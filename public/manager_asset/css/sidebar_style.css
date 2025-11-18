@@ -1,0 +1,163 @@
+<!-- Sidebar Styles - Include this in your page head section -->
+
+/* Sidebar collapse/expand toggle styles (minimal, local overrides) */
+.sidebar{
+  transition: width 0.2s ease;
+  width: 280px;
+  z-index: 1040 !important;
+  background: transparent !important;
+  box-shadow: 2px 0 8px rgba(0,0,0,0.04);
+  position: fixed !important;
+  left: 0;
+  top: 70px;
+  height: 100vh;
+}
+.main-panel, .page-body-wrapper{
+  transition: margin-left 0.2s ease;
+}
+
+.main-panel {
+  margin-left: 280px !important;
+  min-height: calc(100vh - 70px);
+  background-color: #f5f7fa;
+}
+
+body.sidebar-collapsed .main-panel {
+  margin-left: 70px !important;
+}
+
+@media (max-width: 768px) {
+  .main-panel {
+    margin-left: 0 !important;
+  }
+  body.sidebar-collapsed .main-panel {
+    margin-left: 0 !important;
+  }
+  .sidebar {
+    width: 100vw !important;
+    left: 0 !important;
+    height: auto !important;
+    position: fixed !important;
+    z-index: 1040 !important;
+  }
+}
+
+/* Collapsed sidebar state */
+body.sidebar-collapsed .sidebar{
+  width: 70px !important;
+  overflow: hidden;
+}
+body.sidebar-collapsed .sidebar .menu-title,
+body.sidebar-collapsed .sidebar .menu-arrow {
+  display: none !important;
+}
+body.sidebar-collapsed .sidebar .nav-link .menu-title {
+  display: none !important;
+}
+body.sidebar-collapsed .sidebar .menu-icon{
+  margin-right: 0 !important;
+  text-align: center;
+  width: 100%;
+}
+body.sidebar-collapsed .main-panel{
+  margin-left: 70px !important;
+}
+
+/* Ensure sidebar menu items remain clickable */
+.sidebar .nav-link {
+  display: flex !important;
+  align-items: center !important;
+}
+
+/* Sub-menu visibility control */
+.sidebar .sub-menu {
+  transition: all 0.2s ease;
+}
+
+body.sidebar-collapsed .sidebar .sub-menu {
+  display: none !important;
+}
+
+/* Fixed logo container - completely transparent */
+.fixed-logo-container {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 280px !important;
+  height: 70px !important;
+  background: transparent !important;
+  border: none !important;
+  z-index: 9999 !important;
+  box-shadow: none !important;
+  transition: width 0.2s ease !important;
+}
+
+/* Adjust logo container when sidebar is collapsed */
+body.sidebar-collapsed .fixed-logo-container {
+  width: 70px !important;
+}
+
+.logo-hamburger-wrapper {
+  display: flex !important;
+  align-items: center !important;
+  height: 100% !important;
+  padding: 0 20px !important;
+}
+
+/* Hamburger button styling */
+#sidebarToggle {
+  background: #ffffff !important;
+  border: 1px solid #ddd !important;
+  color: #333 !important;
+  margin-right: 15px !important;
+  padding: 10px 12px !important;
+  border-radius: 6px !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 44px !important;
+  min-height: 44px !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
+  z-index: 10001 !important;
+  pointer-events: auto !important;
+}
+
+#sidebarToggle:hover {
+  background: #f8f9fa !important;
+  border-color: #ccc !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.15) !important;
+}
+
+#sidebarToggle:active {
+  background: #e9ecef !important;
+  transform: scale(0.98) !important;
+}
+
+/* Hamburger icon styling */
+#sidebarToggle i {
+  font-size: 22px !important;
+  line-height: 1 !important;
+  font-weight: bold !important;
+}
+
+/* Logo styling */
+.brand-logo {
+  text-decoration: none !important;
+}
+
+.brand-logo img {
+  max-height: 40px !important;
+  width: auto !important;
+}
+
+/* Adjust sidebar positioning */
+.sidebar {
+  margin-top: 70px !important;
+}
+
+/* Adjust main content positioning */
+.page-body-wrapper {
+  margin-top: 70px !important;
+}
