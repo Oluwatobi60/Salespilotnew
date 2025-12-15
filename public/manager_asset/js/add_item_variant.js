@@ -1,20 +1,19 @@
-
-      // Ensure DOM is ready before defining functions
+// Ensure DOM is ready before defining functions
       window.addEventListener('DOMContentLoaded', function() {
         console.log('DOM loaded, pricing modal functions available');
-        
+
         // Test if modal exists
         const modal = document.getElementById('pricingModalOverlay');
         console.log('Pricing modal found:', modal !== null);
       });
-      
+
       // Variant Modal Functions
       function showVariantModal() {
         const modalOverlay = document.getElementById('variantModalOverlay');
         modalOverlay.classList.remove('closing');
         modalOverlay.style.display = 'block';
         document.body.style.overflow = 'hidden';
-        
+
         // Add a slight delay to ensure smooth animation
         setTimeout(() => {
           modalOverlay.style.opacity = '1';
@@ -24,13 +23,13 @@
       function closeVariantModal() {
         const modalOverlay = document.getElementById('variantModalOverlay');
         modalOverlay.classList.add('closing');
-        
+
         // Wait for animation to complete before hiding
         setTimeout(() => {
           modalOverlay.style.display = 'none';
           modalOverlay.classList.remove('closing');
           document.body.style.overflow = 'auto';
-          
+
           // Reset modal form
           document.getElementById('variantConfigForm').reset();
           // Reset variant sets to initial state
@@ -50,17 +49,17 @@
       function handleOptionInputKeydown(event, setNumber) {
         if (event.key === 'Enter') {
           event.preventDefault(); // Prevent form submission
-          
+
           const currentInput = event.target;
           const currentValue = currentInput.value.trim();
-          
+
           // Only add new input if current input has a value
           if (currentValue !== '') {
             // Check if this is the last input in the container
             const container = document.getElementById(`optionsContainer${setNumber}`);
             const allInputs = container.querySelectorAll('.option-input');
             const currentIndex = Array.from(allInputs).indexOf(currentInput);
-            
+
             // If this is the last input, add a new one
             if (currentIndex === allInputs.length - 1) {
               // Add visual feedback for Enter key usage
@@ -68,7 +67,7 @@
               setTimeout(() => {
                 currentInput.style.borderColor = '';
               }, 800);
-              
+
               addOptionInput(setNumber);
               showNotification('Option added! Press Enter in the new field to add another', 'success');
             } else {
@@ -90,13 +89,13 @@
             showNotification('Please enter an option value before adding a new one', 'warning');
           }
         }
-        
+
         // Handle Tab key for better navigation
         if (event.key === 'Tab' && !event.shiftKey) {
           const container = document.getElementById(`optionsContainer${setNumber}`);
           const allInputs = container.querySelectorAll('.option-input');
           const currentIndex = Array.from(allInputs).indexOf(event.target);
-          
+
           // If this is the last input and has content, add a new input before tabbing
           if (currentIndex === allInputs.length - 1 && event.target.value.trim() !== '') {
             event.preventDefault();
@@ -109,11 +108,11 @@
         const content = document.getElementById(`variantSet${setNumber}Content`);
         const addBtn = document.getElementById(`addSet${setNumber}Btn`);
         const removeBtn = document.getElementById(`removeSet${setNumber}Btn`);
-        
+
         content.style.display = 'block';
         addBtn.style.display = 'none';
         removeBtn.style.display = 'inline-block';
-        
+
         showNotification(`Variant Set ${setNumber} enabled`, 'success');
         updateCombinationPreview();
       }
@@ -124,17 +123,17 @@
         const removeBtn = document.getElementById(`removeSet${setNumber}Btn`);
         const nameInput = document.getElementById(`variantSetName${setNumber}`);
         const optionsContainer = document.getElementById(`optionsContainer${setNumber}`);
-        
+
         content.style.display = 'none';
         addBtn.style.display = 'inline-block';
         removeBtn.style.display = 'none';
-        
+
         // Clear inputs
         nameInput.value = '';
-        
+
         // Reset options to single input
         resetOptionsContainer(setNumber);
-        
+
         updateOptionCounter(setNumber);
         updateCombinationPreview();
       }
@@ -142,31 +141,31 @@
       function addOptionInput(setNumber) {
         const container = document.getElementById(`optionsContainer${setNumber}`);
         const currentCount = container.querySelectorAll('.option-input').length;
-        
+
         if (currentCount >= 30) {
           showNotification('Maximum 30 options allowed per set', 'warning');
           return;
         }
-        
+
         const newInputGroup = document.createElement('div');
         newInputGroup.className = 'input-group mb-2 option-fade-in';
-        
+
         newInputGroup.innerHTML = `
           <input type="text" class="form-control option-input" placeholder="Enter option" onchange="updateCombinationPreview()" onkeydown="handleOptionInputKeydown(event, ${setNumber})">
           <button type="button" class="btn btn-outline-danger remove-option-btn" onclick="removeOptionInput(this)" title="Remove this option">
             <i class="mdi mdi-minus"></i>
           </button>
         `;
-        
+
         container.appendChild(newInputGroup);
-        
+
         // Focus on the new input
         const newInput = newInputGroup.querySelector('.option-input');
         newInput.focus();
-        
+
         updateOptionCounter(setNumber);
         updateCombinationPreview();
-        
+
         showNotification('New option field added', 'success');
       }
 
@@ -174,18 +173,18 @@
         const inputGroup = button.closest('.input-group');
         const container = inputGroup.closest('.options-container');
         const setNumber = container.id.replace('optionsContainer', '');
-        
+
         // Don't allow removing if it's the last input
         const remainingInputs = container.querySelectorAll('.option-input').length;
         if (remainingInputs <= 1) {
           showNotification('At least one option field is required', 'warning');
           return;
         }
-        
+
         inputGroup.remove();
         updateOptionCounter(setNumber);
         updateCombinationPreview();
-        
+
         showNotification('Option field removed', 'info');
       }
 
@@ -206,15 +205,15 @@
       function updateOptionCounter(setNumber) {
         const container = document.getElementById(`optionsContainer${setNumber}`);
         const counter = document.getElementById(`optionCount${setNumber}`);
-        
+
         if (!container || !counter) return;
-        
+
         const optionInputs = container.querySelectorAll('.option-input');
         const filledOptions = Array.from(optionInputs).filter(input => input.value.trim() !== '');
         const totalInputs = optionInputs.length;
-        
+
         counter.textContent = totalInputs;
-        
+
         // Update counter color based on count
         counter.className = '';
         if (totalInputs === 0) {
@@ -229,7 +228,7 @@
           counter.classList.add('text-danger');
           counter.textContent = '30+';
         }
-        
+
         // Show add button only if under 30 options
         const addButtons = container.querySelectorAll('.add-option-btn');
         addButtons.forEach(btn => {
@@ -241,18 +240,18 @@
         const options1 = getValidOptions(1);
         const options2 = getValidOptions(2);
         const options3 = getValidOptions(3);
-        
+
         let totalCombinations = options1.length;
         if (options2.length > 0) totalCombinations *= options2.length;
         if (options3.length > 0) totalCombinations *= options3.length;
-        
+
         const preview = document.getElementById('combinationPreview');
         const countSpan = document.getElementById('combinationCount');
-        
+
         if (totalCombinations > 0) {
           countSpan.textContent = totalCombinations;
           preview.style.display = 'block';
-          
+
           // Warn if too many combinations
           const alert = preview.querySelector('.alert');
           if (totalCombinations > 100) {
@@ -273,12 +272,12 @@
       function getValidOptions(setNumber) {
         const container = document.getElementById(`optionsContainer${setNumber}`);
         if (!container) return [];
-        
+
         const optionInputs = container.querySelectorAll('.option-input');
         const options = Array.from(optionInputs)
           .map(input => input.value.trim())
           .filter(value => value !== '');
-        
+
         return options.slice(0, 30); // Limit to 30 options
       }
 
@@ -378,14 +377,14 @@
 
         // Close modal
         closeVariantModal();
-        
+
         showNotification(`Variant configuration applied! Generated ${totalCombinations} variant combinations.`, 'success');
       }
 
       function findDuplicates(array) {
         const seen = new Set();
         const duplicates = new Set();
-        
+
         array.forEach(item => {
           const lowerItem = item.toLowerCase();
           if (seen.has(lowerItem)) {
@@ -394,17 +393,17 @@
             seen.add(lowerItem);
           }
         });
-        
+
         return Array.from(duplicates);
       }
 
       function generateVariantCombinations(optionsArray1, optionsArray2, optionsArray3, setName1, setName2, setName3) {
         const tableBody = document.getElementById('variantTableBody');
         tableBody.innerHTML = ''; // Clear existing rows
-        
+
         const baseName = document.getElementById('itemName').value || 'Item';
         const baseCode = document.getElementById('itemCode').value || 'ITM';
-        
+
         // Ensure we have arrays to work with
         const options1 = optionsArray1 || [];
         const options2 = optionsArray2.length > 0 ? optionsArray2 : [''];
@@ -421,29 +420,36 @@
               if ((option2 === '' && options2.length > 1) || (option3 === '' && options3.length > 1)) {
                 return;
               }
-              
+
               variantCounter++;
               totalCombinations++;
-              
-              // Build variant name
+
+              // Build variant display (only variations, separated by /)
+              let variantDisplay = option1;
+              if (option2) variantDisplay += ` / ${option2}`;
+              if (option3) variantDisplay += ` / ${option3}`;
+
+              // Build full variant name for backend (includes base name)
               let variantName = `${baseName} - ${option1}`;
               if (option2) variantName += ` ${option2}`;
               if (option3) variantName += ` ${option3}`;
-              
+
               // Build SKU
               let variantSku = baseCode;
               if (option1) variantSku += `-${option1.substring(0,2).toUpperCase()}`;
               if (option2) variantSku += `${option2.substring(0,2).toUpperCase()}`;
               if (option3) variantSku += `${option3.substring(0,2).toUpperCase()}`;
-              
+
               const newRow = document.createElement('tr');
               newRow.innerHTML = `
                 <td>
-                  <input type="text" class="form-control form-control-sm" 
-                         name="variants[${variantCounter}][name]" 
-                         value="${variantName}" 
+                  <input type="text" class="form-control form-control-sm"
+                         name="variants[${variantCounter}][name]"
+                         value="${variantName}"
                          readonly
-                         required>
+                         required
+                         style="display: none;">
+                  <div class="variant-display-text">${variantDisplay}</div>
                   <input type="hidden" name="variants[${variantCounter}][sku]" value="${variantSku}">
                   <input type="hidden" name="variants[${variantCounter}][primary_value]" value="${option1}">
                   <input type="hidden" name="variants[${variantCounter}][secondary_value]" value="${option2}${option3 ? (option2 ? ' / ' + option3 : option3) : ''}">
@@ -452,7 +458,7 @@
                 <td class="text-center align-middle">
                   <div class="d-flex flex-column justify-content-center align-items-center">
                     <div class="form-check form-switch mb-1">
-                      <input class="form-check-input variant-sell-toggle" type="checkbox" id="sellToggle${variantCounter}" 
+                      <input class="form-check-input variant-sell-toggle" type="checkbox" id="sellToggle${variantCounter}"
                              name="variants[${variantCounter}][is_sellable]" value="1" checked>
                       <label class="form-check-label" for="sellToggle${variantCounter}">
                         <span class="sell-status-text">Sell</span>
@@ -461,30 +467,63 @@
                     <small class="text-muted">${variantSku}</small>
                   </div>
                 </td>
-                <td>
-                  <button type="button" class="btn btn-outline-primary btn-sm w-100" 
-                          onclick="openPricingModal(${variantCounter}, '${variantName.replace(/'/g, "\\'")}')">
-                    <i class="mdi mdi-currency-usd"></i> 
-                    <span class="cost-price-display" id="costDisplay${variantCounter}">Set Cost</span>
+                <td colspan="2">
+                  <button type="button" onclick="openEditVariantModal(${variantCounter}, '${variantSku}')" class="btn btn-outline-info btn-sm w-100 pricing-group-btn" title="Click to edit pricing">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <div class="text-start">
+                        <i class="mdi mdi-currency-usd"></i>
+                        <span class="cost-price-display" id="costDisplay${variantCounter}">₦0.00</span>
+                      </div>
+                      <div class="text-end">
+                        <i class="mdi mdi-tag"></i>
+                        <span class="sell-price-display" id="sellDisplay${variantCounter}">₦0.00</span>
+                      </div>
+                    </div>
                   </button>
-                  <input type="hidden" name="variants[${variantCounter}][cost_price]" id="costPrice${variantCounter}" value="" required>
+                  <input type="hidden" name="variants[${variantCounter}][cost_price]" id="costPrice${variantCounter}" value="0.00" required>
+                  <input type="hidden" name="variants[${variantCounter}][selling_price]" id="sellPrice${variantCounter}" value="0.00" required>
+                  <input type="hidden" name="variants[${variantCounter}][pricing_method]" id="pricingMethod${variantCounter}" value="fixed">
+                  <input type="hidden" name="variants[${variantCounter}][profit_margin]" id="profitMargin${variantCounter}" value="">
+                  <input type="hidden" name="variants[${variantCounter}][potential_profit]" id="potentialProfit${variantCounter}" value="">
+                  <input type="hidden" name="variants[${variantCounter}][tax_rate]" id="taxRate${variantCounter}" value="0">
+                  <input type="hidden" name="variants[${variantCounter}][discount]" id="discount${variantCounter}" value="0">
+                  <input type="hidden" name="variants[${variantCounter}][final_price]" id="finalPrice${variantCounter}" value="">
+                  <input type="hidden" name="variants[${variantCounter}][manual_cost_price]" id="manualCostPrice${variantCounter}" value="">
+                  <input type="hidden" name="variants[${variantCounter}][margin_cost_price]" id="marginCostPrice${variantCounter}" value="">
+                  <input type="hidden" name="variants[${variantCounter}][target_margin]" id="targetMargin${variantCounter}" value="">
+                  <input type="hidden" name="variants[${variantCounter}][calculated_price]" id="calculatedPrice${variantCounter}" value="">
+                  <input type="hidden" name="variants[${variantCounter}][margin_profit]" id="marginProfit${variantCounter}" value="">
+                  <input type="hidden" name="variants[${variantCounter}][range_cost_price]" id="rangeCostPrice${variantCounter}" value="">
+                  <input type="hidden" name="variants[${variantCounter}][min_price]" id="minPrice${variantCounter}" value="">
+                  <input type="hidden" name="variants[${variantCounter}][max_price]" id="maxPrice${variantCounter}" value="">
+                  <input type="hidden" name="variants[${variantCounter}][range_potential_profit]" id="rangePotentialProfit${variantCounter}" value="">
+                  <input type="hidden" name="variants[${variantCounter}][location]" id="location${variantCounter}" value="">
+                  <input type="hidden" name="variants[${variantCounter}][expiry_date]" id="expiryDate${variantCounter}" value="">
+                  <input type="hidden" name="variants[${variantCounter}][barcode]" id="barcode${variantCounter}" value="">
                 </td>
                 <td>
-                  <button type="button" class="btn btn-outline-success btn-sm w-100" 
-                          onclick="openPricingModal(${variantCounter}, '${variantName.replace(/'/g, "\\'")}')">
-                    <i class="mdi mdi-tag"></i> 
-                    <span class="sell-price-display" id="sellDisplay${variantCounter}">Set Price</span>
-                  </button>
-                  <input type="hidden" name="variants[${variantCounter}][selling_price]" id="sellPrice${variantCounter}" value="" required>
-                  <input type="hidden" name="variants[${variantCounter}][pricing_method]" id="pricingMethod${variantCounter}" value="fixed">
-                  <input type="hidden" name="variants[${variantCounter}][stock_quantity]" value="0">
+                  <input type="number" class="form-control form-control-sm"
+                         name="variants[${variantCounter}][stock_quantity]"
+                         id="stockQty${variantCounter}"
+                         value="0"
+                         min="0"
+                         step="1"
+                         placeholder="0"
+                         title="Stock quantity">
+                </td>
+                <td>
+                  <input type="number" class="form-control form-control-sm"
+                         name="variants[${variantCounter}][low_stock_threshold]"
+                         id="lowStock${variantCounter}"
+                         value="0"
+                         min="0"
+                         step="1"
+                         placeholder="0"
+                         title="Low stock alert threshold">
                 </td>
                 <td class="text-center">
                   <div class="btn-group" role="group">
-                    <a href="views/edit_variant.php?sku=${encodeURIComponent(variantSku)}" class="btn btn-sm btn-outline-secondary settings-variant-btn" title="Settings for this variant">
-                      <i class="mdi mdi-cog"></i>
-                    </a>
-                    <button type="button" class="btn btn-sm remove-variant-btn" 
+                    <button type="button" class="btn btn-sm remove-variant-btn"
                             onclick="removeVariantRow(this)" title="Remove this variant">
                       <i class="mdi mdi-delete"></i>
                     </button>
@@ -492,15 +531,15 @@
                 </td>
               `;
               tableBody.appendChild(newRow);
-              
+
               // Add event listener for the sell toggle
               const sellToggle = newRow.querySelector(`#sellToggle${variantCounter}`);
               const sellingPriceInput = newRow.querySelector('input[name*="[selling_price]"]');
-              
+
               sellToggle.addEventListener('change', function() {
                 updateSellToggleState(this, sellingPriceInput);
               });
-              
+
               // Initialize the toggle state
               updateSellToggleState(sellToggle, sellingPriceInput);
             });
@@ -509,10 +548,10 @@
 
         // Update global variant counter
         window.variantCounter = variantCounter;
-        
+
         // Add master toggle functionality after generating all variants
         setupMasterToggle();
-        
+
         return totalCombinations;
       }
 
@@ -520,13 +559,13 @@
       function setupMasterToggle() {
         const masterToggle = document.getElementById('masterSellToggle');
         const variantToggles = document.querySelectorAll('.variant-sell-toggle');
-        
+
         if (!masterToggle) return;
-        
+
         // Master toggle controls all variant toggles
         masterToggle.addEventListener('change', function() {
           const isChecked = this.checked;
-          
+
           variantToggles.forEach(toggle => {
             if (toggle.checked !== isChecked) {
               toggle.checked = isChecked;
@@ -534,18 +573,18 @@
               updateSellToggleState(toggle, sellingPriceInput);
             }
           });
-          
+
           showNotification(
-            isChecked ? 'All variants enabled for sale' : 'All variants disabled for sale', 
+            isChecked ? 'All variants enabled for sale' : 'All variants disabled for sale',
             'info'
           );
         });
-        
+
         // Update master toggle based on individual toggles
         function updateMasterToggleState() {
           const allToggles = document.querySelectorAll('.variant-sell-toggle');
           const checkedToggles = document.querySelectorAll('.variant-sell-toggle:checked');
-          
+
           // Only turn off master toggle when ALL variants are off
           if (checkedToggles.length === 0) {
             masterToggle.checked = false;
@@ -557,7 +596,7 @@
             masterToggle.indeterminate = checkedToggles.length < allToggles.length;
           }
         }
-        
+
         // Add event listeners to existing variant toggles
         variantToggles.forEach(toggle => {
           toggle.addEventListener('change', function() {
@@ -566,7 +605,7 @@
             updateMasterToggleState();
           });
         });
-        
+
         // Initial state update
         updateMasterToggleState();
       }
@@ -589,8 +628,94 @@
         }
       }
 
+      // Setup custom unit handlers
+      function setupCustomUnitHandlers() {
+        const unitSelect = document.getElementById('unit');
+        const customUnitContainer = document.getElementById('customUnitContainer');
+        const addUnitBtn = document.getElementById('addUnitBtn');
+        const customUnit = document.getElementById('customUnit');
+        const customUnitAbbr = document.getElementById('customUnitAbbr');
+
+        // Show/hide custom unit container
+        unitSelect.addEventListener('change', function() {
+          if (this.value === 'custom') {
+            customUnitContainer.style.display = 'block';
+            customUnit.focus();
+          } else {
+            customUnitContainer.style.display = 'none';
+            customUnit.value = '';
+            customUnitAbbr.value = '';
+          }
+        });
+
+        // Add new unit functionality
+        addUnitBtn.addEventListener('click', function() {
+          const unitName = customUnit.value.trim();
+          const unitAbbr = customUnitAbbr.value.trim();
+
+          if (!unitName || !unitAbbr) {
+            showNotification('Please enter both unit name and abbreviation', 'error');
+            return;
+          }
+
+          // Check if unit already exists
+          const existingOptions = Array.from(unitSelect.options);
+          const exists = existingOptions.some(option =>
+            option.value.toLowerCase() === unitAbbr.toLowerCase() ||
+            option.text.toLowerCase().includes(unitName.toLowerCase())
+          );
+
+          if (exists) {
+            showNotification('This unit already exists in the list', 'warning');
+            return;
+          }
+
+          // Create new option
+          const newOption = document.createElement('option');
+          newOption.value = unitAbbr;
+          newOption.text = `${unitName} (${unitAbbr})`;
+
+          // Insert before the "Add New Unit" option
+          const customOption = unitSelect.querySelector('option[value="custom"]');
+          unitSelect.insertBefore(newOption, customOption);
+
+          // Select the new option
+          unitSelect.value = unitAbbr;
+
+          // Hide the container and clear inputs
+          customUnitContainer.style.display = 'none';
+          customUnit.value = '';
+          customUnitAbbr.value = '';
+
+          // Update Select2 if initialized
+          if (typeof $ !== 'undefined' && $.fn.select2) {
+            $('#unit').trigger('change.select2');
+          }
+
+          showNotification(`Unit "${unitName} (${unitAbbr})" added successfully!`, 'success');
+        });
+
+        // Allow Enter key to add unit
+        customUnit.addEventListener('keypress', function(e) {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            customUnitAbbr.focus();
+          }
+        });
+
+        customUnitAbbr.addEventListener('keypress', function(e) {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            addUnitBtn.click();
+          }
+        });
+      }
+
       // Close variant modal on overlay click
       document.addEventListener('DOMContentLoaded', function() {
+        // Setup custom unit handlers
+        setupCustomUnitHandlers();
+
         const variantModalOverlay = document.getElementById('variantModalOverlay');
         if (variantModalOverlay) {
           variantModalOverlay.addEventListener('click', function(e) {
@@ -612,7 +737,7 @@
               }
             });
           }
-          
+
           const nameInput = document.getElementById(`variantSetName${i}`);
           if (nameInput) {
             nameInput.addEventListener('input', function() {
@@ -631,11 +756,11 @@
       function closeModal() {
         const modalContainer = document.querySelector('.modal-container');
         const modalOverlay = document.querySelector('.modal-overlay');
-        
+
         // Add slide out animation
         modalContainer.style.animation = 'slideOut 0.3s cubic-bezier(0.55, 0.085, 0.68, 0.53) forwards';
         modalOverlay.style.animation = 'fadeOut 0.3s ease-out forwards';
-        
+
         // Redirect after animation
         setTimeout(function() {
           // Check if there's a previous page in history
@@ -652,16 +777,16 @@
       // Reset form
       function resetForm() {
         document.getElementById('addVariantForm').reset();
-        
+
         // Reset variant table to initial state
-        const variantsTableBody = document.getElementById('variantsTableBody');
-        variantsTableBody.innerHTML = `
+        const variantTableBody = document.getElementById('variantTableBody');
+        variantTableBody.innerHTML = `
           <tr>
             <td><input type="text" class="form-control variant-name" name="variant_names[]" placeholder="Enter variant name" required></td>
             <td><input type="text" class="form-control variant-sku" name="variant_skus[]" placeholder="Auto-generated" readonly></td>
-            <td><input type="number" class="form-control variant-cost" name="variant_costs[]" placeholder="0.00" step="0.01" min="0"></td>
-            <td><input type="number" class="form-control variant-price" name="variant_prices[]" placeholder="0.00" step="0.01" min="0"></td>
-            <td><input type="number" class="form-control variant-stock" name="variant_stocks[]" placeholder="0" min="0"></td>
+            <td><input type="number" class="form-control variant-cost" name="variant_costs[]" value="0.00" step="0.01" min="0"></td>
+            <td><input type="number" class="form-control variant-price" name="variant_prices[]" value="0.00" step="0.01" min="0"></td>
+            <td><input type="number" class="form-control variant-stock" name="variant_stocks[]" value="0" min="0"></td>
             <td>
               <button type="button" class="btn btn-sm btn-danger" onclick="removeVariantRow(this)" title="Remove Variant">
                 <i class="mdi mdi-delete"></i>
@@ -669,35 +794,243 @@
             </td>
           </tr>
         `;
-        
+
         showNotification('Form has been reset', 'info');
+      }
+
+      // Sync pricing fields for form submission
+      function syncPricingFieldsForSubmission(pricingType) {
+        console.log('Syncing pricing fields for submission, type:', pricingType);
+
+        // Get all pricing-related fields
+        const costPrice = document.getElementById('costPrice');
+        const manualCostPrice = document.getElementById('manualCostPrice');
+        const marginCostPrice = document.getElementById('marginCostPrice');
+        const rangeCostPrice = document.getElementById('rangeCostPrice');
+
+        const sellingPrice = document.getElementById('sellingPrice');
+        const calculatedPrice = document.getElementById('calculatedPrice');
+        const targetMargin = document.getElementById('targetMargin');
+        const marginProfit = document.getElementById('marginProfit');
+
+        const minPrice = document.getElementById('minPrice');
+        const maxPrice = document.getElementById('maxPrice');
+        const rangePotentialProfit = document.getElementById('rangePotentialProfit');
+
+        // Create or update hidden pricing_type input
+        let pricingTypeInput = document.querySelector('input[name="pricing_type"][type="hidden"]');
+        if (!pricingTypeInput) {
+          pricingTypeInput = document.createElement('input');
+          pricingTypeInput.type = 'hidden';
+          pricingTypeInput.name = 'pricing_type';
+          document.getElementById('addVariantForm').appendChild(pricingTypeInput);
+        }
+        pricingTypeInput.value = pricingType;
+        console.log('Pricing type set to:', pricingType);
+
+        // Create hidden tax_rate input if it doesn't exist
+        let taxRateInput = document.querySelector('input[name="tax_rate"]');
+        if (!taxRateInput) {
+          taxRateInput = document.createElement('input');
+          taxRateInput.type = 'hidden';
+          taxRateInput.name = 'tax_rate';
+          document.getElementById('addVariantForm').appendChild(taxRateInput);
+        }
+
+        // Create hidden potential_profit input if it doesn't exist
+        let potentialProfitInput = document.querySelector('input[name="potential_profit"]');
+        if (!potentialProfitInput) {
+          potentialProfitInput = document.createElement('input');
+          potentialProfitInput.type = 'hidden';
+          potentialProfitInput.name = 'potential_profit';
+          document.getElementById('addVariantForm').appendChild(potentialProfitInput);
+        }
+
+        // Create hidden final_price input if it doesn't exist
+        let finalPriceInput = document.querySelector('input[name="final_price"]');
+        if (!finalPriceInput) {
+          finalPriceInput = document.createElement('input');
+          finalPriceInput.type = 'hidden';
+          finalPriceInput.name = 'final_price';
+          document.getElementById('addVariantForm').appendChild(finalPriceInput);
+        }
+
+        switch(pricingType) {
+          case 'fixed':
+            // Sync cost price from fixed field
+            if (costPrice && costPrice.value) {
+              if (manualCostPrice) manualCostPrice.value = costPrice.value;
+              if (marginCostPrice) marginCostPrice.value = costPrice.value;
+              if (rangeCostPrice) rangeCostPrice.value = costPrice.value;
+            }
+
+            // Use fixed tax rate
+            const fixedTaxRate = document.getElementById('fixedTaxRate');
+            if (fixedTaxRate) {
+              taxRateInput.value = fixedTaxRate.value;
+            }
+
+            // Set potential profit from fixed pricing
+            const potentialProfit = document.getElementById('potentialProfit');
+            if (potentialProfit && potentialProfitInput) {
+              potentialProfitInput.value = potentialProfit.value || '0';
+            }
+
+            // Calculate and set final price
+            if (sellingPrice && fixedTaxRate) {
+              const selling = parseFloat(sellingPrice.value) || 0;
+              const tax = parseFloat(fixedTaxRate.value) || 0;
+              const final = selling * (1 + tax / 100);
+              finalPriceInput.value = final.toFixed(2);
+            }
+
+            // Clear fields not used in fixed pricing
+            if (targetMargin) targetMargin.value = '';
+            if (calculatedPrice) calculatedPrice.value = '';
+            if (minPrice) minPrice.value = '';
+            if (maxPrice) maxPrice.value = '';
+            break;
+
+          case 'manual':
+            // Sync cost price from manual field
+            if (manualCostPrice && manualCostPrice.value) {
+              if (costPrice) costPrice.value = manualCostPrice.value;
+              if (marginCostPrice) marginCostPrice.value = manualCostPrice.value;
+              if (rangeCostPrice) rangeCostPrice.value = manualCostPrice.value;
+            }
+
+            // Clear selling price and other fields for manual pricing
+            if (sellingPrice) sellingPrice.value = '';
+            if (targetMargin) targetMargin.value = '';
+            if (calculatedPrice) calculatedPrice.value = '';
+            if (minPrice) minPrice.value = '';
+            if (maxPrice) maxPrice.value = '';
+
+            taxRateInput.value = '0';
+            potentialProfitInput.value = '0';
+            finalPriceInput.value = '0';
+            break;
+
+          case 'margin':
+            // Sync cost price from margin field
+            if (marginCostPrice && marginCostPrice.value) {
+              if (costPrice) costPrice.value = marginCostPrice.value;
+              if (manualCostPrice) manualCostPrice.value = marginCostPrice.value;
+              if (rangeCostPrice) rangeCostPrice.value = marginCostPrice.value;
+            }
+
+            // Use margin tax rate
+            const marginTaxRate = document.getElementById('marginTaxRate');
+            if (marginTaxRate) {
+              taxRateInput.value = marginTaxRate.value;
+            }
+
+            // Copy calculated price to selling price
+            if (calculatedPrice && sellingPrice) {
+              sellingPrice.value = calculatedPrice.value || '0';
+            }
+
+            // Set potential profit from margin pricing
+            if (marginProfit && potentialProfitInput) {
+              potentialProfitInput.value = marginProfit.value || '0';
+            }
+
+            // Calculate and set final price with tax
+            if (calculatedPrice && marginTaxRate) {
+              const calculated = parseFloat(calculatedPrice.value) || 0;
+              const tax = parseFloat(marginTaxRate.value) || 0;
+              const final = calculated * (1 + tax / 100);
+              finalPriceInput.value = final.toFixed(2);
+            }
+
+            // Clear fields not used in margin pricing
+            if (minPrice) minPrice.value = '';
+            if (maxPrice) maxPrice.value = '';
+            break;
+
+          case 'range':
+            // Sync cost price from range field
+            if (rangeCostPrice && rangeCostPrice.value) {
+              if (costPrice) costPrice.value = rangeCostPrice.value;
+              if (manualCostPrice) manualCostPrice.value = rangeCostPrice.value;
+              if (marginCostPrice) marginCostPrice.value = rangeCostPrice.value;
+            }
+
+            // Use range tax rate
+            const rangeTaxRate = document.getElementById('rangeTaxRate');
+            if (rangeTaxRate) {
+              taxRateInput.value = rangeTaxRate.value;
+            }
+
+            // Calculate average of min and max for selling price
+            if (minPrice && maxPrice && sellingPrice) {
+              const min = parseFloat(minPrice.value) || 0;
+              const max = parseFloat(maxPrice.value) || 0;
+              const average = (min + max) / 2;
+              sellingPrice.value = average.toFixed(2);
+            }
+
+            // Calculate average potential profit
+            if (rangeCostPrice && minPrice && maxPrice && potentialProfitInput) {
+              const cost = parseFloat(rangeCostPrice.value) || 0;
+              const min = parseFloat(minPrice.value) || 0;
+              const max = parseFloat(maxPrice.value) || 0;
+              const avgPrice = (min + max) / 2;
+              const avgProfit = avgPrice - cost;
+              potentialProfitInput.value = avgProfit.toFixed(2);
+            }
+
+            // Calculate and set average final price with tax
+            if (minPrice && maxPrice && rangeTaxRate) {
+              const min = parseFloat(minPrice.value) || 0;
+              const max = parseFloat(maxPrice.value) || 0;
+              const tax = parseFloat(rangeTaxRate.value) || 0;
+              const avgPrice = (min + max) / 2;
+              const final = avgPrice * (1 + tax / 100);
+              finalPriceInput.value = final.toFixed(2);
+            }
+
+            // Clear fields not used in range pricing
+            if (targetMargin) targetMargin.value = '';
+            if (calculatedPrice) calculatedPrice.value = '';
+            break;
+        }
+
+        console.log('Tax rate set to:', taxRateInput.value);
+        console.log('Final price set to:', finalPriceInput.value);
       }
 
       // Submit form with validation
       function submitForm() {
         const form = document.getElementById('addVariantForm');
         const submitBtn = document.querySelector('.btn-primary');
-        
+
         // Add loading state
         submitBtn.classList.add('loading');
         submitBtn.disabled = true;
-        
+
         setTimeout(() => {
+          // Sync pricing fields based on selected pricing type before validation
+          const selectedPricingType = document.querySelector('input[name="pricing_type"]:checked');
+          if (selectedPricingType) {
+            syncPricingFieldsForSubmission(selectedPricingType.value);
+          }
+
           // Check if required fields are filled
           if (!form.checkValidity()) {
             form.reportValidity();
             removeLoading(submitBtn);
             return false;
           }
-          
+
           // Validate that at least one variant exists
-          const variantRows = document.querySelectorAll('#variantsTableBody tr');
+          const variantRows = document.querySelectorAll('#variantTableBody tr');
           if (variantRows.length === 0) {
             showNotification('At least one variant is required', 'error');
             removeLoading(submitBtn);
             return false;
           }
-          
+
           // Validate that variant names are filled
           const variantNames = document.querySelectorAll('.variant-name');
           let hasValidVariant = false;
@@ -706,24 +1039,24 @@
               hasValidVariant = true;
             }
           });
-          
+
           if (!hasValidVariant) {
             showNotification('At least one variant must have a name', 'error');
             removeLoading(submitBtn);
             return false;
           }
-          
+
           // If all validations pass
           showNotification('Variant item validation passed! Ready to be saved.', 'success');
-          
+
           // Simulate save process
           setTimeout(() => {
             removeLoading(submitBtn);
             showNotification('Variant item successfully created!', 'success');
-            
+
             // Remove beforeunload warning since item is saved
             window.removeEventListener('beforeunload', arguments.callee);
-            
+
             // After successful save, return to previous page
             setTimeout(() => {
               // Check if there's a previous page in history
@@ -735,7 +1068,7 @@
                 window.location.href = '../index.php';
               }
             }, 1000); // Give time to see the success message
-            
+
             // Uncomment the line below when you have the backend ready
             // form.submit();
           }, 1500);
@@ -772,8 +1105,8 @@
           transition: all 0.3s ease;
         `;
 
-        const icon = type === 'success' ? 'mdi-check-circle' : 
-                    type === 'warning' ? 'mdi-alert-circle' : 
+        const icon = type === 'success' ? 'mdi-check-circle' :
+                    type === 'warning' ? 'mdi-alert-circle' :
                     type === 'error' ? 'mdi-close-circle' : 'mdi-information';
 
         notification.innerHTML = `
@@ -815,20 +1148,38 @@
       // Close on escape key
       document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
-          closeModal();
+          // Only close the main modal, not variant configuration modals
+          const variantModal = document.getElementById('variantModalOverlay');
+          const variantSettingsModal = document.getElementById('variantSettingsOverlay');
+          const pricingModal = document.getElementById('pricingModalOverlay');
+
+          // Check if any internal modals are open
+          const isVariantModalOpen = variantModal && variantModal.style.display !== 'none';
+          const isSettingsModalOpen = variantSettingsModal && variantSettingsModal.style.display === 'flex';
+          const isPricingModalOpen = pricingModal && pricingModal.style.display !== 'none';
+
+          // Only close main modal if no internal modals are open
+          if (!isVariantModalOpen && !isSettingsModalOpen && !isPricingModalOpen) {
+            closeModal();
+          }
         }
       });
 
 
 
-      // Close on overlay click
-      document.querySelector('.modal-overlay').addEventListener('click', closeModal);
+      // Close on overlay click (only if clicking the backdrop, not the modal content)
+      // Note: This is for the main page overlay only, not for variant configuration modals
+      const mainPageWrapper = document.querySelector('.modal-body-custom');
+      if (mainPageWrapper) {
+        // Don't attach click handler to modal-overlay as it interferes with variant modals
+        // The main page is always visible, so we don't need an overlay click handler
+      }
 
       // Remove variant row
       function removeVariantRow(button) {
         const row = button.closest('tr');
         const tableBody = document.getElementById('variantTableBody');
-        
+
         if (tableBody.children.length > 1) {
           row.remove();
           showNotification('Variant row removed', 'info');
@@ -875,67 +1226,60 @@
       // Submit pricing form
       document.getElementById('variantPricingForm').addEventListener('submit', function(e) {
         e.preventDefault();
-        
-        // Get form data
-        const formData = new FormData(this);
-        
-        // TODO: Add AJAX request to save pricing data
-        console.log('Pricing data:', Object.fromEntries(formData));
-        
-        closeVariantSettingsOverlay();
-        showNotification('Pricing updated successfully', 'success');
+
+        // Save the variant changes
+        saveVariantChanges();
       });
 
       // Submit stocking form
       document.getElementById('variantStockForm').addEventListener('submit', function(e) {
         e.preventDefault();
-        
-        // Get form data
-        const formData = new FormData(this);
-        
-        // TODO: Add AJAX request to save stocking data
-        console.log('Stocking data:', Object.fromEntries(formData));
-        
-        closeVariantSettingsOverlay();
-        showNotification('Stocking information updated successfully', 'success');
+
+        // Save the variant changes
+        saveVariantChanges();
       });
 
       // Pricing Modal Functions
       window.openPricingModal = function(variantIndex, variantName) {
         console.log('Opening pricing modal for variant:', variantIndex, variantName);
-        
+
         // Set current variant info
         document.getElementById('currentVariantIndex').value = variantIndex;
         document.getElementById('modalVariantName').textContent = variantName;
-        
+
         // Load existing pricing data if available
         const costInput = document.getElementById(`costPrice${variantIndex}`);
         const sellInput = document.getElementById(`sellPrice${variantIndex}`);
         const methodInput = document.getElementById(`pricingMethod${variantIndex}`);
-        
+
+        // Populate modal fields; default to 0.00 when values are empty
         if (costInput && costInput.value) {
           document.getElementById('modalCostPrice').value = costInput.value;
+        } else {
+          document.getElementById('modalCostPrice').value = '0.00';
         }
         if (sellInput && sellInput.value) {
           document.getElementById('modalSellingPrice').value = sellInput.value;
+        } else {
+          document.getElementById('modalSellingPrice').value = '0.00';
         }
         if (methodInput && methodInput.value) {
           document.querySelector(`input[name="pricing_method"][value="${methodInput.value}"]`).checked = true;
           showPricingFields(methodInput.value);
         }
-        
+
         // Show modal
         const modalOverlay = document.getElementById('pricingModalOverlay');
         console.log('Modal element found:', modalOverlay);
-        
+
         if (!modalOverlay) {
           alert('Pricing modal not found! Please check the HTML structure.');
           return;
         }
-        
+
         modalOverlay.style.display = 'block';
         document.body.style.overflow = 'hidden';
-        
+
         // Initialize pricing calculations
         setupPricingCalculations();
       }
@@ -944,7 +1288,7 @@
         const modalOverlay = document.getElementById('pricingModalOverlay');
         modalOverlay.style.display = 'none';
         document.body.style.overflow = 'auto';
-        
+
         // Reset form
         document.getElementById('variantPricingForm').reset();
         document.querySelector('input[name="pricing_method"][value="fixed"]').checked = true;
@@ -954,18 +1298,18 @@
       window.savePricing = function() {
         const form = document.getElementById('variantPricingForm');
         const variantIndex = document.getElementById('currentVariantIndex').value;
-        
+
         // Validate form
         if (!form.checkValidity()) {
           form.reportValidity();
           return;
         }
-        
+
         // Get pricing method and values
         const pricingMethod = document.querySelector('input[name="pricing_method"]:checked').value;
         const costPrice = parseFloat(document.getElementById('modalCostPrice').value) || 0;
         let sellingPrice = 0;
-        
+
         // Calculate selling price based on method
         switch (pricingMethod) {
           case 'fixed':
@@ -981,31 +1325,31 @@
             sellingPrice = parseFloat(document.getElementById('modalMinPrice').value) || 0; // Use min price as base
             break;
         }
-        
+
         // Validate pricing
         if (costPrice <= 0) {
           showNotification('Cost price must be greater than 0', 'warning');
           return;
         }
-        
+
         if (pricingMethod === 'fixed' && sellingPrice <= 0) {
           showNotification('Selling price must be greater than 0 for fixed pricing', 'warning');
           return;
         }
-        
+
         if (pricingMethod !== 'manual' && sellingPrice <= costPrice) {
           showNotification('Selling price must be greater than cost price', 'warning');
           return;
         }
-        
+
         // Update hidden inputs
         document.getElementById(`costPrice${variantIndex}`).value = costPrice.toFixed(2);
         document.getElementById(`sellPrice${variantIndex}`).value = sellingPrice.toFixed(2);
         document.getElementById(`pricingMethod${variantIndex}`).value = pricingMethod;
-        
+
         // Update button displays
         document.getElementById(`costDisplay${variantIndex}`).textContent = `₦${costPrice.toFixed(2)}`;
-        
+
         if (pricingMethod === 'manual') {
           document.getElementById(`sellDisplay${variantIndex}`).textContent = 'Manual';
         } else if (pricingMethod === 'range') {
@@ -1014,7 +1358,7 @@
         } else {
           document.getElementById(`sellDisplay${variantIndex}`).textContent = `₦${sellingPrice.toFixed(2)}`;
         }
-        
+
         // Close modal
         closePricingModal();
         showNotification('Pricing updated successfully', 'success');
@@ -1025,7 +1369,7 @@
         document.querySelectorAll('.pricing-fields').forEach(field => {
           field.style.display = 'none';
         });
-        
+
         // Show selected pricing fields
         switch (method) {
           case 'fixed':
@@ -1050,21 +1394,21 @@
             showPricingFields(this.value);
           });
         });
-        
+
         // Fixed pricing calculations
         const modalCostPrice = document.getElementById('modalCostPrice');
         const modalSellingPrice = document.getElementById('modalSellingPrice');
         const modalProfitMargin = document.getElementById('modalProfitMargin');
         const modalPotentialProfit = document.getElementById('modalPotentialProfit');
-        
+
         function calculateFixedProfit() {
           const cost = parseFloat(modalCostPrice.value) || 0;
           const selling = parseFloat(modalSellingPrice.value) || 0;
-          
+
           if (cost > 0 && selling > 0) {
             const profit = selling - cost;
             const margin = (profit / cost) * 100;
-            
+
             modalProfitMargin.value = margin.toFixed(2) + '%';
             modalPotentialProfit.value = profit.toFixed(2);
           } else {
@@ -1072,23 +1416,23 @@
             modalPotentialProfit.value = '';
           }
         }
-        
+
         modalCostPrice.addEventListener('input', calculateFixedProfit);
         modalSellingPrice.addEventListener('input', calculateFixedProfit);
-        
+
         // Margin pricing calculations
         const modalTargetMargin = document.getElementById('modalTargetMargin');
         const modalCalculatedPrice = document.getElementById('modalCalculatedPrice');
         const modalMarginProfit = document.getElementById('modalMarginProfit');
-        
+
         function calculateMarginPrice() {
           const cost = parseFloat(modalCostPrice.value) || 0;
           const margin = parseFloat(modalTargetMargin.value) || 0;
-          
+
           if (cost > 0 && margin > 0) {
             const calculatedPrice = cost * (1 + margin / 100);
             const profit = calculatedPrice - cost;
-            
+
             modalCalculatedPrice.value = calculatedPrice.toFixed(2);
             modalMarginProfit.value = profit.toFixed(2);
           } else {
@@ -1096,29 +1440,29 @@
             modalMarginProfit.value = '';
           }
         }
-        
+
         modalTargetMargin.addEventListener('input', calculateMarginPrice);
-        
+
         // Range pricing calculations
         const modalMinPrice = document.getElementById('modalMinPrice');
         const modalMaxPrice = document.getElementById('modalMaxPrice');
         const modalRangePotentialProfit = document.getElementById('modalRangePotentialProfit');
-        
+
         function calculateRangeProfit() {
           const cost = parseFloat(modalCostPrice.value) || 0;
           const minPrice = parseFloat(modalMinPrice.value) || 0;
           const maxPrice = parseFloat(modalMaxPrice.value) || 0;
-          
+
           if (cost > 0 && minPrice > 0 && maxPrice > 0) {
             const minProfit = minPrice - cost;
             const maxProfit = maxPrice - cost;
-            
+
             modalRangePotentialProfit.value = `${minProfit.toFixed(2)} to ${maxProfit.toFixed(2)}`;
           } else {
             modalRangePotentialProfit.value = '';
           }
         }
-        
+
         modalMinPrice.addEventListener('input', calculateRangeProfit);
         modalMaxPrice.addEventListener('input', calculateRangeProfit);
         modalCostPrice.addEventListener('input', () => {
@@ -1138,5 +1482,553 @@
             }
           });
         }
+
+        // Auto-generate item code if not provided
+        const itemNameInput = document.getElementById('itemName');
+        if (itemNameInput) {
+          itemNameInput.addEventListener('input', function() {
+            const itemCode = document.getElementById('itemCode');
+            if (itemCode && !itemCode.value) {
+              const name = this.value.replace(/\s+/g, '').toUpperCase();
+              const timestamp = Date.now().toString().slice(-4);
+              itemCode.value = name.slice(0, 4) + timestamp;
+            }
+          });
+        }
+
+        // Initialize pricing calculations
+        setupPricingCalculations();
+
+        // Initialize edit pricing handlers once
+        setupEditPricingHandlers();
       });
-    
+
+      // Initialize Select2 after page and scripts load
+      $(document).ready(function() {
+        // Initialize unit with Select2 and tags support (allows creating new units)
+        $('#unit').select2({
+          theme: 'bootstrap',
+          width: '100%',
+          placeholder: 'Select or type to create unit',
+          tags: true,
+          dropdownParent: $('body'),
+          createTag: function (params) {
+            var term = $.trim(params.term);
+            if (term === '' || term.toLowerCase() === '+ add new unit') {
+              return null;
+            }
+            return {
+              id: term,
+              text: term,
+              newTag: true
+            }
+          }
+        });
+
+        // Initialize category with tags support (allows creating new options)
+        $('#category').select2({
+          theme: 'bootstrap',
+          width: '100%',
+          placeholder: 'Select or type to create category',
+          tags: true,
+          dropdownParent: $('body'),
+          createTag: function (params) {
+            var term = $.trim(params.term);
+            if (term === '') {
+              return null;
+            }
+            return {
+              id: term,
+              text: term,
+              newTag: true
+            }
+          }
+        });
+
+        // Initialize supplier with tags support
+        $('#supplier').select2({
+          theme: 'bootstrap',
+          width: '100%',
+          placeholder: 'Select or type to create supplier',
+          tags: true,
+          dropdownParent: $('body'),
+          createTag: function (params) {
+            var term = $.trim(params.term);
+            if (term === '') {
+              return null;
+            }
+            return {
+              id: term,
+              text: term,
+              newTag: true
+            }
+          }
+        });
+
+        // Initialize tax rate dropdowns in edit variant modal
+        $('#editTaxRate').select2({
+          theme: 'bootstrap',
+          width: '100%',
+          placeholder: 'Select tax rate',
+          minimumResultsForSearch: -1, // Hide search box
+          dropdownParent: $('#editVariantModalOverlay')
+        });
+
+        $('#editMarginTaxRate').select2({
+          theme: 'bootstrap',
+          width: '100%',
+          placeholder: 'Select tax rate',
+          minimumResultsForSearch: -1, // Hide search box
+          dropdownParent: $('#editVariantModalOverlay')
+        });
+
+        $('#editRangeTaxRate').select2({
+          theme: 'bootstrap',
+          width: '100%',
+          placeholder: 'Select tax rate',
+          minimumResultsForSearch: -1, // Hide search box
+          dropdownParent: $('#editVariantModalOverlay')
+        });
+      });
+
+
+ // Edit Variant Modal Functions
+      function openEditVariantModal(variantIndex, variantSku) {
+        const modal = document.getElementById('editVariantModalOverlay');
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+
+        // Store the variant index
+        document.getElementById('editVariantIndex').value = variantIndex;
+
+        // Find the variant row
+        const variantRow = document.querySelector(`#variantTableBody tr:nth-child(${variantIndex})`);
+        if (!variantRow) return;
+
+        // Get current values from the row
+        const variantDisplayDiv = variantRow.querySelector('.variant-display-text');
+        const skuInput = variantRow.querySelector('input[name*="[sku]"]');
+        const costPriceInput = variantRow.querySelector('input[name*="[cost_price]"]');
+        const sellingPriceInput = variantRow.querySelector('input[name*="[selling_price]"]');
+        const stockQtyInput = variantRow.querySelector('input[name*="[stock_quantity]"]');
+        const lowStockInput = variantRow.querySelector('input[name*="[low_stock_threshold]"]');
+
+        // Populate modal fields
+        document.getElementById('editVariantDisplay').value = variantDisplayDiv ? variantDisplayDiv.textContent.trim() : '';
+        document.getElementById('editVariantSku').value = skuInput ? skuInput.value : variantSku;
+        document.getElementById('editVariantBarcode').value = ''; // TODO: Get from database when available
+
+        // Populate all method-specific cost price fields with the same initial value
+        const costPriceValue = costPriceInput ? costPriceInput.value : '0.00';
+        document.getElementById('editFixedCostPrice').value = costPriceValue;
+        document.getElementById('editManualCostPrice').value = costPriceValue;
+        document.getElementById('editMarginCostPrice').value = costPriceValue;
+        document.getElementById('editRangeCostPrice').value = costPriceValue;
+
+        document.getElementById('editSellingPrice').value = sellingPriceInput ? sellingPriceInput.value : '0.00';
+        document.getElementById('editStockQuantity').value = stockQtyInput ? stockQtyInput.value : '0';
+        document.getElementById('editLowStockThreshold').value = lowStockInput ? lowStockInput.value : '0';
+
+        // Reset tax rate dropdowns
+        $('#editTaxRate').val('0').trigger('change');
+        $('#editMarginTaxRate').val('0').trigger('change');
+        $('#editRangeTaxRate').val('0').trigger('change');
+
+        // Ensure Fixed pricing is selected by default
+        const editFixedRadio = document.getElementById('editFixedPricing');
+        if (editFixedRadio) {
+          editFixedRadio.checked = true;
+          editShowPricingFields('fixed');
+          editShowPricingDescription('fixed');
+        }
+
+        // Calculate initial profit margin and final price
+        editCalculateProfitMargin();
+
+        // Reset to first tab and ensure tab functionality
+        const firstTabButton = document.querySelector('#edit-item-details-tab');
+        if (firstTabButton) {
+          // Remove active class from all tabs
+          document.querySelectorAll('#editVariantTab .nav-link').forEach(tab => {
+            tab.classList.remove('active');
+          });
+          document.querySelectorAll('#editVariantTabContent .tab-pane').forEach(pane => {
+            pane.classList.remove('show', 'active');
+          });
+
+          // Activate first tab
+          firstTabButton.classList.add('active');
+          document.getElementById('edit-item-details').classList.add('show', 'active');
+
+          // Initialize tab switching
+          initializeEditVariantTabs();
+        }
+      }
+
+      // Initialize tab switching for edit variant modal
+      function initializeEditVariantTabs() {
+        const tabButtons = document.querySelectorAll('#editVariantTab .nav-link');
+
+        tabButtons.forEach(button => {
+          button.addEventListener('click', function(e) {
+            e.preventDefault();
+
+            // Remove active from all tabs
+            document.querySelectorAll('#editVariantTab .nav-link').forEach(tab => {
+              tab.classList.remove('active');
+            });
+            document.querySelectorAll('#editVariantTabContent .tab-pane').forEach(pane => {
+              pane.classList.remove('show', 'active');
+            });
+
+            // Activate clicked tab
+            this.classList.add('active');
+            const targetId = this.getAttribute('data-bs-target');
+            const targetPane = document.querySelector(targetId);
+            if (targetPane) {
+              targetPane.classList.add('show', 'active');
+            }
+          });
+        });
+      }
+
+      function closeEditVariantModal() {
+        const modal = document.getElementById('editVariantModalOverlay');
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+      }
+
+      function saveVariantChanges() {
+        const variantIndex = document.getElementById('editVariantIndex').value;
+        if (!variantIndex) return;
+
+        const variantRow = document.querySelector(`#variantTableBody tr:nth-child(${variantIndex})`);
+        if (!variantRow) return;
+
+        // Get the active pricing method
+        const selectedPricingType = document.querySelector('input[name="edit_pricing_type"]:checked');
+        let costPrice = '0.00';
+
+        // Get cost price from the appropriate method-specific field
+        if (selectedPricingType) {
+          switch(selectedPricingType.value) {
+            case 'fixed':
+              costPrice = document.getElementById('editFixedCostPrice').value;
+              break;
+            case 'manual':
+              costPrice = document.getElementById('editManualCostPrice').value;
+              break;
+            case 'margin':
+              costPrice = document.getElementById('editMarginCostPrice').value;
+              break;
+            case 'range':
+              costPrice = document.getElementById('editRangeCostPrice').value;
+              break;
+            default:
+              costPrice = document.getElementById('editFixedCostPrice').value;
+          }
+        }
+
+        // Get values from modal
+        const sellingPrice = document.getElementById('editSellingPrice').value;
+        const stockQty = document.getElementById('editStockQuantity').value;
+        const lowStock = document.getElementById('editLowStockThreshold').value;
+
+        // Update hidden inputs in the table
+        const costPriceInput = variantRow.querySelector('input[name*="[cost_price]"]');
+        const sellingPriceInput = variantRow.querySelector('input[name*="[selling_price]"]');
+        const stockQtyInput = variantRow.querySelector('input[name*="[stock_quantity]"]');
+        const lowStockInput = variantRow.querySelector('input[name*="[low_stock_threshold]"]');
+
+        if (costPriceInput) costPriceInput.value = costPrice;
+        if (sellingPriceInput) sellingPriceInput.value = sellingPrice;
+        if (stockQtyInput) stockQtyInput.value = stockQty;
+        if (lowStockInput) lowStockInput.value = lowStock;
+
+        // Update visible displays
+        const costDisplay = variantRow.querySelector('.cost-price-display');
+        const sellDisplay = variantRow.querySelector('.sell-price-display');
+        if (costDisplay) costDisplay.textContent = '₦' + parseFloat(costPrice).toFixed(2);
+        if (sellDisplay) sellDisplay.textContent = '₦' + parseFloat(sellingPrice).toFixed(2);
+
+        // Close modal
+        closeEditVariantModal();
+
+        showNotification('Variant details updated successfully!', 'success');
+      }
+
+      // Edit Modal Pricing Handlers
+      function setupEditPricingHandlers() {
+        console.log('setupEditPricingHandlers called');
+        const pricingTypeRadios = document.querySelectorAll('input[name="edit_pricing_type"]');
+        console.log('Found edit pricing type radios:', pricingTypeRadios.length);
+
+        pricingTypeRadios.forEach(radio => {
+          console.log('Adding change listener to radio:', radio.value);
+          radio.addEventListener('change', function() {
+            console.log('Radio changed to:', this.value);
+            if (this.checked) {
+              editShowPricingFields(this.value);
+              editShowPricingDescription(this.value);
+            }
+          });
+        });
+
+        // Fixed Pricing handlers
+        const editFixedCostPrice = document.getElementById('editFixedCostPrice');
+        const editSellingPrice = document.getElementById('editSellingPrice');
+        const editTaxRate = document.getElementById('editTaxRate');
+
+        if (editFixedCostPrice) editFixedCostPrice.addEventListener('input', editCalculateProfitMargin);
+        if (editSellingPrice) editSellingPrice.addEventListener('input', editCalculateProfitMargin);
+        if (editTaxRate) editTaxRate.addEventListener('change', editCalculateFinalPrice);
+
+        // Margin Pricing handlers
+        const editMarginCostPrice = document.getElementById('editMarginCostPrice');
+        const editTargetMargin = document.getElementById('editTargetMargin');
+        const editMarginTaxRate = document.getElementById('editMarginTaxRate');
+
+        if (editMarginCostPrice) editMarginCostPrice.addEventListener('input', editCalculateMarginPrice);
+        if (editTargetMargin) editTargetMargin.addEventListener('input', editCalculateMarginPrice);
+        if (editMarginTaxRate) editMarginTaxRate.addEventListener('change', editCalculateMarginPrice);
+
+        // Range Pricing handlers
+        const editRangeCostPrice = document.getElementById('editRangeCostPrice');
+        const editMinPrice = document.getElementById('editMinPrice');
+        const editMaxPrice = document.getElementById('editMaxPrice');
+
+        if (editRangeCostPrice) editRangeCostPrice.addEventListener('input', editCalculateRangeProfits);
+        if (editMinPrice) {
+          editMinPrice.addEventListener('input', function() {
+            editValidatePriceRange();
+            editCalculateRangeProfits();
+          });
+        }
+        if (editMaxPrice) {
+          editMaxPrice.addEventListener('input', function() {
+            editValidatePriceRange();
+            editCalculateRangeProfits();
+          });
+        }
+      }
+
+      function editShowPricingFields(type) {
+        console.log('editShowPricingFields called with type:', type);
+
+        // Hide all pricing fields within edit modal
+        const editModal = document.getElementById('editVariantModalOverlay');
+        if (editModal) {
+          editModal.querySelectorAll('.pricing-fields').forEach(field => {
+            field.style.display = 'none';
+          });
+        }
+
+        // Remove all required attributes first
+        const editSellingPrice = document.getElementById('editSellingPrice');
+        const editTargetMargin = document.getElementById('editTargetMargin');
+        const editMinPrice = document.getElementById('editMinPrice');
+        const editMaxPrice = document.getElementById('editMaxPrice');
+        const editManualCostPrice = document.getElementById('editManualCostPrice');
+        const editFixedCostPrice = document.getElementById('editFixedCostPrice');
+        const editMarginCostPrice = document.getElementById('editMarginCostPrice');
+        const editRangeCostPrice = document.getElementById('editRangeCostPrice');
+
+        if (editSellingPrice) editSellingPrice.required = false;
+        if (editTargetMargin) editTargetMargin.required = false;
+        if (editMinPrice) editMinPrice.required = false;
+        if (editMaxPrice) editMaxPrice.required = false;
+        if (editManualCostPrice) editManualCostPrice.required = false;
+        if (editFixedCostPrice) editFixedCostPrice.required = false;
+        if (editMarginCostPrice) editMarginCostPrice.required = false;
+        if (editRangeCostPrice) editRangeCostPrice.required = false;
+
+        switch(type) {
+          case 'fixed':
+            const editFixedFields = document.getElementById('editFixedFields');
+            if (editFixedFields) {
+              editFixedFields.style.display = 'block';
+              if (editFixedCostPrice) editFixedCostPrice.required = true;
+              if (editSellingPrice) editSellingPrice.required = true;
+            }
+            console.log('Edit Fixed pricing fields shown');
+            editCalculateProfitMargin();
+            break;
+          case 'manual':
+            const editManualFields = document.getElementById('editManualFields');
+            if (editManualFields) {
+              editManualFields.style.display = 'block';
+              if (editManualCostPrice) editManualCostPrice.required = true;
+            }
+            console.log('Edit Manual pricing fields shown');
+            break;
+          case 'margin':
+            const editMarginFields = document.getElementById('editMarginFields');
+            if (editMarginFields) {
+              editMarginFields.style.display = 'block';
+              if (editMarginCostPrice) editMarginCostPrice.required = true;
+              if (editTargetMargin) editTargetMargin.required = true;
+            }
+            console.log('Edit Margin pricing fields shown');
+            editCalculateMarginPrice();
+            break;
+          case 'range':
+            const editRangeFields = document.getElementById('editRangeFields');
+            if (editRangeFields) {
+              editRangeFields.style.display = 'block';
+              if (editRangeCostPrice) editRangeCostPrice.required = true;
+              if (editMinPrice) editMinPrice.required = true;
+              if (editMaxPrice) editMaxPrice.required = true;
+            }
+            console.log('Edit Range pricing fields shown');
+            editCalculateRangeProfits();
+            break;
+        }
+      }
+
+      function editShowPricingDescription(type) {
+        const descContainer = document.getElementById('editPricingDescription');
+        document.querySelectorAll('#editPricingDescription .pricing-desc').forEach(desc => {
+          desc.style.display = 'none';
+        });
+
+        if (type) {
+          descContainer.style.display = 'block';
+          const targetDesc = document.getElementById('edit' + type.charAt(0).toUpperCase() + type.slice(1) + 'Desc');
+          if (targetDesc) targetDesc.style.display = 'block';
+        } else {
+          descContainer.style.display = 'none';
+        }
+      }
+
+      function editCalculateProfitMargin() {
+        const editFixedCostPrice = document.getElementById('editFixedCostPrice');
+        const editSellingPrice = document.getElementById('editSellingPrice');
+        const editProfitMargin = document.getElementById('editProfitMargin');
+        const editPotentialProfit = document.getElementById('editPotentialProfit');
+
+        if (!editFixedCostPrice || !editSellingPrice || !editProfitMargin || !editPotentialProfit) return;
+
+        const costPrice = parseFloat(editFixedCostPrice.value) || 0;
+        const sellingPrice = parseFloat(editSellingPrice.value) || 0;
+
+        if (costPrice > 0 && sellingPrice > 0) {
+          const profit = sellingPrice - costPrice;
+          const margin = ((profit / costPrice) * 100).toFixed(2);
+
+          editProfitMargin.value = margin + '%';
+          editPotentialProfit.value = profit.toFixed(2);
+        } else {
+          editProfitMargin.value = '0%';
+          editPotentialProfit.value = '0.00';
+        }
+
+        // Also calculate final price
+        editCalculateFinalPrice();
+      }
+
+      function editCalculateFinalPrice() {
+        const editSellingPrice = document.getElementById('editSellingPrice');
+        const editTaxRate = document.getElementById('editTaxRate');
+        const editFinalPrice = document.getElementById('editFinalPrice');
+
+        if (!editSellingPrice || !editTaxRate || !editFinalPrice) return;
+
+        const sellingPrice = parseFloat(editSellingPrice.value) || 0;
+        const taxRate = parseFloat(editTaxRate.value) || 0;
+
+        if (sellingPrice > 0) {
+          // Apply tax only
+          let finalPrice = sellingPrice * (1 + (taxRate / 100));
+          editFinalPrice.value = finalPrice.toFixed(2);
+        } else {
+          editFinalPrice.value = '0.00';
+        }
+      }
+
+      function editCalculateMarginPrice() {
+        const editMarginCostPrice = document.getElementById('editMarginCostPrice');
+        const editTargetMargin = document.getElementById('editTargetMargin');
+        const editMarginTaxRate = document.getElementById('editMarginTaxRate');
+        const editCalculatedPrice = document.getElementById('editCalculatedPrice');
+        const editMarginProfit = document.getElementById('editMarginProfit');
+
+        if (!editMarginCostPrice || !editTargetMargin || !editCalculatedPrice || !editMarginProfit) return;
+
+        const costPrice = parseFloat(editMarginCostPrice.value) || 0;
+        const targetMargin = parseFloat(editTargetMargin.value) || 0;
+        const taxRate = parseFloat(editMarginTaxRate?.value) || 0;
+
+        if (costPrice > 0 && targetMargin > 0) {
+          let calculatedSellingPrice = costPrice * (1 + (targetMargin / 100));
+          const profit = calculatedSellingPrice - costPrice;
+
+          // Apply tax if applicable
+          let finalPrice = calculatedSellingPrice;
+          if (taxRate > 0) {
+            finalPrice = calculatedSellingPrice * (1 + (taxRate / 100));
+          }
+
+          editCalculatedPrice.value = calculatedSellingPrice.toFixed(2);
+          editMarginProfit.value = profit.toFixed(2);
+
+          // Update final price display if exists
+          const editMarginFinalPrice = document.getElementById('editMarginFinalPrice');
+          if (editMarginFinalPrice) {
+            editMarginFinalPrice.textContent = '₦' + finalPrice.toFixed(2);
+          }
+        } else {
+          editCalculatedPrice.value = '';
+          editMarginProfit.value = '0.00';
+        }
+      }
+
+      function editCalculateRangeProfits() {
+        const editRangeCostPrice = document.getElementById('editRangeCostPrice');
+        const editMinPrice = document.getElementById('editMinPrice');
+        const editMaxPrice = document.getElementById('editMaxPrice');
+        const editRangePotentialProfit = document.getElementById('editRangePotentialProfit');
+
+        if (!editRangeCostPrice || !editMinPrice || !editMaxPrice || !editRangePotentialProfit) return;
+
+        const costPrice = parseFloat(editRangeCostPrice.value) || 0;
+        const minPrice = parseFloat(editMinPrice.value) || 0;
+        const maxPrice = parseFloat(editMaxPrice.value) || 0;
+
+        if (costPrice > 0 && minPrice > 0 && maxPrice > 0) {
+          const minProfit = minPrice - costPrice;
+          const maxProfit = maxPrice - costPrice;
+          editRangePotentialProfit.value = `${minProfit.toFixed(2)} to ${maxProfit.toFixed(2)}`;
+        } else {
+          editRangePotentialProfit.value = '0.00 to 0.00';
+        }
+      }
+
+      function editValidatePriceRange() {
+        const minPrice = parseFloat(document.getElementById('editMinPrice').value) || 0;
+        const maxPrice = parseFloat(document.getElementById('editMaxPrice').value) || 0;
+        const costPrice = parseFloat(document.getElementById('editRangeCostPrice').value) || 0;
+
+        if (minPrice > 0 && maxPrice > 0 && minPrice >= maxPrice) {
+          showNotification('Minimum price must be less than maximum price', 'error');
+          return false;
+        }
+        return true;
+      }
+
+      // Close modal on Escape key
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+          const modal = document.getElementById('editVariantModalOverlay');
+          if (modal && modal.style.display === 'flex') {
+            closeEditVariantModal();
+          }
+        }
+      });
+
+      // Close modal on overlay click
+      document.addEventListener('click', function(e) {
+        const modal = document.getElementById('editVariantModalOverlay');
+        if (e.target === modal) {
+          closeEditVariantModal();
+        }
+      });

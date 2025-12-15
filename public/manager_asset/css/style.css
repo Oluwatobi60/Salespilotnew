@@ -1,15 +1,33 @@
-/* Force modal and children to accept input */
-.modal, .modal * {
-  pointer-events: auto !important;
-  opacity: 1 !important;
-  visibility: visible !important;
-}
-/* Fix modal and backdrop z-index for accessibility */
-.modal-backdrop {
-  z-index: 1050 !important;
-}
+/* Fix modal z-index and interaction */
 .modal {
   z-index: 1060 !important;
+}
+
+.modal-dialog {
+  pointer-events: auto !important;
+}
+
+.modal-content {
+  pointer-events: auto !important;
+}
+
+.modal-backdrop {
+  z-index: 1050 !important;
+  pointer-events: none !important;
+}
+
+.modal-backdrop.show {
+  pointer-events: auto !important;
+}
+
+.modal input,
+.modal textarea,
+.modal select,
+.modal button,
+.modal label,
+.modal .form-control,
+.modal .form-select {
+  pointer-events: auto !important;
 }
 /* --- Sidebar Overlap Fix for Categories Page and All Main Content --- */
 .sidebar {
@@ -37,11 +55,11 @@ body.sidebar-collapsed .main-panel {
     margin-left: 0 !important;
   }
 }
-@charset "UTF-8";
+/* @charset "UTF-8"; */
 /*------------------------------------------------------------------
  [Master Stylesheet]
 
-  Project:	Star Admin2 
+  Project:	Star Admin2
   Version:	1.2.1
 -------------------------------------------------------------------*/
 /*-------------------------------------------------------------------
@@ -30922,7 +30940,7 @@ th {
 
       /* Body and page setup */
 
-      //for variant items
+      /* for variant items */
       body {
         margin: 0;
         padding: 20px 0;
@@ -31219,6 +31237,19 @@ th {
         box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
       }
 
+      .action-buttons .btn {
+        border-radius: 10px !important;
+        padding: 12px 30px !important;
+        font-weight: 600 !important;
+        font-size: 0.95rem !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        position: relative !important;
+        overflow: hidden !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
+        min-width: 140px !important;
+      }
+
       .btn {
         border-radius: 10px;
         padding: 12px 30px;
@@ -31247,42 +31278,82 @@ th {
         left: 100%;
       }
 
+      .action-buttons .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        border: 2px solid #667eea !important;
+        color: white !important;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3) !important;
+      }
+
+      .action-buttons .btn-primary:hover {
+        transform: translateY(-3px) scale(1.02) !important;
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4) !important;
+        background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%) !important;
+      }
+
+      .action-buttons .btn-secondary {
+        background: linear-gradient(135deg, #6c757d 0%, #495057 100%) !important;
+        border: 2px solid #6c757d !important;
+        color: white !important;
+        box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3) !important;
+      }
+
+      .action-buttons .btn-secondary:hover {
+        transform: translateY(-3px) scale(1.02) !important;
+        box-shadow: 0 8px 25px rgba(108, 117, 125, 0.4) !important;
+        background: linear-gradient(135deg, #5a6268 0%, #343a40 100%) !important;
+      }
+
+      .action-buttons .btn-light {
+        background: #ffffff !important;
+        border: 2px solid #e9ecef !important;
+        color: #495057 !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+      }
+
+      .action-buttons .btn-light:hover {
+        transform: translateY(-3px) scale(1.02) !important;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1) !important;
+        background: #f8f9fa !important;
+        border-color: #dee2e6 !important;
+      }
+
       .btn-primary {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border: 2px solid #667eea;
-        color: white;
-        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        border: 2px solid #667eea !important;
+        color: white !important;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3) !important;
       }
 
       .btn-primary:hover {
-        transform: translateY(-3px) scale(1.02);
-        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
-        background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+        transform: translateY(-3px) scale(1.02) !important;
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4) !important;
+        background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%) !important;
       }
 
       .btn-secondary {
-        background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
-        border: 2px solid #6c757d;
-        color: white;
+        background: linear-gradient(135deg, #6c757d 0%, #495057 100%) !important;
+        border: 2px solid #6c757d !important;
+        color: white !important;
       }
 
       .btn-secondary:hover {
-        transform: translateY(-3px) scale(1.02);
-        box-shadow: 0 8px 25px rgba(108, 117, 125, 0.4);
-        background: linear-gradient(135deg, #5a6268 0%, #343a40 100%);
+        transform: translateY(-3px) scale(1.02) !important;
+        box-shadow: 0 8px 25px rgba(108, 117, 125, 0.4) !important;
+        background: linear-gradient(135deg, #5a6268 0%, #343a40 100%) !important;
       }
 
       .btn-light {
-        background: #ffffff;
-        border: 2px solid #e9ecef;
-        color: #495057;
+        background: #ffffff !important;
+        border: 2px solid #e9ecef !important;
+        color: #495057 !important;
       }
 
       .btn-light:hover {
-        transform: translateY(-3px) scale(1.02);
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-        background: #f8f9fa;
-        border-color: #dee2e6;
+        transform: translateY(-3px) scale(1.02) !important;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1) !important;
+        background: #f8f9fa !important;
+        border-color: #dee2e6 !important;
       }
 
       /* Variant-specific styles */
@@ -31383,7 +31454,7 @@ th {
         transition: all 0.3s ease;
       }
 
-      
+
       #addVariantCard .btn-outline-primary {
         border-width: 2px;
         padding: 12px 30px;
@@ -31844,13 +31915,13 @@ th {
         .modal-body-custom {
           padding: 25px 20px;
         }
-        
+
         .action-buttons {
           padding: 20px;
           flex-direction: column-reverse;
           gap: 10px;
         }
-        
+
         .action-buttons .btn {
           width: 100%;
           margin-bottom: 0;
@@ -31864,21 +31935,21 @@ th {
           width: 98%;
           margin: 1%;
         }
-        
+
         .modal-header-custom {
           padding: 20px;
         }
-        
+
         .modal-header-custom h4 {
           font-size: 1.3rem;
         }
-        
+
         .action-buttons {
           padding: 15px;
           flex-direction: column-reverse;
           gap: 8px;
         }
-        
+
         .action-buttons .btn {
           width: 100%;
           padding: 16px 20px;
@@ -31886,7 +31957,7 @@ th {
           font-weight: 700;
           letter-spacing: 0.5px;
         }
-        
+
         .action-buttons .btn i {
           margin-right: 8px;
           font-size: 1.2rem;
@@ -32185,7 +32256,7 @@ th {
           font-size: 0.9rem;
         }
       }
-      
+
       /* Pricing method styling - Navigation list style */
       .pricing-methods-row {
         display: flex;
@@ -32253,9 +32324,9 @@ th {
       .pricing-method-label span {
         font-weight: 500;
       }
-  
 
-       //for bundle item
+
+       /* for bundle item */
       /* Body and page setup */
       body {
         margin: 0;
@@ -32743,12 +32814,12 @@ th {
         .modal-body-custom {
           padding: 25px 20px;
         }
-        
+
         .action-buttons {
           padding: 20px;
           flex-direction: column-reverse;
         }
-        
+
         .action-buttons .btn {
           width: 100%;
           margin-bottom: 10px;
@@ -32760,11 +32831,11 @@ th {
           width: 98%;
           margin: 1%;
         }
-        
+
         .modal-header-custom {
           padding: 20px;
         }
-        
+
         .modal-header-custom h4 {
           font-size: 1.3rem;
         }
@@ -32830,4 +32901,3 @@ th {
           padding: 0;
         }
       }
-    

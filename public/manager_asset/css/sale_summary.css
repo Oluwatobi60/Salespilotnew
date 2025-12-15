@@ -1,0 +1,340 @@
+/* Sales Summary Page Styles */
+
+/* Filter Container */
+.filter-container {
+    padding: 15px 0;
+    border-bottom: 1px solid #e9ecef;
+    margin-bottom: 20px;
+}
+
+.filter-container .row {
+    align-items: center;
+}
+
+.filter-container .form-control,
+.filter-container .form-select {
+    border-radius: 6px;
+    font-size: 14px;
+    padding: 8px 12px;
+    height: 38px;
+    min-height: 38px;
+}
+
+.filter-container .input-group {
+    height: 38px;
+}
+
+.filter-container .input-group .form-control {
+    border-right: none;
+    height: 38px;
+}
+
+.filter-container .input-group .btn {
+    border-left: none;
+    background-color: transparent;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.filter-container .btn {
+    font-size: 14px;
+    padding: 8px 16px;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+    height: 38px;
+    min-height: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+}
+
+.filter-container .d-flex {
+    height: 38px;
+    align-items: center;
+}
+
+.filter-container .gap-2 > * {
+    margin: 0;
+}
+
+.filter-container .btn-outline-primary:hover {
+    background-color: #0d6efd;
+    color: white;
+}
+
+.filter-container .btn-outline-secondary:hover {
+    background-color: #6c757d;
+    color: white;
+}
+
+.filter-container .btn-outline-success:hover {
+    background-color: #198754;
+    color: white;
+}
+
+/* Date Filter Wrapper with Custom Date Overlay */
+.date-filter-wrapper {
+    position: relative;
+    display: inline-block;
+    height: 38px;
+}
+
+.date-filter-wrapper .form-select {
+    height: 38px;
+}
+
+.custom-date-container {
+    display: none;
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    min-width: 400px;
+    animation: slideDown 0.3s ease;
+}
+
+.custom-date-container.active,
+.custom-date-container.show {
+    display: block;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.custom-date-container .form-label {
+    font-size: 12px;
+    font-weight: 500;
+    margin-bottom: 5px;
+}
+
+.custom-date-container .form-control {
+    font-size: 14px;
+}
+
+/* Table Enhancements */
+#salesSummaryTable {
+    font-size: 14px;
+}
+
+#salesSummaryTable thead {
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+}
+
+#salesSummaryTable thead th {
+    font-weight: 600;
+    color: #495057;
+    padding: 12px 15px;
+    text-transform: uppercase;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+}
+
+#salesSummaryTable tbody tr {
+    transition: all 0.2s ease;
+}
+
+#salesSummaryTable tbody tr:hover {
+    background-color: #f8f9fa;
+    transform: translateX(3px);
+    box-shadow: -3px 0 0 0 #0d6efd;
+}
+
+#salesSummaryTable tbody td {
+    padding: 12px 15px;
+    vertical-align: middle;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+/* Status Badges */
+.badge {
+    padding: 6px 12px;
+    font-size: 11px;
+    font-weight: 500;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.badge-opacity-success {
+    background-color: rgba(25, 135, 84, 0.1);
+    color: #198754;
+    border: 1px solid rgba(25, 135, 84, 0.2);
+}
+
+.badge-opacity-warning {
+    background-color: rgba(255, 193, 7, 0.1);
+    color: #ffc107;
+    border: 1px solid rgba(255, 193, 7, 0.2);
+}
+
+.badge-opacity-danger {
+    background-color: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+    border: 1px solid rgba(220, 53, 69, 0.2);
+}
+
+.badge-opacity-info {
+    background-color: rgba(13, 202, 240, 0.1);
+    color: #0dcaf0;
+    border: 1px solid rgba(13, 202, 240, 0.2);
+}
+
+/* Chart Cards */
+.card-rounded {
+    border-radius: 12px;
+    border: 1px solid #e9ecef;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+}
+
+.card-rounded:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    transform: translateY(-2px);
+}
+
+.card-rounded .card-body {
+    padding: 20px;
+}
+
+.card-rounded .card-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 15px;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #6c757d;
+}
+
+.empty-state i {
+    font-size: 64px;
+    margin-bottom: 15px;
+    opacity: 0.5;
+}
+
+.empty-state h5 {
+    font-size: 20px;
+    margin-bottom: 10px;
+    color: #495057;
+}
+
+.empty-state p {
+    font-size: 14px;
+    margin: 0;
+}
+
+/* DataTables Pagination Override */
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+    padding: 6px 12px;
+    margin: 0 3px;
+    border-radius: 6px;
+    border: 1px solid #dee2e6;
+    color: #495057 !important;
+    background-color: white;
+    transition: all 0.3s ease;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+    background-color: #0d6efd !important;
+    color: white !important;
+    border-color: #0d6efd !important;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button.current {
+    background-color: #0d6efd !important;
+    color: white !important;
+    border-color: #0d6efd !important;
+}
+
+.dataTables_wrapper .dataTables_info {
+    font-size: 14px;
+    color: #6c757d;
+    padding: 10px 0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .filter-container {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .filter-container .col-md-4,
+    .filter-container .col-md-8 {
+        width: 100%;
+    }
+
+    .filter-container .d-flex {
+        flex-wrap: wrap;
+    }
+
+    .custom-date-container {
+        min-width: 300px;
+        right: auto;
+        left: 0;
+    }
+
+    #salesSummaryTable {
+        font-size: 12px;
+    }
+
+    #salesSummaryTable thead th,
+    #salesSummaryTable tbody td {
+        padding: 8px 10px;
+    }
+}
+
+/* Print Styles */
+@media print {
+    .filter-container,
+    .btn,
+    .dataTables_wrapper .dataTables_paginate,
+    .dataTables_wrapper .dataTables_info {
+        display: none !important;
+    }
+
+    #salesSummaryTable tbody tr:hover {
+        background-color: transparent;
+        transform: none;
+        box-shadow: none;
+    }
+
+    .card-rounded {
+        box-shadow: none;
+        border: 1px solid #000;
+    }
+}
+
+/* Loading Spinner */
+.loading-spinner {
+    text-align: center;
+    padding: 40px;
+}
+
+.spinner-border {
+    width: 3rem;
+    height: 3rem;
+    border-width: 0.3em;
+}

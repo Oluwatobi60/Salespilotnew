@@ -4,6 +4,8 @@
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <!-- CSRF Token -->
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('manager_page_title')</title>
     <!-- plugins:css -->
     <link rel="stylesheet" href="{{ asset('manager_asset/vendors/feather/feather.css') }}">
@@ -15,21 +17,22 @@
     <link rel="stylesheet" href="{{ asset('manager_asset/vendors/css/vendor.bundle.base.css') }}">
     <!-- endinject -->
     <!-- inject:css -->
-    <link rel="stylesheet" href="{{ asset('manager_asset/css/style.css') }}">
-    <link rel="stylesheet" href="{{ asset('manager_asset/css/home.css') }}">
-    <link rel="stylesheet" href="{{ asset('manager_asset/css/sidebar_style.css') }}">
-    <link rel="stylesheet" href="{{ asset('manager_asset/css/staffs_style.css') }}">
+     <link rel="stylesheet" href="{{ asset('manager_asset/css/style.css') }}">
+      <link rel="stylesheet" href="{{ asset('manager_asset/css/home.css') }}">
+   <link rel="stylesheet" href="{{ asset('manager_asset/css/sidebar_style.css') }}">
+    <link rel="stylesheet" href="{{ asset('manager_asset/css/sell_product.css') }}">
+    <link rel="stylesheet" href="{{ asset('manager_asset/css/all_items_style.css') }}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 
     <!-- endinject -->
     <link rel="shortcut icon" href="{{ asset('manager_asset/images/favicon.png') }}" />
   </head>
   <body class="with-welcome-text">
-    
+
     <div class="container-scroller">
       <div class="container-fluid page-body-wrapper">
         <!-- Include Sidebar Content -->
-       
+
         </nav>
 <!-- Fixed Logo Container -->
 <div class="fixed-logo-container">
@@ -53,6 +56,15 @@
       </a>
     </li>
     <li class="nav-item nav-category">Menu</li>
+
+  <li class="nav-item">
+      <a class="nav-link" href="{{ route('manager.sell_product') }}">
+        <i class="menu-icon bi bi-cart-fill"></i>
+        <span class="menu-title">Sell</span>
+      </a>
+    </li>
+
+
     <li class="nav-item">
       <a class="nav-link" data-bs-toggle="collapse" href="#ui-basic" aria-expanded="false" aria-controls="ui-basic">
         <i class="menu-icon bi bi-wallet-fill"></i>
@@ -61,8 +73,8 @@
       </a>
       <div class="collapse" id="ui-basic">
         <ul class="nav flex-column sub-menu">
-          <li class="nav-item"> <a class="nav-link" href="{{ route('manager.completed_sales') }}">Completed Sales</a></li>
-          <li class="nav-item"> <a class="nav-link" href="views/saved_carts.php">Saved Carts</a></li>
+          <li class="nav-item"> <a class="nav-link" href="{{ route('manager.completed_sales') }} ">Completed Sales</a></li>
+          <li class="nav-item"> <a class="nav-link" href="{{ route('manager.view_saved_carts') }}">Saved Carts</a></li>
         </ul>
       </div>
     </li>
@@ -72,11 +84,11 @@
         <span class="menu-title">Reports</span>
         <i class="menu-arrow"></i>
       </a>
-      <div class="collapse" id="form-elements">
+     <div class="collapse" id="form-elements">
         <ul class="nav flex-column sub-menu">
           <li class="nav-item"><a class="nav-link" href="{{ route('manager.sales_summary') }}">Sales Summary</a></li>
-          <li class="nav-item"><a class="nav-link" href="{{ route('manager.staff_sales') }}">Sales by Staff</a></li>
-          <li class="nav-item"><a class="nav-link" href="{{ route('manager.sales_by_item') }}">Sales by Item</a></li>
+          <li class="nav-item"><a class="nav-link" href=" {{ route('manager.staff_sales') }} ">Sales by Staff</a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ route('manager.sales_by_item') }} ">Sales by Item</a></li>
           <li class="nav-item"><a class="nav-link" href="{{ route('manager.sales_by_category') }}">Sales by Category</a></li>
           <li class="nav-item"><a class="nav-link" href="{{ route('manager.valuation_report') }}">Inventory Valuation</a></li>
           <li class="nav-item"><a class="nav-link" href="{{ route('manager.taxes') }}">Taxes</a></li>
@@ -91,14 +103,14 @@
       </a>
       <div class="collapse" id="crm-menu">
         <ul class="nav flex-column sub-menu">
-          <li class="nav-item"> <a class="nav-link" href="views/customers.php">Customers</a></li>
+          <li class="nav-item"> <a class="nav-link" href="{{ route('manager.customers') }}">Customers</a></li>
           <li class="nav-item"> <a class="nav-link" href="views/discount.php">Discount</a></li>
         </ul>
       </div>
     </li>
-    
-    <li class="nav-item">
-      <a class="nav-link" href="{{ route('manager.add_staff') }}">
+
+   <li class="nav-item">
+      <a class="nav-link" href="{{ route('manager.staff') }}">
         <i class="menu-icon bi bi-person-workspace"></i>
         <span class="menu-title">Staffs</span>
       </a>
@@ -117,42 +129,44 @@
         <span class="menu-title">Inventory</span>
         <i class="menu-arrow"></i>
       </a>
-      <div class="collapse" id="icons">
+     <div class="collapse" id="icons">
         <ul class="nav flex-column sub-menu">
           <li class="nav-item"> <a class="nav-link" href="{{ route('all_items') }}">All items</a></li>
-          <li class="nav-item"> <a class="nav-link" href="views/categories.php">Categories</a></li>
+          <li class="nav-item"> <a class="nav-link" href="{{ route('all_categories') }}">Categories</a></li>
           <li class="nav-item"> <a class="nav-link" href="views/stock_history.php">Stock History</a></li>
         </ul>
       </div>
     </li>
-    <li class="nav-item">
-      <a class="nav-link" href="views/suppliers.php">
+  <li class="nav-item">
+      <a class="nav-link" href="{{--  {{ route('manager.suppliers') }}  --}}">
         <i class="menu-icon bi bi-truck"></i>
         <span class="menu-title">Suppliers</span>
       </a>
     </li>
-    
-    <li class="nav-item">
-      <a class="nav-link" href="views/settings.php">
-       <i class="menu-icon bi bi-gear-wide"></i>
-        <span class="menu-title">Settings</span>
-      </a>
-    </li>
 
-    <li class="nav-item dropdown d-none d-lg-block user-dropdown">
-      <a class="nav-link" id="UserDropdown" href="#" data-bs-toggle="dropdown" aria-expanded="false">
-        <img class="img-xs rounded-circle" src="{{ asset('manager_asset/images/faces/face8.jpg') }}" alt="Profile image"> </a>
-      <div class="dropdown-menu dropdown-menu-right navbar-dropdown" aria-labelledby="UserDropdown">
-        <div class="dropdown-header text-center">
-          <img class="img-md rounded-circle" src="{{ asset('manager_asset/images/faces/face8.jpg') }}" alt="Profile image">
+
+
+   <li class="nav-item dropdown user-dropdown">
+      <a class="nav-link dropdown-toggle" id="UserDropdown" href="#" data-bs-toggle="dropdown" aria-expanded="false" role="button" style="cursor: pointer; display: flex; align-items: center; padding: 15px 20px;">
+        <img class="img-xs rounded-circle" src="assets/images/faces/face8.jpg" alt="Profile image" style="width: 40px; height: 40px; object-fit: cover;">
+      </a>
+      <div class="dropdown-menu dropdown-menu-end navbar-dropdown" aria-labelledby="UserDropdown" style="min-width: 250px;">
+        <div class="dropdown-header text-center" style="padding: 20px;">
+          <img class="img-md rounded-circle" src="assets/images/faces/face8.jpg" alt="Profile image" style="width: 80px; height: 80px; object-fit: cover;">
           <p class="mb-1 mt-3 fw-semibold">Allen Moreno</p>
           <p class="fw-light text-muted mb-0">allenmoreno@gmail.com</p>
         </div>
-        <a class="dropdown-item"><i class="dropdown-item-icon mdi mdi-account-outline text-primary me-2"></i> My Profile <span class="badge badge-pill badge-danger">1</span></a>
-        <a class="dropdown-item"><i class="dropdown-item-icon mdi mdi-message-text-outline text-primary me-2"></i> Messages</a>
-        <a class="dropdown-item"><i class="dropdown-item-icon mdi mdi-calendar-check-outline text-primary me-2"></i> Activity</a>
-        <a class="dropdown-item"><i class="dropdown-item-icon mdi mdi-help-circle-outline text-primary me-2"></i> FAQ</a>
-        <a class="dropdown-item"><i class="dropdown-item-icon mdi mdi-power text-primary me-2"></i>Sign Out</a>
+        <a class="dropdown-item" href="views/profile.php" style="padding: 10px 20px;"><i class="dropdown-item-icon mdi mdi-account-outline text-primary me-2"></i> My Profile <span class="badge badge-pill badge-danger">1</span></a>
+        <a class="dropdown-item" href="views/settings.php" style="padding: 10px 20px;"><i class="dropdown-item-icon bi bi-gear-wide text-primary me-2"></i> System Preference</a>
+        <a class="dropdown-item" href="#" style="padding: 10px 20px;"><i class="dropdown-item-icon mdi mdi-message-text-outline text-primary me-2"></i> Messages</a>
+        <a class="dropdown-item" href="views/activity_logs.php" style="padding: 10px 20px;"><i class="dropdown-item-icon mdi mdi-calendar-check-outline text-primary me-2"></i> Activity</a>
+        <a class="dropdown-item" href="#" style="padding: 10px 20px;"><i class="dropdown-item-icon mdi mdi-help-circle-outline text-primary me-2"></i> FAQ</a>
+       {{--   <a class="dropdown-item" href="../index.php" style="padding: 10px 20px;"><i class="dropdown-item-icon mdi mdi-power text-primary me-2"></i>Sign Out</a>  --}}
+
+        <form method="POST" action="{{ route('logout') }}">
+            @csrf
+            <button type="submit" class="dropdown-item"><i class="dropdown-item-icon mdi mdi-power text-primary me-2"></i> Sign Out</button>
+        </form>
       </div>
     </li>
   </ul>
@@ -161,9 +175,9 @@
         <!-- Main Dashboard Content Area -->
         <div class="main-panel">
                 <div class="content-wrapper">
-            
+
                 @yield('manager_layout_content')
-               
+
                 </div>
 
 
@@ -171,7 +185,7 @@
                  <!-- Footer -->
           <footer class="footer">
             <div class="d-sm-flex justify-content-center justify-content-sm-between">
-             
+
               <span class="float-none float-sm-end d-block mt-1 mt-sm-0 text-center">
                 Copyright © 2025. All rights reserved.
               </span>
@@ -201,51 +215,51 @@
     <script src="{{ asset('manager_asset/js/sidebar1.js') }}"></script>
     <!-- Modal for selecting item type - Properly positioned at body level -->
     <div class="modal fade" id="itemTypeModal" tabindex="-1" aria-labelledby="itemTypeModalLabel" aria-hidden="true" style="z-index: 1055;">
-      <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content" style="border: none; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);">
-          <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-bottom: none;">
-            <h5 class="modal-title" id="itemTypeModalLabel" style="font-weight: 600;">
+      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" style="max-width: 900px; max-height: 90vh;">
+        <div class="modal-content" style="border: none; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); border-radius: 15px; max-height: 90vh;">
+          <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-bottom: none; padding: 1rem 2rem; border-radius: 15px 15px 0 0; flex-shrink: 0;">
+            <h5 class="modal-title" id="itemTypeModalLabel" style="font-weight: 600; font-size: 1.25rem;">
               <i class="bi bi-box-seam me-2"></i>Select Item Type
             </h5>
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
-          <div class="modal-body" style="min-height: 400px; padding: 2rem;">
-            <div class="row">
+          <div class="modal-body" style="overflow-y: auto; padding: 1.5rem; flex: 1 1 auto;">
+            <div class="row g-4">
               <!-- Left Column - Item Type Options -->
               <div class="col-md-4">
-                <div class="list-group">
-                  <button type="button" class="list-group-item list-group-item-action d-flex align-items-center p-3 item-option active" 
-                          data-type="standard" onclick="showItemDetails('standard')" style="border: 2px solid #007bff; background-color: #e3f2fd;">
-                    <i class="bi bi-box-seam text-primary me-3" style="font-size: 1.5rem;"></i>
+                <div class="list-group" style="display: flex; flex-direction: column; gap: 0.75rem;">
+                  <button type="button" class="list-group-item list-group-item-action d-flex align-items-center p-3 item-option active"
+                          data-type="standard" onclick="showItemDetails('standard')" style="border: 2px solid #007bff; background-color: #e3f2fd; border-radius: 10px; transition: all 0.3s ease;">
+                    <i class="bi bi-box-seam text-primary me-3" style="font-size: 1.75rem;"></i>
                     <div>
-                      <h6 class="mb-0 text-primary">Standard Item</h6>
+                      <h6 class="mb-0 text-primary" style="font-weight: 600;">Standard Item</h6>
                       <small class="text-muted">Simple single product</small>
                     </div>
                   </button>
-                  
-                  <button type="button" class="list-group-item list-group-item-action d-flex align-items-center p-3 item-option" 
-                          data-type="variant" onclick="showItemDetails('variant')" style="border: 2px solid transparent;">
-                    <i class="bi bi-grid-3x3 text-success me-3" style="font-size: 1.5rem;"></i>
+
+                  <button type="button" class="list-group-item list-group-item-action d-flex align-items-center p-3 item-option"
+                          data-type="variant" onclick="showItemDetails('variant')" style="border: 2px solid #e0e0e0; border-radius: 10px; transition: all 0.3s ease;">
+                    <i class="bi bi-grid-3x3 text-success me-3" style="font-size: 1.75rem;"></i>
                     <div>
-                      <h6 class="mb-0 text-success">Variant Item</h6>
+                      <h6 class="mb-0 text-success" style="font-weight: 600;">Variant Item</h6>
                       <small class="text-muted">Multiple variations</small>
                     </div>
                   </button>
-                  
-                  <button type="button" class="list-group-item list-group-item-action d-flex align-items-center p-3 item-option" 
-                          data-type="bundled" onclick="showItemDetails('bundled')" style="border: 2px solid transparent;">
-                    <i class="bi bi-collection text-warning me-3" style="font-size: 1.5rem;"></i>
+
+                  <button type="button" class="list-group-item list-group-item-action d-flex align-items-center p-3 item-option"
+                          data-type="bundled" onclick="showItemDetails('bundled')" style="border: 2px solid #e0e0e0; border-radius: 10px; transition: all 0.3s ease;">
+                    <i class="bi bi-collection text-warning me-3" style="font-size: 1.75rem;"></i>
                     <div>
-                      <h6 class="mb-0 text-warning">Bundled Item</h6>
+                      <h6 class="mb-0 text-warning" style="font-weight: 600;">Bundled Item</h6>
                       <small class="text-muted">Package of products</small>
                     </div>
                   </button>
                 </div>
               </div>
-              
+
               <!-- Right Column - Item Details -->
               <div class="col-md-8">
-                <div class="item-details-container">
+                <div class="item-details-container" style="background-color: #f8f9fa; border-radius: 10px; padding: 1.25rem;">
                   <!-- Standard Item Details -->
                   <div id="standard-details" class="item-details active" style="display: block; opacity: 1;">
                     <div class="d-flex align-items-start mb-3">
@@ -259,7 +273,7 @@
                         </p>
                       </div>
                     </div>
-                    
+
                     <div class="mb-3">
                       <h6><strong>Best for:</strong></h6>
                       <ul class="text-muted mb-3">
@@ -268,7 +282,7 @@
                         <li>Simple inventory tracking</li>
                       </ul>
                     </div>
-                    
+
                     <div class="mb-4">
                       <h6><strong>Examples:</strong></h6>
                       <div class="d-flex flex-wrap gap-2">
@@ -279,12 +293,12 @@
                         <span class="badge bg-primary-subtle text-primary border">Notebook A4</span>
                       </div>
                     </div>
-                    
+
                    <a href="{{ route('manager.add_item_standard') }}" class="text-decoration-none text-white">  <button class="btn btn-primary"  style="padding: 0.75rem 1.5rem;">
                       <i class="bi bi-plus-circle me-1"></i> Create Standard Item
                     </button></a>
                   </div>
-                  
+
                   <!-- Variant Item Details -->
                   <div id="variant-details" class="item-details" style="display: none; opacity: 0;">
                     <div class="d-flex align-items-start mb-3">
@@ -298,7 +312,7 @@
                         </p>
                       </div>
                     </div>
-                    
+
                     <div class="mb-3">
                       <h6><strong>Best for:</strong></h6>
                       <ul class="text-muted mb-3">
@@ -308,7 +322,7 @@
                         <li>Tracking inventory per variant combination</li>
                       </ul>
                     </div>
-                    
+
                     <div class="mb-4">
                       <h6><strong>Examples:</strong></h6>
                       <div class="d-flex flex-wrap gap-2">
@@ -318,12 +332,12 @@
                         <span class="badge bg-success-subtle text-success border">Jeans (Size 28-38, Regular/Slim)</span>
                       </div>
                     </div>
-                    
+
                     <a href="{{ route('manager.add_item_variant')}}" class="text-decoration-none text-white"><button class="btn btn-success"  style="padding: 0.75rem 1.5rem;">
                       <i class="bi bi-plus-circle me-1"></i> Create Variant Item
                     </button></a>
                   </div>
-                  
+
                   <!-- Bundled Item Details -->
                   <div id="bundled-details" class="item-details" style="display: none; opacity: 0;">
                     <div class="d-flex align-items-start mb-3">
@@ -337,7 +351,7 @@
                         </p>
                       </div>
                     </div>
-                    
+
                     <div class="mb-3">
                       <h6><strong>Best for:</strong></h6>
                       <ul class="text-muted mb-3">
@@ -347,7 +361,7 @@
                         <li>Value packs with multiple related items</li>
                       </ul>
                     </div>
-                    
+
                     <div class="mb-4">
                       <h6><strong>Examples:</strong></h6>
                       <div class="d-flex flex-wrap gap-2">
@@ -357,8 +371,8 @@
                         <span class="badge bg-warning-subtle text-warning border">Back to School Pack</span>
                       </div>
                     </div>
-                    
-                    <a href="{{ route('manager.add_item_bundle')}}" class="text-decoration-none text-white"><button class="btn btn-warning text-dark"  style="padding: 0.75rem 1.5rem;">
+
+                    <a href="#" class="text-decoration-none text-white"><button class="btn btn-warning text-dark"  style="padding: 0.75rem 1.5rem;">
                       <i class="bi bi-plus-circle me-1"></i> Create Bundled Item
                     </button></a>
                   </div>
@@ -366,7 +380,7 @@
               </div>
             </div>
           </div>
-          <div class="modal-footer" style="border-top: 1px solid #dee2e6; background-color: #f8f9fa; padding: 1.5rem;">
+          <div class="modal-footer" style="border-top: 1px solid #dee2e6; background-color: #f8f9fa; padding: 1rem 1.5rem; flex-shrink: 0;">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="padding: 0.75rem 1.5rem;">Cancel</button>
           {{--  <button type="button" class="btn btn-primary" style="padding: 0.75rem 1.5rem;">
               <i class="bi bi-arrow-right me-1"></i>Continue

@@ -3,131 +3,136 @@
 Completed Sales
 @endsection
 @section('manager_layout_content')
+<link rel="stylesheet" href="{{ asset('manager_asset/css/completed_sales.css') }}">
        <!-- partial -->
       <div class="container-fluid page-body-wrapper">
-      
+
         <!-- partial -->
-     
-          <div class="content-wrapper">
+
+           <div class="content-wrapper">
             <!-- Completed Sales content starts here -->
             <div class="row">
               <div class="col-12 grid-margin stretch-card">
                 <div class="card card-rounded">
                   <div class="card-body">
-                    <h4 class="card-title">Completed Sales</h4>
-                    <p class="card-description">List of completed sales transactions.</p>
-                    
-                    <!-- Search and Filter Section -->
-                    <div class="row mb-3">
+                    <div class="d-sm-flex justify-content-between align-items-start">
+                      <div>
+                        <h4 class="card-title mb-0">Completed Sales</h4>
+                        <p class="card-description">List of completed sales transactions.</p>
+                      </div>
+                    </div>
+
+                    <!-- Modern Search and Filter Options -->
+                    <div class="row mb-3 filter-container">
                       <div class="col-md-4">
                         <div class="input-group">
-                          <span class="input-group-text bg-white border-end-0">
+                          <input type="text" class="form-control" placeholder="Search completed sales..." id="searchSales">
+                          <button class="btn btn-outline-secondary" type="button">
                             <i class="bi bi-search"></i>
-                          </span>
-                          <input type="text" class="form-control border-start-0" placeholder="Search by invoice, customer, or staff..." id="searchInput">
+                          </button>
                         </div>
                       </div>
-                      <div class="col-md-2">
-                        <select class="form-select mb-2" id="dateRangeFilter" onchange="toggleCustomRangeInputs()">
-                          <option value="today">Today</option>
-                          <option value="yesterday">Yesterday</option>
-                          <option value="last7">Last 7 Days</option>
-                          <option value="last30">Last 30 Days</option>
-                          <option value="thisMonth">This Month</option>
-                          <option value="lastMonth">Last Month</option>
-                          <option value="custom">Custom Range</option>
-                        </select>
-                        <div id="customRangeInputs" style="display:none;">
-                          <div class="input-group mb-1">
-                            <span class="input-group-text">From</span>
-                            <input type="date" class="form-control" id="customStartDate">
-                          </div>
-                          <div class="input-group">
-                            <span class="input-group-text">To</span>
-                            <input type="date" class="form-control" id="customEndDate">
-                          </div>
-                        </div>
-                        <small class="form-text text-muted">Choose a date range to filter sales.</small>
-                      </div>
-                      <div class="col-md-2">
-                        <select class="form-select" id="sellerFilter">
+                      <div class="col-md-8 d-flex justify-content-end align-items-center gap-2">
+                        <!-- Seller Filter -->
+                        <select class="form-select" id="sellerFilter" style="max-width: 140px;">
                           <option value="">All Sellers</option>
                           <option value="Alice Johnson">Alice Johnson</option>
                           <option value="Bob Smith">Bob Smith</option>
                           <option value="Carol Williams">Carol Williams</option>
                           <option value="David Brown">David Brown</option>
                         </select>
-                      </div>
-                      <div class="col-md-2">
-                        <select class="form-select" id="statusFilter">
+
+                        <!-- Status Filter -->
+                        <select class="form-select" id="statusFilter" style="max-width: 140px;">
                           <option value="">All Status</option>
                           <option value="Completed">Completed</option>
                           <option value="Pending">Pending</option>
-                          <option value="Refunded">Refunded</option>
+                          <option value="Cancelled">Cancelled</option>
                         </select>
+
+                        <!-- Date Range Filter -->
+                        <div class="date-filter-wrapper">
+                          <select class="form-select" id="dateRangeFilter" style="max-width: 140px;">
+                            <option value="">All Dates</option>
+                            <option value="today">Today</option>
+                            <option value="yesterday">Yesterday</option>
+                            <option value="last7">Last 7 Days</option>
+                            <option value="last30">Last 30 Days</option>
+                            <option value="thisMonth">This Month</option>
+                            <option value="lastMonth">Last Month</option>
+                            <option value="custom">Custom Range</option>
+                          </select>
+
+                          <!-- Custom Date Inputs -->
+                          <div id="customDateInputs" class="custom-date-container">
+                            <div class="row g-3">
+                              <div class="col-md-6">
+                                <label for="customStartDate" class="form-label text-muted">From Date</label>
+                                <input type="date" class="form-control" id="customStartDate" onchange="performSearch()">
+                              </div>
+                              <div class="col-md-6">
+                                <label for="customEndDate" class="form-label text-muted">To Date</label>
+                                <input type="date" class="form-control" id="customEndDate" onchange="performSearch()">
+                              </div>
+                            </div>
+                            <div class="text-center mt-3">
+                              <button type="button" class="btn btn-outline-secondary btn-sm" onclick="hideCustomDateOverlay()">
+                                <i class="bi bi-x"></i> Close
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <button class="btn btn-outline-primary" id="applyFilters">
+                          <i class="bi bi-funnel"></i> Apply
+                        </button>
+                        <button class="btn btn-outline-secondary" id="clearFilters">
+                          <i class="bi bi-x-circle"></i> Clear
+                        </button>
+                        <button class="btn btn-outline-success" id="exportReport">
+                          <i class="bi bi-download"></i> Export
+                        </button>
                       </div>
-                    </div>
-                    <br>
+                    </div><br>
 
                     <div class="table-responsive">
                       <table class="table table-striped" id="completedSalesTable">
                         <thead>
                           <tr>
                             <th>S/N</th>
-                            <th>Invoice</th>
+                            <th>Receipt No.</th>
                             <th>Date</th>
                             <th>Customer</th>
-                            <th>Sold by:</th>
+                            <th>Sold by</th>
+                            <th>Items</th>
                             <th>Total</th>
                             <th>Status</th>
                           </tr>
                         </thead>
                         <tbody>
-                          <tr>
-                            <td>1</td>
-                            <td>INV-001</td>
-                            <td>2025-10-14</td>
-                            <td>John Doe</td>
-                            <td>Alice Johnson</td>
-                            <td>$120.00</td>
+                          @forelse($completedSales as $index => $sale)
+                          <tr class="sale-row" data-receipt-number="{{ $sale->receipt_number }}" style="cursor: pointer;" title="Click to view details">
+                            <td>{{ $index + 1 }}</td>
+                            <td><strong>{{ $sale->receipt_number }}</strong></td>
+                            <td><small>{{ \Carbon\Carbon::parse($sale->created_at)->format('M d, Y h:i A') }}</small></td>
+                            <td>{{ $sale->customer_name ?? 'Walk-in Customer' }}</td>
+                            <td>{{ $sale->user ? $sale->user->name : 'Unknown' }}</td>
+                            <td><span class="badge badge-info">{{ $sale->items_count }} items</span></td>
+                            <td><strong class="text-success">₦{{ number_format($sale->total, 2) }}</strong></td>
                             <td><span class="badge badge-opacity-success">Completed</span></td>
                           </tr>
+                          @empty
                           <tr>
-                            <td>2</td>
-                            <td>INV-002</td>
-                            <td>2025-10-15</td>
-                            <td>Jane Smith</td>
-                            <td>Bob Smith</td>
-                            <td>$250.50</td>
-                            <td><span class="badge badge-opacity-success">Completed</span></td>
+                            <td colspan="8" class="text-center py-5">
+                              <div class="empty-state">
+                                <i class="bi bi-inbox"></i>
+                                <h5>No Completed Sales</h5>
+                                <p class="text-muted">No sales have been completed yet.</p>
+                              </div>
+                            </td>
                           </tr>
-                          <tr>
-                            <td>3</td>
-                            <td>INV-003</td>
-                            <td>2025-10-16</td>
-                            <td>Michael Brown</td>
-                            <td>Carol Williams</td>
-                            <td>$89.99</td>
-                            <td><span class="badge badge-opacity-success">Completed</span></td>
-                          </tr>
-                          <tr>
-                            <td>4</td>
-                            <td>INV-004</td>
-                            <td>2025-10-17</td>
-                            <td>Sarah Johnson</td>
-                            <td>Alice Johnson</td>
-                            <td>$175.25</td>
-                            <td><span class="badge badge-opacity-warning">Pending</span></td>
-                          </tr>
-                          <tr>
-                            <td>5</td>
-                            <td>INV-005</td>
-                            <td>2025-10-18</td>
-                            <td>David Wilson</td>
-                            <td>David Brown</td>
-                            <td>$320.00</td>
-                            <td><span class="badge badge-opacity-success">Completed</span></td>
-                          </tr>
+                          @endforelse
                         </tbody>
                       </table>
                     </div>
@@ -135,30 +140,90 @@ Completed Sales
                     <!-- Pagination and Info -->
                     <div class="d-flex justify-content-between align-items-center mt-3">
                       <div class="text-muted small">
-                        Showing <strong>1-5</strong> of <strong>5</strong> entries
+                        Showing <strong>{{ $completedSales->firstItem() ?? 0 }}</strong> to <strong>{{ $completedSales->lastItem() ?? 0 }}</strong> of <strong>{{ $completedSales->total() }}</strong> entries
                       </div>
                       <nav aria-label="Table pagination">
-                        <ul class="pagination pagination-sm mb-0">
-                          <li class="page-item disabled">
-                            <a class="page-link" href="#" tabindex="-1">Previous</a>
-                          </li>
-                          <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                          <li class="page-item"><a class="page-link" href="#">2</a></li>
-                          <li class="page-item"><a class="page-link" href="#">3</a></li>
-                          <li class="page-item">
-                            <a class="page-link" href="#">Next</a>
-                          </li>
-                        </ul>
+                        {{ $completedSales->links('pagination::bootstrap-4') }}
                       </nav>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-            <!-- Completed Sales content ends here -->
+
+            <!-- Panel Overlay -->
+            <div class="details-panel-backdrop" id="detailsBackdrop"></div>
+
+            <!-- Sale Details Side Panel -->
+            <div class="details-panel" id="detailsPanel">
+              <div class="details-panel-header">
+                <div class="d-flex justify-content-between align-items-center">
+                  <h5 class="mb-0">
+                    <i class="bi bi-receipt me-2"></i>Sale Details
+                  </h5>
+                  <button type="button" class="btn btn-sm btn-light" id="closePanelBtn">
+                    <i class="bi bi-x-lg"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="details-panel-body">
+                <div class="detail-item">
+                  <div class="detail-label">Receipt Number</div>
+                  <div class="detail-value" id="detailReceiptNumber">-</div>
+                </div>
+                <div class="detail-item">
+                  <div class="detail-label">Customer Name</div>
+                  <div class="detail-value" id="detailCustomerName">-</div>
+                </div>
+                <div class="detail-item">
+                  <div class="detail-label">Sold By</div>
+                  <div class="detail-value" id="detailSoldBy">-</div>
+                </div>
+                <div class="detail-item">
+                  <div class="detail-label">Sale Date</div>
+                  <div class="detail-value" id="detailSaleDate">-</div>
+                </div>
+                <div class="detail-item">
+                  <div class="detail-label">Total Items</div>
+                  <div class="detail-value" id="detailTotalItems">-</div>
+                </div>
+                <div class="detail-item">
+                  <div class="detail-label">Total Amount</div>
+                  <div class="detail-value" id="detailTotalAmount">-</div>
+                </div>
+                <div class="detail-item">
+                  <div class="detail-label">Status</div>
+                  <div class="detail-value" id="detailStatus">-</div>
+                </div>
+
+                <div class="detail-item">
+                  <div class="detail-label">Items in Sale</div>
+                  <div class="items-list" id="saleItemsList">
+                    <!-- Sale items will be populated here -->
+                    <div class="text-muted text-center py-3">
+                      <i class="bi bi-hourglass-split"></i> Loading items...
+                    </div>
+                  </div>
+                </div>
+
+                <div class="detail-item">
+                  <div class="detail-label">Actions</div>
+                  <div class="d-flex gap-2 mt-2">
+                    <button class="btn btn-primary btn-sm" id="printReceiptBtn">
+                      <i class="bi bi-printer"></i> Print Receipt
+                    </button>
+                    <button class="btn btn-outline-secondary btn-sm" id="exportSaleBtn">
+                      <i class="bi bi-download"></i> Export
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-          <!-- content-wrapper ends -->
-          
+          <!-- Completed Sales content ends here -->
+
       </div>
       <!-- page-body-wrapper ends -->
+
+      <script src="{{ asset('manager_asset/js/completed_sales.js') }}"></script>
 @endsection

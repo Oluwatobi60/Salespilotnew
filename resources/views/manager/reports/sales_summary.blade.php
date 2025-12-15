@@ -3,70 +3,82 @@
 Sales Summary
 @endsection
 @section('manager_layout_content')
-    <div class="container-fluid page-body-wrapper">
-        <!-- partial:layouts/sidebar_content.php -->
-
-          <div class="content-wrapper">
-            <!-- Sales Summary content starts here -->
-            <div class="row">
+<link rel="stylesheet" href="{{ asset('manager_asset/css/sale_summary.css') }}">
+<div class="content-wrapper">
+ <div class="row">
               <div class="col-12 grid-margin stretch-card">
                 <div class="card card-rounded">
                   <div class="card-body">
                     <h4 class="card-title">Sales Summary</h4>
                     <p class="card-description">Overview of total sales, number of transactions, and totals by customer or date. Use filters to refine the report.</p>
-
-                    <!-- Search and Filter Section -->
-                    <div class="row mb-3">
-                      <div class="col-sm-3 col-6">
-                        <div class="input-group input-group-sm">
-                          <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
-                          <input type="text" class="form-control form-control-sm border-start-0" placeholder="Search by date, status, or customer..." id="searchInput">
+                    <div class="row mb-3 filter-container">
+                      <div class="col-md-4">
+                        <div class="input-group">
+                          <input type="text" class="form-control" placeholder="Search sales summary..." id="searchSummary">
+                          <button class="btn btn-outline-secondary" type="button">
+                            <i class="bi bi-search"></i>
+                          </button>
                         </div>
                       </div>
-                      <div class="col-sm-4 col-6">
-                        <select class="form-select form-select-sm mb-2" id="dateRangeFilter" onchange="toggleCustomRangeInputs()">
-                          <option value="today">Today</option>
-                          <option value="yesterday">Yesterday</option>
-                          <option value="last7">Last 7 Days</option>
-                          <option value="last30">Last 30 Days</option>
-                          <option value="thisMonth">This Month</option>
-                          <option value="lastMonth">Last Month</option>
-                          <option value="custom">Custom Range</option>
+                      <div class="col-md-8 d-flex justify-content-end align-items-center gap-2">
+                        <!-- Status Filter -->
+                        <select class="form-select" id="statusFilter" style="max-width: 140px;">
+                          <option value="">All Status</option>
+                          <option value="Completed">Completed</option>
+                          <option value="Pending">Pending</option>
+                          <option value="Cancelled">Cancelled</option>
                         </select>
-                        <div id="customRangeInputs" style="display:none;">
-                          <div class="input-group input-group-sm mb-1">
-                            <span class="input-group-text">From</span>
-                            <input type="date" class="form-control form-control-sm" id="customStartDate">
-                          </div>
-                          <div class="input-group input-group-sm">
-                            <span class="input-group-text">To</span>
-                            <input type="date" class="form-control form-control-sm" id="customEndDate">
-                          </div>
-                        </div>
-                        <small class="form-text text-muted">Choose a date range to filter sales summary.</small>
-                        <script>
-                          function toggleCustomRangeInputs() {
-                            var range = document.getElementById('dateRangeFilter');
-                            var customInputs = document.getElementById('customRangeInputs');
-                            if (range && customInputs) {
-                              customInputs.style.display = range.value === 'custom' ? 'block' : 'none';
-                            }
-                          }
-                          document.addEventListener('DOMContentLoaded', function() {
-                            toggleCustomRangeInputs();
-                          });
-                        </script>
-                      </div>
-                      <div class="col-sm-3 col-12 mt-2 mt-sm-0">
-                        <select class="form-select form-select-sm" id="staffFilter">
+                        <!-- Staff Filter -->
+                        <select class="form-select" id="staffFilter" style="max-width: 140px;">
                           <option value="">All Staff</option>
                           <option value="Alice Johnson">Alice Johnson</option>
                           <option value="Bob Smith">Bob Smith</option>
                           <option value="Carol Williams">Carol Williams</option>
                           <option value="David Brown">David Brown</option>
                         </select>
+                        <!-- Date Range Filter -->
+                        <div class="date-filter-wrapper">
+                          <select class="form-select" id="dateRangeFilter" style="max-width: 140px;">
+                            <option value="">All Dates</option>
+                            <option value="today">Today</option>
+                            <option value="yesterday">Yesterday</option>
+                            <option value="last7">Last 7 Days</option>
+                            <option value="last30">Last 30 Days</option>
+                            <option value="thisMonth">This Month</option>
+                            <option value="lastMonth">Last Month</option>
+                            <option value="custom">Custom Range</option>
+                          </select>
+                          <!-- Custom Date Inputs -->
+                          <div id="customDateInputs" class="custom-date-container">
+                            <div class="row g-3">
+                              <div class="col-md-6">
+                                <label for="customStartDate" class="form-label text-muted">From Date</label>
+                                <input type="date" class="form-control" id="customStartDate" onchange="performSearch()">
+                              </div>
+                              <div class="col-md-6">
+                                <label for="customEndDate" class="form-label text-muted">To Date</label>
+                                <input type="date" class="form-control" id="customEndDate" onchange="performSearch()">
+                              </div>
+                            </div>
+                            <div class="text-center mt-3">
+                              <button type="button" class="btn btn-outline-secondary btn-sm" onclick="hideCustomDateOverlay()">
+                                <i class="bi bi-x"></i> Close
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                        <!-- Action Buttons -->
+                        <button class="btn btn-outline-primary" id="applyFilters">
+                          <i class="bi bi-funnel"></i> Apply
+                        </button>
+                        <button class="btn btn-outline-secondary" id="clearFilters">
+                          <i class="bi bi-x-circle"></i> Clear
+                        </button>
+                        <button class="btn btn-outline-success" id="exportReport">
+                          <i class="bi bi-download"></i> Export
+                        </button>
                       </div>
-                    </div>
+
                     <br>
                     <div class="table-responsive">
                       <table class="table table-striped" id="salesSummaryTable">
@@ -86,48 +98,96 @@ Sales Summary
                           </tr>
                         </thead>
                         <tbody>
+                          @forelse($salesSummary as $index => $sale)
                           <tr>
-                            <td>1</td>
-                            <td>2025-10-20</td>
-                            <td>$2,450.00</td>
-                            <td>$120.00</td>
-                            <td>$1,200.00</td>
-                            <td>$1,130.00</td>
-                            <td>15</td>
-                            <td>$1,130.00</td>
-                            <td>46.1%</td>
-                            <td>$98.00</td>
+                            <td>{{ ($salesSummary->currentPage() - 1) * $salesSummary->perPage() + $index + 1 }}</td>
+                            <td>{{ \Carbon\Carbon::parse($sale->sale_date)->format('M d, Y') }}</td>
+                            <td>₦{{ number_format($sale->gross_sales, 2) }}</td>
+                            <td>₦{{ number_format($sale->total_discount, 2) }}</td>
+                            <td>₦{{ number_format($sale->cost_of_items, 2) }}</td>
+                            <td>₦{{ number_format($sale->net_sales, 2) }}</td>
+                            <td>{{ $sale->transaction_count }}</td>
+                            <td>₦{{ number_format($sale->gross_profit, 2) }}</td>
+                            <td>{{ number_format($sale->margin, 1) }}%</td>
+                            <td>₦{{ number_format($sale->taxes, 2) }}</td>
                             <td><span class="badge badge-opacity-success">Completed</span></td>
                           </tr>
+                          @empty
                           <tr>
-                            <td>2</td>
-                            <td>2025-10-19</td>
-                            <td>$1,890.50</td>
-                            <td>$80.00</td>
-                            <td>$1,050.00</td>
-                            <td>$1,010.50</td>
-                            <td>12</td>
-                            <td>$760.50</td>
-                            <td>40.2%</td>
-                            <td>$75.00</td>
-                            <td><span class="badge badge-opacity-success">Completed</span></td>
+                            <td colspan="11" class="text-center py-5">
+                              <div class="empty-state">
+                                <i class="bi bi-inbox"></i>
+                                <h5>No Sales Data</h5>
+                                <p class="text-muted">No sales have been completed yet.</p>
+                              </div>
+                            </td>
                           </tr>
-                          <tr>
-                            <td>3</td>
-                            <td>2025-10-18</td>
-                            <td>$3,120.75</td>
-                            <td>$100.00</td>
-                            <td>$1,800.00</td>
-                            <td>$1,220.75</td>
-                            <td>18</td>
-                            <td>$1,220.75</td>
-                            <td>39.1%</td>
-                            <td>$120.00</td>
-                            <td><span class="badge badge-opacity-success">Completed</span></td>
-                          </tr>
+                          @endforelse
                         </tbody>
                       </table>
-</div>
-</div>
-    
+                    </div>
+
+                    <!-- Pagination -->
+                    @if($salesSummary->hasPages())
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                      <div class="text-muted small">
+                        Showing <strong>{{ $salesSummary->firstItem() ?? 0 }}</strong> to <strong>{{ $salesSummary->lastItem() ?? 0 }}</strong> of <strong>{{ $salesSummary->total() }}</strong> entries
+                      </div>
+                      <nav aria-label="Sales summary pagination">
+                        {{ $salesSummary->links('pagination::bootstrap-4') }}
+                      </nav>
+                    </div>
+                    @endif
+
+                    <!-- Charts Section -->
+                    <div class="row mt-5">
+                      <div class="col-md-6 mb-4">
+                        <div class="card card-rounded">
+                          <div class="card-body">
+                            <h5 class="card-title">Gross Sales</h5>
+                            <canvas id="grossSalesLineChart" height="180"></canvas>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-md-6 mb-4">
+                        <div class="card card-rounded">
+                          <div class="card-body">
+                            <h5 class="card-title">Cost of Items</h5>
+                            <canvas id="costItemsLineChart" height="180"></canvas>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-md-6 mb-4">
+                        <div class="card card-rounded">
+                          <div class="card-body">
+                            <h5 class="card-title">Transactions</h5>
+                            <canvas id="transactionsLineChart" height="180"></canvas>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-md-6 mb-4">
+                        <div class="card card-rounded">
+                          <div class="card-body">
+                            <h5 class="card-title">Gross Profit</h5>
+                            <canvas id="grossProfitLineChart" height="180"></canvas>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+  <!-- Sales Summary content ends here -->
+
+
+<script>
+// Pass PHP data to JavaScript (use allSalesData for charts to show all data)
+const salesData = @json($allSalesData ?? []);
+</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ asset('manager_asset/js/sale_summary.js') }}"></script>
 @endsection

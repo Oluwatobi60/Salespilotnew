@@ -24,13 +24,13 @@ Add Item Bundle
         <div class="intro-text">
           <p>
             <i class="mdi mdi-information-outline"></i>
-            Create a bundle package containing multiple existing products sold together as one unit. 
+            Create a bundle package containing multiple existing products sold together as one unit.
             Selling a bundle automatically deducts stock from all included items.
           </p>
         </div>
 
-        <form class="forms-sample" id="addBundleForm" method="POST" action="process_add_bundle.php" enctype="multipart/form-data">
-          
+        <form class="forms-sample" id="addBundleForm" method="POST" action="{{ route('bundle.create') }}" enctype="multipart/form-data">
+            @csrf
           <!-- Section 1: Bundle Details -->
           <div class="card mb-4">
             <div class="card-header">
@@ -43,13 +43,13 @@ Add Item Bundle
                 <div class="col-md-6">
                   <div class="form-group">
                     <label for="bundleName" class="form-label required-field">Bundle Name</label>
-                    <input type="text" class="form-control" id="bundleName" name="bundle_name" placeholder="Enter bundle name" required>
+                    <input type="text" class="form-control" id="bundleName" name="bundle_name" placeholder="Enter bundle name" required value="{{ old('bundle_name') }}">
                   </div>
                 </div>
                 <div class="col-md-6">
                   <div class="form-group">
                     <label for="bundleCode" class="form-label">Bundle Code/SKU</label>
-                    <input type="text" class="form-control" id="bundleCode" name="bundle_code" placeholder="Auto-generated or enter custom code">
+                    <input type="text" class="form-control" id="bundleCode" name="bundle_code" placeholder="Auto-generated or enter custom code" value="{{ old('bundle_code') }}">
                   </div>
                 </div>
               </div>
@@ -74,13 +74,16 @@ Add Item Bundle
                 <div class="col-md-6">
                   <div class="form-group">
                     <label for="supplier" class="form-label">Primary Supplier</label>
-                    <select class="form-select" id="supplier" name="supplier">
-                      <option value="">Select Supplier</option>
-                      <option value="supplier1">Supplier 1</option>
-                      <option value="supplier2">Supplier 2</option>
-                      <option value="supplier3">Supplier 3</option>
+                    <select class="form-select" id="supplier" name="supplier_id">
+                        <option value="">Select Supplier</option>
+                        @foreach($suppliers as $supplier)
+                        <option value="{{ $supplier->id }}" {{ old('supplier_id') == $supplier->id ? 'selected' : '' }}>
+                            {{ $supplier->name }}
+                        </option>
+                        @endforeach
                     </select>
-                  </div>
+
+                </div>
                 </div>
               </div>
 
@@ -88,21 +91,20 @@ Add Item Bundle
                 <div class="col-md-6">
                   <div class="form-group">
                     <label for="unit" class="form-label required-field">Unit of Measurement</label>
-                    <select class="form-select" id="unit" name="unit" required>
-                      <option value="">Select Unit</option>
-                      <option value="bundle">Bundle</option>
-                      <option value="pack">Pack</option>
-                      <option value="set">Set</option>
-                      <option value="kit">Kit</option>
-                      <option value="box">Box</option>
-                      <option value="pcs">Piece (pcs)</option>
-                    </select>
+                      <select class="form-select" id="unit" name="unit_id">
+                            <option value="">Select Unit</option>
+                            @foreach($units as $unit)
+                            <option value="{{ $unit->id }}" {{ old('unit_id') == $unit->id ? 'selected' : '' }}>
+                                {{ $unit->name }}
+                            </option>
+                            @endforeach
+                         </select>
                   </div>
                 </div>
                 <div class="col-md-6">
                   <div class="form-group">
                     <label for="barcode" class="form-label">Bundle Barcode</label>
-                    <input type="text" class="form-control" id="barcode" name="barcode" placeholder="Enter or scan bundle barcode">
+                    <input type="text" class="form-control" id="barcode" name="barcode" placeholder="Enter or scan bundle barcode" value="{{ old('barcode') }}">
                   </div>
                 </div>
               </div>
@@ -111,7 +113,7 @@ Add Item Bundle
                 <div class="col-md-12">
                   <div class="form-group">
                     <label for="description" class="form-label">Bundle Description</label>
-                    <textarea class="form-control" id="description" name="description" rows="4" placeholder="Describe what's included in this bundle and its benefits"></textarea>
+                    <textarea class="form-control" id="description" name="description" rows="4" placeholder="Describe what's included in this bundle and its benefits">{{ old('description') }}</textarea>
                   </div>
                 </div>
               </div>
@@ -317,7 +319,7 @@ Add Item Bundle
             <div class="card-body">
               <div class="alert alert-info" role="alert">
                 <i class="mdi mdi-information me-2"></i>
-                <strong>Note:</strong> Bundle stock is limited by the available stock of individual items. 
+                <strong>Note:</strong> Bundle stock is limited by the available stock of individual items.
                 The maximum bundles you can create is determined by the item with the lowest available stock.
               </div>
 
@@ -370,7 +372,7 @@ Add Item Bundle
         <button type="button" class="btn btn-secondary" onclick="closeModal()">
           <i class="mdi mdi-close"></i> Cancel
         </button>
-        <button type="button" class="btn btn-primary" onclick="submitForm()">
+        <button type="submit" class="btn btn-primary" >
           <i class="mdi mdi-content-save"></i> Save Bundle
         </button>
       </div>
@@ -379,6 +381,6 @@ Add Item Bundle
       </div>
 
 
-      
+
       <script src="{{ asset('manager_asset/js/add_item_bunble.js') }}"></script>
 @endsection

@@ -2,6 +2,23 @@
 @section('manager_page_title', 'Manager Dashboard')
 
 @section('manager_layout_content')
+
+   @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="mdi mdi-check-circle me-2"></i>
+            {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="mdi mdi-alert-circle me-2"></i>
+            {{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
    <!-- Welcome Section -->
             <div class="welcome-section">
               <h1 class="welcome-title">Welcome to SalesPilot</h1>
@@ -42,7 +59,7 @@
                   <div class="stat-label">Items Sold</div>
                 </div>
               </div>
-              
+
               <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
                 <div class="dashboard-card stat-card">
                   <div class="stat-icon">
@@ -52,7 +69,7 @@
                   <div class="stat-label">Number of Sales</div>
                 </div>
               </div>
-              
+
               <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
                 <div class="dashboard-card stat-card">
                   <div class="stat-icon">
@@ -62,7 +79,7 @@
                   <div class="stat-label">Gross Sales</div>
                 </div>
               </div>
-              
+
               <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
                 <div class="dashboard-card stat-card">
                   <div class="stat-icon">
@@ -86,10 +103,10 @@
                   <a href="#" class="quick-action-btn">
                     <i class="bi bi-plus-circle me-2"></i>New Sale
                   </a>
-                   <a href="{{ route('manager.add_staff') }}" class="quick-action-btn">
+                   <a href="{{--  {{ route('manager.staff') }}  --}}" class="quick-action-btn">
                     <i class="bi bi-person-plus me-2"></i>Add New Staff
                   </a>
-                  <a href="{{ route('manager.completed_sales') }}" class="quick-action-btn">
+                  <a href="{{--  {{ route('manager.completed_sales') }}  --}}" class="quick-action-btn">
                     <i class="bi bi-graph-up me-2"></i>View Reports
                   </a>
                 </div>
@@ -159,7 +176,7 @@
                   </div>
                 </div>
               </div>
-              
+
               <div class="col-lg-6">
                 <div class="dashboard-card">
                   <h5 class="mb-3">Top Products</h5>

@@ -3,11 +3,11 @@
       function closeModal() {
         const modalContainer = document.querySelector('.modal-container');
         const modalOverlay = document.querySelector('.modal-overlay');
-        
+
         // Add slide out animation
         modalContainer.style.animation = 'slideOut 0.3s cubic-bezier(0.55, 0.085, 0.68, 0.53) forwards';
         modalOverlay.style.animation = 'fadeOut 0.3s ease-out forwards';
-        
+
         // Redirect after animation
         setTimeout(function() {
           // Check if there's a previous page in history
@@ -54,47 +54,58 @@
       function calculateProfitMargin() {
         const costPrice = parseFloat(document.getElementById('costPrice').value) || 0;
         const sellingPrice = parseFloat(document.getElementById('sellingPrice').value) || 0;
-        
+        const profitMarginField = document.getElementById('profitMargin');
+
         if (costPrice > 0 && sellingPrice > 0) {
           const profit = sellingPrice - costPrice;
           const margin = (profit / costPrice) * 100;
-          document.getElementById('profitMargin').value = margin.toFixed(2) + '%';
-          
+
+          // Store numeric value in data attribute for submission
+          profitMarginField.setAttribute('data-value', margin.toFixed(2));
+          // Display with % for user
+          profitMarginField.value = margin.toFixed(2) + '%';
+
           // Calculate potential profit for fixed pricing
           const potentialProfitField = document.getElementById('potentialProfit');
           if (potentialProfitField) {
             potentialProfitField.value = profit.toFixed(2);
           }
         } else {
-          document.getElementById('profitMargin').value = '0%';
+          profitMarginField.setAttribute('data-value', '0');
+          profitMarginField.value = '0%';
           const potentialProfitField = document.getElementById('potentialProfit');
           if (potentialProfitField) {
             potentialProfitField.value = '0.00';
           }
         }
-        
-        calculateFinalPrice(); 
+
+        calculateFinalPrice();
       }
 
       // Calculate final price with tax
       function calculateFinalPrice() {
         const sellingPrice = parseFloat(document.getElementById('sellingPrice').value) || 0;
-        const taxRate = parseFloat(document.getElementById('taxRate').value) || 0;
-        const discount = parseFloat(document.getElementById('discount').value) || 0;
-        
+        const taxRateElement = document.getElementById('fixedTaxRate');
+        const taxRate = taxRateElement ? parseFloat(taxRateElement.value) || 0 : 0;
+
         let finalPrice = sellingPrice;
-        
-        // Apply discount
-        if (discount > 0) {
-          finalPrice = finalPrice - (finalPrice * (discount / 100));
-        }
-        
+
         // Apply tax
         if (taxRate > 0) {
           finalPrice = finalPrice + (finalPrice * (taxRate / 100));
         }
-        
-        document.getElementById('finalPrice').textContent = '₦' + finalPrice.toFixed(2);
+
+        // Update display
+        const finalPriceDisplay = document.getElementById('finalPrice');
+        if (finalPriceDisplay) {
+          finalPriceDisplay.textContent = '₦' + finalPrice.toFixed(2);
+        }
+
+        // Update hidden input field for form submission
+        const finalPriceInput = document.getElementById('finalPriceInput');
+        if (finalPriceInput) {
+          finalPriceInput.value = finalPrice.toFixed(2);
+        }
       }
 
       // Reset form
@@ -102,7 +113,7 @@
         document.getElementById('addItemForm').reset();
         document.getElementById('profitMargin').value = '0%';
         document.getElementById('finalPrice').textContent = '₦0.00';
-        
+
         // Clear any potential profit field if it exists
         const potentialProfitField = document.getElementById('potentialProfit');
         if (potentialProfitField) {
@@ -114,67 +125,43 @@
       function submitForm() {
         const form = document.getElementById('addItemForm');
         const submitBtn = document.querySelector('.btn-primary');
-        
+
+        // Check if required fields are filled
+        if (!form.checkValidity()) {
+          form.reportValidity();
+          return false;
+        }
+
+        // Clean up profit margin field - remove % symbol
+        const profitMarginField = document.getElementById('profitMargin');
+        if (profitMarginField && profitMarginField.value) {
+          const cleanValue = profitMarginField.value.replace('%', '').trim();
+          profitMarginField.value = cleanValue || '0';
+        }
+
+        // Clean up other readonly calculated fields if they're empty strings
+        const potentialProfitField = document.getElementById('potentialProfit');
+        if (potentialProfitField && !potentialProfitField.value) {
+          potentialProfitField.value = '0';
+        }
+
+        const marginProfitField = document.getElementById('marginProfit');
+        if (marginProfitField && !marginProfitField.value) {
+          marginProfitField.value = '0';
+        }
+
+        const calculatedPriceField = document.getElementById('calculatedPrice');
+        if (calculatedPriceField && !calculatedPriceField.value) {
+          calculatedPriceField.value = '0';
+        }
+
         // Add loading state
         submitBtn.classList.add('loading');
         submitBtn.disabled = true;
-        
-        // Simulate validation delay for better UX
-        setTimeout(() => {
-          // Validate that selling price is greater than cost price
-          const costPrice = parseFloat(document.getElementById('costPrice').value) || 0;
-          const sellingPrice = parseFloat(document.getElementById('sellingPrice').value) || 0;
-          
-          if (sellingPrice <= costPrice && costPrice > 0) {
-            showNotification('Warning: Selling price should be greater than cost price for profit!', 'warning');
-            removeLoading(submitBtn);
-            return false;
-          }
-          
-          // Validate reorder level is less than max stock
-          const reorderLevel = parseFloat(document.getElementById('reorderLevel').value) || 0;
-          const maxStock = parseFloat(document.getElementById('maxStock').value) || 0;
-          
-          if (maxStock > 0 && reorderLevel >= maxStock) {
-            showNotification('Error: Reorder level must be less than maximum stock level!', 'error');
-            removeLoading(submitBtn);
-            return false;
-          }
-          
-          // Check if required fields are filled
-          if (!form.checkValidity()) {
-            form.reportValidity();
-            removeLoading(submitBtn);
-            return false;
-          }
-          
-          // If all validations pass
-          showNotification('Form validation passed! Item ready to be saved.', 'success');
-          
-          // Simulate save process
-          setTimeout(() => {
-            removeLoading(submitBtn);
-            showNotification('Item successfully added to inventory!', 'success');
-            
-            // Remove beforeunload warning since item is saved
-            window.removeEventListener('beforeunload', arguments.callee);
-            
-            // After successful save, return to previous page
-            setTimeout(() => {
-              // Check if there's a previous page in history
-              if (document.referrer && document.referrer !== window.location.href) {
-                // Go back to the previous page
-                window.history.back();
-              } else {
-                // Fallback to dashboard if no referrer
-                window.location.href = '../index.php';
-              }
-            }, 1000); // Give time to see the success message
-            
-            // Uncomment the line below when you have the backend ready
-            // form.submit();
-          }, 1500);
-        }, 800);
+        submitBtn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Submitting...';
+
+        // Submit the form
+        form.submit();
       }
 
       // Helper function to remove loading state
@@ -207,8 +194,8 @@
           transition: all 0.3s ease;
         `;
 
-        const icon = type === 'success' ? 'mdi-check-circle' : 
-                    type === 'warning' ? 'mdi-alert-circle' : 
+        const icon = type === 'success' ? 'mdi-check-circle' :
+                    type === 'warning' ? 'mdi-alert-circle' :
                     type === 'error' ? 'mdi-close-circle' : 'mdi-information';
 
         notification.innerHTML = `
@@ -232,11 +219,217 @@
 
       // Event listeners and enhanced form initialization
       document.addEventListener('DOMContentLoaded', function() {
+        // ===== AUTO-GENERATE ITEM CODE =====
+        const itemNameInput = document.getElementById('itemName');
+        const itemCodeInput = document.getElementById('itemCode');
+
+        if (itemNameInput && itemCodeInput) {
+          let manuallyEditedCode = false;
+
+          // Detect manual editing of item code
+          itemCodeInput.addEventListener('focus', function() {
+            manuallyEditedCode = true;
+          });
+
+          itemCodeInput.addEventListener('input', function() {
+            if (this.value.trim() === '') {
+              manuallyEditedCode = false;
+            }
+          });
+
+          // Auto-generate on item name input
+          itemNameInput.addEventListener('input', function() {
+            if (!manuallyEditedCode) {
+              const name = this.value.trim();
+              if (name) {
+                const cleanName = name.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+                const timestamp = Date.now().toString().slice(-4);
+                const prefix = cleanName.slice(0, Math.min(3, cleanName.length));
+                itemCodeInput.value = prefix + '-' + timestamp;
+              } else {
+                itemCodeInput.value = '';
+              }
+            }
+          });
+        }
+        // ===== END AUTO-GENERATE =====
+
         // Price calculation events
-        document.getElementById('costPrice').addEventListener('input', calculateProfitMargin);
-        document.getElementById('sellingPrice').addEventListener('input', calculateProfitMargin);
-        document.getElementById('taxRate').addEventListener('change', calculateFinalPrice);
-        document.getElementById('discount').addEventListener('input', calculateFinalPrice);
+        const costPriceField = document.getElementById('costPrice');
+        const sellingPriceField = document.getElementById('sellingPrice');
+        const fixedTaxRateField = document.getElementById('fixedTaxRate');
+
+        if (costPriceField) {
+          costPriceField.addEventListener('input', calculateProfitMargin);
+        }
+        if (sellingPriceField) {
+          sellingPriceField.addEventListener('input', function() {
+            calculateProfitMargin();
+            calculateFinalPrice();
+          });
+        }
+        if (fixedTaxRateField) {
+          fixedTaxRateField.addEventListener('change', calculateFinalPrice);
+        }
+
+        // Add form submit event to clean data before submission
+        document.getElementById('addItemForm').addEventListener('submit', function(e) {
+          // Sync all cost price fields to the main cost_price field before submission
+          const costPrice = document.getElementById('costPrice');
+          const manualCostPrice = document.getElementById('manualCostPrice');
+          const marginCostPrice = document.getElementById('marginCostPrice');
+          const rangeCostPrice = document.getElementById('rangeCostPrice');
+
+          // Get the active pricing type
+          const selectedPricingType = document.querySelector('input[name="pricing_type"]:checked');
+          if (selectedPricingType) {
+            const pricingType = selectedPricingType.value;
+
+            // Sync the appropriate cost price to the main field
+            if (pricingType === 'manual' && manualCostPrice && manualCostPrice.value) {
+              costPrice.value = manualCostPrice.value;
+            } else if (pricingType === 'margin' && marginCostPrice && marginCostPrice.value) {
+              costPrice.value = marginCostPrice.value;
+            } else if (pricingType === 'range' && rangeCostPrice && rangeCostPrice.value) {
+              costPrice.value = rangeCostPrice.value;
+            }
+
+            // Clear fields that are not relevant to the selected pricing type
+            const minPriceField = document.getElementById('minPrice');
+            const maxPriceField = document.getElementById('maxPrice');
+            const targetMarginField = document.getElementById('targetMargin');
+            const sellingPriceField = document.getElementById('sellingPrice');
+            const calculatedPriceField = document.getElementById('calculatedPrice');
+            const potentialProfitField = document.getElementById('potentialProfit');
+            const marginProfitField = document.getElementById('marginProfit');
+            const finalPriceInputField = document.getElementById('finalPriceInput');
+
+            if (pricingType !== 'range') {
+              // Clear min and max price for non-range pricing types
+              if (minPriceField) minPriceField.value = '';
+              if (maxPriceField) maxPriceField.value = '';
+            }
+
+            if (pricingType !== 'margin') {
+              // Clear target margin for non-margin pricing types
+              if (targetMarginField) targetMarginField.value = '';
+              // Clear calculated price for non-margin pricing
+              if (calculatedPriceField) calculatedPriceField.value = '';
+            }
+
+            if (pricingType === 'manual') {
+              // Clear selling price for manual pricing
+              if (sellingPriceField) sellingPriceField.value = '';
+            }
+
+            // For margin pricing, sync calculated price to selling price and margin profit to potential profit
+            if (pricingType === 'margin') {
+              if (calculatedPriceField && calculatedPriceField.value) {
+                // Set selling_price from calculated price
+                if (sellingPriceField) {
+                  sellingPriceField.value = calculatedPriceField.value;
+                }
+              }
+
+              if (marginProfitField && marginProfitField.value) {
+                // Set potential_profit from margin profit
+                if (potentialProfitField) {
+                  potentialProfitField.value = marginProfitField.value;
+                }
+              }
+
+              // Calculate and set final price from margin pricing
+              const marginTaxRate = parseFloat(document.getElementById('marginTaxRate')?.value) || 0;
+              const calculatedPrice = parseFloat(calculatedPriceField?.value) || 0;
+              if (calculatedPrice > 0) {
+                const finalPrice = calculatedPrice * (1 + (marginTaxRate / 100));
+                if (finalPriceInputField) {
+                  finalPriceInputField.value = finalPrice.toFixed(2);
+                }
+              }
+            }
+
+            // For range pricing, set selling price and final price based on average
+            if (pricingType === 'range') {
+              const minPrice = parseFloat(minPriceField?.value) || 0;
+              const maxPrice = parseFloat(maxPriceField?.value) || 0;
+
+              if (minPrice > 0 && maxPrice > 0) {
+                // Use average of min and max for selling price
+                const avgPrice = (minPrice + maxPrice) / 2;
+                if (sellingPriceField) {
+                  sellingPriceField.value = avgPrice.toFixed(2);
+                }
+
+                // Calculate final price with tax based on average price
+                const rangeTaxRate = parseFloat(document.getElementById('rangeTaxRate')?.value) || 0;
+                const finalPrice = avgPrice * (1 + (rangeTaxRate / 100));
+                if (finalPriceInputField) {
+                  finalPriceInputField.value = finalPrice.toFixed(2);
+                }
+
+                // Set potential profit based on average
+                const costPrice = parseFloat(document.getElementById('rangeCostPrice')?.value) || parseFloat(document.getElementById('costPrice')?.value) || 0;
+                const avgProfit = avgPrice - costPrice;
+                if (potentialProfitField) {
+                  potentialProfitField.value = avgProfit.toFixed(2);
+                }
+              }
+            }
+          }
+
+          // Clean up profit margin field - use stored numeric value
+          const profitMarginField = document.getElementById('profitMargin');
+          if (profitMarginField) {
+            // Get clean numeric value from data attribute or parse from displayed value
+            let numericValue = profitMarginField.getAttribute('data-value') ||
+                                profitMarginField.value.replace('%', '').replace(/\s/g, '').trim();
+            // Ensure it's a valid number
+            numericValue = parseFloat(numericValue) || 0;
+            profitMarginField.value = numericValue.toString();
+            console.log('Profit margin cleaned:', profitMarginField.value);
+          }
+
+          // Clean up other readonly calculated fields if they're empty strings
+          const potentialProfitField = document.getElementById('potentialProfit');
+          if (potentialProfitField && !potentialProfitField.value) {
+            potentialProfitField.value = '0';
+          }
+
+          const marginProfitField = document.getElementById('marginProfit');
+          if (marginProfitField && !marginProfitField.value) {
+            marginProfitField.value = '0';
+          }
+
+          const calculatedPriceField = document.getElementById('calculatedPrice');
+          if (calculatedPriceField && !calculatedPriceField.value) {
+            calculatedPriceField.value = '0';
+          }
+
+          // Clean up range_potential_profit field - extract first number or set to 0
+          const rangePotentialProfitField = document.getElementById('rangePotentialProfit');
+          if (rangePotentialProfitField) {
+            const value = rangePotentialProfitField.value;
+            if (value && value.includes('-')) {
+              // Extract first number from "0.00 - 0.00" format
+              const firstNumber = value.split('-')[0].trim();
+              rangePotentialProfitField.value = firstNumber || '0';
+            } else if (!value) {
+              rangePotentialProfitField.value = '0';
+            }
+          }
+
+          console.log('Form data ready for submission');
+          console.log('Cost Price:', costPrice.value);
+          console.log('Pricing Type:', selectedPricingType ? selectedPricingType.value : 'none');
+
+          // Show loading state on button
+          const submitBtn = document.getElementById('addItemBtn');
+          if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Submitting...';
+          }
+        });
 
         // Initialize Select2 for better dropdowns
         if (typeof $ !== 'undefined' && $.fn.select2) {
@@ -280,16 +473,6 @@
           });
         });
 
-        // Auto-generate item code if not provided
-        document.getElementById('itemName').addEventListener('input', function() {
-          const itemCode = document.getElementById('itemCode');
-          if (!itemCode.value) {
-            const name = this.value.replace(/\s+/g, '').toUpperCase();
-            const timestamp = Date.now().toString().slice(-4);
-            itemCode.value = name.slice(0, 4) + timestamp;
-          }
-        });
-
         // Handle custom unit creation
         setupCustomUnitHandlers();
 
@@ -307,7 +490,7 @@
       // Field validation function
       function validateField(field) {
         const formGroup = field.closest('.form-group');
-        
+
         if (field.required && !field.value.trim()) {
           formGroup.classList.add('error');
           formGroup.classList.remove('success');
@@ -349,7 +532,7 @@
 
           // Check if unit already exists
           const existingOptions = Array.from(unitSelect.options);
-          const exists = existingOptions.some(option => 
+          const exists = existingOptions.some(option =>
             option.value.toLowerCase() === unitAbbr.toLowerCase() ||
             option.text.toLowerCase().layouts(unitName.toLowerCase())
           );
@@ -363,14 +546,14 @@
           const newOption = document.createElement('option');
           newOption.value = unitAbbr;
           newOption.text = `${unitName} (${unitAbbr})`;
-          
+
           // Insert before the "Add New Unit" option
           const customOption = unitSelect.querySelector('option[value="custom"]');
           unitSelect.insertBefore(newOption, customOption);
 
           // Select the new option
           unitSelect.value = unitAbbr;
-          
+
           // Hide the container and clear inputs
           customUnitContainer.style.display = 'none';
           customUnit.value = '';
@@ -416,6 +599,9 @@
         const pricingTypeRadios = document.querySelectorAll('input[name="pricing_type"]');
         const pricingDescription = document.getElementById('pricingDescription');
         const costPrice = document.getElementById('costPrice');
+        const manualCostPrice = document.getElementById('manualCostPrice');
+        const marginCostPrice = document.getElementById('marginCostPrice');
+        const rangeCostPrice = document.getElementById('rangeCostPrice');
         const targetMargin = document.getElementById('targetMargin');
         const calculatedPrice = document.getElementById('calculatedPrice');
 
@@ -430,6 +616,31 @@
           });
         });
 
+        // Sync all cost price fields when any one changes
+        [costPrice, manualCostPrice, marginCostPrice, rangeCostPrice].forEach(field => {
+          if (field) {
+            field.addEventListener('input', function() {
+              const value = this.value;
+              if (costPrice) costPrice.value = value;
+              if (manualCostPrice) manualCostPrice.value = value;
+              if (marginCostPrice) marginCostPrice.value = value;
+              if (rangeCostPrice) rangeCostPrice.value = value;
+
+              // Trigger calculations based on active pricing type
+              const selectedPricingType = document.querySelector('input[name="pricing_type"]:checked');
+              if (selectedPricingType) {
+                if (selectedPricingType.value === 'margin') {
+                  calculateMarginPrice();
+                } else if (selectedPricingType.value === 'range') {
+                  calculateRangeProfits();
+                } else if (selectedPricingType.value === 'fixed') {
+                  calculateProfitMargin();
+                }
+              }
+            });
+          }
+        });
+
         // Handle margin pricing calculations
         if (targetMargin) {
           targetMargin.addEventListener('input', function() {
@@ -437,18 +648,15 @@
           });
         }
 
-        costPrice.addEventListener('input', function() {
-          const selectedPricingType = document.querySelector('input[name="pricing_type"]:checked');
-          if (selectedPricingType) {
-            if (selectedPricingType.value === 'margin') {
-              calculateMarginPrice();
-            } else if (selectedPricingType.value === 'range') {
-              calculateRangeProfits();
-            } else if (selectedPricingType.value === 'fixed') {
-              calculateProfitMargin();
-            }
-          }
-        });
+        // Handle tax rate changes for margin pricing
+        const marginTaxRate = document.getElementById('marginTaxRate');
+        if (marginTaxRate) {
+          marginTaxRate.addEventListener('change', function() {
+            calculateMarginPrice();
+          });
+        }
+
+        // Tax rate for fixed pricing already handled above in DOMContentLoaded
 
         // Handle range pricing validation and profit calculation
         document.getElementById('minPrice')?.addEventListener('input', function() {
@@ -459,78 +667,111 @@
           validatePriceRange();
           calculateRangeProfits();
         });
+
+        // Handle tax rate changes for range pricing
+        const rangeTaxRate = document.getElementById('rangeTaxRate');
+        if (rangeTaxRate) {
+          rangeTaxRate.addEventListener('change', function() {
+            calculateRangeProfits();
+          });
+        }
       }
 
       // Show appropriate pricing fields based on selected type
       function showPricingFields(type) {
+        console.log('showPricingFields called with type:', type);
+
         // Hide all pricing fields first
         document.querySelectorAll('.pricing-fields').forEach(field => {
           field.style.display = 'none';
         });
-        
-        // Always hide pricing tiers (no longer used)
-        document.getElementById('pricingTiers').style.display = 'none';
 
-        // Show/hide additional pricing options based on type
-        const additionalPricingOptions = document.getElementById('additionalPricingOptions');
-        const discountField = additionalPricingOptions.querySelector('.col-md-4:nth-child(2)');
-        const finalPriceField = additionalPricingOptions.querySelector('.col-md-4:nth-child(3)');
-        
-        if (type === 'manual') {
-          additionalPricingOptions.style.display = 'none';
-        } else if (type === 'margin' || type === 'range') {
-          additionalPricingOptions.style.display = 'flex';
-          // Hide discount and final price preview for margin and range pricing
-          discountField.style.display = 'none';
-          finalPriceField.style.display = 'none';
-        } else {
-          additionalPricingOptions.style.display = 'flex';
-          // Show all fields for other pricing methods (fixed)
-          discountField.style.display = 'block';
-          finalPriceField.style.display = 'block';
+        // Hide pricing tiers
+        const pricingTiersElement = document.getElementById('pricingTiers');
+        if (pricingTiersElement) {
+          pricingTiersElement.style.display = 'none';
         }
+
+        // Remove required attribute from all pricing-specific fields first
+        const sellingPriceInput = document.getElementById('sellingPrice');
+        const targetMarginInput = document.getElementById('targetMargin');
+        const minPriceInput = document.getElementById('minPrice');
+        const maxPriceInput = document.getElementById('maxPrice');
+
+        if (sellingPriceInput) sellingPriceInput.required = false;
+        if (targetMarginInput) targetMarginInput.required = false;
+        if (minPriceInput) minPriceInput.required = false;
+        if (maxPriceInput) maxPriceInput.required = false;
 
         // Show relevant fields based on type
         switch(type) {
           case 'fixed':
-            document.getElementById('fixedFields').style.display = 'flex';
-            const sellingPriceInput = document.getElementById('sellingPrice');
-            sellingPriceInput.required = true;
-            break;
-          case 'manual':
-            document.getElementById('manualFields').style.display = 'flex';
-            // For manual pricing, only cost price is required, no selling price field shown
-            const sellingPriceInputManual = document.getElementById('sellingPrice');
-            if (sellingPriceInputManual) {
-              sellingPriceInputManual.required = false;
+            const fixedFields = document.getElementById('fixedFields');
+            const fixedFinalPrice = document.getElementById('fixedFinalPrice');
+            if (fixedFields) {
+              fixedFields.style.display = '';
+              fixedFields.classList.remove('d-none');
             }
-            // Reset tax, discount and final price for manual pricing
-            document.getElementById('taxRate').value = '0';
-            document.getElementById('discount').value = '0';
-            document.getElementById('finalPrice').textContent = '₦0.00';
+            if (fixedFinalPrice) {
+              fixedFinalPrice.style.display = '';
+              fixedFinalPrice.classList.remove('d-none');
+            }
+            if (sellingPriceInput) {
+              sellingPriceInput.required = true;
+            }
+            console.log('Fixed pricing fields shown');
+            // Trigger calculation for fixed pricing
+            calculateProfitMargin();
+            calculateFinalPrice();
             break;
+
+          case 'manual':
+            const manualFields = document.getElementById('manualFields');
+            if (manualFields) {
+              manualFields.style.display = '';
+              manualFields.classList.remove('d-none');
+            }
+            console.log('Manual pricing fields shown');
+            break;
+
           case 'margin':
-            document.getElementById('marginFields').style.display = 'flex';
-            document.getElementById('targetMargin').required = true;
-            // Reset discount and final price for margin pricing
-            document.getElementById('discount').value = '0';
-            document.getElementById('finalPrice').textContent = '₦0.00';
+            const marginFields = document.getElementById('marginFields');
+            if (marginFields) {
+              marginFields.style.display = '';
+              marginFields.classList.remove('d-none');
+            }
+            if (targetMarginInput) {
+              targetMarginInput.required = true;
+            }
+            console.log('Margin pricing fields shown');
+            // Trigger calculation for margin pricing
+            calculateMarginPrice();
             break;
+
           case 'range':
-            document.getElementById('rangeFields').style.display = 'flex';
-            document.getElementById('minPrice').required = true;
-            document.getElementById('maxPrice').required = true;
-            // Reset discount and final price for range pricing
-            document.getElementById('discount').value = '0';
-            document.getElementById('finalPrice').textContent = '₦0.00';
+            const rangeFields = document.getElementById('rangeFields');
+            if (rangeFields) {
+              rangeFields.style.display = '';
+              rangeFields.classList.remove('d-none');
+            }
+            if (minPriceInput) {
+              minPriceInput.required = true;
+            }
+            if (maxPriceInput) {
+              maxPriceInput.required = true;
+            }
+            console.log('Range pricing fields shown');
+            // Trigger calculation for range pricing
+            calculateRangeProfits();
             break;
         }
-      }
 
-      // Show pricing description
+        // Sync cost price fields
+        syncCostPriceFields();
+      }      // Show pricing description
       function showPricingDescription(type) {
         const descContainer = document.getElementById('pricingDescription');
-        
+
         // Hide all descriptions
         document.querySelectorAll('.pricing-desc').forEach(desc => {
           desc.style.display = 'none';
@@ -547,30 +788,53 @@
         }
       }
 
+      // Sync cost price across all pricing types
+      function syncCostPriceFields() {
+        const costPrice = document.getElementById('costPrice');
+        const manualCostPrice = document.getElementById('manualCostPrice');
+        const marginCostPrice = document.getElementById('marginCostPrice');
+        const rangeCostPrice = document.getElementById('rangeCostPrice');
+
+        if (costPrice && costPrice.value) {
+          if (manualCostPrice) manualCostPrice.value = costPrice.value;
+          if (marginCostPrice) marginCostPrice.value = costPrice.value;
+          if (rangeCostPrice) rangeCostPrice.value = costPrice.value;
+        }
+      }
+
       // Calculate selling price and profit based on margin
       function calculateMarginPrice() {
-        const costPrice = parseFloat(document.getElementById('costPrice').value) || 0;
+        const costPrice = parseFloat(document.getElementById('marginCostPrice').value) || parseFloat(document.getElementById('costPrice').value) || 0;
         const targetMargin = parseFloat(document.getElementById('targetMargin').value) || 0;
-        
+
         if (costPrice > 0 && targetMargin > 0) {
           const calculatedSellingPrice = costPrice * (1 + (targetMargin / 100));
           const profit = calculatedSellingPrice - costPrice;
-          
+
           document.getElementById('calculatedPrice').value = calculatedSellingPrice.toFixed(2);
-          
+
           // Calculate and display margin profit
           const marginProfitField = document.getElementById('marginProfit');
           if (marginProfitField) {
             marginProfitField.value = profit.toFixed(2);
           }
-          
-          // Update the selling price field for final calculations
-          document.getElementById('sellingPrice').value = calculatedSellingPrice.toFixed(2);
+
+          // Calculate final price with tax
+          const taxRate = parseFloat(document.getElementById('marginTaxRate').value) || 0;
+          const finalPrice = calculatedSellingPrice * (1 + (taxRate / 100));
+          const marginFinalPrice = document.getElementById('marginFinalPrice');
+          if (marginFinalPrice) {
+            marginFinalPrice.textContent = '₦' + finalPrice.toFixed(2);
+          }
         } else {
           document.getElementById('calculatedPrice').value = '';
           const marginProfitField = document.getElementById('marginProfit');
           if (marginProfitField) {
             marginProfitField.value = '0.00';
+          }
+          const marginFinalPrice = document.getElementById('marginFinalPrice');
+          if (marginFinalPrice) {
+            marginFinalPrice.textContent = '₦0.00';
           }
         }
       }
@@ -579,14 +843,14 @@
       function validatePriceRange() {
         const minPrice = parseFloat(document.getElementById('minPrice').value) || 0;
         const maxPrice = parseFloat(document.getElementById('maxPrice').value) || 0;
-        const costPrice = parseFloat(document.getElementById('costPrice').value) || 0;
+        const costPrice = parseFloat(document.getElementById('rangeCostPrice').value) || parseFloat(document.getElementById('costPrice').value) || 0;
 
         if (minPrice > 0 && maxPrice > 0) {
           if (minPrice >= maxPrice) {
             showNotification('Minimum price must be less than maximum price', 'error');
             return false;
           }
-          
+
           if (minPrice <= costPrice) {
             showNotification('Warning: Minimum price is less than or equal to cost price', 'warning');
           }
@@ -610,22 +874,35 @@
 
       // Calculate range pricing profits
       function calculateRangeProfits() {
-        const costPrice = parseFloat(document.getElementById('costPrice').value) || 0;
+        const costPrice = parseFloat(document.getElementById('rangeCostPrice').value) || parseFloat(document.getElementById('costPrice').value) || 0;
         const minPrice = parseFloat(document.getElementById('minPrice').value) || 0;
         const maxPrice = parseFloat(document.getElementById('maxPrice').value) || 0;
-        
+
         const rangePotentialProfitField = document.getElementById('rangePotentialProfit');
-        
+
         if (costPrice > 0 && minPrice > 0 && maxPrice > 0) {
           const minProfit = minPrice - costPrice;
           const maxProfit = maxPrice - costPrice;
-          
+
           if (rangePotentialProfitField) {
-            rangePotentialProfitField.value = `${minProfit.toFixed(2)} to ${maxProfit.toFixed(2)}`;
+            rangePotentialProfitField.value = `${minProfit.toFixed(2)} - ${maxProfit.toFixed(2)}`;
+          }
+
+          // Calculate final price range with tax
+          const taxRate = parseFloat(document.getElementById('rangeTaxRate').value) || 0;
+          const finalMinPrice = minPrice * (1 + (taxRate / 100));
+          const finalMaxPrice = maxPrice * (1 + (taxRate / 100));
+          const rangeFinalPrice = document.getElementById('rangeFinalPrice');
+          if (rangeFinalPrice) {
+            rangeFinalPrice.textContent = `₦${finalMinPrice.toFixed(2)} - ₦${finalMaxPrice.toFixed(2)}`;
           }
         } else {
           if (rangePotentialProfitField) {
-            rangePotentialProfitField.value = '0.00 to 0.00';
+            rangePotentialProfitField.value = '0.00 - 0.00';
+          }
+          const rangeFinalPrice = document.getElementById('rangeFinalPrice');
+          if (rangeFinalPrice) {
+            rangeFinalPrice.textContent = '₦0.00 - ₦0.00';
           }
         }
       }
@@ -634,7 +911,7 @@
       function removeTier(button) {
         const row = button.closest('tr');
         const tbody = document.getElementById('tierTableBody');
-        
+
         if (tbody.children.length > 1) {
           row.remove();
           showNotification('Pricing tier removed', 'info');
@@ -647,7 +924,7 @@
       function toggleStockDetails() {
         const stockContent = document.getElementById('stockDetailsContent');
         const toggleCheckbox = document.getElementById('stockToggleCheckbox');
-        
+
         if (toggleCheckbox.checked) {
           stockContent.style.display = 'block';
           // Add smooth slide down animation
@@ -673,7 +950,7 @@
             overflow: visible;
           }
         }
-        
+
         @keyframes slideUp {
           from {
             opacity: 1;
@@ -686,7 +963,7 @@
             overflow: hidden;
           }
         }
-        
+
         /* Toggle Switch Styles */
         .toggle-switch {
           position: relative;
@@ -696,13 +973,13 @@
           margin: 0;
           cursor: pointer;
         }
-        
+
         .toggle-switch input {
           opacity: 0;
           width: 0;
           height: 0;
         }
-        
+
         .toggle-slider {
           position: absolute;
           cursor: pointer;
@@ -714,7 +991,7 @@
           transition: .4s;
           border-radius: 24px;
         }
-        
+
         .toggle-slider:before {
           position: absolute;
           content: "";
@@ -727,23 +1004,23 @@
           border-radius: 50%;
           box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
-        
+
         .toggle-switch input:checked + .toggle-slider {
           background-color: #2196F3;
         }
-        
+
         .toggle-switch input:focus + .toggle-slider {
           box-shadow: 0 0 1px #2196F3;
         }
-        
+
         .toggle-switch input:checked + .toggle-slider:before {
           transform: translateX(26px);
         }
-        
+
         .toggle-switch:hover .toggle-slider {
           box-shadow: 0 0 8px rgba(33, 150, 243, 0.3);
         }
-        
+
         #stockDetailsContent {
           transition: all 0.3s ease;
         }

@@ -4,7 +4,28 @@ Add Item Variant
 @endsection
 @section('manager_layout_content')
 
-  <!-- Modal Body -->
+<style>
+  .variant-cost-price, .variant-sell-price {
+    font-weight: 600;
+  }
+  .variant-table tbody td {
+    vertical-align: middle;
+  }
+  .variant-table .input-group-sm {
+    margin-bottom: 0.25rem;
+  }
+  .variant-table small {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 0.75rem;
+  }
+  .variant-table .form-control-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+  }
+</style>
+
+     <!-- Modal Body -->
       <div class="modal-body-custom">
         <div class="intro-text">
           <p>
@@ -12,8 +33,9 @@ Add Item Variant
             Create a new item with multiple variants (e.g., different sizes, colors, or specifications). Define the base item details and add specific variants with their own pricing and stock levels.
           </p>
         </div>
-        <form class="forms-sample" id="addVariantForm" method="POST" action="process_add_variant.php" enctype="multipart/form-data">
-          
+        <form class="forms-sample" id="addVariantForm" method="POST" action="{{ route('variant.create') }}" enctype="multipart/form-data">
+          @csrf
+
           <!-- Section 1: Base Item Details -->
           <div class="card mb-4">
             <div class="card-header">
@@ -26,13 +48,13 @@ Add Item Variant
                 <div class="col-md-6">
                   <div class="form-group">
                     <label for="itemName" class="form-label required-field">Base Item Name</label>
-                    <input type="text" class="form-control" id="itemName" name="item_name" placeholder="Enter base item name (e.g., T-Shirt)" required>
+                    <input type="text" class="form-control" id="itemName" name="item_name" placeholder="Enter base item name (e.g., T-Shirt)" value="{{ old('item_name') }}" required>
                   </div>
                 </div>
                 <div class="col-md-6">
                   <div class="form-group">
                     <label for="itemCode" class="form-label">Base Item Code/SKU</label>
-                    <input type="text" class="form-control" id="itemCode" name="item_code" placeholder="Auto-generated or enter custom code">
+                    <input type="text" class="form-control" id="itemCode" name="item_code" placeholder="Auto-generated or enter custom code" value="{{ old('item_code') }}">
                   </div>
                 </div>
               </div>
@@ -42,26 +64,29 @@ Add Item Variant
                   <div class="form-group">
                     <label for="category" class="form-label required-field">Category</label>
                     <select class="form-select" id="category" name="category" required>
-                      <option value="">Select Category</option>
-                      <option value="electronics">Electronics</option>
-                      <option value="clothing">Clothing</option>
-                      <option value="food">Food & Beverages</option>
-                      <option value="furniture">Furniture</option>
-                      <option value="stationery">Stationery</option>
-                      <option value="other">Other</option>
-                    </select>
+                                  <option value="">Select Category</option>
+                                   @foreach($categories as $category)
+                                    <option value="{{ $category->id }}" {{ old('category') == $category->id ? 'selected' : '' }}>
+                                      {{ $category->category_name }}
+                                    </option>
+                                  @endforeach
+                                </select>
+                    <small class="form-text text-muted">Select existing or type new category name</small>
                   </div>
                 </div>
-                <div class="col-md-6">
-                  <div class="form-group">
-                    <label for="supplier" class="form-label">Supplier</label>
-                    <select class="form-select" id="supplier" name="supplier">
-                      <option value="">Select Supplier</option>
-                      <option value="supplier1">Supplier 1</option>
-                      <option value="supplier2">Supplier 2</option>
-                      <option value="supplier3">Supplier 3</option>
-                    </select>
-                  </div>
+                  <div class="col-md-6">
+                              <div class="form-group">
+                                <label for="supplier" class="form-label">Supplier</label>
+                                <select class="form-select" id="supplier" name="supplier_id">
+                                  <option value="">Select Supplier</option>
+                                  @foreach($suppliers as $supplier)
+                                    <option value="{{ $supplier->id }}" {{ old('supplier_id') == $supplier->id ? 'selected' : '' }}>
+                                      {{ $supplier->name }}
+                                    </option>
+                                  @endforeach
+                                </select>
+
+                              </div>
                 </div>
               </div>
 
@@ -69,25 +94,32 @@ Add Item Variant
                 <div class="col-md-6">
                   <div class="form-group">
                     <label for="unit" class="form-label required-field">Unit of Measurement</label>
-                    <select class="form-select" id="unit" name="unit" required>
-                      <option value="">Select Unit</option>
-                      <option value="pcs">Piece (pcs)</option>
-                      <option value="ct">Carton (ct)</option>
-                      <option value="cm">Centimeter (cm)</option>
-                      <option value="L">Litre (L)</option>
-                      <option value="g">Gram (g)</option>
-                      <option value="kg">Kilogram (kg)</option>
-                      <option value="pi">Per item (pi)</option>
-                      <option value="yd">Yard (yd)</option>
-                      <option value="m">Metre (m)</option>
-                      <option value="mm">Millimetre (mm)</option>
-                    </select>
+                    <div class="unit-input-container">
+                       <select class="form-select" id="unit" name="unit_id">
+                                  <option value="">Select Unit</option>
+                                  @foreach($units as $unit)
+                                    <option value="{{ $unit->id }}" {{ old('unit_id') == $unit->id ? 'selected' : '' }}>
+                                      {{ $unit->name }}
+                                    </option>
+                                  @endforeach
+                         </select>
+                      <div id="customUnitContainer" class="mt-2" style="display: none;">
+                        <div class="input-group">
+                          <input type="text" class="form-control" id="customUnit" placeholder="Enter custom unit (e.g., tons, pieces)">
+                          <input type="text" class="form-control" id="customUnitAbbr" placeholder="Abbreviation (e.g., t, pcs)">
+                          <button type="button" class="btn btn-outline-primary" id="addUnitBtn">
+                            <i class="mdi mdi-plus"></i> Add
+                          </button>
+                        </div>
+                        <small class="form-text text-muted">Enter the unit name and its abbreviation</small>
+                      </div>
+                    </div>
                   </div>
                 </div>
                 <div class="col-md-6">
                   <div class="form-group">
-                    <label for="brand" class="form-label">Brand</label>
-                    <input type="text" class="form-control" id="brand" name="brand" placeholder="Enter brand name">
+                    <label for="barcode" class="form-label">Barcode</label>
+                    <input type="text" class="form-control" id="barcode" name="barcode" placeholder="Enter or scan barcode" value="{{ old('barcode') }}">
                   </div>
                 </div>
               </div>
@@ -96,7 +128,7 @@ Add Item Variant
                 <div class="col-md-12">
                   <div class="form-group">
                     <label for="description" class="form-label">Base Description</label>
-                    <textarea class="form-control" id="description" name="description" rows="4" placeholder="Enter base item description (common for all variants)"></textarea>
+                    <textarea class="form-control" id="description" name="description" rows="4" placeholder="Enter base item description (common for all variants)">{{ old('description') }}</textarea>
                   </div>
                 </div>
               </div>
@@ -136,11 +168,13 @@ Add Item Variant
                 <table class="table table-bordered" id="variantTable">
                   <thead>
                     <tr>
-                      <th>Variant</th>
-                      <th class="text-center align-middle">Sell Item</th>
-                      <th>Cost Price</th>
-                      <th>Sell Price</th>
-                      <th>Action</th>
+                      <th style="width: 15%;">Variant</th>
+                      <th class="text-center align-middle" style="width: 10%;">Sell Item</th>
+                      <th style="width: 15%;">Cost Price</th>
+                      <th style="width: 15%;">Sell Price</th>
+                      <th style="width: 12%;">Stock</th>
+                      <th style="width: 13%;">Low Stock</th>
+                      <th style="width: 10%;">Action</th>
                     </tr>
                   </thead>
                   <tbody id="variantTableBody">
@@ -161,26 +195,25 @@ Add Item Variant
             </div>
           </div>
 
+          <!-- Action Buttons (Sticky Footer) -->
+          <div class="action-buttons">
+            <button type="reset" class="btn btn-light">
+              <i class="mdi mdi-refresh"></i> Reset
+            </button>
+            <button type="button" class="btn btn-secondary" onclick="closeModal()">
+              <i class="mdi mdi-close"></i> Cancel
+            </button>
+            <button type="submit" class="btn btn-primary">
+              <i class="mdi mdi-content-save"></i> Save Item
+            </button>
+          </div>
 
-
-             <!-- Action Buttons (Sticky Footer) -->
-      <div class="action-buttons">
-        <button type="reset" class="btn btn-light" onclick="resetForm()">
-          <i class="mdi mdi-refresh"></i> Reset
-        </button>
-        <button type="button" class="btn btn-secondary" onclick="closeModal()">
-          <i class="mdi mdi-close"></i> Cancel
-        </button>
-        <button type="button" class="btn btn-primary" onclick="submitForm()">
-          <i class="mdi mdi-content-save"></i> Save Item
-        </button>
-      </div>
         </form>
       </div>
 
     <!-- Variant Configuration Modal -->
     <div class="modal-overlay" id="variantModalOverlay" style="display: none;">
-      <div class="modal-container" onclick="event.stopPropagation();" style="overflow-y: auto; max-height: 90vh;">
+      <div class="modal-container">
         <div class="modal-header">
           <h4 class="modal-title">
             <i class="mdi mdi-palette"></i> Configure Product Variants
@@ -190,7 +223,7 @@ Add Item Variant
           </button>
         </div>
         <div class="modal-body">
-          <form id="variantConfigForm" onsubmit="return false;">
+          <form id="variantConfigForm">
             <!-- Set 1 - Primary (Required) -->
             <div class="variant-set-group mb-4" id="variantSet1">
               <h6 class="variant-set-title">
@@ -293,28 +326,26 @@ Add Item Variant
 
             <!-- Combination Preview -->
             <div class="mt-4" id="combinationPreview" style="display: none;">
-                <div class="alert alert-info">
-                    <i class="mdi mdi-information"></i>
-                    <strong>Combination Preview:</strong> 
-                    <span id="combinationCount">0</span> variants will be generated
-                </div>
+              <div class="alert alert-info">
+                <i class="mdi mdi-information"></i>
+                <strong>Combination Preview:</strong>
+                <span id="combinationCount">0</span> variants will be generated
+              </div>
             </div>
           </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeVariantModal()">
+            <i class="mdi mdi-close"></i> Cancel
+          </button>
+          <button type="button" class="btn btn-primary" onclick="configureVariants()">
+            <i class="mdi mdi-check"></i> Configure Variants
+          </button>
+        </div>
+      </div>
     </div>
 
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" onclick="closeVariantModal()">
-                    <i class="mdi mdi-close"></i> Cancel
-                </button>
-                <button type="button" class="btn btn-primary" onclick="configureVariants()">
-                    <i class="mdi mdi-check"></i> Configure Variants
-                </button>
-            </div>
-        </div>
-         </div>
-      
-
-      <!-- Overlay for variant settings -->
+    <!-- Overlay for variant settings -->
     <div id="variantSettingsOverlay" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.5); z-index:20000; align-items:center; justify-content:center;">
       <div style="background:#fff; border-radius:20px; max-width:900px; width:98vw; min-width:340px; margin:auto; box-shadow:0 8px 40px rgba(0,0,0,0.25); position:relative;">
         <div class="d-flex justify-content-between align-items-center p-3 border-bottom">
@@ -412,12 +443,12 @@ Add Item Variant
                     </select>
                   </div>
                 </div>
-                <div class="col-md-4">
+              {{--    <div class="col-md-4">
                   <div class="form-group">
                     <label for="discount" class="form-label">Discount (%)</label>
                     <input type="number" class="form-control" id="discount" name="discount" placeholder="0" step="0.01" min="0" max="100" value="0">
                   </div>
-                </div>
+                </div>  --}}
                 <div class="col-md-4">
                   <div class="form-group">
                     <label class="form-label">Final Price Preview</label>
@@ -439,7 +470,7 @@ Add Item Variant
                     <small class="form-text text-muted">Price you pay to supplier. Selling price set at sale time.</small>
                   </div>
                 </div>
-                
+
                 <div class="tab-pane fade" id="marginPricingPane" role="tabpanel" aria-labelledby="margin-tab">
                   <div class="row">
                     <div class="col-md-6">
@@ -571,9 +602,8 @@ Add Item Variant
         </div>
       </div>
     </div>
-    
-    
-      <!-- Variant Pricing Modal -->
+
+    <!-- Variant Pricing Modal -->
     <div class="modal-overlay" id="pricingModalOverlay" style="display: none;">
       <div class="modal-container" style="max-width: 1000px;">
         <div class="modal-header-custom">
@@ -585,11 +615,11 @@ Add Item Variant
             <i class="mdi mdi-close"></i>
           </button>
         </div>
-        
+
         <div class="modal-body-custom">
           <form id="variantPricingForm">
             <input type="hidden" id="currentVariantIndex" value="">
-            
+
             <!-- Pricing Methods Selection -->
             <div class="form-group">
               <label class="form-label"><strong>Choose Pricing Method:</strong></label>
@@ -625,7 +655,7 @@ Add Item Variant
               </div>
               <div class="pricing-help-text mt-2">
                 <strong><i class="mdi mdi-lock text-primary"></i> Fixed Pricing:</strong> Set a single, unchanging selling price for this variant.<br>
-                <strong><i class="mdi mdi-pencil text-warning"></i> Manual Pricing:</strong> Enter only the cost price. Selling prices set during sales.<br>
+                <strong><i class="mdi mdi-pencil text-warning"></i> Manual Pricing:</strong> Only cost price is required. Selling price, taxes, and discounts will be set during individual sales transactions.<br>
                 <strong><i class="mdi mdi-percent text-success"></i> Margin Pricing:</strong> Set a profit margin percentage, and selling price will be calculated automatically.<br>
                 <strong><i class="mdi mdi-chart-line text-info"></i> Range Pricing:</strong> Set minimum and maximum price boundaries for flexible pricing.
               </div>
@@ -683,8 +713,7 @@ Add Item Variant
                 <div id="modalManualFields" class="pricing-fields row" style="display: none;">
                   <div class="col-md-12">
                     <div class="alert alert-info">
-                      <i class="mdi mdi-information"></i> 
-                      <strong>Manual Pricing:</strong> Only cost price is required. Selling price, taxes, and discounts will be set during individual sales transactions.
+                      <i class="mdi mdi-information"></i>
                     </div>
                   </div>
                 </div>
@@ -760,7 +789,7 @@ Add Item Variant
             </div>
           </form>
         </div>
-        
+
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" onclick="closePricingModal()">
             <i class="mdi mdi-close"></i> Cancel
@@ -771,11 +800,501 @@ Add Item Variant
         </div>
       </div>
     </div>
-    </div>
+
+      <!-- Edit Variant Modal (Embedded) -->
+    <div class="edit-variant-modal-overlay" id="editVariantModalOverlay" style="display: none;">
+      <div class="edit-variant-modal">
+        <!-- Modal Header -->
+        <div class="edit-variant-modal-header">
+          <h4><i class="mdi mdi-pencil"></i> Edit Variant</h4>
+          <button type="button" class="edit-variant-close-btn" onclick="closeEditVariantModal()">
+            <i class="mdi mdi-close"></i>
+          </button>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="edit-variant-modal-body">
+          <ul class="nav nav-tabs" id="editVariantTab" role="tablist">
+            <li class="nav-item" role="presentation">
+              <button class="nav-link active" id="edit-item-details-tab" data-bs-toggle="tab" data-bs-target="#edit-item-details" type="button" role="tab">
+                <i class="mdi mdi-tag-outline"></i> Item Details
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="edit-pricing-tab" data-bs-toggle="tab" data-bs-target="#edit-pricing" type="button" role="tab">
+                <i class="mdi mdi-currency-usd"></i> Pricing Details
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="edit-stock-tab" data-bs-toggle="tab" data-bs-target="#edit-stock" type="button" role="tab">
+                <i class="mdi mdi-package-variant"></i> Stock Tracking
+              </button>
+            </li>
+          </ul>
+
+          <div class="tab-content" id="editVariantTabContent">
+            <!-- Item Details Tab -->
+            <div class="tab-pane fade show active" id="edit-item-details" role="tabpanel">
+              <form id="editItemDetailsForm">
+                <input type="hidden" id="editVariantIndex" value="">
+                <div class="form-group">
+                  <label for="editVariantDisplay" class="form-label">Variant</label>
+                  <input type="text" class="form-control" id="editVariantDisplay" name="variant_display" readonly>
+                  <small class="form-text text-muted">Variations separated by /</small>
+                </div>
+                <div class="form-group">
+                  <label for="editVariantSku" class="form-label">SKU</label>
+                  <input type="text" class="form-control" id="editVariantSku" name="sku" readonly>
+                </div>
+                <div class="form-group">
+                  <label for="editVariantBarcode" class="form-label">Barcode</label>
+                  <input type="text" class="form-control" id="editVariantBarcode" name="barcode" placeholder="Enter barcode">
+                  <small class="form-text text-muted">Optional: Product barcode for scanning</small>
+                </div>
+              </form>
+            </div>
+
+            <!-- Pricing Details Tab -->
+            <div class="tab-pane fade" id="edit-pricing" role="tabpanel">
+              <form id="editPricingForm">
+                <!-- Pricing Method Selection (Radio Buttons) -->
+                <div class="form-group mb-3">
+                  <label class="form-label required-field">Pricing Method</label>
+                  <div class="pricing-methods-row">
+                    <div class="pricing-method-option">
+                      <input type="radio" class="form-check-input" id="editFixedPricing" name="edit_pricing_type" value="fixed" required checked>
+                      <label for="editFixedPricing" class="pricing-method-label">
+                        <i class="mdi mdi-lock"></i>
+                        <span class="method-name">Fixed</span>
+                      </label>
+                    </div>
+                    <div class="pricing-method-option">
+                      <input type="radio" class="form-check-input" id="editManualPricing" name="edit_pricing_type" value="manual" required>
+                      <label for="editManualPricing" class="pricing-method-label">
+                        <i class="mdi mdi-pencil"></i>
+                        <span class="method-name">Manual</span>
+                      </label>
+                    </div>
+                    <div class="pricing-method-option">
+                      <input type="radio" class="form-check-input" id="editMarginPricing" name="edit_pricing_type" value="margin" required>
+                      <label for="editMarginPricing" class="pricing-method-label">
+                        <i class="mdi mdi-percent"></i>
+                        <span class="method-name">Margin</span>
+                      </label>
+                    </div>
+                    <div class="pricing-method-option">
+                      <input type="radio" class="form-check-input" id="editRangePricing" name="edit_pricing_type" value="range" required>
+                      <label for="editRangePricing" class="pricing-method-label">
+                        <i class="mdi mdi-chart-line"></i>
+                        <span class="method-name">Range</span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Pricing Method Descriptions -->
+                <div id="editPricingDescription" class="alert alert-light mb-3" style="display: none;">
+                  <div id="editFixedDesc" class="pricing-desc" style="display: none;">
+                    <strong><i class="mdi mdi-lock text-primary"></i> Fixed Pricing:</strong> Set a single, unchanging selling price for this item.
+                  </div>
+                  <div id="editManualDesc" class="pricing-desc" style="display: none;">
+                    <strong><i class="mdi mdi-pencil text-warning"></i> Manual Pricing:</strong> Enter only the cost price. Selling prices will be set during sales.
+                  </div>
+                  <div id="editMarginDesc" class="pricing-desc" style="display: none;">
+                    <strong><i class="mdi mdi-percent text-success"></i> Margin Pricing:</strong> Set a profit margin percentage, and selling price will be auto-calculated.
+                  </div>
+                  <div id="editRangeDesc" class="pricing-desc" style="display: none;">
+                    <strong><i class="mdi mdi-chart-line text-info"></i> Range Pricing:</strong> Set minimum and maximum price boundaries for flexible pricing.
+                  </div>
+                </div>
+
+                <!-- Fixed Pricing Fields -->
+                <div id="editFixedFields" class="pricing-fields" style="display: block;">
+                  <div class="row">
+                    <div class="col-md-6">
+                      <div class="form-group">
+                        <label for="editFixedCostPrice" class="form-label required-field">Cost Price</label>
+                        <div class="input-group">
+                          <span class="input-group-text">₦</span>
+                          <input type="number" class="form-control" id="editFixedCostPrice" name="fixed_cost_price" placeholder="0.00" step="0.01" min="0">
+                        </div>
+                        <small class="form-text text-muted">Price you pay to supplier</small>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="form-group">
+                        <label for="editSellingPrice" class="form-label required-field">Selling Price</label>
+                        <div class="input-group">
+                          <span class="input-group-text">₦</span>
+                          <input type="number" class="form-control" id="editSellingPrice" name="selling_price" placeholder="0.00" step="0.01" min="0">
+                        </div>
+                        <small class="form-text text-muted">Price you sell to customers</small>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-md-6">
+                      <div class="form-group">
+                        <label for="editProfitMargin" class="form-label">Profit Margin</label>
+                        <div class="input-group">
+                          <input type="text" class="form-control" id="editProfitMargin" name="profit_margin" placeholder="0%" readonly>
+                          <span class="input-group-text">%</span>
+                        </div>
+                        <small class="form-text text-muted">Auto-calculated margin percentage</small>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="form-group">
+                        <label for="editPotentialProfit" class="form-label">Potential Profit</label>
+                        <div class="input-group">
+                          <span class="input-group-text">₦</span>
+                          <input type="text" class="form-control" id="editPotentialProfit" name="potential_profit" placeholder="0.00" readonly>
+                        </div>
+                        <small class="form-text text-muted">Per unit profit</small>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-md-6">
+                      <div class="form-group">
+                        <label for="editTaxRate" class="form-label">Tax Rate</label>
+                        <select class="form-select" id="editTaxRate" name="tax_rate">
+                          <option value="0">No Tax (0%)</option>
+                          <option value="5">VAT 5%</option>
+                          <option value="7.5">VAT 7.5%</option>
+                          <option value="10">VAT 10%</option>
+                          <option value="15">VAT 15%</option>
+                        </select>
+                        <small class="form-text text-muted">Applicable tax percentage</small>
+                      </div>
+                    </div>
+                  {{--    <div class="col-md-6">
+                      <div class="form-group">
+                        <label for="editDiscount" class="form-label">Discount</label>
+                        <div class="input-group">
+                          <input type="number" class="form-control" id="editDiscount" name="discount" placeholder="0" step="0.01" min="0" max="100">
+                          <span class="input-group-text">%</span>
+                        </div>
+                        <small class="form-text text-muted">Discount percentage (if any)</small>
+                      </div>
+                    </div>  --}}
+
+                    <div class="col-md-6">
+                      <div class="form-group">
+                        <label for="editFinalPrice" class="form-label">Final Price Review</label>
+                        <div class="input-group">
+                          <span class="input-group-text">₦</span>
+                          <input type="text" class="form-control" id="editFinalPrice" name="final_price" placeholder="0.00" readonly>
+                        </div>
+                        <small class="form-text text-muted">After tax and discount</small>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+
+                <!-- Manual Pricing Fields -->
+                <div id="editManualFields" class="pricing-fields" style="display: none;">
+                  <div class="row">
+                    <div class="col-md-12">
+                      <div class="form-group">
+                        <label for="editManualCostPrice" class="form-label required-field">Cost Price</label>
+                        <div class="input-group">
+                          <span class="input-group-text">₦</span>
+                          <input type="number" class="form-control" id="editManualCostPrice" name="manual_cost_price" placeholder="0.00" step="0.01" min="0">
+                        </div>
+                        <small class="form-text text-muted">Price you pay to supplier</small>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Margin Pricing Fields -->
+                <div id="editMarginFields" class="pricing-fields" style="display: none;">
+                  <div class="row">
+                    <div class="col-md-6">
+                      <div class="form-group">
+                        <label for="editMarginCostPrice" class="form-label required-field">Cost Price</label>
+                        <div class="input-group">
+                          <span class="input-group-text">₦</span>
+                          <input type="number" class="form-control" id="editMarginCostPrice" name="margin_cost_price" placeholder="0.00" step="0.01" min="0">
+                        </div>
+                        <small class="form-text text-muted">Price you pay to supplier</small>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="form-group">
+                        <label for="editTargetMargin" class="form-label required-field">Target Profit Margin</label>
+                        <div class="input-group">
+                          <input type="number" class="form-control" id="editTargetMargin" name="target_margin" placeholder="0" step="0.01" min="0" max="1000">
+                          <span class="input-group-text">%</span>
+                        </div>
+                        <small class="form-text text-muted">Desired profit margin percentage</small>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-md-6">
+                      <div class="form-group">
+                        <label for="editCalculatedPrice" class="form-label">Calculated Selling Price</label>
+                        <div class="input-group">
+                          <span class="input-group-text">₦</span>
+                          <input type="number" class="form-control" id="editCalculatedPrice" name="calculated_price" placeholder="0.00" readonly>
+                        </div>
+                        <small class="form-text text-muted">Auto-calculated based on margin</small>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="form-group">
+                        <label for="editMarginProfit" class="form-label">Potential Profit</label>
+                        <div class="input-group">
+                          <span class="input-group-text">₦</span>
+                          <input type="text" class="form-control" id="editMarginProfit" name="margin_profit" placeholder="0.00" readonly>
+                        </div>
+                        <small class="form-text text-muted">Per unit profit</small>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-md-12">
+                      <div class="form-group">
+                        <label for="editMarginTaxRate" class="form-label">Tax Rate</label>
+                        <select class="form-select" id="editMarginTaxRate" name="margin_tax_rate">
+                          <option value="0">No Tax (0%)</option>
+                          <option value="5">VAT 5%</option>
+                          <option value="7.5">VAT 7.5%</option>
+                          <option value="10">VAT 10%</option>
+                          <option value="15">VAT 15%</option>
+                        </select>
+                        <small class="form-text text-muted">Applicable tax percentage</small>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Range Pricing Fields -->
+                <div id="editRangeFields" class="pricing-fields" style="display: none;">
+                  <div class="row">
+                    <div class="col-md-12">
+                      <div class="form-group">
+                        <label for="editRangeCostPrice" class="form-label required-field">Cost Price</label>
+                        <div class="input-group">
+                          <span class="input-group-text">₦</span>
+                          <input type="number" class="form-control" id="editRangeCostPrice" name="range_cost_price" placeholder="0.00" step="0.01" min="0">
+                        </div>
+                        <small class="form-text text-muted">Price you pay to supplier</small>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-md-6">
+                      <div class="form-group">
+                        <label for="editMinPrice" class="form-label required-field">Minimum Price</label>
+                        <div class="input-group">
+                          <span class="input-group-text">₦</span>
+                          <input type="number" class="form-control" id="editMinPrice" name="min_price" placeholder="0.00" step="0.01" min="0">
+                        </div>
+                        <small class="form-text text-muted">Lowest selling price</small>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="form-group">
+                        <label for="editMaxPrice" class="form-label required-field">Maximum Price</label>
+                        <div class="input-group">
+                          <span class="input-group-text">₦</span>
+                          <input type="number" class="form-control" id="editMaxPrice" name="max_price" placeholder="0.00" step="0.01" min="0">
+                        </div>
+                        <small class="form-text text-muted">Highest selling price</small>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-md-6">
+                      <div class="form-group">
+                        <label for="editRangeTaxRate" class="form-label">Tax Rate</label>
+                        <select class="form-select" id="editRangeTaxRate" name="range_tax_rate">
+                          <option value="0">No Tax (0%)</option>
+                          <option value="5">VAT 5%</option>
+                          <option value="7.5">VAT 7.5%</option>
+                          <option value="10">VAT 10%</option>
+                          <option value="15">VAT 15%</option>
+                        </select>
+                        <small class="form-text text-muted">Applicable tax percentage</small>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="form-group">
+                        <label for="editRangePotentialProfit" class="form-label">Potential Profit Range</label>
+                        <div class="input-group">
+                          <span class="input-group-text">₦</span>
+                          <input type="text" class="form-control" id="editRangePotentialProfit" name="range_potential_profit" placeholder="0.00 to 0.00" readonly>
+                        </div>
+                        <small class="form-text text-muted">Profit range per unit</small>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </form>
+            </div>
+
+            <!-- Stock Tracking Tab -->
+            <div class="tab-pane fade" id="edit-stock" role="tabpanel">
+              <form id="editStockForm">
+                <div class="form-group">
+                  <label for="editStockQuantity" class="form-label">Stock Quantity</label>
+                  <input type="number" class="form-control" id="editStockQuantity" name="stock_quantity" min="0" required>
+                </div>
+                <div class="form-group">
+                  <label for="editLowStockThreshold" class="form-label">Low Stock Alert (Threshold)</label>
+                  <input type="number" class="form-control" id="editLowStockThreshold" name="low_stock_threshold" min="0">
+                </div>
+                <div class="form-group">
+                  <label for="editExpiryDate" class="form-label">Expiry Date</label>
+                  <input type="date" class="form-control" id="editExpiryDate" name="expiry_date">
+                </div>
+                <div class="form-group">
+                  <label for="editLocation" class="form-label">Storage Location</label>
+                  <input type="text" class="form-control" id="editLocation" name="location" placeholder="e.g., Warehouse A, Shelf 3">
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="edit-variant-modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeEditVariantModal()">
+            <i class="mdi mdi-close"></i> Cancel
+          </button>
+          <button type="button" class="btn btn-primary" onclick="saveVariantChanges()">
+            <i class="mdi mdi-content-save"></i> Save Changes
+          </button>
+        </div>
+      </div>
 
 
+ <style>
+      /* Edit Variant Modal Styles */
+      .edit-variant-modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(4px);
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: fadeIn 0.3s ease-out;
+      }
 
-   
+      .edit-variant-modal {
+        background: #fff;
+        border-radius: 16px;
+        width: 90%;
+        max-width: 700px;
+        max-height: 85vh;
+        overflow: hidden;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        animation: slideUp 0.3s ease-out;
+        display: flex;
+        flex-direction: column;
+      }
+
+      @keyframes slideUp {
+        from {
+          transform: translateY(50px);
+          opacity: 0;
+        }
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+
+      .edit-variant-modal-header {
+        padding: 20px 25px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: #fff;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-radius: 16px 16px 0 0;
+      }
+
+      .edit-variant-modal-header h4 {
+        margin: 0;
+        font-size: 1.3rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .edit-variant-close-btn {
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        color: #fff;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        transition: all 0.3s ease;
+      }
+
+      .edit-variant-close-btn:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: rotate(90deg);
+      }
+
+      .edit-variant-modal-body {
+        padding: 25px;
+        overflow-y: auto;
+        flex: 1;
+      }
+
+      .edit-variant-modal-body::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      .edit-variant-modal-body::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+      }
+
+      .edit-variant-modal-body::-webkit-scrollbar-thumb {
+        background: #667eea;
+        border-radius: 10px;
+      }
+
+      .edit-variant-modal-footer {
+        padding: 20px 25px;
+        background: #f8f9fa;
+        border-top: 1px solid #e9ecef;
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+      }
+
+      .required-field::after {
+        content: " *";
+        color: #dc3545;
+      }
+
+      .pricing-desc {
+        padding: 10px 15px;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        background: rgba(102, 126, 234, 0.1);
+      }
+    </style>
+
 
      <script src="{{ asset('manager_asset/js/add_item_variant.js') }}"></script>
 

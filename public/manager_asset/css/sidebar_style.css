@@ -1,4 +1,92 @@
-<!-- Sidebar Styles - Include this in your page head section -->
+/* User dropdown responsive styles */
+.user-dropdown {
+  margin-top: auto !important;
+  border-top: 1px solid rgba(0,0,0,0.1);
+  padding-top: 10px !important;
+  position: relative !important;
+}
+
+.user-dropdown .nav-link {
+  padding: 15px 20px !important;
+  cursor: pointer !important;
+  transition: background-color 0.2s ease !important;
+  display: flex !important;
+  align-items: center !important;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.user-dropdown .nav-link:hover {
+  background-color: rgba(0,0,0,0.05) !important;
+}
+
+.user-dropdown .nav-link:active {
+  background-color: rgba(0,0,0,0.1) !important;
+}
+
+.user-dropdown .img-xs {
+  width: 40px !important;
+  height: 40px !important;
+  object-fit: cover !important;
+  border: 2px solid #fff !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+  pointer-events: none !important;
+}
+
+.user-dropdown .img-md {
+  width: 80px !important;
+  height: 80px !important;
+  object-fit: cover !important;
+  border: 3px solid #fff !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15) !important;
+}
+
+  /* Show dropdown as an overlay on top of the avatar (desktop & collapsed) */
+  .user-dropdown {
+    position: relative !important;
+  }
+
+  .user-dropdown .dropdown-menu {
+    position: absolute !important;
+    min-width: 260px !important;
+    max-width: 320px !important;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.18) !important;
+    border: 1px solid rgba(0,0,0,0.08) !important;
+    border-radius: 10px !important;
+    margin: 0 !important;
+    z-index: 1000 !important;
+    left: 8px !important;
+    top: 0 !important;
+    bottom: auto !important;
+    /* Reduce negative translate to lower dropdown closer to avatar */
+    transform: translateY(-100%) !important;
+    transform-origin: bottom left !important;
+    background: #fff !important;
+    display: none;
+    padding: 3px 0 !important;
+  }
+
+  /* When showing, make sure it overlays the avatar cleanly */
+  .user-dropdown .dropdown-menu.show {
+    display: block !important;
+  }
+
+.user-dropdown .dropdown-menu.show {
+  display: block !important;
+}
+
+.user-dropdown .dropdown-item {
+  padding: 10px 20px !important;
+  transition: all 0.2s ease !important;
+  cursor: pointer !important;
+  white-space: nowrap !important;
+}
+
+.user-dropdown .dropdown-item:hover {
+  background-color: #f8f9fa !important;
+  padding-left: 25px !important;
+}
+
 
 /* Sidebar collapse/expand toggle styles (minimal, local overrides) */
 .sidebar{
@@ -161,3 +249,59 @@ body.sidebar-collapsed .fixed-logo-container {
 .page-body-wrapper {
   margin-top: 70px !important;
 }
+
+/* Enhanced Active Link Styling */
+.sidebar .nav-item.active > .nav-link {
+  background: #fff !important;
+  color: #1F3BB3 !important;
+  font-weight: 600 !important;
+  border-radius: 0px 20px 20px 0px !important;
+}
+
+.sidebar .nav-item.active > .nav-link i.menu-icon,
+.sidebar .nav-item.active > .nav-link .menu-title {
+  color: #1F3BB3 !important;
+}
+
+/* Active submenu items */
+.sidebar .nav.sub-menu .nav-item .nav-link.active {
+  color: #1F3BB3 !important;
+  font-weight: 600 !important;
+  background: transparent !important;
+  position: relative;
+}
+
+.sidebar .nav.sub-menu .nav-item .nav-link.active:before {
+  content: "";
+  position: absolute;
+  left: -10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 6px;
+  height: 6px;
+  background: #1F3BB3;
+  border-radius: 50%;
+}
+
+/* Parent menu item with active child */
+.sidebar .nav-item.active > .nav-link[aria-expanded="true"] {
+  border-radius: 0px 20px 0px 0px !important;
+  background: #fff !important;
+}
+
+/* Hover state for non-active items */
+.sidebar .nav-item:not(.active):hover > .nav-link {
+  background: rgba(255, 255, 255, 0.1) !important;
+  transition: background 0.3s ease;
+}
+
+/* Ensure active state works when sidebar is collapsed */
+body.sidebar-collapsed .sidebar .nav-item.active > .nav-link {
+  background: #fff !important;
+  border-radius: 8px !important;
+}
+
+body.sidebar-collapsed .sidebar .nav-item.active > .nav-link i.menu-icon {
+  color: #1F3BB3 !important;
+}
+
