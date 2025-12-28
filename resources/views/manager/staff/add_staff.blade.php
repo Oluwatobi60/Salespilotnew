@@ -193,21 +193,30 @@ Add Staff Member
 
               <!-- Personal Information Section -->
               <div class="form-section mb-4">
+
                 <h6 class="section-title mb-3">
                   <i class="bi bi-person-badge me-2"></i>Personal Information
                 </h6>
               <div class="row">
-                <div class="col-md-6 mb-3">
+                <div class="col-md-4 mb-3">
                   <label for="fullname" class="form-label">Full Name <span class="text-danger">*</span></label>
                   <input type="text" class="form-control" id="fullname" name="fullname" placeholder="Enter full name" required value="{{ old('fullname') }}">
                   @error('fullname')
                     <small class="text-danger">{{ $message }}</small>
                   @enderror
                 </div>
-                <div class="col-md-6 mb-3">
+                <div class="col-md-4 mb-3">
                   <label for="username" class="form-label">Username <span class="text-danger">*</span></label>
                   <input type="text" class="form-control" id="username" name="username" placeholder="Enter username" required value="{{ old('username') }}">
                   @error('username')
+                    <small class="text-danger">{{ $message }}</small>
+                  @enderror
+                </div>
+                <div class="col-md-4 mb-3">
+                  <label for="staff_id" class="form-label">Staff ID <span class="text-danger">*</span></label>
+                  <input type="text" class="form-control" id="staff_id" name="staff_id" placeholder="Auto-generated" value="{{ old('staff_id') }}" readonly required>
+                  <small class="text-muted">Auto-generated: 3 letters of surname + 3 digits</small>
+                  @error('staff_id')
                     <small class="text-danger">{{ $message }}</small>
                   @enderror
                 </div>
@@ -335,5 +344,6 @@ Add Staff Member
 </div>
 
 <script src="{{ asset('manager_asset/js/staff.js') }}"></script>
+
 
 @endsection

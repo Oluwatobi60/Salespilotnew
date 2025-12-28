@@ -1,47 +1,73 @@
-<x-guest-layout>
-    <!-- Session Status -->
-    <x-auth-session-status class="mb-4" :status="session('status')" />
-
-    <form method="POST" action="{{ route('login') }}">
-        @csrf
-
-        <!-- Email Address -->
-        <div>
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autofocus autocomplete="username" />
-            <x-input-error :messages="$errors->get('email')" class="mt-2" />
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manager Login</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap" rel="stylesheet">
+    <style>
+        .manager-login-title {
+            font-family: 'Montserrat', Arial, sans-serif;
+            font-size: 2.2rem;
+            color: #0d6efd;
+            text-shadow: 1px 2px 8px rgba(13,110,253,0.12);
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="container d-flex align-items-center justify-content-center min-vh-100">
+        <div class="row w-100 justify-content-center">
+            <div class="col-md-6 col-lg-5">
+                <img src="{{ asset('manager_asset/images/salespilot logo1.png') }}" alt="SalesPilot Logo" class="mb-4" style="max-width: 180px; display: block; margin-left: auto; margin-right: auto;">
+                <div class="card shadow-lg">
+                    <div class="card-body p-4">
+                        <h3 class="mb-4 text-center manager-login-title">Manager Login</h3>
+                        @if (session('status'))
+                            <div class="alert alert-info">{{ session('status') }}</div>
+                        @endif
+                        <form method="POST" action="{{ route('login') }}">
+                            @csrf
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email</label>
+                                <input id="email" type="email" name="email" class="form-control @error('email') is-invalid @enderror" value="{{ old('email') }}" required autofocus autocomplete="username">
+                                @error('email')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Password</label>
+                                <input id="password" type="password" name="password" class="form-control @error('password') is-invalid @enderror" required autocomplete="current-password">
+                                @error('password')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" class="form-check-input" id="remember_me" name="remember">
+                                <label class="form-check-label" for="remember_me">Remember me</label>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                @if (Route::has('password.request'))
+                                    <a class="text-decoration-none" href="{{ route('password.request') }}">Forgot your password?</a>
+                                @endif
+                                <button type="submit" class="btn btn-primary">Log in</button>
+                            </div>
+                        </form>
+                        <div class="text-center mt-4">
+                            <div class="alert alert-secondary p-2 mb-2" style="font-size: 0.97rem;">
+                                Are you a staff member? Please use the staff login page below.
+                            </div>
+                            <a class="btn btn-outline-primary w-100" href="{{ route('staff.login') }}">
+                                Go to Staff Login
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-
-        <!-- Password -->
-        <div class="mt-4">
-            <x-input-label for="password" :value="__('Password')" />
-
-            <x-text-input id="password" class="block mt-1 w-full"
-                            type="password"
-                            name="password"
-                            required autocomplete="current-password" />
-
-            <x-input-error :messages="$errors->get('password')" class="mt-2" />
-        </div>
-
-        <!-- Remember Me -->
-        <div class="block mt-4">
-            <label for="remember_me" class="inline-flex items-center">
-                <input id="remember_me" type="checkbox" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500" name="remember">
-                <span class="ms-2 text-sm text-gray-600">{{ __('Remember me') }}</span>
-            </label>
-        </div>
-
-        <div class="flex items-center justify-end mt-4">
-            @if (Route::has('password.request'))
-                <a class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" href="{{ route('password.request') }}">
-                    {{ __('Forgot your password?') }}
-                </a>
-            @endif
-
-            <x-primary-button class="ms-3">
-                {{ __('Log in') }}
-            </x-primary-button>
-        </div>
-    </form>
-</x-guest-layout>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

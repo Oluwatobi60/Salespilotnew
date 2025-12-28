@@ -39,7 +39,7 @@ class ProductVariant extends Model
         'range_potential_profit',
         // Additional Pricing
         'tax_rate',
-      /*   'discount', */
+        'discount',
         'final_price',
         // Stock Management
         'stock_quantity',
@@ -65,7 +65,7 @@ class ProductVariant extends Model
         'max_price' => 'decimal:2',
         'range_potential_profit' => 'decimal:2',
         'tax_rate' => 'decimal:2',
-      /* /*   'discount' => 'decimal:2', */
+      /* /* 'discount' => 'decimal:2', */
         'final_price' => 'decimal:2',
         'expiry_date' => 'date',
     ];

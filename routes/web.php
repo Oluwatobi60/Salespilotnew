@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Manager\AddDiscountController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Manager\AllItemsController;
@@ -7,20 +8,28 @@ use App\Http\Controllers\Manager\CategoryCOntroller;
 use App\Http\Controllers\Manager\CustomerController;
 use App\Http\Controllers\Manager\SupplierController;
 use App\Http\Controllers\Manager\StaffMainController;
-use App\Http\Controllers\Manager\BundleItemController;
 use App\Http\Controllers\Manager\ManagerMainController;
 use App\Http\Controllers\Manager\SalesReportController;
 use App\Http\Controllers\Manager\SellProductController;
+use App\Http\Controllers\Manager\StaffSalesController;
 use App\Http\Controllers\Manager\VariantItemController;
 use App\Http\Controllers\Manager\StandardItemController;
+use App\Http\Controllers\Manager\SalesbyItemController;
+use App\Http\Controllers\Manager\TaxController;
+use App\Http\Controllers\Staff\StaffsMainController;
+use App\Http\Controllers\Staff\StaffAuthController;
+use App\Http\Controllers\Staff\StaffProfileController;
+use App\Http\Controllers\Manager\ValuationReportController;
+use App\Http\Controllers\Staff\StaffAddDiscountController;
+
 
 Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/dashboard', function () {
+/* Route::get('/dashboard', function () {
     return view('dashboard');
-})->middleware(['auth', 'verified', 'rolemanager:staff'])->name('dashboard');
+})->middleware(['auth', 'verified', 'rolemanager:staff'])->name('dashboard'); */
 
 
 Route::get('/superadmin/dashboard', function () {
@@ -28,11 +37,9 @@ Route::get('/superadmin/dashboard', function () {
 })->middleware(['auth', 'verified', 'rolemanager:superadmin'])->name('superadmin');
 
 
-/* Route::get('/manager/dashboard', function () {
-    return view('manager');
-})->middleware(['auth', 'verified', 'rolemanager:manager'])->name('manager');
- */
 
+
+// (Removed duplicate staff routes)
 
 //Manager routes
 Route::middleware(['auth', 'verified','rolemanager:manager'])->group(function () {
@@ -68,18 +75,41 @@ Route::middleware(['auth', 'verified','rolemanager:manager'])->group(function ()
        Route::post('/variant_item/create', 'createvariant')->name('variant.create');
     });
 
+    Route::controller(TaxController::class)->group(function () {
+         Route::get('/taxes', 'taxes')->name('manager.taxes');
+    });
 
     Route::controller(SalesReportController::class)->group(function () {
-      Route::get('/completed_sales', 'completed_sales')->name('manager.completed_sales');
-        Route::get('/get_sale_items/{receiptNumber}', 'get_sale_items')->name('manager.get_sale_items');
-        Route::get('/sales_summary', 'sales_summary')->name('manager.sales_summary');
-        Route::get('/staff_sales', 'staff_sales')->name('manager.staff_sales');
-        Route::get('/sales_by_item', 'sales_by_item')->name('manager.sales_by_item');
-        Route::get('/sales_by_category', 'sales_by_category')->name('manager.sales_by_category');
-        Route::get('/valuation_report', 'valuation_report')->name('manager.valuation_report');
-        Route::get('/taxes', 'taxes')->name('manager.taxes');
+    Route::get('/completed_sales', 'completed_sales')->name('manager.completed_sales');
+    Route::get('/get_sale_items/{receiptNumber}', 'get_sale_items')->name('manager.get_sale_items');
+    Route::get('/print_receipt/{receiptNumber}', 'print_receipt')->name('manager.print_receipt');
+    Route::get('/sales_summary', 'sales_summary')->name('manager.sales_summary');
+    Route::get('/sales_by_category', 'sales_by_category')->name('manager.sales_by_category');
+    Route::get('/manager/get-staff-user-list', 'getStaffUserList')->name('manager.getStaffUserList');
+  });
+
+
+
+    Route::controller(AddDiscountController::class)->group(function () {
         Route::get('/discount_report', 'discount_report')->name('manager.discount_report');
-    });
+        Route::post('/discount/create', 'create_discount')->name('discount.create');
+        Route::get('/get_discounts', 'get_discounts')->name('manager.get_discounts');
+   });
+
+
+
+   Route::controller(StaffSalesController::class)->group(function () {
+         Route::get('/staff_sales', 'staff_sales')->name('manager.staff_sales');
+   });
+
+   Route::controller(SalesbyItemController::class)->group(function () {
+       Route::get('/sales_by_item', 'sales_by_item')->name('manager.sales_by_item');
+   });
+
+
+     Route::controller(ValuationReportController::class)->group(function () {
+        Route::get('/valuation_report', 'valuation_report')->name('manager.valuation_report');
+   });
 
 
     Route::controller(AllItemsController::class)->group(function () {
@@ -144,6 +174,52 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
+
+
+
+// Staff Auth Routes
+Route::prefix('staff')->group(function () {
+    Route::get('/login', [StaffAuthController::class, 'showLoginForm'])->name('staff.login');
+    Route::post('/login', [StaffAuthController::class, 'login'])->name('staff.login.submit');
+    Route::post('/logout', [StaffAuthController::class, 'logout'])->name('staff.logout');
+});
+
+// Staff dashboard and main routes (protected)
+Route::middleware(['auth:staff'])->prefix('staff')->group(function () {
+    Route::controller(StaffsMainController::class)->group(function () {
+        Route::get('/dashboard', 'index')->name('staff.dashboard');
+        Route::get('/sell_product', 'sell_product')->name('staff.sell_product');
+        Route::post('/checkout', 'checkout')->name('staff.checkout');
+        Route::post('/save_cart', 'save_cart')->name('staff.save_cart');
+        Route::get('/get_saved_carts', 'get_saved_carts')->name('staff.get_saved_carts');
+        Route::get('/load_saved_cart/{sessionId}', 'load_saved_cart')->name('staff.load_saved_cart');
+        Route::delete('/delete_saved_cart/{sessionId}', 'delete_saved_cart')->name('staff.delete_saved_cart');
+        Route::get('/View_Saved_Carts', 'view_saved_carts')->name('staff.view_saved_carts');
+        Route::get('/completed_sales', 'completed_sales')->name('staff.completed_sales');
+        Route::get('/get_all_customers', 'get_all_customers')->name('staff.get_all_customers');
+        Route::post('/add_customer', 'add_customer')->name('staff.add_customer');
+        Route::get('/customers_information', 'customers')->name('staff.customers');
+        Route::get('/edit_customer/{id}', 'edit_customer')->name('customer.edit');
+        Route::put('/update_customer/{id}', 'update_customer')->name('customer.update');
+        Route::delete('/delete_customer/{id}', 'delete_customer')->name('customer.delete');
+        Route::get('/print_receipt/{receiptNumber}', 'print_receipt')->name('staff.print_receipt');
+        // Add staff route for getting sale items by receipt number
+        Route::get('/get_sale_items/{receiptNumber}', 'get_sale_items')->name('staff.get_sale_items');
+    });
+
+
+    Route::controller(StaffProfileController::class)->group(function () {
+        Route::get('/staff/profile', 'staff_profile')->name('staff.profile');
+
+    });
+
+     Route::controller(StaffAddDiscountController::class)->group(function () {
+        Route::get('/get_discounts', 'get_discounts')->name('staff.get_discounts');
+   });
+
+
+
 });
 
 require __DIR__.'/auth.php';

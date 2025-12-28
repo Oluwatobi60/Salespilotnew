@@ -112,12 +112,20 @@ Completed Sales
                         </thead>
                         <tbody>
                           @forelse($completedSales as $index => $sale)
-                          <tr class="sale-row" data-receipt-number="{{ $sale->receipt_number }}" style="cursor: pointer;" title="Click to view details">
+                          <tr class="sale-row" data-receipt-number="{{ $sale->receipt_number }}" data-discount="{{ $sale->discount ?? 0 }}" style="cursor: pointer;" title="Click to view details">
                             <td>{{ $index + 1 }}</td>
                             <td><strong>{{ $sale->receipt_number }}</strong></td>
                             <td><small>{{ \Carbon\Carbon::parse($sale->created_at)->format('M d, Y h:i A') }}</small></td>
                             <td>{{ $sale->customer_name ?? 'Walk-in Customer' }}</td>
-                            <td>{{ $sale->user ? $sale->user->name : 'Unknown' }}</td>
+                            <td>
+                                @if($sale->staff_id && $sale->staff)
+                                {{ $sale->staff->fullname }}
+                                @elseif($sale->user)
+                                {{ $sale->user->name }}
+                                @else
+                                Unknown
+                                @endif
+                            </td>
                             <td><span class="badge badge-info">{{ $sale->items_count }} items</span></td>
                             <td><strong class="text-success">₦{{ number_format($sale->total, 2) }}</strong></td>
                             <td><span class="badge badge-opacity-success">Completed</span></td>
@@ -190,6 +198,10 @@ Completed Sales
                 <div class="detail-item">
                   <div class="detail-label">Total Amount</div>
                   <div class="detail-value" id="detailTotalAmount">-</div>
+                </div>
+                <div class="detail-item">
+                  <div class="detail-label">Discount Applied</div>
+                  <div class="detail-value" id="detailDiscount">-</div>
                 </div>
                 <div class="detail-item">
                   <div class="detail-label">Status</div>

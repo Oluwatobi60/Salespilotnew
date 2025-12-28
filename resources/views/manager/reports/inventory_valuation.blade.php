@@ -5,7 +5,7 @@ Inventory Valuation
 @section('manager_layout_content')
   <div class="container-scroller">
       <div class="container-fluid page-body-wrapper">
-   
+
           <div class="content-wrapper">
             <!-- Inventory Valuation content starts here -->
             <div class="row">
@@ -57,7 +57,7 @@ Inventory Valuation
                             <div class="card-body py-3 px-2">
                               <div class="d-flex flex-column align-items-start">
                                 <span class="fw-bold fs-6">Total Inventory Value</span>
-                                <span class="fs-5">$13,812.50</span>
+                                <span class="fs-5">₦{{ number_format($totalInventoryValue ?? 0, 2) }}</span>
                               </div>
                             </div>
                           </div>
@@ -67,7 +67,7 @@ Inventory Valuation
                             <div class="card-body py-3 px-2">
                               <div class="d-flex flex-column align-items-start">
                                 <span class="fw-bold fs-6">Total Selling Price Value</span>
-                                <span class="fs-5">$18,000.00</span>
+                                <span class="fs-5">₦{{ number_format($totalSellingValue ?? 0, 2) }}</span>
                               </div>
                             </div>
                           </div>
@@ -77,7 +77,7 @@ Inventory Valuation
                             <div class="card-body py-3 px-2">
                               <div class="d-flex flex-column align-items-start">
                                 <span class="fw-bold fs-6">Potential Profit</span>
-                                <span class="fs-5">$4,187.50</span>
+                                <span class="fs-5">₦{{ number_format($totalPotentialProfit ?? 0, 2) }}</span>
                               </div>
                             </div>
                           </div>
@@ -87,7 +87,7 @@ Inventory Valuation
                             <div class="card-body py-3 px-2">
                               <div class="d-flex flex-column align-items-start">
                                 <span class="fw-bold fs-6">Margin</span>
-                                <span class="fs-5">23.3%</span>
+                                <span class="fs-5">{{ number_format($overallMargin ?? 0, 2) }}%</span>
                               </div>
                             </div>
                           </div>
@@ -110,118 +110,36 @@ Inventory Valuation
                             </tr>
                           </thead>
                           <tbody>
+                            @foreach($paginatedItems as $i => $item)
                             <tr>
-                              <td>1</td>
-                              <td>Product A</td>
-                              <td>Electronics</td>
-                              <td>150</td>
-                              <td>$25.00</td>
-                              <td>$3,750.00</td>
-                              <td>$4,950.00</td>
-                              <td>$1,200.00</td>
-                              <td>24.2%</td>
+                              <td>{{ ($paginatedItems->firstItem() ?? 0) + $i }}</td>
+                              <td>{{ $item['item_name'] }}</td>
+                              <td>{{ $item['category_name'] }}</td>
+                              <td>{{ $item['quantity'] }}</td>
+                              <td>₦{{ number_format($item['cost_price'], 2) }}</td>
+                              <td>₦{{ number_format($item['inventory_value'], 2) }}</td>
+                              <td>₦{{ number_format($item['total_selling_value'], 2) }}</td>
+                              <td>₦{{ number_format($item['potential_profit'], 2) }}</td>
+                              <td>{{ number_format($item['margin'], 2) }}%</td>
                             </tr>
-                            <tr>
-                              <td>2</td>
-                              <td>Product B</td>
-                              <td>Accessories</td>
-                              <td>85</td>
-                              <td>$12.50</td>
-                              <td>$1,062.50</td>
-                              <td>$1,445.00</td>
-                              <td>$382.50</td>
-                              <td>26.5%</td>
-                            </tr>
-                            <tr>
-                              <td>3</td>
-                              <td>Product C</td>
-                              <td>Electronics</td>
-                              <td>200</td>
-                              <td>$45.00</td>
-                              <td>$9,000.00</td>
-                              <td>$12,000.00</td>
-                              <td>$3,000.00</td>
-                              <td>25.0%</td>
-                            </tr>
-                            <tr>
-                              <td>4</td>
-                              <td>Product D</td>
-                              <td>Furniture</td>
-                              <td>60</td>
-                              <td>$80.00</td>
-                              <td>$4,800.00</td>
-                              <td>$6,600.00</td>
-                              <td>$1,800.00</td>
-                              <td>27.3%</td>
-                            </tr>
-                            <tr>
-                              <td>5</td>
-                              <td>Product E</td>
-                              <td>Stationery</td>
-                              <td>500</td>
-                              <td>$2.00</td>
-                              <td>$1,000.00</td>
-                              <td>$1,500.00</td>
-                              <td>$500.00</td>
-                              <td>33.3%</td>
-                            </tr>
-                            <tr>
-                              <td>6</td>
-                              <td>Product F</td>
-                              <td>Accessories</td>
-                              <td>120</td>
-                              <td>$15.00</td>
-                              <td>$1,800.00</td>
-                              <td>$2,400.00</td>
-                              <td>$600.00</td>
-                              <td>25.0%</td>
-                            </tr>
-                            <tr>
-                              <td>7</td>
-                              <td>Product G</td>
-                              <td>Electronics</td>
-                              <td>75</td>
-                              <td>$60.00</td>
-                              <td>$4,500.00</td>
-                              <td>$6,000.00</td>
-                              <td>$1,500.00</td>
-                              <td>25.0%</td>
-                            </tr>
-                            <tr>
-                              <td>8</td>
-                              <td>Product H</td>
-                              <td>Furniture</td>
-                              <td>40</td>
-                              <td>$120.00</td>
-                              <td>$4,800.00</td>
-                              <td>$6,000.00</td>
-                              <td>$1,200.00</td>
-                              <td>20.0%</td>
-                            </tr>
-                            <tr>
-                              <td>9</td>
-                              <td>Product I</td>
-                              <td>Stationery</td>
-                              <td>300</td>
-                              <td>$3.00</td>
-                              <td>$900.00</td>
-                              <td>$1,200.00</td>
-                              <td>$300.00</td>
-                              <td>25.0%</td>
-                            </tr>
-                            <tr>
-                              <td>10</td>
-                              <td>Product J</td>
-                              <td>Accessories</td>
-                              <td>200</td>
-                              <td>$8.00</td>
-                              <td>$1,600.00</td>
-                              <td>$2,200.00</td>
-                              <td>$600.00</td>
-                              <td>27.3%</td>
-                            </tr>
+                            @endforeach
+                                                    </tbody>
+                                                  </table>
+
+
+                    <!-- Pagination and Stats -->
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <span class="text-muted">
+                                Showing {{  $paginatedItems->firstItem() ?? 0 }} to {{ $paginatedItems->lastItem() ?? 0 }} of {{ $paginatedItems->total() }} entries
+                            </span>
+                        </div>
+                        <div class="col-md-6">
+                            {{ $paginatedItems->links('pagination::bootstrap-5') }}
+                        </div>
+                    </div>
                           </tbody>
-                          
+
                         </table>
                       </div>
                     </div>

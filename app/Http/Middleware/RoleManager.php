@@ -17,6 +17,9 @@ class RoleManager
     public function handle(Request $request, Closure $next, string $role): Response
     {
         if(!Auth::check()){
+            if ($role === 'staff') {
+                return redirect()->route('staff.login');
+            }
             return redirect()->route('login');
         }
 

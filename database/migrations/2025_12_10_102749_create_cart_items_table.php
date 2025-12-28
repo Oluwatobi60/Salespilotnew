@@ -30,6 +30,7 @@ return new class extends Migration
             $table->string('session_id')->nullable();
             $table->string('receipt_number')->nullable();
             $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('set null');
+            $table->foreignId('staff_id')->nullable()->constrained('staffs')->onDelete('set null');
             $table->timestamps();
         });
     }

@@ -1,10 +1,189 @@
- document.addEventListener('DOMContentLoaded', function() {
-      // Cart state
-      let cartItems = [];
-      let selectedCustomer = {
-        id: null,
-        name: 'Walk-in Customer'
-      };
+
+    // --- Discount Side Panel Logic ---
+    let availableDiscounts = [];
+    let selectedDiscount = null;
+
+    const addDiscountBtn = document.getElementById('addDiscountBtn');
+    const discountPanel = document.getElementById('discountSidePanel');
+    const discountPanelOverlay = document.getElementById('discountPanelOverlay');
+    const discountSelect = document.getElementById('discountSelect');
+    const applyDiscountBtn = document.getElementById('applyDiscountBtn');
+    const closeDiscountPanel = document.getElementById('closeDiscountPanel');
+    const cancelDiscountBtn = document.getElementById('cancelDiscountBtn');
+
+    // Helper to format currency
+    function formatCurrency(amount) {
+      return '₦' + parseFloat(amount).toLocaleString();
+    }
+
+    // Open side panel and fetch discounts
+    if (addDiscountBtn) {
+      addDiscountBtn.addEventListener('click', function() {
+        if (discountPanel) discountPanel.classList.add('open');
+        if (discountPanelOverlay) discountPanelOverlay.style.display = 'block';
+        if (discountSelect) {
+          discountSelect.innerHTML = '<option value="" selected disabled>Loading discounts...</option>';
+          applyDiscountBtn.disabled = true;
+          selectedDiscount = null;
+          fetch('/manager/get_discounts', {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success && data.discounts.length > 0) {
+              availableDiscounts = data.discounts;
+              discountSelect.innerHTML = '<option value="" selected disabled>Select a discount</option>';
+              data.discounts.forEach(function(discount, idx) {
+                const option = document.createElement('option');
+                option.value = discount.id;
+                option.textContent = `${discount.discount_name} (₦${parseFloat(discount.discount_rate).toLocaleString()})`;
+                option.dataset.rate = discount.discount_rate;
+                discountSelect.appendChild(option);
+              });
+            } else {
+              discountSelect.innerHTML = '<option value="" disabled>No discounts available</option>';
+            }
+          })
+          .catch(() => {
+            discountSelect.innerHTML = '<option value="" disabled>Failed to load discounts</option>';
+          });
+        }
+      });
+    }
+
+    // Close side panel function
+    function closeDiscountSidePanel() {
+      if (discountPanel) discountPanel.classList.remove('open');
+      if (discountPanelOverlay) discountPanelOverlay.style.display = 'none';
+    }
+    if (closeDiscountPanel) closeDiscountPanel.addEventListener('click', closeDiscountSidePanel);
+    if (cancelDiscountBtn) cancelDiscountBtn.addEventListener('click', closeDiscountSidePanel);
+    if (discountPanelOverlay) discountPanelOverlay.addEventListener('click', closeDiscountSidePanel);
+
+
+    // Handle discount selection
+    if (discountSelect) {
+      discountSelect.addEventListener('change', function() {
+        const selectedId = this.value;
+        selectedDiscount = availableDiscounts.find(d => d.id == selectedId);
+        applyDiscountBtn.disabled = !selectedDiscount;
+      });
+    }
+
+    // Apply discount to cart
+    if (applyDiscountBtn) {
+      applyDiscountBtn.addEventListener('click', function() {
+        if (!selectedDiscount) return;
+        window.selectedDiscount = selectedDiscount;
+        updateCartUI();
+        closeDiscountSidePanel();
+      });
+    }
+
+    // Patch checkout and save to include discount
+    function getDiscountAmount() {
+      return window.selectedDiscount ? parseFloat(window.selectedDiscount.discount_rate) : 0;
+    }
+
+    // Patch checkout and save to include discount
+    function getDiscountAmount() {
+      return window.selectedDiscount ? parseFloat(window.selectedDiscount.discount_rate) : 0;
+    }
+document.addEventListener('DOMContentLoaded', function() {
+  // --- Discount Side Panel Logic ---
+  let availableDiscounts = [];
+  let selectedDiscount = null;
+
+  const addDiscountBtn = document.getElementById('addDiscountBtn');
+  const discountPanel = document.getElementById('discountSidePanel');
+  const discountPanelOverlay = document.getElementById('discountPanelOverlay');
+  const discountSelect = document.getElementById('discountSelect');
+  const applyDiscountBtn = document.getElementById('applyDiscountBtn');
+  const closeDiscountPanel = document.getElementById('closeDiscountPanel');
+  const cancelDiscountBtn = document.getElementById('cancelDiscountBtn');
+
+  // Helper to format currency
+  function formatCurrency(amount) {
+    return '₦' + parseFloat(amount).toLocaleString();
+  }
+
+  // Open side panel and fetch discounts
+  if (addDiscountBtn) {
+    addDiscountBtn.addEventListener('click', function() {
+      if (discountPanel) discountPanel.classList.add('open');
+      if (discountPanelOverlay) discountPanelOverlay.style.display = 'block';
+      if (discountSelect) {
+        discountSelect.innerHTML = '<option value="" selected disabled>Loading discounts...</option>';
+        if (applyDiscountBtn) applyDiscountBtn.disabled = true;
+        selectedDiscount = null;
+        fetch('/manager/get_discounts', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success && data.discounts.length > 0) {
+            availableDiscounts = data.discounts;
+            discountSelect.innerHTML = '<option value="" selected disabled>Select a discount</option>';
+            data.discounts.forEach(function(discount, idx) {
+              const option = document.createElement('option');
+              option.value = discount.id;
+              option.textContent = `${discount.discount_name} (₦${parseFloat(discount.discount_rate).toLocaleString()})`;
+              option.dataset.rate = discount.discount_rate;
+              discountSelect.appendChild(option);
+            });
+          } else {
+            discountSelect.innerHTML = '<option value="" disabled>No discounts available</option>';
+          }
+        })
+        .catch(() => {
+          discountSelect.innerHTML = '<option value="" disabled>Failed to load discounts</option>';
+        });
+      }
+    });
+  }
+
+  // Close side panel function
+  function closeDiscountSidePanel() {
+    if (discountPanel) discountPanel.classList.remove('open');
+    if (discountPanelOverlay) discountPanelOverlay.style.display = 'none';
+  }
+  if (closeDiscountPanel) closeDiscountPanel.addEventListener('click', closeDiscountSidePanel);
+  if (cancelDiscountBtn) cancelDiscountBtn.addEventListener('click', closeDiscountSidePanel);
+  if (discountPanelOverlay) discountPanelOverlay.addEventListener('click', closeDiscountSidePanel);
+
+  // Handle discount selection
+  if (discountSelect) {
+    discountSelect.addEventListener('change', function() {
+      const selectedId = this.value;
+      selectedDiscount = availableDiscounts.find(d => d.id == selectedId);
+      if (applyDiscountBtn) applyDiscountBtn.disabled = !selectedDiscount;
+    });
+  }
+
+  // Apply discount to cart
+  if (applyDiscountBtn) {
+    applyDiscountBtn.addEventListener('click', function() {
+      if (!selectedDiscount) return;
+      window.selectedDiscount = selectedDiscount;
+      updateCartUI();
+      closeDiscountSidePanel();
+    });
+  }
+
+  // Cart state
+  let cartItems = [];
+  let selectedCustomer = {
+    id: null,
+    name: 'Walk-in Customer'
+  };
 
       // Customers array - will be populated from database
       let allCustomers = [
@@ -142,6 +321,8 @@
       const itemQuantity = document.getElementById('itemQuantity');
       const addToCartBtn = document.getElementById('addToCartBtn');
       const itemNote = document.getElementById('itemNote');
+      const sellingPriceGroup = document.getElementById('sellingPriceGroup');
+      const modalSellingPrice = document.getElementById('modalSellingPrice');
 
       // Customer dropdown elements
       const addCustomerBtn = document.getElementById('addCustomerBtn');
@@ -168,6 +349,15 @@
       const printReceiptBtn = document.getElementById('printReceiptBtn');
 
       let currentItem = null;
+
+      // Helper: Check if item has only cost_price (no final/selling price)
+      function needsManualPrice(card) {
+        // If price is 0 or null, but card has data-cost-price
+        const price = parseFloat(card.dataset.price);
+        const cost = parseFloat(card.dataset.costPrice || 0);
+        // Show input if price is 0 or missing, but cost is present
+        return (!price || price === 0) && cost > 0;
+      }
 
       // Customer Dropdown functionality
       addCustomerBtn.addEventListener('click', function(e) {
@@ -618,15 +808,24 @@
           return;
         }
 
-        // Calculate total
-        const cartTotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        // Calculate subtotal
+        const cartSubtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+        // Get discount amount and id
+        let discountAmount = 0;
+        let discountId = null;
+        if (window.selectedDiscount) {
+          discountAmount = parseFloat(window.selectedDiscount.discount_rate) || 0;
+          discountId = window.selectedDiscount.id || null;
+        }
 
         // Prepare cart data for submission
         const checkoutData = {
           customer_id: selectedCustomer.id,
           customer_name: selectedCustomer.name,
-          total: cartTotal,
-          discount: 0,
+          total: cartSubtotal,
+          discount: discountAmount,
+          discount_id: discountId,
           items: cartItems.map(function(item) {
             return {
               id: item.id,
@@ -707,7 +906,24 @@
         });
 
         document.getElementById('receiptSubtotal').textContent = '₦' + subtotal.toLocaleString();
-        document.getElementById('receiptTotal').textContent = '₦' + subtotal.toLocaleString();
+
+        // Show discount and discounted total if applied
+        let discountAmount = 0;
+        if (window.selectedDiscount) {
+          discountAmount = parseFloat(window.selectedDiscount.discount_rate) || 0;
+        }
+        const receiptDiscount = document.getElementById('receiptDiscount');
+        if (receiptDiscount) {
+          if (discountAmount > 0) {
+            receiptDiscount.textContent = '-₦' + discountAmount.toLocaleString();
+            receiptDiscount.style.display = '';
+          } else {
+            receiptDiscount.textContent = '';
+            receiptDiscount.style.display = 'none';
+          }
+        }
+        const discountedTotal = subtotal - discountAmount;
+        document.getElementById('receiptTotal').textContent = '₦' + (discountedTotal > 0 ? discountedTotal.toLocaleString() : '0');
       }
 
       closeReceiptBtn.addEventListener('click', function() {
@@ -737,7 +953,6 @@
         card.addEventListener('click', function() {
           const stock = parseInt(this.dataset.stock || '0');
           if (stock === 0) return; // Prevent opening modal for sold out items
-          // ...existing code...
           let itemType = 'standard';
           let itemId = this.dataset.id;
           if (this.dataset.type === 'variant' || this.dataset.productVariant === 'true') {
@@ -749,16 +964,25 @@
             name: this.dataset.name,
             price: parseFloat(this.dataset.price),
             stock: stock,
-            img: this.dataset.img
+            img: this.dataset.img,
+            costPrice: parseFloat(this.dataset.costPrice || 0)
           };
           document.getElementById('modalTitle').textContent = currentItem.name;
           document.getElementById('modalItemName').textContent = currentItem.name;
-          document.getElementById('modalItemPrice').textContent = '₦' + currentItem.price.toLocaleString();
           document.getElementById('modalItemStock').textContent = 'Available: ' + currentItem.stock + ' units';
           document.getElementById('modalItemImg').src = currentItem.img;
           itemQuantity.value = 1;
           itemQuantity.max = currentItem.stock;
           itemNote.value = '';
+          // Show/hide selling price input
+          if (needsManualPrice(this)) {
+            sellingPriceGroup.style.display = '';
+            modalSellingPrice.value = '';
+            document.getElementById('modalItemPrice').textContent = '₦0.00';
+          } else {
+            sellingPriceGroup.style.display = 'none';
+            document.getElementById('modalItemPrice').textContent = '₦' + currentItem.price.toLocaleString();
+          }
           modal.classList.add('active');
         });
       });
@@ -812,32 +1036,53 @@
         updateCartUI();
       });
 
+      // Update price display and total when price or quantity changes
+      modalSellingPrice.addEventListener('input', function() {
+        const price = parseFloat(this.value) || 0;
+        document.getElementById('modalItemPrice').textContent = '₦' + price.toLocaleString();
+      });
+      itemQuantity.addEventListener('input', function() {
+        if (sellingPriceGroup.style.display !== 'none') {
+          const price = parseFloat(modalSellingPrice.value) || 0;
+          document.getElementById('modalItemPrice').textContent = '₦' + (price * parseInt(itemQuantity.value || 1)).toLocaleString();
+        }
+      });
+
       // Add to cart
       addToCartBtn.addEventListener('click', function() {
         if (!currentItem) return;
-
         const quantity = parseInt(itemQuantity.value);
         const note = itemNote.value.trim();
-
+        let price = currentItem.price;
+        // If manual price is needed, get from input
+        if (sellingPriceGroup.style.display !== 'none') {
+          price = parseFloat(modalSellingPrice.value);
+          if (!price || price <= 0) {
+            alert('Please enter a valid selling price');
+            modalSellingPrice.focus();
+            return;
+          }
+        }
         const existingIndex = cartItems.findIndex(item => item.id === currentItem.id && item.type === currentItem.type);
-
         if (existingIndex >= 0) {
           cartItems[existingIndex].quantity += quantity;
           if (note) {
             cartItems[existingIndex].note = note;
+          }
+          if (sellingPriceGroup.style.display !== 'none') {
+            cartItems[existingIndex].price = price;
           }
         } else {
           cartItems.push({
             id: currentItem.id,
             type: currentItem.type,
             name: currentItem.name,
-            price: currentItem.price,
+            price: price,
             quantity: quantity,
             note: note,
             img: currentItem.img
           });
         }
-
         updateCartUI();
         modal.classList.remove('active');
       });
@@ -916,6 +1161,9 @@
           `;
           cartTotalElement.textContent = '₦0.00';
           checkoutBtn.disabled = true;
+          // Remove discount info if not applied
+          let discountInfo = document.getElementById('cartDiscountInfo');
+          if (discountInfo) discountInfo.remove();
           return;
         }
 
@@ -932,7 +1180,7 @@
           if (card) {
             item.stock = parseInt(card.dataset.stock || '0');
           }
-// Generate cart item HTML
+          // Generate cart item HTML
           const cartItemHTML = `
             <div class="cart-item" data-index="${index}">
               <div class="cart-item-main">
@@ -965,7 +1213,30 @@
           cartItemsContainer.insertAdjacentHTML('beforeend', cartItemHTML);
         });
 
-        cartTotalElement.textContent = '₦' + total.toLocaleString();
+        // Discount logic
+        if (window.selectedDiscount && cartTotalElement) {
+          let discountAmount = parseFloat(window.selectedDiscount.discount_rate);
+          let newTotal = total - discountAmount;
+          if (newTotal < 0) newTotal = 0;
+          cartTotalElement.textContent = formatCurrency(newTotal);
+          // Optionally show discount info somewhere
+          let discountInfo = document.getElementById('cartDiscountInfo');
+          if (!discountInfo) {
+            discountInfo = document.createElement('div');
+            discountInfo.id = 'cartDiscountInfo';
+            discountInfo.className = 'text-success fw-bold';
+            cartTotalElement.parentNode.insertBefore(discountInfo, cartTotalElement);
+          }
+          discountInfo.innerHTML = `<span style="background:#e0f7fa;color:#00796b;padding:4px 10px;border-radius:16px;font-weight:bold;display:inline-block; font-size:13px">
+            <i class='bi bi-tag-fill' style='color:#009688;margin-right:4px;'></i>
+            Discount: <span style='color:#d32f2f;'>-${formatCurrency(discountAmount)}</span> <span style='color:#1976d2;'>(${window.selectedDiscount.discount_name})</span>
+          </span>`;
+        } else {
+          // Remove discount info if not applied
+          let discountInfo = document.getElementById('cartDiscountInfo');
+          if (discountInfo) discountInfo.remove();
+          cartTotalElement.textContent = formatCurrency(total);
+        }
 
         // Add event listeners for quantity controls
         document.querySelectorAll('.qty-decrease').forEach(function(btn) {

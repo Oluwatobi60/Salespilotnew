@@ -58,6 +58,7 @@ Sell Product
                 data-type="standard"
                 data-name="{{ $item->item_name }}"
                 data-price="{{ $item->final_price ?? $item->selling_price }}"
+                data-cost-price="{{ $item->cost_price ?? 0 }}"
                 data-stock="{{ $item->current_stock ?? 0 }}"
                 data-category="{{ $item->category_name }}"
                 data-img="{{ $item->item_image ? asset($item->item_image) : asset('manager_asset/images/salespilot logo1.png') }}">
@@ -90,6 +91,7 @@ Sell Product
                     data-parent-id="{{ $item->id }}"
                     data-name="{{ $item->item_name }} - {{ $variant->variant_name }}"
                     data-price="{{ $variant->final_price ?? $variant->selling_price ?? 0 }}"
+                    data-cost-price="{{ $variant->cost_price ?? $variant->manual_cost_price ?? $variant->margin_cost_price ?? $variant->range_cost_price ?? 0 }}"
                     data-stock="{{ $variant->stock_quantity ?? 0 }}"
                     data-category="{{ $item->category_name }}"
                     data-primary-value="{{ $variant->primary_value ?? '' }}"
@@ -186,9 +188,34 @@ Sell Product
 
         <div class="cart-summary">
             <!-- Add Discount Button -->
+
             <button class="cart-action-btn" id="addDiscountBtn">
-            <i class="bi bi-percent"></i> Add Discount
+                <i class="bi bi-percent"></i> Add Discount
             </button>
+
+
+            <!-- Discount Selection Side Panel -->
+            <div class="side-panel-overlay" id="discountPanelOverlay" style="display:none;"></div>
+            <div class="side-panel" id="discountSidePanel">
+              <div class="side-panel-content">
+                <div class="side-panel-header d-flex justify-content-between align-items-center">
+                  <h5 class="side-panel-title mb-0"><i class="bi bi-percent me-2"></i>Select Discount</h5>
+                  <button type="button" class="btn-close" id="closeDiscountPanel" aria-label="Close"></button>
+                </div>
+                <div class="side-panel-body">
+                  <div class="mb-3">
+                    <label for="discountSelect" class="form-label">Choose Discount</label>
+                    <select id="discountSelect" class="form-select">
+                      <option value="" selected disabled>Loading discounts...</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="side-panel-footer d-flex justify-content-end gap-2">
+                  <button type="button" class="btn btn-secondary" id="cancelDiscountBtn">Cancel</button>
+                  <button type="button" class="btn btn-primary" id="applyDiscountBtn" disabled>Apply Discount</button>
+                </div>
+              </div>
+            </div>
 
             <div class="cart-total">
             <span>Total:</span>
@@ -238,6 +265,12 @@ Sell Product
               <div class="item-preview-price" id="modalItemPrice"></div>
               <div class="item-preview-stock" id="modalItemStock"></div>
             </div>
+          </div>
+
+          <!-- Selling Price Input (hidden by default, shown for cost-only items) -->
+          <div class="form-group" id="sellingPriceGroup" style="display:none;">
+            <label class="form-label" for="modalSellingPrice">Selling Price <span class="text-danger">*</span></label>
+            <input type="number" class="form-control" id="modalSellingPrice" min="0" step="0.01" placeholder="Enter selling price">
           </div>
 
           <div class="form-group">
@@ -420,6 +453,10 @@ Sell Product
             <div class="receipt-total-row">
               <span>Tax (0%):</span>
               <span>₦0.00</span>
+            </div>
+            <div class="receipt-total-row" id="receiptDiscountRow" style="display:none;">
+              <span>Discount:</span>
+              <span id="receiptDiscount"></span>
             </div>
             <div class="receipt-total-row grand-total">
               <span>Total:</span>

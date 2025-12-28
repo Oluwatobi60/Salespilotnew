@@ -51,7 +51,7 @@ class CustomerController extends Controller
         return view('manager.customer.edit_customer', compact('customer'));
     }
 
-    /* public function update_customer(Request $request, $id)
+     public function update_customer(Request $request, $id)
     {
         $customer = AddCustomer::findOrFail($id);
 
@@ -72,8 +72,8 @@ class CustomerController extends Controller
             'customer' => $customer,
         ]);
     }
- */
-   /*  public function delete_customer($id)
+
+    public function delete_customer($id)
     {
         $customer = AddCustomer::findOrFail($id);
         $customer->delete();
@@ -82,5 +82,5 @@ class CustomerController extends Controller
             'success' => true,
             'message' => 'Customer deleted successfully',
         ]);
-    } */
+    }
 }

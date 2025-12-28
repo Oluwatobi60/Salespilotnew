@@ -16,6 +16,7 @@ class StaffMainController extends Controller
         try {
             // Validate the incoming request data
             $validatedData = $request->validate([
+                'staff_id' => 'required|string|unique:staffs,staff_id',
                 'fullname' => 'required|string|max:255',
                 'username' => 'required|string|max:255|unique:staffs,username',
                 'email' => 'required|string|email|max:255|unique:staffs,email',
@@ -102,6 +103,7 @@ class StaffMainController extends Controller
 
             // Validate the incoming request data
             $validatedData = $request->validate([
+                'staff_id' => 'required|string|unique:staffs,staff_id,'.$staff->id,
                 'fullname' => 'required|string|max:255',
                 'username' => 'required|string|max:255|unique:staffs,username,'.$staff->id,
                 'email' => 'required|string|email|max:255|unique:staffs,email,'.$staff->id,

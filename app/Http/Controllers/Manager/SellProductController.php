@@ -130,17 +130,25 @@ class SellProductController extends Controller
                 'items.*.note' => 'nullable|string',
                 'items.*.img' => 'nullable|string',
                 'total' => 'required|numeric',
-                'discount' => 'nullable|numeric'
+                'discount' => 'nullable|numeric',
+                'discount_id' => 'nullable|integer|exists:add_discounts,id'
             ]);
 
 
             $sessionId = Str::uuid();
             $receiptNumber = 'RCPT-' . strtoupper(substr($sessionId, 0, 8));
             $discount = $validated['discount'] ?? 0;
+            $discountId = $validated['discount_id'] ?? null;
+
+            $cartSubtotal = 0;
+            foreach ($validated['items'] as $item) {
+                $cartSubtotal += $item['price'] * $item['quantity'];
+            }
 
             foreach ($validated['items'] as $item) {
                 $itemSubtotal = $item['price'] * $item['quantity'];
-                $itemDiscount = ($discount / $validated['total']) * $itemSubtotal;
+                // Avoid division by zero, and use subtotal for proportional discount
+                $itemDiscount = ($cartSubtotal > 0 && $discount > 0) ? ($discount * ($itemSubtotal / $cartSubtotal)) : 0;
                 $itemTotal = $itemSubtotal - $itemDiscount;
 
                 $itemType = isset($item['type']) ? $item['type'] : 'standard';
@@ -159,6 +167,7 @@ class SellProductController extends Controller
                     'item_image' => $item['img'] ?? null,
                     'subtotal' => $itemSubtotal,
                     'discount' => $itemDiscount,
+                    'discount_id' => $discountId,
                     'total' => $itemTotal,
                     'status' => 'completed',
                     'session_id' => $sessionId,
@@ -166,12 +175,24 @@ class SellProductController extends Controller
                     'user_id' => Auth::id()
                 ]);
 
-                // Update stock for standard items
+                // Update stock for standard and variant items
                 if ($itemType === 'standard') {
                     $standardItem = StandardItem::find($item['id']);
                     if ($standardItem) {
                         $standardItem->current_stock -= $item['quantity'];
+                        if ($standardItem->current_stock < 0) {
+                            $standardItem->current_stock = 0;
+                        }
                         $standardItem->save();
+                    }
+                } elseif ($itemType === 'variant') {
+                    $productVariant = ProductVariant::find($item['id']);
+                    if ($productVariant) {
+                        $productVariant->stock_quantity -= $item['quantity'];
+                        if ($productVariant->stock_quantity < 0) {
+                            $productVariant->stock_quantity = 0;
+                        }
+                        $productVariant->save();
                     }
                 }
             }

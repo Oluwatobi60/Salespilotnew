@@ -11,8 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('cart_items', function (Blueprint $table) {
-            $table->string('receipt_number')->nullable()->after('session_id');
+        Schema::create('add_discounts', function (Blueprint $table) {
+            $table->id();
+            $table->string('discount_name');
+            $table->decimal('discount_rate', 5, 2); // e.g., 10.00 for 10%
+            $table->integer('time_used')->default(0);
+            $table->timestamps();
         });
     }
 
@@ -21,8 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('cart_items', function (Blueprint $table) {
-            $table->dropColumn('receipt_number');
-        });
+        Schema::dropIfExists('add_discounts');
     }
 };

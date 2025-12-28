@@ -9,20 +9,22 @@ use Illuminate\Support\Facades\Log;
 use App\Models\StandardItem;
 use App\Models\VariantItem;
 use App\Models\ProductVariant;
+use App\Models\Staffs;
+use App\Models\Category;
 
 
 class SalesReportController extends Controller
 {
 
     // Display completed sales with pagination
-   public function completed_sales()
+    public function completed_sales()
     {
         $completedSales = CartItem::where('status', 'completed')
-            ->select('receipt_number', 'customer_name', 'customer_id', 'created_at', 'user_id')
+            ->select('receipt_number', 'customer_name', 'customer_id', 'created_at', 'user_id', 'staff_id')
             ->selectRaw('SUM(total) as total')
+            ->selectRaw('SUM(discount) as discount')
             ->selectRaw('COUNT(*) as items_count')
-            ->with('user')
-            ->groupBy('receipt_number', 'customer_name', 'customer_id', 'created_at', 'user_id')
+            ->groupBy('receipt_number', 'customer_name', 'customer_id', 'created_at', 'user_id', 'staff_id')
             ->orderBy('created_at', 'desc')
             ->paginate(15);
 
@@ -184,37 +186,107 @@ class SalesReportController extends Controller
         ]);
     }
 
-    public function staff_sales()
-    {
-        return view('manager.reports.sales_by_staff');
-    }
 
 
-    public function sales_by_item()
-    {
-        return view('manager.reports.sales_by_item');
-    }
+
 
 
     public function sales_by_category()
     {
-        return view('manager.reports.sale_by_category');
+        // Get all completed sales items
+        $cartItems = CartItem::where('status', 'completed')->get();
+
+        // Aggregate by category
+        $categoryData = [];
+        foreach ($cartItems as $item) {
+            $categoryId = null;
+            $categoryName = '';
+            $costPrice = 0;
+            $taxRate = 0;
+            if ($item->item_type === 'standard') {
+                $std = StandardItem::find($item->item_id);
+                if ($std) {
+                    $categoryId = $std->category;
+                    $catModel = Category::find($categoryId);
+                    $categoryName = $catModel ? $catModel->category_name : ($categoryId ?? 'Unknown');
+                    $costPrice = $std->cost_price ?? 0;
+                    $taxRate = $std->tax_rate ?? 0;
+                }
+            } elseif ($item->item_type === 'variant') {
+                $prodVar = ProductVariant::find($item->item_id);
+                $variantItem = $prodVar ? $prodVar->variantItem : null;
+                if ($prodVar) {
+                    $costPrice = $prodVar->cost_price ?? 0;
+                    $taxRate = $prodVar->tax_rate ?? 0;
+                }
+                if ($variantItem) {
+                    $categoryId = $variantItem->category;
+                    $catModel = Category::find($categoryId);
+                    $categoryName = $catModel ? $catModel->category_name : ($categoryId ?? 'Unknown');
+                } else {
+                    $var = VariantItem::find($item->item_id);
+                    if ($var) {
+                        $categoryId = $var->category;
+                        $catModel = Category::find($categoryId);
+                        $categoryName = $catModel ? $catModel->category_name : ($categoryId ?? 'Unknown');
+                    }
+                }
+            }
+            if ($categoryId === null) {
+                $categoryId = 'uncategorized';
+                $categoryName = 'Uncategorized';
+            }
+            if (!isset($categoryData[$categoryId])) {
+                $categoryData[$categoryId] = [
+                    'category_id' => $categoryId,
+                    'category_name' => $categoryName,
+                    'total_quantity_sold' => 0,
+                    'gross_sales' => 0,
+                    'total_discount' => 0,
+                    'total_sales' => 0,
+                    'transactions_count' => 0,
+                    'total_cost' => 0,
+                    'gross_profit' => 0,
+                    'tax' => 0,
+                ];
+            }
+            $itemCost = $costPrice * $item->quantity;
+            $itemTax = ($taxRate / 100) * $item->subtotal;
+            $categoryData[$categoryId]['total_quantity_sold'] += $item->quantity;
+            $categoryData[$categoryId]['gross_sales'] += $item->subtotal;
+            $categoryData[$categoryId]['total_discount'] += $item->discount;
+            $categoryData[$categoryId]['total_sales'] += $item->total;
+            $categoryData[$categoryId]['transactions_count'] += 1; // Each cart item is a transaction line
+            $categoryData[$categoryId]['total_cost'] += $itemCost;
+            $categoryData[$categoryId]['tax'] += $itemTax;
+        }
+
+        // Calculate gross profit and margin for each category
+        foreach ($categoryData as &$cat) {
+            $cat['gross_profit'] = $cat['gross_sales'] - $cat['total_cost'];
+            $cat['margin'] = $cat['gross_sales'] > 0 ? ($cat['gross_profit'] / $cat['gross_sales']) * 100 : 0;
+        }
+        unset($cat);
+
+        // Convert to collection and sort by gross_sales desc
+        $salesByCategory = collect($categoryData)->sortByDesc('gross_sales')->values();
+
+        // Calculate totals for all categories
+        $totals = [
+            'gross_sales' => $salesByCategory->sum('gross_sales'),
+            'net_sales' => $salesByCategory->sum('total_sales'),
+            'items_cost' => $salesByCategory->sum('total_cost'),
+            'gross_profit' => $salesByCategory->sum('gross_profit'),
+            'tax' => $salesByCategory->sum('tax'),
+        ];
+
+        return view('manager.reports.sales_by_category', [
+            'salesByCategory' => $salesByCategory,
+            'totals' => $totals
+        ]);
     }
 
-    public function valuation_report()
-    {
-        return view('manager.reports.inventory_valuation');
-    }
 
-    public function taxes()
-    {
-        return view('manager.reports.taxes');
-    }
-
-    public function discount_report()
-    {
-        return view('manager.reports.discount_report');
-    }
 
 
     // Get sale items by receipt number
@@ -242,5 +314,52 @@ class SalesReportController extends Controller
                 'message' => 'Failed to load sale items: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+
+
+    public function getStaffUserList()
+    {
+        $staffUsers = Staffs::select('id', 'first_name', 'last_name')->get();
+
+        $userList = $staffUsers->map(function ($staff) {
+            return [
+                'id' => $staff->id,
+                'name' => $staff->first_name . ' ' . $staff->last_name,
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'staffUsers' => $userList
+        ]);
+    }
+
+
+        // Print receipt for a completed sale
+    public function print_receipt($receiptNumber)
+    {
+        // Get all items for this receipt
+        $items = CartItem::where('receipt_number', $receiptNumber)
+            ->where('status', 'completed')
+            ->get();
+
+        if ($items->isEmpty()) {
+            abort(404, 'Sale not found');
+        }
+
+        // Get sale summary (customer, date, total, discount, etc.)
+        $sale = $items->first();
+        $total = $items->sum('total');
+        $discount = $items->sum('discount');
+        $subtotal = $items->sum('subtotal');
+
+        return view('manager.sales.print_receipt', [
+            'items' => $items,
+            'sale' => $sale,
+            'total' => $total,
+            'discount' => $discount,
+            'subtotal' => $subtotal,
+        ]);
     }
 }

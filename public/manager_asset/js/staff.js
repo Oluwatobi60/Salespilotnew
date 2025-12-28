@@ -49,4 +49,28 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
 
+
+// Auto-generate Staff ID from surname (last word in fullname) and random 3 digits
+
+  const fullnameInput = document.getElementById('fullname');
+  const staffIdInput = document.getElementById('staff_id');
+  function generateStaffId() {
+    let fullname = fullnameInput.value.trim();
+    if (!fullname) {
+      staffIdInput.value = '';
+      return;
+    }
+    // Get surname (last word)
+    let parts = fullname.split(' ');
+    let surname = parts.length > 1 ? parts[parts.length - 1] : parts[0];
+    let prefix = surname.substring(0, 3).toUpperCase().padEnd(3, 'X');
+    let randomDigits = Math.floor(100 + Math.random() * 900); // 3 digits
+    staffIdInput.value = prefix + randomDigits;
+  }
+  fullnameInput.addEventListener('input', generateStaffId);
+  // If form is reset or loaded with value, generate
+  if (fullnameInput.value) generateStaffId();
+
+
+
 });

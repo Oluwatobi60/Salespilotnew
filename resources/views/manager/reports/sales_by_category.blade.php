@@ -46,7 +46,7 @@ Sales by Category
                               </select>
                             </div>
                           </div>
-                         
+
                           <div class="table-responsive">
                             <table class="table table-striped" id="salesByCategoryTable">
                               <thead>
@@ -63,68 +63,40 @@ Sales by Category
                                 </tr>
                               </thead>
                               <tbody>
+                                @forelse($salesByCategory as $i => $category)
                                 <tr>
-                                  <td>1</td>
-                                  <td>Electronics</td>
-                                  <td>245</td>
-                                  <td>$12,450.00</td>
-                                  <td>$12,000.00</td>
-                                  <td>$7,000.00</td>
-                                  <td>$5,000.00</td>
-                                  <td>$450.00</td>
-                                  <td>40.0%</td>
+                                  <td>{{ $i + 1 }}</td>
+                                  <td>{{ $category['category_name'] }}</td>
+                                  <td>{{ $category['total_quantity_sold'] }}</td>
+                                  <td>{{ number_format($category['gross_sales'], 2) }}</td>
+                                  <td>{{ number_format($category['total_sales'], 2) }}</td>
+                                  <td>{{ isset($category['total_cost']) ? number_format($category['total_cost'], 2) : '-' }}</td>
+                                  <td>{{ isset($category['gross_profit']) ? number_format($category['gross_profit'], 2) : '-' }}</td>
+                                  <td>{{ isset($category['tax']) ? number_format($category['tax'], 2) : '-' }}</td>
+                                  <td>{{ isset($category['margin']) ? number_format($category['margin'], 1) . '%' : '-' }}</td>
                                 </tr>
+                                @empty
                                 <tr>
-                                  <td>2</td>
-                                  <td>Accessories</td>
-                                  <td>358</td>
-                                  <td>$8,950.00</td>
-                                  <td>$8,500.00</td>
-                                  <td>$4,200.00</td>
-                                  <td>$4,300.00</td>
-                                  <td>$450.00</td>
-                                  <td>50.6%</td>
+                                  <td colspan="9" class="text-center">No sales data available.</td>
                                 </tr>
-                                <tr>
-                                  <td>3</td>
-                                  <td>Apparel</td>
-                                  <td>187</td>
-                                  <td>$5,610.00</td>
-                                  <td>$5,500.00</td>
-                                  <td>$2,800.00</td>
-                                  <td>$2,700.00</td>
-                                  <td>$110.00</td>
-                                  <td>48.2%</td>
-                                </tr>
-                                <tr>
-                                  <td>4</td>
-                                  <td>Home & Garden</td>
-                                  <td>92</td>
-                                  <td>$2,760.00</td>
-                                  <td>$2,700.00</td>
-                                  <td>$1,500.00</td>
-                                  <td>$1,200.00</td>
-                                  <td>$60.00</td>
-                                  <td>44.4%</td>
-                                </tr>
+                                @endforelse
                               </tbody>
                               <tfoot>
                                 <tr>
-                                  <th>Total</th>
-                                  <th>882</th>
-                                  <th>$29,770.00</th>
-                                  <th>$28,700.00</th>
-                                  <th>$15,500.00</th>
-                                  <th>$13,200.00</th>
-                                  <th>$1,070.00</th>
-                                  <th>46.0%</th>
+                                  <th colspan="3">Total</th>
+                                  <th>₦{{ number_format($totals['gross_sales'] ?? 0, 2) }}</th>
+                                  <th>₦{{ number_format($totals['net_sales'] ?? 0, 2) }}</th>
+                                  <th>₦{{ number_format($totals['items_cost'] ?? 0, 2) }}</th>
+                                  <th>₦{{ number_format($totals['gross_profit'] ?? 0, 2) }}</th>
+                                  <th>₦{{ number_format($totals['tax'] ?? 0, 2) }}</th>
+                                  <th></th>
                                 </tr>
                               </tfoot>
                             </table>
 
 
                           <hr class="my-3" style="border-top: 2px solid #e0e0e0;">
-                          
+
                           <!-- Bar Chart: Units Sold vs Category -->
                           <div class="mt-4 mb-2">
                             <h5 class="mb-3">Sales Performance by Category</h5>
@@ -145,7 +117,7 @@ Sales by Category
                   <!-- Sales by Category content ends here -->
                 </div>
                 <!-- content-wrapper ends -->
-               
+
               </div>
               <!-- main-panel ends -->
             </div>

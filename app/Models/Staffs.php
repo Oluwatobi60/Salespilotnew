@@ -2,11 +2,17 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
 
-class Staffs extends Model
+class Staffs extends Authenticatable
 {
+    use Notifiable;
+
+    protected $table = 'staffs';
+
     protected $fillable = [
+        'staff_id',
         'fullname',
         'username',
         'email',
@@ -16,5 +22,10 @@ class Staffs extends Model
         'status',
         'address',
         'passport_photo',
+    ];
+
+    protected $hidden = [
+        'password',
+        'remember_token',
     ];
 }

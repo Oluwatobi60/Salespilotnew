@@ -43,6 +43,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     total: cells[6]?.textContent.trim() || '',
                     status: cells[7]?.querySelector('.badge')?.textContent.trim() || '',
                     receiptNumber: row.dataset.receiptNumber || '',
+                    discount: row.dataset.discount !== undefined ? row.dataset.discount : '-',
                     rowElement: row
                 };
                 allSales.push(sale);
@@ -286,6 +287,13 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('detailTotalItems').textContent = sale.items;
         document.getElementById('detailTotalAmount').textContent = sale.total;
         document.getElementById('detailStatus').innerHTML = `<span class="badge badge-opacity-success">${sale.status}</span>`;
+
+        // Show discount if available (requires discount info in sale object)
+        if (typeof sale.discount !== 'undefined' && document.getElementById('detailDiscount')) {
+            document.getElementById('detailDiscount').textContent = sale.discount !== null ? sale.discount : '-';
+        } else if (document.getElementById('detailDiscount')) {
+            document.getElementById('detailDiscount').textContent = '-';
+        }
 
         // Load sale items via AJAX
         loadSaleItems(sale.receiptNumber);

@@ -5,7 +5,7 @@ Sales Summary
 @section('manager_layout_content')
  <div class="container-scroller">
       <div class="container-fluid page-body-wrapper">
-        
+
           <div class="content-wrapper">
             <!-- Sales by Staff content starts here -->
             <div class="row">
@@ -42,93 +42,68 @@ Sales Summary
                       <div class="col-md-4">
                         <select class="form-select form-select-sm" id="staffFilter">
                           <option value="">All Staff</option>
-                          <option value="Sarah Johnson">Sarah Johnson</option>
-                          <option value="Michael Lee">Michael Lee</option>
-                          <option value="Emily Davis">Emily Davis</option>
-                          <option value="James Smith">James Smith</option>
                         </select>
                       </div>
                     </div>
-                   
+
                     <div class="table-responsive">
                       <table class="table table-striped" id="salesByStaffTable">
                         <thead>
                           <tr>
                             <th>S/N</th>
                             <th>Staff Name</th>
-                            <th>Employee ID</th>
+                           {{--   <th>Employee ID</th>  --}}
                             <th>Transactions</th>
                             <th>Items Sold</th>
                             <th>Total Sales</th>
-                            <th>Customers Registered</th>
-                            <th>Performance</th>
+                            {{--  <th>Customers Registered (Staff/User)</th>  --}}
+                           <th>Transactions Date</th>
                           </tr>
                         </thead>
                         <tbody>
-                          <tr>
-                            <td>1</td>
-                            <td>Sarah Johnson</td>
-                            <td>EMP-001</td>
-                            <td>142</td>
-                            <td>287</td>
-                            <td>$18,450.00</td>
-                            <td>5</td>
-                            <td><span class="badge badge-opacity-success">Excellent</span></td>
-                          </tr>
-                          <tr>
-                            <td>2</td>
-                            <td>Michael Chen</td>
-                            <td>EMP-002</td>
-                            <td>128</td>
-                            <td>245</td>
-                            <td>$15,230.00</td>
-                            <td>4</td>
-                            <td><span class="badge badge-opacity-success">Excellent</span></td>
-                          </tr>
-                          <tr>
-                            <td>3</td>
-                            <td>Emily Rodriguez</td>
-                            <td>EMP-003</td>
-                            <td>95</td>
-                            <td>178</td>
-                            <td>$11,890.00</td>
-                            <td>3</td>
-                            <td><span class="badge badge-opacity-info">Good</span></td>
-                          </tr>
-
-
-                          <tr>
-                            <td>4</td>
-                            <td>David Williams</td>
-                            <td>EMP-004</td>
-                            <td>87</td>
-                            <td>156</td>
-                            <td>$9,780.00</td>
-                            <td>3</td>
-                            <td><span class="badge badge-opacity-info">Good</span></td>
-                          </tr>
-                          <tr>
-                            <td>5</td>
-                            <td>Lisa Thompson</td>
-                            <td>EMP-005</td>
-                            <td>63</td>
-                            <td>112</td>
-                            <td>$7,340.00</td>
-                            <td>2</td>
-                            <td><span class="badge badge-opacity-warning">Average</span></td>
-                          </tr>
+                            @forelse ($salesbystaff as $index => $staff)
+                            <tr>
+                              <td>{{ $index + 1 }}</td>
+                              <td>
+                                @if(!empty($staff->user->name)){{ $staff->user->name }}<br>@endif
+                                @if(!empty($staff->staff->fullname)){{ $staff->staff->fullname }}@endif
+                              </td>
+                              <td>{{ $staff->transactions_count ?? 0 }}</td>
+                              <td>{{ $staff->items_sold ?? 0 }}</td>
+                              <td>₦{{ number_format($staff->total_sales ?? 0, 2) }}</td>
+                              <td><span class="badge badge-opacity-success">{{ $staff->last_transaction_date}}</span></td>
+                            </tr>
+                            @empty
+                            <tr>
+                              <td colspan="8" class="text-center py-5">
+                                <div class="empty-state">
+                                  <i class="bi bi-inbox"></i>
+                                  <h5>No Completed Sales</h5>
+                                  <p class="text-muted">No sales have been completed yet.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            @endforelse
+                            @if($totals)
+                            <tr style="font-weight:bold; background:#f8f9fa;">
+                              <td colspan="2">Grand Total</td>
+                              <td>{{ $totals->transactions_count ?? 0 }}</td>
+                              <td>{{ $totals->items_sold ?? 0 }}</td>
+                              <td>₦{{ number_format($totals->total_sales ?? 0, 2) }}</td>
+                              <td></td>
+                            </tr>
+                            @endif
                         </tbody>
-                        <tfoot>
+                    {{--      <tfoot>
                           <tr>
-                            <th> <th>
-                            <th>Total</th>
+                            <th colspan="2">Total</th>
                             <th>515</th>
                             <th>978</th>
                             <th>$62,690.00</th>
                             <th>17</th>
-                            <th>-</th>
+
                           </tr>
-                        </tfoot>
+                        </tfoot>  --}}
                       </table>
                     </div>
                   </div>

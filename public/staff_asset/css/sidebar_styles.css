@@ -1,0 +1,286 @@
+
+
+  /* Sidebar collapse/expand toggle styles (minimal, local overrides) */
+.sidebar{
+  transition: width 0.2s ease;
+  width: 280px;
+  z-index: 1040 !important;
+  background: transparent !important;
+  box-shadow: 2px 0 8px rgba(0,0,0,0.04);
+  position: fixed !important;
+  left: 0;
+  top: 70px;
+  height: 100vh;
+}
+.main-panel, .page-body-wrapper{
+  transition: margin-left 0.2s ease;
+}
+
+.main-panel {
+  margin-left: 280px !important;
+  min-height: calc(100vh - 70px);
+  background-color: #f5f7fa;
+}
+
+body.sidebar-collapsed .main-panel {
+  margin-left: 70px !important;
+}
+
+@media (max-width: 768px) {
+  .main-panel {
+    margin-left: 0 !important;
+  }
+  body.sidebar-collapsed .main-panel {
+    margin-left: 0 !important;
+  }
+  .sidebar {
+    width: 100vw !important;
+    left: 0 !important;
+    height: auto !important;
+    position: fixed !important;
+    z-index: 1040 !important;
+  }
+}
+
+/* Collapsed sidebar state */
+body.sidebar-collapsed .sidebar{
+  width: 70px !important;
+  overflow: hidden;
+}
+body.sidebar-collapsed .sidebar .menu-title,
+body.sidebar-collapsed .sidebar .menu-arrow {
+  display: none !important;
+}
+body.sidebar-collapsed .sidebar .nav-link .menu-title {
+  display: none !important;
+}
+body.sidebar-collapsed .sidebar .menu-icon{
+  margin-right: 0 !important;
+  text-align: center;
+  width: 100%;
+}
+body.sidebar-collapsed .main-panel{
+  margin-left: 70px !important;
+}
+
+/* Ensure sidebar menu items remain clickable */
+.sidebar .nav-link {
+  display: flex !important;
+  align-items: center !important;
+}
+
+/* Sub-menu visibility control */
+.sidebar .sub-menu {
+  transition: all 0.2s ease;
+}
+
+body.sidebar-collapsed .sidebar .sub-menu {
+  display: none !important;
+}
+
+/* Fixed logo container - completely transparent */
+.fixed-logo-container {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 280px !important;
+  height: 70px !important;
+  background: transparent !important;
+  border: none !important;
+  z-index: 9999 !important;
+  box-shadow: none !important;
+  transition: width 0.2s ease !important;
+}
+
+/* Adjust logo container when sidebar is collapsed */
+body.sidebar-collapsed .fixed-logo-container {
+  width: 70px !important;
+}
+
+.logo-hamburger-wrapper {
+  display: flex !important;
+  align-items: center !important;
+  height: 100% !important;
+  padding: 0 20px !important;
+}
+
+/* Hamburger button styling */
+#sidebarToggle {
+  background: #ffffff !important;
+  border: 1px solid #ddd !important;
+  color: #333 !important;
+  margin-right: 15px !important;
+  padding: 10px 12px !important;
+  border-radius: 6px !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 44px !important;
+  min-height: 44px !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
+  z-index: 10001 !important;
+  pointer-events: auto !important;
+}
+
+#sidebarToggle:hover {
+  background: #f8f9fa !important;
+  border-color: #ccc !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.15) !important;
+}
+
+#sidebarToggle:active {
+  background: #e9ecef !important;
+  transform: scale(0.98) !important;
+}
+
+/* Hamburger icon styling */
+#sidebarToggle i {
+  font-size: 22px !important;
+  line-height: 1 !important;
+  font-weight: bold !important;
+}
+
+/* Logo styling */
+.brand-logo {
+  text-decoration: none !important;
+}
+
+.brand-logo img {
+  max-height: 40px !important;
+  width: auto !important;
+}
+
+/* Adjust sidebar positioning */
+.sidebar {
+  margin-top: 70px !important;
+}
+
+/* Adjust main content positioning */
+.page-body-wrapper {
+  margin-top: 70px !important;
+}
+
+/* User dropdown responsive styles */
+.user-dropdown {
+  margin-top: auto !important;
+  border-top: 1px solid rgba(0,0,0,0.1);
+  padding-top: 10px !important;
+}
+
+.user-dropdown .nav-link {
+  padding: 15px 20px !important;
+  cursor: pointer !important;
+  transition: background-color 0.2s ease !important;
+}
+
+.user-dropdown .nav-link:hover {
+  background-color: rgba(0,0,0,0.05) !important;
+}
+
+.user-dropdown .nav-link:active {
+  background-color: rgba(0,0,0,0.1) !important;
+}
+
+.user-dropdown .img-xs {
+  width: 40px !important;
+  height: 40px !important;
+  object-fit: cover !important;
+  border: 2px solid #fff !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+}
+
+.user-dropdown .img-md {
+  width: 80px !important;
+  height: 80px !important;
+  object-fit: cover !important;
+  border: 3px solid #fff !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15) !important;
+}
+
+.user-dropdown .dropdown-menu {
+  min-width: 250px !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+  border: 1px solid rgba(0,0,0,0.1) !important;
+  border-radius: 8px !important;
+  margin-top: 10px !important;
+  display: none;
+  position: absolute;
+  left: 0;
+  bottom: 100%;
+  margin-bottom: 5px;
+  z-index: 1050;
+}
+
+.user-dropdown .dropdown-menu.show {
+  display: block !important;
+}
+
+.user-dropdown .dropdown-item {
+  padding: 10px 20px !important;
+  transition: all 0.2s ease !important;
+  cursor: pointer !important;
+}
+
+.user-dropdown .dropdown-item:hover {
+  background-color: #f8f9fa !important;
+  padding-left: 25px !important;
+}
+
+/* Collapsed sidebar - hide user dropdown */
+body.sidebar-collapsed .user-dropdown .img-xs {
+  width: 35px !important;
+  height: 35px !important;
+  margin: 0 auto !important;
+  display: block !important;
+}
+
+body.sidebar-collapsed .user-dropdown .nav-link {
+  padding: 10px !important;
+  justify-content: center !important;
+}
+
+/* Mobile responsive styles */
+@media (max-width: 768px) {
+  .user-dropdown {
+    display: block !important;
+  }
+
+  .user-dropdown .nav-link {
+    padding: 12px 15px !important;
+  }
+
+  .user-dropdown .img-xs {
+    width: 35px !important;
+    height: 35px !important;
+  }
+
+  .user-dropdown .dropdown-menu {
+    position: fixed !important;
+    top: auto !important;
+    bottom: 60px !important;
+    left: 10px !important;
+    right: 10px !important;
+    width: calc(100% - 20px) !important;
+    margin: 0 !important;
+  }
+}
+
+/* Ensure dropdown is clickable on touch devices */
+@media (hover: none) and (pointer: coarse) {
+  .user-dropdown .nav-link {
+    -webkit-tap-highlight-color: rgba(0,0,0,0.1);
+    tap-highlight-color: rgba(0,0,0,0.1);
+  }
+}
+
+/* Arrow rotation helper for sidebar parent triggers */
+.sidebar .menu-arrow {
+  display: inline-block;
+  width: 0.8rem;
+  height: 0.8rem;
+  margin-left: auto;
+  transition: transform .18s ease;
+}
+.sidebar .menu-arrow.rotated { transform: rotate(90deg); }

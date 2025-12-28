@@ -1,0 +1,99 @@
+<?php
+
+namespace App\Http\Controllers\Manager;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use App\Models\StandardItem;
+use App\Models\ProductVariant;
+use App\Models\Category;
+use Illuminate\Pagination\LengthAwarePaginator;
+
+class ValuationReportController extends Controller
+{
+      public function valuation_report()
+    {
+        // Fetch all standard items and product variants
+        $standardItems = StandardItem::all();
+        $productVariants = ProductVariant::all();
+        $categories = Category::pluck('category_name', 'id');
+
+        $items = [];
+        $totalInventoryValue = 0;
+        $totalSellingValue = 0;
+        $totalPotentialProfit = 0;
+        $totalMargin = 0;
+        $marginDenominator = 0;
+        // Standard Items
+        foreach ($standardItems as $item) {
+            $quantity = $item->current_stock ?? 0;
+            $cost = $item->cost_price ?? 0;
+            $selling = $item->selling_price ?? 0;
+            $inventoryValue = $quantity * $cost;
+            $sellingValue = $quantity * $selling;
+            $potentialProfit = $sellingValue - $inventoryValue;
+            $margin = $sellingValue > 0 ? ($potentialProfit / $sellingValue) * 100 : 0;
+            $items[] = [
+                'item_name' => $item->item_name,
+                'category_name' => $categories[$item->category] ?? 'N/A',
+                'quantity' => $quantity,
+                'cost_price' => $cost,
+                'inventory_value' => $inventoryValue,
+                'total_selling_value' => $sellingValue,
+                'potential_profit' => $potentialProfit,
+                'margin' => $margin,
+            ];
+            $totalInventoryValue += $inventoryValue;
+            $totalSellingValue += $sellingValue;
+            $totalPotentialProfit += $potentialProfit;
+            $marginDenominator += $sellingValue;
+        }
+        // Product Variants
+        foreach ($productVariants as $variant) {
+            $quantity = $variant->stock_quantity ?? 0;
+            $cost = $variant->cost_price ?? 0;
+            $selling = $variant->selling_price ?? 0;
+            $inventoryValue = $quantity * $cost;
+            $sellingValue = $quantity * $selling;
+            $potentialProfit = $sellingValue - $inventoryValue;
+            $margin = $sellingValue > 0 ? ($potentialProfit / $sellingValue) * 100 : 0;
+            // Get category name via related VariantItem
+            $categoryName = 'N/A';
+            if ($variant->variantItem) {
+                $variantItem = $variant->variantItem;
+                if (isset($variantItem->category)) {
+                    $catId = $variantItem->category;
+                    $categoryName = $categories[$catId] ?? 'N/A';
+                }
+            }
+            $items[] = [
+                'item_name' => $variant->variant_name,
+                'category_name' => $categoryName,
+                'quantity' => $quantity,
+                'cost_price' => $cost,
+                'inventory_value' => $inventoryValue,
+                'total_selling_value' => $sellingValue,
+                'potential_profit' => $potentialProfit,
+                'margin' => $margin,
+            ];
+            $totalInventoryValue += $inventoryValue;
+            $totalSellingValue += $sellingValue;
+            $totalPotentialProfit += $potentialProfit;
+            $marginDenominator += $sellingValue;
+        }
+
+        $overallMargin = $marginDenominator > 0 ? ($totalPotentialProfit / $marginDenominator) * 100 : 0;
+        // Paginate items (15 per page)
+        $perPage = 10;
+        $page = request()->get('page', 1);
+        $itemsCollection = collect($items);
+        $paginatedItems = new LengthAwarePaginator(
+            $itemsCollection->forPage($page, $perPage),
+            $itemsCollection->count(),
+            $perPage,
+            $page,
+            ['path' => request()->url(), 'query' => request()->query()]
+        );
+        return view('manager.reports.inventory_valuation', compact('paginatedItems', 'totalInventoryValue', 'totalSellingValue', 'totalPotentialProfit', 'overallMargin'));
+    }
+}

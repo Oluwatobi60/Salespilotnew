@@ -14,6 +14,18 @@ Discount Report
                   <div class="card-body">
                     <h4 class="card-title">Discount Report</h4>
                     <p class="card-description">View and manage discount transactions.</p>
+                    @if(session('success'))
+                      <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        {{ session('success') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                      </div>
+                    @endif
+                    @if(session('error'))
+                      <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        {{ session('error') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                      </div>
+                    @endif
                     <div class="row mb-3">
                       <div class="col-sm-4">
                         <select class="form-select form-select-sm mb-2" id="dateRangeFilter" onchange="toggleCustomRangeInputs()" style="font-size:0.85rem;">
@@ -45,8 +57,13 @@ Discount Report
                           <option value="Staff3">Staff 3</option>
                         </select>
                       </div>
+
+                      <div class="col-sm-4">
+                        <button type="button" class="btn btn-primary" style="min-width: 150px;" id="openAddDiscountBtn"><strong>+ Add Discount</strong></button>
+                      </div>
+
                     </div>
-                   
+
                     <div class="table-responsive">
                       <table class="table table-striped" id="discountTable">
                         <thead>
@@ -57,16 +74,12 @@ Discount Report
                           </tr>
                         </thead>
                         <tbody>
-                          <tr>
-                            <td>Over 100k purchase</td>
-                            <td>3</td>
-                            <td>&#8358; 2,000.00</td>
+                          @foreach($discounnts as $discount)
+                            <td>{{ $discount->discount_name }}</td>
+                            <td>{{ $discount->time_used }}</td>
+                            <td>{{ $discount->discount_rate }}</td>
                           </tr>
-                          <tr>
-                            <td>First Time Customer</td>
-                            <td>5</td>
-                            <td>&#8358; 12,000.00</td>
-                          </tr>
+                            @endforeach
                         </tbody>
                       </table>
                     </div>
@@ -77,8 +90,117 @@ Discount Report
             <!-- Discount content ends here -->
           </div>
           <!-- content-wrapper ends -->
-       
+
         </div>
       <!-- page-body-wrapper ends -->
     </div>
+
+
+    <!-- Add Staff Side Panel - Outside section to cover entire viewport -->
+<div class="side-panel-overlay" id="sidePanelOverlay"></div>
+<div class="side-panel" id="addDiscountPanel">
+  <div class="side-panel-content">
+    <div class="side-panel-header">
+      <h5 class="side-panel-title">
+        <i class="bi bi-percent me-2"></i>Add Discount
+      </h5>
+      <button type="button" class="btn-close" id="closeSidePanel" aria-label="Close"></button>
+    </div>
+    <div class="side-panel-body">
+      <form id="addDiscountForm" action="{{ route('discount.create') }}" method="POST">
+        @csrf
+        <div class="form-section mb-4">
+          <div class="mb-3">
+            <label for="discount_name" class="form-label">Discount Name <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="discount_name" name="discount_name" placeholder="Enter discount name" required value="{{ old('discount_name') }}">
+            @error('discount_name')
+              <small class="text-danger">{{ $message }}</small>
+            @enderror
+          </div>
+          <div class="mb-3">
+            <label for="discount_rate" class="form-label">Amount Discounted <span class="text-danger">*</span></label>
+            <input type="number" step="0.01" class="form-control" id="discount_rate" name="discount_rate" placeholder="Enter amount discounted" required value="{{ old('discount_rate') }}">
+            @error('discount_rate')
+              <small class="text-danger">{{ $message }}</small>
+            @enderror
+          </div>
+        </div>
+        <div class="side-panel-footer">
+          <button type="submit" class="btn btn-primary w-100">Add Discount</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <!-- Remove any leftover staff form/footer markup below -->
+    </div>
+                </h6>
+              <div class="row">
+                <div class="col-md-6 mb-2">
+                  <label for="role" class="form-label">Role <span class="text-danger">*</span></label>
+                  <select class="form-select" id="role" name="role" required>
+                    <option value="">Select Role</option>
+                    <option value="manager" {{ old('role') == 'manager' ? 'selected' : '' }}>Manager</option>
+                    <option value="staff" {{ old('role') == 'staff' ? 'selected' : '' }}>Staff</option>
+                  </select>
+                  @error('role')
+                    <small class="text-danger">{{ $message }}</small>
+                  @enderror
+                </div>
+
+                <div class="col-md-6 mb-2">
+                  <label for="status" class="form-label">Status <span class="text-danger">*</span></label>
+                  <select class="form-select" id="status" name="status" required>
+                    <option value="Active" {{ old('status') == 'Active' ? 'selected' : '' }} selected>Active</option>
+                    <option value="Inactive" {{ old('status') == 'Inactive' ? 'selected' : '' }}>Inactive</option>
+                    <option value="On Leave" {{ old('status') == 'On Leave' ? 'selected' : '' }}>On Leave</option>
+                  </select>
+                  <div class="invalid-feedback">Please select a status.</div>
+              </div>
+              </div>
+              </div>
+              <!-- End Role & Status -->
+
+
+              <div class="row mb-3">
+                <div class="col-md-12 mb-2">
+                  <label for="address" class="form-label">Address</label>
+                  <textarea class="form-control" id="address" name="address" rows="5" cols="5" placeholder="Enter address (optional)"></textarea>
+                </div>
+              </div>
+
+              <!-- Profile Photo Section -->
+              <div class="form-section mb-3">
+                <h6 class="section-title mb-3">
+                  <i class="bi bi-camera me-2"></i>Profile Photo <span class="text-muted" style="font-size: 0.85rem; font-weight: normal;">(Optional)</span>
+                </h6>
+              <div class="row">
+                <div class="col-md-12">
+                  <div class="photo-upload-area">
+                    <input type="file" class="form-control" id="passport_photo" name="passport_photo" accept="image/*">
+                    <div id="uploadPlaceholder" class="upload-placeholder">
+                      <i class="bi bi-cloud-arrow-up" style="font-size: 2.5rem; color: #6c757d;"></i>
+                      <p class="mb-2 mt-2"><strong>Click to upload</strong> or drag and drop</p>
+                      <small class="text-muted">JPG, PNG, GIF (max 2MB)</small>
+                    </div>
+                    <div id="photoPreview" class="photo-preview" style="display: none;">
+                      <img id="previewImage" src="" alt="Preview">
+                      <button type="button" class="btn btn-sm btn-danger remove-photo-btn" id="removePhoto">
+                        <i class="bi bi-trash"></i> Remove Photo
+                      </button>
+                    </div>
+                  </div>
+                  @error('passport_photo')
+                    <small class="text-danger d-block mt-2">{{ $message }}</small>
+                  @enderror
+                </div>
+              </div>
+              </div>
+              <!-- End Profile Photo -->
+            </form>
+    </div>
+
+  </div>
+</div>
+
+<script src="{{ asset('manager_asset/js/discount.js') }}"></script>
 @endsection

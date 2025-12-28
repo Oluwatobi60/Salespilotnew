@@ -7,14 +7,19 @@ Sales by item
   <div class="container-scroller">
       <div class="container-fluid page-body-wrapper">
         <!-- partial: Include Sidebar Content -->
-       
-    
+
+
           <div class="content-wrapper">
             <!-- Sales by Item content starts here -->
             <div class="row">
               <div class="col-12 grid-margin stretch-card">
                 <div class="card card-rounded">
                   <div class="card-body">
+                    @if(request('categoryFilter'))
+                      <div class="alert alert-info mb-2" style="font-size:0.95rem;">
+                        Showing results for category: <strong>{{ request('categoryFilter') }}</strong>
+                      </div>
+                    @endif
                     <h4 class="card-title">Sales by Item Report</h4>
                     <p class="card-description">Detailed sales performance for individual products.</p>
 
@@ -61,7 +66,7 @@ Sales by item
                         </select>
                       </div>
                     </div>
-                    
+
                     <div class="table-responsive">
                       <table class="table table-striped" id="salesByItemTable">
                         <thead>
@@ -79,75 +84,41 @@ Sales by item
                           </tr>
                         </thead>
                         <tbody>
-                          <tr>
-                            <td>1</td>
-                            <td>Wireless Mouse</td>
-                            <td>WM-001</td>
-                            <td>Electronics</td>
-                            <td>125</td>
-                            <td>$29.99</td>
-                            <td>$23.99</td>
-                            <td>$5.00</td>
-                            <td>$3,748.75</td>
-                            <td>14%</td>
-                          </tr>
-                          <tr>
-                            <td>2</td>
-                            <td>USB-C Cable</td>
-                            <td>UC-002</td>
-                            <td>Accessories</td>
-                            <td>250</td>
-                            <td>$12.50</td>
-                            <td>$8.75</td>
-                            <td>$3.75</td>
-                            <td>$3,125.00</td>
-                            <td>30%</td>
-                          </tr>
 
+                         @forelse ($salesbyitem as $index => $item)
                           <tr>
-                            <td>3</td>
-                            <td>Bluetooth Headset</td>
-                            <td>BH-003</td>
-                            <td>Electronics</td>
-                            <td>87</td>
-                            <td>$59.99</td>
-                            <td>$45.00</td>
-                            <td>$4</td>
-                            <td>$5,219.13</td>
-                            <td>23%</td>
+                            <td>{{ $index + 1 }}</td>
+                            <td>{{ $item->item_name }}</td>
+                            <td>{{ $item->sku ?? '-' }}</td>
+                            <td>{{ $item->category_name ?? $item->category ?? '-' }}</td>
+                            <td>{{ $item->total_quantity_sold ?? 0 }}</td>
+                            <td>₦{{ number_format($item->gross_sales ?? 0, 2) }}</td>
+                            <td>₦{{ number_format($item->cost_price ?? 0, 2) }}</td>
+                            <td>₦{{ number_format($item->gross_profit ?? 0, 2) }}</td>
+                            <td>₦{{ number_format($item->total_discount ?? 0, 2) }}</td>
+                            <td>{{ $item->profit_margin ?? 0 }}%</td>
                           </tr>
-                          <tr>
-                            <td>4</td>
-                            <td>Phone Case</td>
-                            <td>PC-004</td>
-                            <td>Accessories</td>
-                            <td>198</td>
-                            <td>$15.00</td>
-                            <td>$2,970.00</td>
-                          </tr>
-                          <tr>
-                            <td>5</td>
-                            <td>Laptop Stand</td>
-                            <td>LS-005</td>
-                            <td>Electronics</td>
-                            <td>64</td>
-                            <td>$59.99</td>
-                            <td>$45.00</td>
-                            <td>$4</td>
-                            <td>$5,219.13</td>
-                            <td>23%</td>
-                          </tr>
+                           @empty
+                            <tr>
+                              <td colspan="8" class="text-center py-5">
+                                <div class="empty-state">
+                                  <i class="bi bi-inbox"></i>
+                                  <h5>No Completed Sales</h5>
+                                  <p class="text-muted">No sales have been completed yet.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            @endforelse
                         </tbody>
                         <tfoot>
-                          <tr>
-                            <th colspan="3">Total</th>
-                            <th>724</th>
-                            <th>-</th>
-                            <th>-</th>
-                            <th>-</th>
-                            <th>-</th>
-                            <th>-</th>
-                            <th>$17,942.88</th>
+                          <tr style="font-weight:bold; background:#f8f9fa;">
+                            <th colspan="4" class="text-end">Grand Total</th>
+                            <th></th>
+                            <th>₦{{ number_format($totals['gross_sales'] ?? 0, 2) }}</th>
+                            <th>₦{{ number_format($totals['cost_price'] ?? 0, 2) }}</th>
+                            <th>₦{{ number_format($totals['gross_profit'] ?? 0, 2) }}</th>
+                            <th>₦{{ number_format($totals['total_discount'] ?? 0, 2) }}</th>
+                            <th></th>
                           </tr>
                         </tfoot>
                       </table>
@@ -170,10 +141,13 @@ Sales by item
                   </div>
                 </div>
               </div>
-      
-       
+
+
             </div>
             <!-- Sales by Item content ends here -->
+                      <div class="d-flex justify-content-center mt-4">
+                        {{ $salesbyitem->links() }}
+                      </div>
           </div>
           <!-- content-wrapper ends -->
           <!-- main-panel ends -->

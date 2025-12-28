@@ -3,6 +3,10 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\AddCustomer;
+use App\Models\AddDiscount;
+use App\Models\User;
+use App\Models\Staffs;
 
 
 class CartItem extends Model
@@ -20,12 +24,18 @@ class CartItem extends Model
         'item_image',
         'subtotal',
         'discount',
+        'discount_id',
         'total',
         'status',
         'session_id',
         'receipt_number',
-        'user_id'
+        'user_id',
+        'staff_id'
     ];
+    public function discount()
+    {
+        return $this->belongsTo(AddDiscount::class, 'discount_id');
+    }
 
     protected $casts = [
         'quantity' => 'integer',
@@ -43,5 +53,10 @@ class CartItem extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function staff()
+    {
+        return $this->belongsTo(Staffs::class, 'staff_id');
     }
 }
