@@ -21,6 +21,15 @@ class StaffAuthController extends Controller
         $credentials = $request->only('email', 'password');
         if (Auth::guard('staff')->attempt($credentials, $request->filled('remember'))) {
             $request->session()->regenerate();
+            // Log staff login activity
+            $staff = Auth::guard('staff')->user();
+            $details = [
+                'staff_id' => $staff ? $staff->staff_id : null,
+                'email' => $staff ? $staff->email : $request->input('email'),
+                'device' => $request->header('User-Agent'),
+                'ip_address' => $request->ip(),
+            ];
+            \App\Helpers\ActivityLogger::log('login', json_encode($details));
             return redirect()->intended('/staff/dashboard');
         }
         return back()->withErrors([

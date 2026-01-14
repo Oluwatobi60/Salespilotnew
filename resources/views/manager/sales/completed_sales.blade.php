@@ -35,19 +35,7 @@ Completed Sales
                       <div class="col-md-8 d-flex justify-content-end align-items-center gap-2">
                         <!-- Seller Filter -->
                         <select class="form-select" id="sellerFilter" style="max-width: 140px;">
-                          <option value="">All Sellers</option>
-                          <option value="Alice Johnson">Alice Johnson</option>
-                          <option value="Bob Smith">Bob Smith</option>
-                          <option value="Carol Williams">Carol Williams</option>
-                          <option value="David Brown">David Brown</option>
-                        </select>
-
-                        <!-- Status Filter -->
-                        <select class="form-select" id="statusFilter" style="max-width: 140px;">
-                          <option value="">All Status</option>
-                          <option value="Completed">Completed</option>
-                          <option value="Pending">Pending</option>
-                          <option value="Cancelled">Cancelled</option>
+                        <option value="">All Sellers</option>
                         </select>
 
                         <!-- Date Range Filter -->
@@ -112,7 +100,12 @@ Completed Sales
                         </thead>
                         <tbody>
                           @forelse($completedSales as $index => $sale)
-                          <tr class="sale-row" data-receipt-number="{{ $sale->receipt_number }}" data-discount="{{ $sale->discount ?? 0 }}" style="cursor: pointer;" title="Click to view details">
+                          <tr class="sale-row"
+                              data-receipt-number="{{ $sale->receipt_number }}"
+                              data-discount="{{ $sale->discount ?? 0 }}"
+                              data-seller-id="{{ $sale->staff_id ? 'staff_' . $sale->staff_id : ($sale->user_id ? 'user_' . $sale->user_id : 'unknown') }}"
+                              style="cursor: pointer;"
+                              title="Click to view details">
                             <td>{{ $index + 1 }}</td>
                             <td><strong>{{ $sale->receipt_number }}</strong></td>
                             <td><small>{{ \Carbon\Carbon::parse($sale->created_at)->format('M d, Y h:i A') }}</small></td>

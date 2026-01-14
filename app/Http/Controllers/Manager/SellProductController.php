@@ -55,7 +55,6 @@ class SellProductController extends Controller
 
     public function save_cart(Request $request)
     {
-
         try {
             $validated = $request->validate([
                 'cart_name' => 'required|string|max:255',
@@ -98,6 +97,7 @@ class SellProductController extends Controller
                     'session_id' => $sessionId,
                     'user_id' => Auth::id()
                 ]);
+                \App\Helpers\ActivityLogger::log('add_to_cart', 'Manager added item to cart: ' . ($item['name'] ?? ''));
             }
 
             return response()->json([
@@ -133,6 +133,16 @@ class SellProductController extends Controller
                 'discount' => 'nullable|numeric',
                 'discount_id' => 'nullable|integer|exists:add_discounts,id'
             ]);
+
+            // Log checkout activity for manager
+            $details = [
+                'customer_id' => $request->input('customer_id'),
+                'customer_name' => $request->input('customer_name'),
+                'total' => $request->input('total'),
+                'discount' => $request->input('discount'),
+                'items_count' => is_array($request->input('items')) ? count($request->input('items')) : 0,
+            ];
+            \App\Helpers\ActivityLogger::log('Checkout completed', json_encode($details));
 
 
             $sessionId = Str::uuid();

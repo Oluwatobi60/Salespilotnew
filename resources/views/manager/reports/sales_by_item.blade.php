@@ -27,22 +27,22 @@ Sales by item
                     <div class="row mb-3">
                       <div class="col-sm-3">
                         <select class="form-select form-select-sm mb-2" id="dateRangeFilter" onchange="toggleCustomRangeInputs()" style="font-size:0.85rem;">
-                          <option value="today">Today</option>
-                          <option value="yesterday">Yesterday</option>
-                          <option value="last7">Last 7 Days</option>
-                          <option value="last30">Last 30 Days</option>
-                          <option value="thisMonth">This Month</option>
-                          <option value="lastMonth">Last Month</option>
-                          <option value="custom">Custom Range</option>
+                          <option value="today" {{ request('date_range') == 'today' ? 'selected' : '' }}>Today</option>
+                          <option value="yesterday" {{ request('date_range') == 'yesterday' ? 'selected' : '' }}>Yesterday</option>
+                          <option value="last7" {{ request('date_range') == 'last7' ? 'selected' : '' }}>Last 7 Days</option>
+                          <option value="last30" {{ request('date_range') == 'last30' ? 'selected' : '' }}>Last 30 Days</option>
+                          <option value="thisMonth" {{ request('date_range') == 'thisMonth' ? 'selected' : '' }}>This Month</option>
+                          <option value="lastMonth" {{ request('date_range') == 'lastMonth' ? 'selected' : '' }}>Last Month</option>
+                          <option value="custom" {{ request('date_range') == 'custom' ? 'selected' : '' }}>Custom Range</option>
                         </select>
-                        <div id="customRangeInputs" style="display:none;">
+                        <div id="customRangeInputs" style="display:{{ request('date_range') == 'custom' ? 'block' : 'none' }};">
                           <div class="input-group input-group-sm mb-1">
                             <span class="input-group-text" style="font-size:0.85rem;">From</span>
-                            <input type="date" class="form-control form-control-sm" id="customStartDate" style="font-size:0.85rem;">
+                            <input type="date" class="form-control form-control-sm" id="customStartDate" style="font-size:0.85rem;" value="{{ request('start_date') }}">
                           </div>
                           <div class="input-group input-group-sm">
                             <span class="input-group-text" style="font-size:0.85rem;">To</span>
-                            <input type="date" class="form-control form-control-sm" id="customEndDate" style="font-size:0.85rem;">
+                            <input type="date" class="form-control form-control-sm" id="customEndDate" style="font-size:0.85rem;" value="{{ request('end_date') }}">
                           </div>
                         </div>
                         <small class="form-text text-muted" style="font-size:0.8rem;">Choose a date range to filter sales by item.</small>
@@ -50,19 +50,11 @@ Sales by item
                       <div class="col-sm-3">
                         <select class="form-select form-select-sm" id="categoryFilter" style="font-size:0.85rem;">
                           <option value="">All Categories</option>
-                          <option value="Electronics">Electronics</option>
-                          <option value="Accessories">Accessories</option>
-                          <option value="Office">Office</option>
                         </select>
                       </div>
                       <div class="col-sm-3">
                         <select class="form-select form-select-sm" id="itemFilter" style="font-size:0.85rem;">
                           <option value="">All Items</option>
-                          <option value="Wireless Mouse">Wireless Mouse</option>
-                          <option value="USB-C Cable">USB-C Cable</option>
-                          <option value="Bluetooth Headset">Bluetooth Headset</option>
-                          <option value="Phone Case">Phone Case</option>
-                          <option value="Laptop Stand">Laptop Stand</option>
                         </select>
                       </div>
                     </div>
@@ -155,4 +147,5 @@ Sales by item
       </div>
       <!-- page-body-wrapper ends -->
 
+    <script src="{{ asset('manager_asset/js/sales_by_item.js') }}"></script>
 @endsection

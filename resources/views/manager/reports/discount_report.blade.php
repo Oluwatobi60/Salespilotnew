@@ -29,22 +29,22 @@ Discount Report
                     <div class="row mb-3">
                       <div class="col-sm-4">
                         <select class="form-select form-select-sm mb-2" id="dateRangeFilter" onchange="toggleCustomRangeInputs()" style="font-size:0.85rem;">
-                          <option value="today">Today</option>
-                          <option value="yesterday">Yesterday</option>
-                          <option value="last7">Last 7 Days</option>
-                          <option value="last30">Last 30 Days</option>
-                          <option value="thisMonth">This Month</option>
-                          <option value="lastMonth">Last Month</option>
-                          <option value="custom">Custom Range</option>
+                          <option value="today" {{ request('date_range') == 'today' ? 'selected' : '' }}>Today</option>
+                          <option value="yesterday" {{ request('date_range') == 'yesterday' ? 'selected' : '' }}>Yesterday</option>
+                          <option value="last7" {{ request('date_range') == 'last7' ? 'selected' : '' }}>Last 7 Days</option>
+                          <option value="last30" {{ request('date_range') == 'last30' ? 'selected' : '' }}>Last 30 Days</option>
+                          <option value="thisMonth" {{ request('date_range') == 'thisMonth' ? 'selected' : '' }}>This Month</option>
+                          <option value="lastMonth" {{ request('date_range') == 'lastMonth' ? 'selected' : '' }}>Last Month</option>
+                          <option value="custom" {{ request('date_range') == 'custom' ? 'selected' : '' }}>Custom Range</option>
                         </select>
-                        <div id="customRangeInputs" style="display:none;">
+                        <div id="customRangeInputs" style="display:{{ request('date_range') == 'custom' ? 'block' : 'none' }};">
                           <div class="input-group input-group-sm mb-1">
                             <span class="input-group-text" style="font-size:0.85rem;">From</span>
-                            <input type="date" class="form-control form-control-sm" id="customStartDate" style="font-size:0.85rem;">
+                            <input type="date" class="form-control form-control-sm" id="customStartDate" style="font-size:0.85rem;" value="{{ request('start_date') }}">
                           </div>
                           <div class="input-group input-group-sm">
                             <span class="input-group-text" style="font-size:0.85rem;">To</span>
-                            <input type="date" class="form-control form-control-sm" id="customEndDate" style="font-size:0.85rem;">
+                            <input type="date" class="form-control form-control-sm" id="customEndDate" style="font-size:0.85rem;" value="{{ request('end_date') }}">
                           </div>
                         </div>
                         <small class="form-text text-muted" style="font-size:0.8rem;">Choose a date range to filter discounts.</small>
@@ -52,15 +52,12 @@ Discount Report
                       <div class="col-sm-4">
                         <select class="form-select form-select-sm" id="staffFilter" style="font-size:0.85rem;">
                           <option value="">All Staff</option>
-                          <option value="Staff1">Staff 1</option>
-                          <option value="Staff2">Staff 2</option>
-                          <option value="Staff3">Staff 3</option>
                         </select>
                       </div>
 
-                      <div class="col-sm-4">
+                      {{--  <div class="col-sm-4">
                         <button type="button" class="btn btn-primary" style="min-width: 150px;" id="openAddDiscountBtn"><strong>+ Add Discount</strong></button>
-                      </div>
+                      </div>  --}}
 
                     </div>
 
@@ -69,17 +66,24 @@ Discount Report
                         <thead>
                           <tr>
                             <th>Discount Name</th>
+                            {{--  <th>Type</th>
+                            <th>Customers Group</th>  --}}
+                         {{--     <th>Discount Rate</th>  --}}
                             <th>Times Used</th>
                             <th>Amount Discounted</th>
                           </tr>
                         </thead>
                         <tbody>
-                          @foreach($discounnts as $discount)
-                            <td>{{ $discount->discount_name }}</td>
-                            <td>{{ $discount->time_used }}</td>
-                            <td>{{ $discount->discount_rate }}</td>
-                          </tr>
-                            @endforeach
+                          @foreach($discountStats as $discount)
+                            <tr>
+                              <td>{{ $discount['discount_name'] }}</td>
+                             {{--   <td>{{ $discount['type'] }}</td>
+                              <td>{{ $discount['customers_group'] }}</td>  --}}
+                            {{--    <td>{{ $discount['discount_rate'] }}</td>  --}}
+                              <td>{{ $discount['times_used'] }}</td>
+                              <td>{{ number_format($discount['amount_discounted'], 2) }}</td>
+                            </tr>
+                          @endforeach
                         </tbody>
                       </table>
                     </div>
@@ -95,112 +99,6 @@ Discount Report
       <!-- page-body-wrapper ends -->
     </div>
 
-
-    <!-- Add Staff Side Panel - Outside section to cover entire viewport -->
-<div class="side-panel-overlay" id="sidePanelOverlay"></div>
-<div class="side-panel" id="addDiscountPanel">
-  <div class="side-panel-content">
-    <div class="side-panel-header">
-      <h5 class="side-panel-title">
-        <i class="bi bi-percent me-2"></i>Add Discount
-      </h5>
-      <button type="button" class="btn-close" id="closeSidePanel" aria-label="Close"></button>
-    </div>
-    <div class="side-panel-body">
-      <form id="addDiscountForm" action="{{ route('discount.create') }}" method="POST">
-        @csrf
-        <div class="form-section mb-4">
-          <div class="mb-3">
-            <label for="discount_name" class="form-label">Discount Name <span class="text-danger">*</span></label>
-            <input type="text" class="form-control" id="discount_name" name="discount_name" placeholder="Enter discount name" required value="{{ old('discount_name') }}">
-            @error('discount_name')
-              <small class="text-danger">{{ $message }}</small>
-            @enderror
-          </div>
-          <div class="mb-3">
-            <label for="discount_rate" class="form-label">Amount Discounted <span class="text-danger">*</span></label>
-            <input type="number" step="0.01" class="form-control" id="discount_rate" name="discount_rate" placeholder="Enter amount discounted" required value="{{ old('discount_rate') }}">
-            @error('discount_rate')
-              <small class="text-danger">{{ $message }}</small>
-            @enderror
-          </div>
-        </div>
-        <div class="side-panel-footer">
-          <button type="submit" class="btn btn-primary w-100">Add Discount</button>
-        </div>
-      </form>
-    </div>
-  </div>
-  <!-- Remove any leftover staff form/footer markup below -->
-    </div>
-                </h6>
-              <div class="row">
-                <div class="col-md-6 mb-2">
-                  <label for="role" class="form-label">Role <span class="text-danger">*</span></label>
-                  <select class="form-select" id="role" name="role" required>
-                    <option value="">Select Role</option>
-                    <option value="manager" {{ old('role') == 'manager' ? 'selected' : '' }}>Manager</option>
-                    <option value="staff" {{ old('role') == 'staff' ? 'selected' : '' }}>Staff</option>
-                  </select>
-                  @error('role')
-                    <small class="text-danger">{{ $message }}</small>
-                  @enderror
-                </div>
-
-                <div class="col-md-6 mb-2">
-                  <label for="status" class="form-label">Status <span class="text-danger">*</span></label>
-                  <select class="form-select" id="status" name="status" required>
-                    <option value="Active" {{ old('status') == 'Active' ? 'selected' : '' }} selected>Active</option>
-                    <option value="Inactive" {{ old('status') == 'Inactive' ? 'selected' : '' }}>Inactive</option>
-                    <option value="On Leave" {{ old('status') == 'On Leave' ? 'selected' : '' }}>On Leave</option>
-                  </select>
-                  <div class="invalid-feedback">Please select a status.</div>
-              </div>
-              </div>
-              </div>
-              <!-- End Role & Status -->
-
-
-              <div class="row mb-3">
-                <div class="col-md-12 mb-2">
-                  <label for="address" class="form-label">Address</label>
-                  <textarea class="form-control" id="address" name="address" rows="5" cols="5" placeholder="Enter address (optional)"></textarea>
-                </div>
-              </div>
-
-              <!-- Profile Photo Section -->
-              <div class="form-section mb-3">
-                <h6 class="section-title mb-3">
-                  <i class="bi bi-camera me-2"></i>Profile Photo <span class="text-muted" style="font-size: 0.85rem; font-weight: normal;">(Optional)</span>
-                </h6>
-              <div class="row">
-                <div class="col-md-12">
-                  <div class="photo-upload-area">
-                    <input type="file" class="form-control" id="passport_photo" name="passport_photo" accept="image/*">
-                    <div id="uploadPlaceholder" class="upload-placeholder">
-                      <i class="bi bi-cloud-arrow-up" style="font-size: 2.5rem; color: #6c757d;"></i>
-                      <p class="mb-2 mt-2"><strong>Click to upload</strong> or drag and drop</p>
-                      <small class="text-muted">JPG, PNG, GIF (max 2MB)</small>
-                    </div>
-                    <div id="photoPreview" class="photo-preview" style="display: none;">
-                      <img id="previewImage" src="" alt="Preview">
-                      <button type="button" class="btn btn-sm btn-danger remove-photo-btn" id="removePhoto">
-                        <i class="bi bi-trash"></i> Remove Photo
-                      </button>
-                    </div>
-                  </div>
-                  @error('passport_photo')
-                    <small class="text-danger d-block mt-2">{{ $message }}</small>
-                  @enderror
-                </div>
-              </div>
-              </div>
-              <!-- End Profile Photo -->
-            </form>
-    </div>
-
-  </div>
-</div>
 
 <script src="{{ asset('manager_asset/js/discount.js') }}"></script>
 @endsection

@@ -68,54 +68,70 @@ All Items
 </div>
 
 <!-- Search and Filter Options -->
-<div class="row mb-3 align-items-center">
-    <div class="col-md-4 mb-2 mb-md-0">
+<div class="row mb-3 align-items-center g-2">
+    <!-- Search Input -->
+    <div class="col-lg-4 col-md-6">
         <div class="input-group">
-            <input type="text" class="form-control" placeholder="Search items..." id="searchItems">
-            <button class="btn btn-outline-secondary" type="button">
+            <span class="input-group-text bg-white">
                 <i class="bi bi-search"></i>
-            </button>
+            </span>
+            <input type="text" class="form-control" placeholder="Search by name, code, or category..." id="searchItems">
         </div>
     </div>
-    <div class="col-md-8">
-        <div class="d-flex flex-wrap justify-content-md-end" style="gap: 0.5rem;">
+
+    <!-- Filters -->
+    <div class="col-lg-8 col-md-6">
+        <div class="row g-2">
             <!-- Category Filter -->
-            <select class="form-select" id="categoryFilter" style="max-width: 140px;">
-                <option value="">All Categories</option>
-                @foreach($categories as $category)
-                    <option value="{{ $category }}">{{ ucfirst($category) }}</option>
-                @endforeach
-            </select>
+            <div class="col-sm-6 col-md-4 col-lg-3">
+                <select class="form-select" id="categoryFilter">
+                    <option value="">All Categories</option>
+                    @foreach($categories as $category)
+                        <option value="{{ $category }}">{{ ucfirst($category) }}</option>
+                    @endforeach
+                </select>
+            </div>
 
             <!-- Inventory Status Filter -->
-            <select class="form-select" id="inventoryFilter" style="max-width: 140px;">
-                <option value="">All Stock</option>
-                <option value="in-stock">In Stock</option>
-                <option value="low-stock">Low Stock</option>
-                <option value="out-of-stock">Out of Stock</option>
-            </select>
+            <div class="col-sm-6 col-md-4 col-lg-3">
+                <select class="form-select" id="inventoryFilter">
+                    <option value="">All Stock</option>
+                    <option value="in-stock">In Stock</option>
+                    <option value="low-stock">Low Stock</option>
+                    <option value="out-of-stock">Out of Stock</option>
+                </select>
+            </div>
 
             <!-- Suppliers Filter -->
-            <select class="form-select" id="supplierFilter" style="max-width: 140px;">
-                <option value="">All Suppliers</option>
-                @foreach($suppliers as $supplier)
-                    <option value="{{ $supplier->id }}">{{ $supplier->name }}</option>
-                @endforeach
-            </select>
+            <div class="col-sm-6 col-md-4 col-lg-3">
+                <select class="form-select" id="supplierFilter">
+                    <option value="">All Suppliers</option>
+                    @foreach($suppliers as $supplier)
+                        <option value="{{ $supplier->id }}">{{ $supplier->name }}</option>
+                    @endforeach
+                </select>
+            </div>
 
             <!-- Action Buttons -->
-            <button class="btn btn-outline-primary" id="applyFilters">
-                <i class="bi bi-funnel"></i> Apply
-            </button>
-            <button class="btn btn-outline-secondary" id="clearFilters">
-                <i class="bi bi-x-circle"></i> Clear
-            </button>
-            <button class="btn btn-outline-info" id="importItems">
-                <i class="bi bi-upload"></i> Import
-            </button>
-            <button class="btn btn-outline-success" id="exportItems">
-                <i class="bi bi-download"></i> Export
-            </button>
+            <div class="col-sm-6 col-md-12 col-lg-3">
+                <div class="d-flex gap-1">
+                    <button class="btn btn-outline-primary flex-fill" id="applyFilters" title="Apply Filters">
+                        <i class="bi bi-funnel"></i>
+                    </button>
+                    <button class="btn btn-outline-secondary flex-fill" id="clearFilters" title="Clear Filters">
+                        <i class="bi bi-x-circle"></i>
+                    </button>
+                    <button class="btn btn-outline-info flex-fill" id="importItems" title="Import Items">
+                        <i class="bi bi-upload"></i>
+                    </button>
+                    <button class="btn btn-outline-success flex-fill" id="exportItems" title="Export Items">
+                        <i class="bi bi-download"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
             <!-- Hidden file input for import -->
             <input type="file" id="importFile" accept=".csv,.xlsx,.xls" style="display: none;">
@@ -234,10 +250,14 @@ All Items
                         <i class="bi bi-eye"></i>
                     </button>
 
-                    <form action="{{ route('all_items.delete', ['type' => $item['type'], 'id' => $item['id']]) }}" method="POST" style="display: inline;">
+                    <form action="{{ route('all_items.delete', ['type' => $item['type'], 'id' => $item['id']]) }}" method="POST" style="display: inline;" class="delete-item-form">
                         @csrf
                         @method('DELETE')
-                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this item?')"> <i class="bi bi-trash"></i></button>
+                        <button type="button" class="btn btn-sm btn-danger delete-item-btn"
+                                data-item-name="{{ $item['name'] }}"
+                                data-item-type="{{ $item['type'] }}">
+                            <i class="bi bi-trash"></i>
+                        </button>
                     </form></tr>
                 </td>
             </tr>
@@ -392,6 +412,38 @@ All Items
     </div>
         </div>
 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="{{ asset('manager_asset/js/all_items.js') }}"></script>
+
+<script>
+// SweetAlert2 for delete confirmation
+document.addEventListener('DOMContentLoaded', function() {
+    const deleteBtns = document.querySelectorAll('.delete-item-btn');
+
+    deleteBtns.forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const itemName = this.getAttribute('data-item-name');
+            const itemType = this.getAttribute('data-item-type');
+            const form = this.closest('form');
+
+            Swal.fire({
+                title: 'Are you sure?',
+                text: `Do you want to delete "${itemName}" (${itemType})? This action cannot be undone!`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete it!',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
+        });
+    });
+});
+</script>
 
 @endsection

@@ -1,31 +1,9 @@
 // Sales Summary Page JavaScript
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize DataTable
-    const table = $('#salesSummaryTable').DataTable({
-        pageLength: 10,
-        lengthChange: false,
-        ordering: true,
-        info: true,
-        autoWidth: false,
-        responsive: true,
-        language: {
-            search: "",
-            searchPlaceholder: "Search in table...",
-            paginate: {
-                first: "First",
-                last: "Last",
-                next: "Next",
-                previous: "Previous"
-            }
-        }
-    });
-
     // Elements
     const dateRangeFilter = document.getElementById('dateRangeFilter');
     const customDateInputs = document.getElementById('customDateInputs');
     const searchInput = document.getElementById('searchSummary');
-    const statusFilter = document.getElementById('statusFilter');
-    const staffFilter = document.getElementById('staffFilter');
     const applyFiltersBtn = document.getElementById('applyFilters');
     const clearFiltersBtn = document.getElementById('clearFilters');
     const exportReportBtn = document.getElementById('exportReport');
@@ -42,21 +20,9 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Search functionality
+    // Search functionality - real-time search
     if (searchInput) {
-        searchInput.addEventListener('input', function() {
-            table.search(this.value).draw();
-        });
-    }
-
-    // Status filter
-    if (statusFilter) {
-        statusFilter.addEventListener('change', performSearch);
-    }
-
-    // Staff filter
-    if (staffFilter) {
-        staffFilter.addEventListener('change', performSearch);
+        searchInput.addEventListener('input', performSearch);
     }
 
     // Apply filters
@@ -67,16 +33,14 @@ document.addEventListener('DOMContentLoaded', function() {
     // Clear filters
     if (clearFiltersBtn) {
         clearFiltersBtn.addEventListener('click', function() {
-            searchInput.value = '';
-            statusFilter.value = '';
-            staffFilter.value = '';
-            dateRangeFilter.value = '';
-            document.getElementById('customStartDate').value = '';
-            document.getElementById('customEndDate').value = '';
+            if (searchInput) searchInput.value = '';
+            if (dateRangeFilter) dateRangeFilter.value = '';
+            const customStartDate = document.getElementById('customStartDate');
+            const customEndDate = document.getElementById('customEndDate');
+            if (customStartDate) customStartDate.value = '';
+            if (customEndDate) customEndDate.value = '';
             hideCustomDateOverlay();
-
-            // Reset DataTable
-            table.search('').columns().search('').draw();
+            performSearch();
         });
     }
 
@@ -91,7 +55,9 @@ document.addEventListener('DOMContentLoaded', function() {
     document.addEventListener('click', function(e) {
         if (customDateInputs && dateRangeFilter) {
             if (!customDateInputs.contains(e.target) && !dateRangeFilter.contains(e.target)) {
-                hideCustomDateOverlay();
+                if (customDateInputs.classList.contains('show')) {
+                    hideCustomDateOverlay();
+                }
             }
         }
     });
@@ -123,38 +89,104 @@ function hideCustomDateOverlay() {
     }
 }
 
+// Get date range based on filter selection
+function getDateRange(filterValue) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    let startDate, endDate;
+
+    switch(filterValue) {
+        case 'today':
+            startDate = new Date(today);
+            endDate = new Date(today);
+            break;
+        case 'yesterday':
+            startDate = new Date(today);
+            startDate.setDate(startDate.getDate() - 1);
+            endDate = new Date(startDate);
+            break;
+        case 'last7':
+            startDate = new Date(today);
+            startDate.setDate(startDate.getDate() - 6);
+            endDate = new Date(today);
+            break;
+        case 'last30':
+            startDate = new Date(today);
+            startDate.setDate(startDate.getDate() - 29);
+            endDate = new Date(today);
+            break;
+        case 'thisMonth':
+            startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+            endDate = new Date(today);
+            break;
+        case 'lastMonth':
+            startDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+            endDate = new Date(today.getFullYear(), today.getMonth(), 0);
+            break;
+        default:
+            return null;
+    }
+
+    return { startDate, endDate };
+}
+
+// Parse date from table cell (format: "Mon dd, yyyy")
+function parseTableDate(dateStr) {
+    const date = new Date(dateStr);
+    date.setHours(0, 0, 0, 0);
+    return date;
+}
+
 // Perform search/filter
 function performSearch() {
-    const searchTerm = document.getElementById('searchSummary').value.toLowerCase();
-    const selectedStatus = document.getElementById('statusFilter').value;
-    const selectedStaff = document.getElementById('staffFilter').value;
-    const dateRange = document.getElementById('dateRangeFilter').value;
-    const startDate = document.getElementById('customStartDate').value;
-    const endDate = document.getElementById('customEndDate').value;
+    const searchTerm = document.getElementById('searchSummary')?.value.toLowerCase() || '';
+    const dateRangeValue = document.getElementById('dateRangeFilter')?.value || '';
+    const customStartDate = document.getElementById('customStartDate')?.value;
+    const customEndDate = document.getElementById('customEndDate')?.value;
 
-    // Apply DataTable filters
-    const table = $('#salesSummaryTable').DataTable();
+    const tableRows = document.querySelectorAll('#salesSummaryTable tbody tr.summary-row');
+    let visibleCount = 0;
 
-    // Search filter
-    table.search(searchTerm);
-
-    // Column filters
-    if (selectedStatus) {
-        table.column(10).search(selectedStatus); // Status column
-    } else {
-        table.column(10).search('');
+    // Get date range
+    let dateRange = null;
+    if (dateRangeValue === 'custom' && customStartDate && customEndDate) {
+        dateRange = {
+            startDate: new Date(customStartDate),
+            endDate: new Date(customEndDate)
+        };
+    } else if (dateRangeValue && dateRangeValue !== 'custom') {
+        dateRange = getDateRange(dateRangeValue);
     }
 
-    // Date range filtering (custom logic needed based on your date format)
-    if (dateRange && dateRange !== 'custom') {
-        // Apply preset date ranges
-        console.log('Date range filter:', dateRange);
-    } else if (startDate && endDate) {
-        // Apply custom date range
-        console.log('Custom date range:', startDate, 'to', endDate);
-    }
+    tableRows.forEach(row => {
+        const rowText = row.textContent.toLowerCase();
+        const dateCell = row.cells[1]?.textContent.trim(); // Date column
 
-    table.draw();
+        // Search filter
+        const matchesSearch = !searchTerm || rowText.includes(searchTerm);
+
+        // Date filter
+        let matchesDate = true;
+        if (dateRange && dateCell) {
+            const rowDate = parseTableDate(dateCell);
+            matchesDate = rowDate >= dateRange.startDate && rowDate <= dateRange.endDate;
+        }
+
+        // Show/hide row
+        if (matchesSearch && matchesDate) {
+            row.style.display = '';
+            visibleCount++;
+        } else {
+            row.style.display = 'none';
+        }
+    });
+
+    // Show/hide empty state
+    const emptyRow = document.querySelector('#salesSummaryTable tbody tr:not(.summary-row)');
+    if (emptyRow) {
+        emptyRow.style.display = visibleCount === 0 ? '' : 'none';
+    }
 }
 
 // Export table to CSV

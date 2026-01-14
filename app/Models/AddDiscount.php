@@ -8,6 +8,8 @@ class AddDiscount extends Model
 {
     protected $fillable = [
         'discount_name',
+        'type',
+        'customers_group',
         'discount_rate',
         'time_used',
     ];

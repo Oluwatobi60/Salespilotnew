@@ -15,19 +15,19 @@ class AddCustomer extends Model
         'email',
         'phone_number',
         'address',
-      /*   'staff_id',
-        'user_id', */
+        'staff_id',
+        'user_id',
     ];
 
     // Relationship to user
-   /*  public function user()
+    public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
-    } */
+    }
 
     // Relationship to staff
-    /* public function staff()
+    public function staff()
     {
         return $this->belongsTo(Staffs::class, 'staff_id');
-    } */
+    }
 }

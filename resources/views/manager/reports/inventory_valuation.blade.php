@@ -16,7 +16,7 @@ Inventory Valuation
                       <p class="card-description">Current inventory value and stock levels.</p>
                       <form class="row g-2 align-items-center mb-4" id="inventoryFilterForm" style="margin-bottom: 1.5rem !important;">
                         <div class="col-md-4 col-12">
-                          <input type="text" class="form-control form-control-sm" id="searchInput" placeholder="Search Item Name or Category">
+                          <input type="text" class="form-control form-control-sm" id="searchInput" placeholder="Search Item Name or Category" value="{{ request('search') }}">
                         </div>
                         <div class="col-md-3 col-8">
                           <div class="dropdown">
@@ -153,4 +153,5 @@ Inventory Valuation
         </div>
         <!-- main-panel ends -->
 
+    <script src="{{ asset('manager_asset/js/inventory_valuation.js') }}"></script>
 @endsection

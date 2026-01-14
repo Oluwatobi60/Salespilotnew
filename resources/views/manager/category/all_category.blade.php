@@ -26,62 +26,39 @@ Add Categories
                 <div class="card card-rounded">
                   <div class="card-body">
                     <!-- Header Section -->
-                    <div class="d-sm-flex justify-content-between align-items-start">
+                    <div class="d-sm-flex justify-content-between align-items-start mb-2">
                       <div>
                         <h4 class="card-title mb-0">Categories</h4>
                         <p class="card-description">Manage your product categories below.</p>
                       </div>
-                      <div class="btn-wrapper">
-                        <button type="button" class="btn btn-primary text-white me-0" id="addCategoryBtn">
-                          <i class="bi bi-plus"></i> Add Category
-                        </button>
-                      </div>
                     </div>
 
-                    <!-- Modern Search and Filter Section -->
-                    <div class="row mb-3 filter-container">
-                      <div class="col-md-4">
+                    <!-- Search and Action Section -->
+                    <div class="row mb-3 align-items-center g-2">
+                      <div class="col-md-6">
                         <div class="input-group">
-                          <input type="text" class="form-control" placeholder="Search categories..." id="searchCategories">
-                          <button class="btn btn-outline-secondary" type="button">
+                          <span class="input-group-text bg-white">
                             <i class="bi bi-search"></i>
+                          </span>
+                          <input type="text" class="form-control" placeholder="Search categories..." id="searchCategories">
+                        </div>
+                      </div>
+                      <div class="col-md-6">
+                        <div class="d-flex justify-content-end gap-2">
+                          <button type="button" class="btn btn-primary" id="addCategoryBtn">
+                            <i class="bi bi-plus"></i> Add Category
+                          </button>
+                          <button class="btn btn-outline-success" id="exportCategories" title="Export Categories">
+                            <i class="bi bi-download"></i> Export
                           </button>
                         </div>
                       </div>
-                      <div class="col-md-8 d-flex justify-content-end align-items-center gap-2">
-                        <!-- Filter by Items Count -->
-                        <select class="form-select" id="itemsFilter" style="max-width: 140px;">
-                          <option value="">All Items</option>
-                          <option value="0-10">0-10 Items</option>
-                          <option value="11-25">11-25 Items</option>
-                          <option value="26-50">26+ Items</option>
-                        </select>
-
-                        <!-- Filter by Margin Range -->
-                        <select class="form-select" id="marginFilter" style="max-width: 140px;">
-                          <option value="">All Margins</option>
-                          <option value="0-15">0-15%</option>
-                          <option value="16-25">16-25%</option>
-                          <option value="26+">26%+</option>
-                        </select>
-
-                        <!-- Action Buttons -->
-                        <button class="btn btn-outline-primary" id="applyFilters">
-                          <i class="bi bi-funnel"></i> Apply
-                        </button>
-                        <button class="btn btn-outline-secondary" id="clearFilters">
-                          <i class="bi bi-x-circle"></i> Clear
-                        </button>
-                        <button class="btn btn-outline-success" id="exportCategories">
-                          <i class="bi bi-download"></i> Export
-                        </button>
-                      </div>
-                    </div><br>
+                    </div>
 
 
 
                 <div class="table-responsive">
-                  <table class="table table-striped" id="categoriesTable">
+                  <table class="table table-striped table-sm" id="categoriesTable">
                     <thead>
                       <tr>
                         <th>S/N</th>
@@ -92,26 +69,26 @@ Add Categories
                     </thead>
                     <tbody>
                         @foreach ($categories as $index => $category)
-                                 <tr>
+                        <tr>
                         <td>{{ $index + 1 }}</td>
                         <td>{{ $category->category_name }}</td>
                         <td>{{ $category->items_count ?? 0 }}</td>
                         <td style="white-space: nowrap;">
                           <div class="d-flex gap-1 justify-content-start align-items-center">
                             <button class="btn btn-sm btn-outline-primary edit-btn"
-                                    style="padding: 0.25rem 0.5rem; line-height: 1; min-width: 32px; height: 28px;"
+                                    style=""
                                     data-id="{{ $category->id }}"
                                     data-name="{{ $category->category_name }}"
                                     title="Edit Category">
                               <i class="bi bi-pencil" style="font-size: 0.875rem;"></i>
                             </button>
 
-                            <form action="{{ route('category.delete', ['id' => $category->id]) }}" method="POST" style="display: inline; margin: 0;">
+                            <form action="{{ route('category.delete', ['id' => $category->id]) }}" method="POST" style="display: inline; margin: 0;" class="delete-category-form">
                               @csrf
                               @method('DELETE')
-                              <button type="submit" class="btn btn-sm btn-outline-danger"
+                              <button type="button" class="btn btn-sm btn-outline-danger delete-category-btn"
                                       style="padding: 0.25rem 0.5rem; line-height: 1; min-width: 32px; height: 28px;"
-                                      onclick="return confirm('Are you sure you want to delete this category?')">
+                                      data-category-name="{{ $category->category_name }}">
                                 <i class="bi bi-trash" style="font-size: 0.875rem;"></i>
                               </button>
                             </form>
@@ -215,7 +192,37 @@ Add Categories
 
 <script src="{{ asset('manager_asset/js/category.js') }}"></script>
 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
+// SweetAlert2 for delete confirmation
+document.addEventListener('DOMContentLoaded', function() {
+    const deleteBtns = document.querySelectorAll('.delete-category-btn');
+
+    deleteBtns.forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const categoryName = this.getAttribute('data-category-name');
+            const form = this.closest('form');
+
+            Swal.fire({
+                title: 'Are you sure?',
+                text: `Do you want to delete "${categoryName}" category? This action cannot be undone!`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete it!',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
+        });
+    });
+});
+
 // Reopen modal if there are validation errors
 @if($errors->any())
     document.addEventListener('DOMContentLoaded', function() {

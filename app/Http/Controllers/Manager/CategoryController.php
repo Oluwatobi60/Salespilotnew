@@ -36,7 +36,8 @@ class CategoryController extends Controller
         ]);
 
         // Create a new category
-        Category::create($validatedata);
+        $category = Category::create($validatedata);
+        \App\Helpers\ActivityLogger::log('create_category', 'Created category: ' . $category->category_name);
 
 
         // Redirect back with success message
@@ -60,6 +61,7 @@ class CategoryController extends Controller
 
         // Update the category
         $category->update($validatedData);
+        \App\Helpers\ActivityLogger::log('update_category', 'Updated category: ' . $category->category_name);
 
         // Redirect back with success message
         return redirect()->route('all_categories')->with('success', 'Category updated successfully.');
@@ -80,7 +82,9 @@ class CategoryController extends Controller
         }
 
         // Delete the category
+        $categoryName = $category->category_name;
         $category->delete();
+        \App\Helpers\ActivityLogger::log('delete_category', 'Deleted category: ' . $categoryName);
 
         // Redirect back with success message
         return redirect()->route('all_categories')->with('success', 'Category deleted successfully.');

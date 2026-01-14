@@ -91,7 +91,7 @@
           <li class="nav-item"><a class="nav-link" href="{{ route('manager.sales_by_item') }} ">Sales by Item</a></li>
           <li class="nav-item"><a class="nav-link" href="{{ route('manager.sales_by_category') }}">Sales by Category</a></li>
           <li class="nav-item"><a class="nav-link" href="{{ route('manager.valuation_report') }}">Inventory Valuation</a></li>
-          <li class="nav-item"><a class="nav-link" href="{{ route('manager.taxes') }}">Taxes</a></li>
+      {{--      <li class="nav-item"><a class="nav-link" href="{{ route('manager.taxes') }}">Taxes</a></li>  --}}
           <li class="nav-item"><a class="nav-link" href="{{ route('manager.discount_report') }}">Discount Report</a></li>
         </ul>
       </div>
@@ -104,7 +104,7 @@
       <div class="collapse" id="crm-menu">
         <ul class="nav flex-column sub-menu">
           <li class="nav-item"> <a class="nav-link" href="{{ route('manager.customers') }}">Customers</a></li>
-          <li class="nav-item"> <a class="nav-link" href="views/discount.php">Discount</a></li>
+          <li class="nav-item"> <a class="nav-link" href="{{ route('manager.add_discount') }}">Discount</a></li>
         </ul>
       </div>
     </li>
@@ -117,7 +117,7 @@
     </li>
 
     <li class="nav-item">
-      <a class="nav-link" href="views/activity_logs.php">
+      <a class="nav-link" href="{{ route('manager.activity_logs') }}">
         <i class="menu-icon bi bi-activity"></i>
         <span class="menu-title">Activity Logs</span>
       </a>
@@ -133,12 +133,12 @@
         <ul class="nav flex-column sub-menu">
           <li class="nav-item"> <a class="nav-link" href="{{ route('all_items') }}">All items</a></li>
           <li class="nav-item"> <a class="nav-link" href="{{ route('all_categories') }}">Categories</a></li>
-          <li class="nav-item"> <a class="nav-link" href="views/stock_history.php">Stock History</a></li>
+         {{--   <li class="nav-item"> <a class="nav-link" href="views/stock_history.php">Stock History</a></li>  --}}
         </ul>
       </div>
     </li>
   <li class="nav-item">
-      <a class="nav-link" href="{{--  {{ route('manager.suppliers') }}  --}}">
+      <a class="nav-link" href="{{ route('manager.suppliers') }} ">
         <i class="menu-icon bi bi-truck"></i>
         <span class="menu-title">Suppliers</span>
       </a>

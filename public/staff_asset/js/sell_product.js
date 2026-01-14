@@ -1227,9 +1227,15 @@ document.addEventListener('DOMContentLoaded', function() {
             discountInfo.className = 'text-success fw-bold';
             cartTotalElement.parentNode.insertBefore(discountInfo, cartTotalElement);
           }
+          let discountLabel = '';
+          if (window.selectedDiscount.type === 'percentage') {
+            discountLabel = `<span style='color:#d32f2f;'>-${window.selectedDiscount.discount_rate}%</span>`;
+          } else {
+            discountLabel = `<span style='color:#d32f2f;'>-${formatCurrency(discountAmount)}</span>`;
+          }
           discountInfo.innerHTML = `<span style="background:#e0f7fa;color:#00796b;padding:4px 10px;border-radius:16px;font-weight:bold;display:inline-block; font-size:13px">
             <i class='bi bi-tag-fill' style='color:#009688;margin-right:4px;'></i>
-            Discount: <span style='color:#d32f2f;'>-${formatCurrency(discountAmount)}</span> <span style='color:#1976d2;'>(${window.selectedDiscount.discount_name})</span>
+            Discount: ${discountLabel} <span style='color:#1976d2;'>(${window.selectedDiscount.discount_name})</span>
           </span>`;
         } else {
           // Remove discount info if not applied

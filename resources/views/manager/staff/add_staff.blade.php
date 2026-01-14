@@ -145,10 +145,13 @@ Add Staff Member
                                 <i class="bi bi-pencil"></i>
                               </a>
 
-                            <form action="{{ route('staff.delete', $staff->id) }}" method="POST" style="display: inline;">
+                            <form action="{{ route('staff.delete', $staff->id) }}" method="POST" style="display: inline;" class="delete-staff-form">
                             @csrf
                             @method('DELETE')
-                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this Staff?')"> <i class="bi bi-trash"></i></button>
+                            <button type="button" class="btn btn-sm btn-danger delete-staff-btn"
+                                    data-staff-name="{{ $staff->staff_name }}">
+                                <i class="bi bi-trash"></i>
+                            </button>
                             </form>
                             </td>
                           </tr>
@@ -343,7 +346,38 @@ Add Staff Member
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="{{ asset('manager_asset/js/staff.js') }}"></script>
+
+<script>
+// SweetAlert2 for delete confirmation
+document.addEventListener('DOMContentLoaded', function() {
+    const deleteBtns = document.querySelectorAll('.delete-staff-btn');
+
+    deleteBtns.forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const staffName = this.getAttribute('data-staff-name');
+            const form = this.closest('form');
+
+            Swal.fire({
+                title: 'Are you sure?',
+                text: `Do you want to delete "${staffName}"? This action cannot be undone!`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete it!',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
+        });
+    });
+});
+</script>
 
 
 @endsection

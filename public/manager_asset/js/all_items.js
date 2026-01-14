@@ -485,23 +485,25 @@ document.addEventListener('DOMContentLoaded', function() {
 		  // Function to apply all filters
 		  function applyAllFilters() {
 		    const searchTerm = searchInput.value.toLowerCase();
-		    const selectedCategory = categoryFilter.value;
+		    const selectedCategory = categoryFilter.value.toLowerCase();
 		    const selectedInventory = inventoryFilter.value;
 		    const selectedSupplier = supplierFilter.value;
 		    const tableRows = document.querySelectorAll('#itemsTable tbody tr');
 
 		    tableRows.forEach(row => {
 		      const itemName = row.querySelector('h6').textContent.toLowerCase();
-		      const category = row.cells[3].textContent.trim(); // Category column
-		      const stockQuantity = row.cells[5].textContent.trim(); // Stock column
+		      const itemCode = row.querySelector('small.text-muted')?.textContent.toLowerCase() || '';
+		      const category = row.cells[3].textContent.trim().toLowerCase(); // Category column
+		      const stockQuantity = parseInt(row.cells[5].querySelector('span.badge')?.textContent.trim()) || 0; // Stock column
 		      const stockStatus = getStockStatus(stockQuantity);
 
-		      // Search filter
+		      // Search filter - search in name, code, and category
 		      const matchesSearch = itemName.includes(searchTerm) ||
-		                           category.toLowerCase().includes(searchTerm);
+		                           itemCode.includes(searchTerm) ||
+		                           category.includes(searchTerm);
 
-		      // Category filter
-		      const matchesCategory = !selectedCategory || category === selectedCategory;
+		      // Category filter - case-insensitive comparison
+		      const matchesCategory = !selectedCategory || category === selectedCategory || category === 'n/a';
 
 		      // Inventory filter
 		      const matchesInventory = !selectedInventory || stockStatus === selectedInventory;

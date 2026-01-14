@@ -10,7 +10,9 @@ use App\Models\StandardItem;
 use App\Models\VariantItem;
 use App\Models\ProductVariant;
 use App\Models\Staffs;
+use App\Models\User;
 use App\Models\Category;
+use Carbon\Carbon;
 
 
 class SalesReportController extends Controller
@@ -61,11 +63,25 @@ class SalesReportController extends Controller
                 ->whereDate('created_at', $sale->sale_date)
                 ->get();
 
+            // Collect unique seller IDs for this date
+            $sellerIds = $items->map(function($item) {
+                if ($item->staff_id) {
+                    return 'staff_' . $item->staff_id;
+                } elseif ($item->user_id) {
+                    return 'user_' . $item->user_id;
+                }
+                return null;
+            })->filter()->unique()->values()->toArray();
+
+            $sale->seller_ids = $sellerIds;
+
             // Calculate cost of items and taxes by looking up cost_price and tax_rate for each item
             $costOfItems = 0;
             $totalTaxes = 0;
+            $totalDiscount = 0;
 
             foreach ($items as $item) {
+                $totalDiscount += $item->discount;
                 Log::info('Processing cart item:', [
                     'item_name' => $item->item_name,
                     'item_type' => $item->item_type,
@@ -76,7 +92,6 @@ class SalesReportController extends Controller
                 ]);
 
                 if ($item->item_type === 'standard') {
-                    // Prefer lookup by item_code if present, else by item_id
                     $standardItem = null;
                     if (!empty($item->item_code)) {
                         $standardItem = StandardItem::where('item_code', $item->item_code)->first();
@@ -99,7 +114,6 @@ class SalesReportController extends Controller
                         Log::warning('Standard item not found for item_id: ' . $item->item_id . ' or item_code: ' . ($item->item_code ?? ''));
                     }
                 } elseif ($item->item_type === 'variant') {
-                    // Prefer lookup by item_code if present, else by item_id
                     $productVariant = null;
                     if (!empty($item->item_code)) {
                         $productVariant = ProductVariant::where('variant_code', $item->item_code)->first();
@@ -119,7 +133,6 @@ class SalesReportController extends Controller
                         $taxRate = ($productVariant->tax_rate ?? 0) / 100;
                         $totalTaxes += $item->subtotal * $taxRate;
                     } else {
-                        // If not found, try VariantItem
                         $variantItem = null;
                         if (!empty($item->item_code)) {
                             $variantItem = VariantItem::where('variant_code', $item->item_code)->first();
@@ -148,21 +161,23 @@ class SalesReportController extends Controller
             Log::info('Total cost calculation:', [
                 'sale_date' => $sale->sale_date,
                 'total_cost_of_items' => $costOfItems,
-                'gross_sales' => $sale->gross_sales
+                'gross_sales' => $sale->gross_sales,
+                'total_discount' => $totalDiscount
             ]);
 
-            // Calculate gross profit: Gross Sales - Cost of Items
-            // Gross profit is based on sales before discount
-            $grossProfit = $sale->gross_sales - $costOfItems;
+            // Calculate gross profit: (Gross Sales - Discount) - Cost of Items
+            $grossProfit = ($sale->gross_sales - $totalDiscount) - $costOfItems;
 
-            // Calculate margin percentage based on gross sales
-            $margin = $sale->gross_sales > 0 ? ($grossProfit / $sale->gross_sales) * 100 : 0;
+            // Calculate margin percentage based on (gross sales - discount)
+            $marginBase = $sale->gross_sales - $totalDiscount;
+            $margin = $marginBase > 0 ? ($grossProfit / $marginBase) * 100 : 0;
 
             // Add calculated fields to the sale object
             $sale->cost_of_items = round($costOfItems, 2);
             $sale->gross_profit = round($grossProfit, 2);
             $sale->margin = round($margin, 1);
             $sale->taxes = round($totalTaxes, 2);
+            $sale->total_discount = round($totalDiscount, 2);
 
             return $sale;
         });
@@ -182,7 +197,7 @@ class SalesReportController extends Controller
 
         return view('manager.reports.sales_summary', [
             'salesSummary' => $salesSummaryPaginated,
-            'allSalesData' => $salesSummary // For charts
+            'allSalesData' => $salesSummary->values()->toArray() // Convert to array for charts
         ]);
     }
 
@@ -191,10 +206,61 @@ class SalesReportController extends Controller
 
 
 
-    public function sales_by_category()
+    public function sales_by_category(Request $request)
     {
         // Get all completed sales items
-        $cartItems = CartItem::where('status', 'completed')->get();
+        $query = CartItem::where('status', 'completed');
+
+        // Apply date range filter
+        if ($request->filled('date_range')) {
+            $dateRange = $request->date_range;
+            $startDate = null;
+            $endDate = null;
+
+            switch ($dateRange) {
+                case 'today':
+                    $startDate = Carbon::today();
+                    $endDate = Carbon::today()->endOfDay();
+                    break;
+                case 'yesterday':
+                    $startDate = Carbon::yesterday();
+                    $endDate = Carbon::yesterday()->endOfDay();
+                    break;
+                case 'last7':
+                    $startDate = Carbon::today()->subDays(6);
+                    $endDate = Carbon::today()->endOfDay();
+                    break;
+                case 'last30':
+                    $startDate = Carbon::today()->subDays(29);
+                    $endDate = Carbon::today()->endOfDay();
+                    break;
+                case 'thisMonth':
+                    $startDate = Carbon::now()->startOfMonth();
+                    $endDate = Carbon::now()->endOfMonth();
+                    break;
+                case 'lastMonth':
+                    $startDate = Carbon::now()->subMonth()->startOfMonth();
+                    $endDate = Carbon::now()->subMonth()->endOfMonth();
+                    break;
+                case 'custom':
+                    if ($request->filled('start_date')) {
+                        $startDate = Carbon::parse($request->start_date)->startOfDay();
+                    }
+                    if ($request->filled('end_date')) {
+                        $endDate = Carbon::parse($request->end_date)->endOfDay();
+                    }
+                    break;
+            }
+
+            if ($startDate) {
+                $query->where('created_at', '>=', $startDate);
+            }
+            if ($endDate) {
+                $query->where('created_at', '<=', $endDate);
+            }
+        }
+
+        $cartItems = $query->get();
 
         // Aggregate by category
         $categoryData = [];
@@ -250,8 +316,11 @@ class SalesReportController extends Controller
                     'tax' => 0,
                 ];
             }
+            // Calculate item cost and tax
             $itemCost = $costPrice * $item->quantity;
+            // Calculate item tax based on subtotal and tax rate
             $itemTax = ($taxRate / 100) * $item->subtotal;
+            // Aggregate data
             $categoryData[$categoryId]['total_quantity_sold'] += $item->quantity;
             $categoryData[$categoryId]['gross_sales'] += $item->subtotal;
             $categoryData[$categoryId]['total_discount'] += $item->discount;
@@ -263,17 +332,27 @@ class SalesReportController extends Controller
 
         // Calculate gross profit and margin for each category
         foreach ($categoryData as &$cat) {
-            $cat['gross_profit'] = $cat['gross_sales'] - $cat['total_cost'];
-            $cat['margin'] = $cat['gross_sales'] > 0 ? ($cat['gross_profit'] / $cat['gross_sales']) * 100 : 0;
+            // Deduct discount from gross sales before gross profit
+            $grossSalesAfterDiscount = $cat['gross_sales'] - $cat['total_discount'];
+            $cat['gross_profit'] = $grossSalesAfterDiscount - $cat['total_cost'];
+            $cat['margin'] = $grossSalesAfterDiscount > 0 ? ($cat['gross_profit'] / $grossSalesAfterDiscount) * 100 : 0;
         }
         unset($cat);
 
         // Convert to collection and sort by gross_sales desc
         $salesByCategory = collect($categoryData)->sortByDesc('gross_sales')->values();
 
-        // Calculate totals for all categories
+        // Apply category filter after aggregation
+        if ($request->filled('category_id')) {
+            $salesByCategory = $salesByCategory->filter(function($category) use ($request) {
+                return $category['category_id'] == $request->category_id;
+            })->values();
+        }
+
+        // Calculate totals for all categories (or filtered categories)
         $totals = [
             'gross_sales' => $salesByCategory->sum('gross_sales'),
+            'total_discount' => $salesByCategory->sum('total_discount'),
             'net_sales' => $salesByCategory->sum('total_sales'),
             'items_cost' => $salesByCategory->sum('total_cost'),
             'gross_profit' => $salesByCategory->sum('gross_profit'),
@@ -320,14 +399,56 @@ class SalesReportController extends Controller
 
     public function getStaffUserList()
     {
-        $staffUsers = Staffs::select('id', 'first_name', 'last_name')->get();
+        // Get unique staff IDs from completed sales in cart_items
+        $staffIds = CartItem::where('status', 'completed')
+            ->whereNotNull('staff_id')
+            ->distinct()
+            ->pluck('staff_id');
 
-        $userList = $staffUsers->map(function ($staff) {
-            return [
-                'id' => $staff->id,
-                'name' => $staff->first_name . ' ' . $staff->last_name,
-            ];
-        });
+        // Get unique user IDs from completed sales in cart_items
+        $userIds = CartItem::where('status', 'completed')
+            ->whereNotNull('user_id')
+            ->distinct()
+            ->pluck('user_id');
+
+        // Get staff members who have made sales
+        $staffUsers = collect();
+        if ($staffIds->isNotEmpty()) {
+            $staffUsers = Staffs::whereIn('id', $staffIds)
+                ->select('id', 'fullname')
+                ->get()
+                ->map(function ($staff) {
+                    return [
+                        'id' => 'staff_' . $staff->id,
+                        'name' => $staff->fullname,
+                        'type' => 'staff'
+                    ];
+                });
+        }
+
+        // Get users who have made sales
+        $users = collect();
+        if ($userIds->isNotEmpty()) {
+            $users = User::whereIn('id', $userIds)
+                ->select('id', 'name')
+                ->get()
+                ->map(function ($user) {
+                    return [
+                        'id' => 'user_' . $user->id,
+                        'name' => $user->name,
+                        'type' => 'user'
+                    ];
+                });
+        }
+
+        // Merge and sort by name
+        $userList = $staffUsers->merge($users)->sortBy('name')->values();
+
+        Log::info('Seller filter data', [
+            'staff_count' => $staffUsers->count(),
+            'user_count' => $users->count(),
+            'total' => $userList->count()
+        ]);
 
         return response()->json([
             'success' => true,

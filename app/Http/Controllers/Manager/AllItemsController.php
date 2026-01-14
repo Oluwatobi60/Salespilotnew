@@ -45,8 +45,8 @@ class AllItemsController extends Controller
 
         // Get unique categories from all item types
         $categories = collect();
-        $categories = $categories->merge($standardItems->pluck('category'))
-                                 ->merge($variantItems->pluck('category'))
+        $categories = $categories->merge($standardItems->pluck('category_name'))
+                                 ->merge($variantItems->pluck('category_name'))
                                  ->merge($bundleItems->pluck('category'))
                                  ->filter()
                                  ->unique()
@@ -166,8 +166,9 @@ class AllItemsController extends Controller
                 return redirect()->back()->with('error', 'Invalid item type specified.');
         }
 
+        $itemName = $item->item_name ?? ($item->bundle_name ?? '');
         $item->forceDelete();
-
+        \App\Helpers\ActivityLogger::log('Delete item', json_encode(['type' => $type, 'id' => $id, 'name' => $itemName]));
         return redirect()->back()->with('success', ucfirst($type) . ' item permanently deleted successfully.');
     }
 
@@ -331,6 +332,8 @@ class AllItemsController extends Controller
                     }
 
                     $item->update($validatedData);
+                    $itemName = $item->item_name ?? ($item->bundle_name ?? '');
+                    \App\Helpers\ActivityLogger::log('Update item', json_encode(['type' => $type, 'id' => $id, 'name' => $itemName]));
                     break;
 
                 case 'variant':
@@ -426,28 +429,35 @@ class AllItemsController extends Controller
                 }
 
                 try {
+                    $itemName = '';
                     switch ($type) {
                         case 'standard':
                             $item = StandardItem::find($id);
                             if ($item) {
+                                $itemName = $item->item_name;
                                 $item->forceDelete();
                                 $deletedCount++;
+                                \App\Helpers\ActivityLogger::log('Delete item (multiple)', json_encode(['type' => $type, 'id' => $id, 'name' => $itemName]));
                             }
                             break;
 
                         case 'variant':
                             $item = VariantItem::find($id);
                             if ($item) {
+                                $itemName = $item->item_name;
                                 $item->forceDelete();
                                 $deletedCount++;
+                                \App\Helpers\ActivityLogger::log('Delete item (multiple)', json_encode(['type' => $type, 'id' => $id, 'name' => $itemName]));
                             }
                             break;
 
                         case 'bundle':
                             $item = BundleItem::find($id);
                             if ($item) {
+                                $itemName = $item->bundle_name;
                                 $item->forceDelete();
                                 $deletedCount++;
+                                \App\Helpers\ActivityLogger::log('Delete item (multiple)', json_encode(['type' => $type, 'id' => $id, 'name' => $itemName]));
                             }
                             break;
 

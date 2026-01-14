@@ -3,11 +3,29 @@ let allSales = [];
 let currentSaleId = null;
 
 document.addEventListener('DOMContentLoaded', function() {
+        // Populate seller filter with all users and staff
+        function populateSellerFilter() {
+            fetch('/manager/get-staff-user-list')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && Array.isArray(data.staffUsers)) {
+                        const sellerFilter = document.getElementById('sellerFilter');
+                        // Remove all except the first option
+                        while (sellerFilter.options.length > 1) sellerFilter.remove(1);
+                        data.staffUsers.forEach(user => {
+                            const option = document.createElement('option');
+                            option.value = user.id;
+                            option.textContent = user.name;
+                            sellerFilter.appendChild(option);
+                        });
+                    }
+                });
+        }
+
     // Elements
     const completedSalesTable = document.getElementById('completedSalesTable');
     const searchInput = document.getElementById('searchSales');
     const sellerFilter = document.getElementById('sellerFilter');
-    const statusFilter = document.getElementById('statusFilter');
     const dateRangeFilter = document.getElementById('dateRangeFilter');
     const applyFiltersBtn = document.getElementById('applyFilters');
     const clearFiltersBtn = document.getElementById('clearFilters');
@@ -27,6 +45,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initialize - collect all sales from table
     function initializeSales() {
+        populateSellerFilter();
         const rows = completedSalesTable.querySelectorAll('tbody tr.sale-row');
         allSales = [];
 
@@ -39,6 +58,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     date: cells[2]?.textContent.trim() || '',
                     customer: cells[3]?.textContent.trim() || '',
                     seller: cells[4]?.textContent.trim() || '',
+                    sellerId: row.dataset.sellerId || '',
                     items: cells[5]?.textContent.trim() || '',
                     total: cells[6]?.textContent.trim() || '',
                     status: cells[7]?.querySelector('.badge')?.textContent.trim() || '',
@@ -65,7 +85,6 @@ document.addEventListener('DOMContentLoaded', function() {
     function performSearch() {
         const searchTerm = searchInput.value.toLowerCase();
         const selectedSeller = sellerFilter.value;
-        const selectedStatus = statusFilter.value;
         const dateRange = dateRangeFilter.value;
 
         let filtered = allSales.filter(sale => {
@@ -77,10 +96,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 sale.total.toLowerCase().includes(searchTerm);
 
             // Seller filter
-            const matchesSeller = !selectedSeller || sale.seller === selectedSeller;
-
-            // Status filter
-            const matchesStatus = !selectedStatus || sale.status === selectedStatus;
+            const matchesSeller = !selectedSeller || sale.sellerId === selectedSeller;
 
             // Date filter
             let matchesDate = true;
@@ -128,7 +144,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
 
-            return matchesSearch && matchesSeller && matchesStatus && matchesDate;
+            return matchesSearch && matchesSeller && matchesDate;
         });
 
         renderFilteredSales(filtered);
@@ -212,13 +228,11 @@ document.addEventListener('DOMContentLoaded', function() {
     // Event listeners
     searchInput.addEventListener('input', performSearch);
     sellerFilter.addEventListener('change', performSearch);
-    statusFilter.addEventListener('change', performSearch);
     applyFiltersBtn.addEventListener('click', performSearch);
 
     clearFiltersBtn.addEventListener('click', function() {
         searchInput.value = '';
         sellerFilter.value = '';
-        statusFilter.value = '';
         dateRangeFilter.value = '';
         customStartDate.value = '';
         customEndDate.value = '';

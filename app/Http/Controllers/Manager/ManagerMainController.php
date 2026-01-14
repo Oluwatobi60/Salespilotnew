@@ -29,7 +29,10 @@ class ManagerMainController extends Controller
         // Calculate key metrics
         $totalItemsSold = (clone $query)->sum('quantity');
         $numberOfSales = (clone $query)->distinct('receipt_number')->count('receipt_number');
+
         $grossSales = (clone $query)->sum('subtotal');
+        $totalDiscount = (clone $query)->sum('discount');
+        $grossSalesAfterDiscount = $grossSales - $totalDiscount;
 
         // Calculate gross profit: gross sales - cost of items
         $cartItems = (clone $query)->get();
@@ -45,7 +48,7 @@ class ManagerMainController extends Controller
             }
             $totalCost += $cost;
         }
-        $grossProfit = $grossSales - $totalCost;
+        $grossProfit = $grossSalesAfterDiscount - $totalCost;
 
         // Recent sales activity with pagination
         $recentSales = (clone $query)
@@ -91,6 +94,8 @@ class ManagerMainController extends Controller
             'totalItemsSold' => $totalItemsSold,
             'numberOfSales' => $numberOfSales,
             'grossSales' => $grossSales,
+            'totalDiscount' => $totalDiscount,
+            'grossSalesAfterDiscount' => $grossSalesAfterDiscount,
             'grossProfit' => $grossProfit,
             'recentSales' => $recentSales,
             'startDate' => $startDate,

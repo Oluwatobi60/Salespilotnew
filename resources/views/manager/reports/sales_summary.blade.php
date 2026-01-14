@@ -21,21 +21,10 @@ Sales Summary
                         </div>
                       </div>
                       <div class="col-md-8 d-flex justify-content-end align-items-center gap-2">
-                        <!-- Status Filter -->
-                        <select class="form-select" id="statusFilter" style="max-width: 140px;">
-                          <option value="">All Status</option>
-                          <option value="Completed">Completed</option>
-                          <option value="Pending">Pending</option>
-                          <option value="Cancelled">Cancelled</option>
-                        </select>
-                        <!-- Staff Filter -->
-                        <select class="form-select" id="staffFilter" style="max-width: 140px;">
-                          <option value="">All Staff</option>
-                          <option value="Alice Johnson">Alice Johnson</option>
-                          <option value="Bob Smith">Bob Smith</option>
-                          <option value="Carol Williams">Carol Williams</option>
-                          <option value="David Brown">David Brown</option>
-                        </select>
+                        <!-- Seller Filter -->
+                        {{-- <select class="form-select" id="sellerFilter" style="max-width: 140px;">
+                          <option value="">All Sellers</option>
+                        </select> --}}
                         <!-- Date Range Filter -->
                         <div class="date-filter-wrapper">
                           <select class="form-select" id="dateRangeFilter" style="max-width: 140px;">
@@ -99,7 +88,9 @@ Sales Summary
                         </thead>
                         <tbody>
                           @forelse($salesSummary as $index => $sale)
-                          <tr>
+                          <tr class="summary-row" 
+                              data-date="{{ $sale->sale_date }}"
+                              data-seller-ids="{{ implode(',', $sale->seller_ids ?? []) }}">
                             <td>{{ ($salesSummary->currentPage() - 1) * $salesSummary->perPage() + $index + 1 }}</td>
                             <td>{{ \Carbon\Carbon::parse($sale->sale_date)->format('M d, Y') }}</td>
                             <td>₦{{ number_format($sale->gross_sales, 2) }}</td>

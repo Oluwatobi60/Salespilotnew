@@ -19,22 +19,22 @@ Sales Summary
                     <div class="row mb-3">
                       <div class="col-md-4">
                         <select class="form-select form-select-sm mb-2" id="dateRangeFilter" onchange="toggleCustomRangeInputs()">
-                          <option value="today">Today</option>
-                          <option value="yesterday">Yesterday</option>
-                          <option value="last7">Last 7 Days</option>
-                          <option value="last30">Last 30 Days</option>
-                          <option value="thisMonth">This Month</option>
-                          <option value="lastMonth">Last Month</option>
-                          <option value="custom">Custom Range</option>
+                          <option value="today" {{ request('date_range') == 'today' ? 'selected' : '' }}>Today</option>
+                          <option value="yesterday" {{ request('date_range') == 'yesterday' ? 'selected' : '' }}>Yesterday</option>
+                          <option value="last7" {{ request('date_range') == 'last7' ? 'selected' : '' }}>Last 7 Days</option>
+                          <option value="last30" {{ request('date_range') == 'last30' ? 'selected' : '' }}>Last 30 Days</option>
+                          <option value="thisMonth" {{ request('date_range') == 'thisMonth' ? 'selected' : '' }}>This Month</option>
+                          <option value="lastMonth" {{ request('date_range') == 'lastMonth' ? 'selected' : '' }}>Last Month</option>
+                          <option value="custom" {{ request('date_range') == 'custom' ? 'selected' : '' }}>Custom Range</option>
                         </select>
-                        <div id="customRangeInputs" style="display:none;">
+                        <div id="customRangeInputs" style="display:{{ request('date_range') == 'custom' ? 'block' : 'none' }};">
                           <div class="input-group input-group-sm mb-1">
                             <span class="input-group-text">From</span>
-                            <input type="date" class="form-control form-control-sm" id="customStartDate">
+                            <input type="date" class="form-control form-control-sm" id="customStartDate" value="{{ request('start_date') }}">
                           </div>
                           <div class="input-group input-group-sm">
                             <span class="input-group-text">To</span>
-                            <input type="date" class="form-control form-control-sm" id="customEndDate">
+                            <input type="date" class="form-control form-control-sm" id="customEndDate" value="{{ request('end_date') }}">
                           </div>
                         </div>
                         <small class="form-text text-muted">Choose a date range to filter sales by staff.</small>
@@ -119,4 +119,5 @@ Sales Summary
     </div>
     <!-- container-scroller -->
 
+    <script src="{{ asset('manager_asset/js/sales_by_staff.js') }}"></script>
 @endsection

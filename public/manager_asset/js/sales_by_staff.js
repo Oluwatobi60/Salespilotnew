@@ -21,12 +21,24 @@ function populateStaffDropdown() {
             if (!response.ok) throw new Error('Network response was not ok');
             return response.json();
         })
-        .then(data => {
+        .then(response => {
             const staffFilter = document.getElementById('staffFilter');
             if (!staffFilter) return;
+
+            // Get current staff_id from URL params
+            const urlParams = new URLSearchParams(window.location.search);
+            const currentStaffId = urlParams.get('staff_id');
+
             staffFilter.innerHTML = '<option value="">All Staff</option>';
-            data.forEach(person => {
-                staffFilter.innerHTML += `<option value="${person.id}">${person.name}</option>`;
+
+            // Access the staffUsers array from the response
+            const staffUsers = response.staffUsers || [];
+
+            staffUsers.forEach(person => {
+                // Extract numeric ID from 'staff_123' or 'user_456' format
+                const numericId = person.id.replace(/^(staff_|user_)/, '');
+                const selected = currentStaffId == numericId ? 'selected' : '';
+                staffFilter.innerHTML += `<option value="${numericId}" ${selected}>${person.name}</option>`;
             });
         })
         .catch(error => {

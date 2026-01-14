@@ -155,19 +155,48 @@
     .customer-details-panel {
       position: fixed;
       top: 0;
-      right: -500px;
+      right: -600px;
       width: 500px;
       height: 100vh;
       background: white;
       box-shadow: -5px 0 20px rgba(0,0,0,0.15);
       z-index: 1050;
-      transition: right 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      transition: right 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), visibility 0s 0.4s;
       overflow-y: auto;
       border-left: 1px solid #e9ecef;
+      visibility: hidden;
+      opacity: 0;
     }
 
     .customer-details-panel.show {
       right: 0;
+      visibility: visible;
+      opacity: 1;
+      transition: right 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), visibility 0s;
+    }
+
+    /* Edit Customer Side Panel */
+    .edit-customer-panel {
+      position: fixed;
+      top: 0;
+      right: -600px;
+      width: 500px;
+      height: 100vh;
+      background: white;
+      box-shadow: -5px 0 20px rgba(0,0,0,0.15);
+      z-index: 1060;
+      transition: right 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), visibility 0s 0.4s;
+      overflow-y: auto;
+      border-left: 1px solid #e9ecef;
+      visibility: hidden;
+      opacity: 0;
+    }
+
+    .edit-customer-panel.show {
+      right: 0;
+      visibility: visible;
+      opacity: 1;
+      transition: right 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), visibility 0s;
     }
 
     /* Panel backdrop for mobile */
@@ -222,12 +251,15 @@
       z-index: 1040;
       opacity: 0;
       visibility: hidden;
-      transition: all 0.3s ease;
+      pointer-events: none;
+      transition: opacity 0.3s ease, visibility 0s 0.3s;
     }
 
     .panel-backdrop.show {
       opacity: 1;
       visibility: visible;
+      pointer-events: auto;
+      transition: opacity 0.3s ease, visibility 0s;
     }
 
     /* Main details container */

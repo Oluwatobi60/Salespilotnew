@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Manager\ActivityLogsController;
 use App\Http\Controllers\Manager\AddDiscountController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProfileController;
@@ -85,13 +86,14 @@ Route::middleware(['auth', 'verified','rolemanager:manager'])->group(function ()
     Route::get('/print_receipt/{receiptNumber}', 'print_receipt')->name('manager.print_receipt');
     Route::get('/sales_summary', 'sales_summary')->name('manager.sales_summary');
     Route::get('/sales_by_category', 'sales_by_category')->name('manager.sales_by_category');
-    Route::get('/manager/get-staff-user-list', 'getStaffUserList')->name('manager.getStaffUserList');
+    Route::get('/get-staff-user-list', 'getStaffUserList')->name('manager.getStaffUserList');
   });
 
 
 
     Route::controller(AddDiscountController::class)->group(function () {
         Route::get('/discount_report', 'discount_report')->name('manager.discount_report');
+        Route::get('/add_discount', 'add_discount')->name('manager.add_discount');
         Route::post('/discount/create', 'create_discount')->name('discount.create');
         Route::get('/get_discounts', 'get_discounts')->name('manager.get_discounts');
    });
@@ -102,8 +104,14 @@ Route::middleware(['auth', 'verified','rolemanager:manager'])->group(function ()
          Route::get('/staff_sales', 'staff_sales')->name('manager.staff_sales');
    });
 
+   Route::controller(ActivityLogsController::class)->group(function () {
+         Route::get('/activity_logs', 'activity_logs')->name('manager.activity_logs');
+   });
+
    Route::controller(SalesbyItemController::class)->group(function () {
        Route::get('/sales_by_item', 'sales_by_item')->name('manager.sales_by_item');
+       Route::get('/get-categories-list', 'getCategoriesList')->name('manager.getCategoriesList');
+       Route::get('/get-items-list', 'getItemsList')->name('manager.getItemsList');
    });
 
 
@@ -156,6 +164,7 @@ Route::middleware(['auth', 'verified','rolemanager:manager'])->group(function ()
       Route::get('/get_all_customers', 'get_all_customers')->name('manager.get_all_customers');
       Route::post('/add_customer', 'add_customer')->name('manager.add_customer');
          Route::get('/customers_information', 'customers')->name('manager.customers');
+         Route::get('/get_customer_details/{id}', 'get_customer_details')->name('customer.details');
          Route::get('/edit_customer/{id}', 'edit_customer')->name('customer.edit');
          Route::put('/update_customer/{id}', 'update_customer')->name('customer.update');
          Route::delete('/delete_customer/{id}', 'delete_customer')->name('customer.delete');

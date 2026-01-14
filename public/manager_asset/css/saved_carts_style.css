@@ -93,18 +93,22 @@
 .details-panel {
     position: fixed;
     top: 0;
-    right: -450px;
+    right: -600px;
     width: 450px;
     height: 100%;
     background: white;
     box-shadow: -4px 0 20px rgba(0,0,0,0.15);
     z-index: 1050;
-    transition: right 0.3s ease;
+    transition: all 0.3s ease;
     overflow-y: auto;
+    opacity: 0;
+    visibility: hidden;
 }
 
 .details-panel.show {
     right: 0;
+    opacity: 1;
+    visibility: visible;
 }
 
 .details-panel-header {

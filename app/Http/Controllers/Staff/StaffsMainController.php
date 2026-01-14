@@ -133,6 +133,7 @@ class StaffsMainController extends Controller
                     'session_id' => $sessionId,
                     'staff_id' => Auth::guard('staff')->id()
                 ]);
+                \App\Helpers\ActivityLogger::log('add_to_cart', 'Staff added item to cart: ' . ($item['name'] ?? ''));
             }
 
             return response()->json([
@@ -169,9 +170,20 @@ class StaffsMainController extends Controller
             ]);
 
 
+
             $sessionId = Str::uuid();
             $receiptNumber = 'RCPT-' . strtoupper(substr($sessionId, 0, 8));
             $discount = $validated['discount'] ?? 0;
+
+            // Log checkout activity for staff
+            $details = [
+                'customer_id' => $request->input('customer_id'),
+                'customer_name' => $request->input('customer_name'),
+                'total' => $request->input('total'),
+                'discount' => $request->input('discount'),
+                'items_count' => is_array($request->input('items')) ? count($request->input('items')) : 0,
+            ];
+            \App\Helpers\ActivityLogger::log('Checkout completed', json_encode($details));
 
             foreach ($validated['items'] as $item) {
                 $itemSubtotal = $item['price'] * $item['quantity'];

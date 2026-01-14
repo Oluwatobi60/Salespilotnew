@@ -17,11 +17,15 @@ class RoleManager
     public function handle(Request $request, Closure $next, string $role): Response
     {
         if(!Auth::check()){
+            // Log login attempt (not authenticated)
+            \App\Helpers\ActivityLogger::log('login_attempt', 'Unauthenticated login attempt');
             if ($role === 'staff') {
                 return redirect()->route('staff.login');
             }
             return redirect()->route('login');
         }
+    // Log successful login
+    \App\Helpers\ActivityLogger::log('login', 'User logged in');
 
         $authUserRole = Auth::user()->role;
 

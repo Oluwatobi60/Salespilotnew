@@ -9,13 +9,70 @@ use App\Models\StandardItem;
 use App\Models\ProductVariant;
 use App\Models\VariantItem;
 use App\Models\Category;
+use Carbon\Carbon;
 
 class SalesbyItemController extends Controller
 {
-     public function sales_by_item()
+     public function sales_by_item(Request $request)
     {
+        $query = CartItem::where('status', 'completed');
 
-        $rawItems = CartItem::where('status', 'completed')
+        // Apply date range filter
+        if ($request->filled('date_range')) {
+            $dateRange = $request->date_range;
+            $startDate = null;
+            $endDate = null;
+
+            switch ($dateRange) {
+                case 'today':
+                    $startDate = Carbon::today();
+                    $endDate = Carbon::today()->endOfDay();
+                    break;
+                case 'yesterday':
+                    $startDate = Carbon::yesterday();
+                    $endDate = Carbon::yesterday()->endOfDay();
+                    break;
+                case 'last7':
+                    $startDate = Carbon::today()->subDays(6);
+                    $endDate = Carbon::today()->endOfDay();
+                    break;
+                case 'last30':
+                    $startDate = Carbon::today()->subDays(29);
+                    $endDate = Carbon::today()->endOfDay();
+                    break;
+                case 'thisMonth':
+                    $startDate = Carbon::now()->startOfMonth();
+                    $endDate = Carbon::now()->endOfMonth();
+                    break;
+                case 'lastMonth':
+                    $startDate = Carbon::now()->subMonth()->startOfMonth();
+                    $endDate = Carbon::now()->subMonth()->endOfMonth();
+                    break;
+                case 'custom':
+                    if ($request->filled('start_date')) {
+                        $startDate = Carbon::parse($request->start_date)->startOfDay();
+                    }
+                    if ($request->filled('end_date')) {
+                        $endDate = Carbon::parse($request->end_date)->endOfDay();
+                    }
+                    break;
+            }
+
+            if ($startDate) {
+                $query->where('created_at', '>=', $startDate);
+            }
+            if ($endDate) {
+                $query->where('created_at', '<=', $endDate);
+            }
+        }
+
+        // Apply item filter
+        if ($request->filled('item_id') && $request->filled('item_type')) {
+            $query->where('item_id', $request->item_id)
+                  ->where('item_type', $request->item_type);
+        }
+
+        $rawItems = $query
             ->select('item_id', 'item_type', 'item_name')
             ->selectRaw('SUM(quantity) as total_quantity_sold')
             ->selectRaw('SUM(subtotal) as gross_sales')
@@ -27,7 +84,7 @@ class SalesbyItemController extends Controller
             ->get();
 
         // Enrich with cost price, gross profit, margin, category, sku
-            $salesbyitem = $rawItems->map(function($item) {
+            $salesbyitem = $rawItems->map(function($item) use ($request) {
                 $costPrice = 0;
                 $category = '';
                 $category_name = '';
@@ -41,6 +98,7 @@ class SalesbyItemController extends Controller
                     'total_quantity_sold' => $item->total_quantity_sold ?? 0,
                     'gross_sales' => $item->gross_sales ?? 0,
                     'total_discount' => $item->total_discount ?? 0,
+                    'gross_sales_after_discount' => ($item->gross_sales ?? 0) - ($item->total_discount ?? 0),
                     'total_sales' => $item->total_sales ?? 0,
                     'transactions_count' => $item->transactions_count ?? 0,
                 ];
@@ -97,8 +155,9 @@ class SalesbyItemController extends Controller
                 }
                 // Calculate total cost, gross profit, and margin
                 $totalCost = $costPrice * $item->total_quantity_sold;
-                $grossProfit = $item->gross_sales - $totalCost;
-                $margin = $item->gross_sales > 0 ? ($grossProfit / $item->gross_sales) * 100 : 0;
+                $grossSalesAfterDiscount = ($item->gross_sales ?? 0) - ($item->total_discount ?? 0);
+                $grossProfit = $grossSalesAfterDiscount - $totalCost;
+                $margin = $grossSalesAfterDiscount > 0 ? ($grossProfit / $grossSalesAfterDiscount) * 100 : 0;
                 return (object) array_merge($base, [
                     'cost_price' => round($costPrice, 2),
                     'total_cost' => round($totalCost, 2),
@@ -109,6 +168,13 @@ class SalesbyItemController extends Controller
                     'sku' => $sku
                 ]);
             });
+
+        // Apply category filter after enrichment
+        if ($request->filled('category_id')) {
+            $salesbyitem = $salesbyitem->filter(function($item) use ($request) {
+                return $item->category == $request->category_id;
+            });
+        }
 
         // Calculate totals
         $totals = [
@@ -133,6 +199,66 @@ class SalesbyItemController extends Controller
             'salesbyitem' => $salesbyitemPaginated,
             'totals' => $totals
         ]);
+    }
+
+    public function getCategoriesList()
+    {
+        // Get unique categories from items that have been sold
+        $categoryIds = CartItem::where('status', 'completed')
+            ->whereNotNull('item_id')
+            ->get()
+            ->map(function($cartItem) {
+                if ($cartItem->item_type === 'standard') {
+                    $std = StandardItem::find($cartItem->item_id);
+                    return $std ? $std->category : null;
+                } elseif ($cartItem->item_type === 'variant') {
+                    $prodVar = ProductVariant::find($cartItem->item_id);
+                    if ($prodVar && $prodVar->variantItem) {
+                        return $prodVar->variantItem->category;
+                    }
+                    $var = VariantItem::find($cartItem->item_id);
+                    return $var ? $var->category : null;
+                }
+                return null;
+            })
+            ->filter(function($catId) {
+                return !empty($catId) && is_numeric($catId);
+            })
+            ->unique()
+            ->values();
+
+        // Get category names
+        $categories = Category::whereIn('id', $categoryIds)
+            ->select('id', 'category_name')
+            ->orderBy('category_name')
+            ->get()
+            ->map(function($cat) {
+                return [
+                    'id' => $cat->id,
+                    'name' => $cat->category_name
+                ];
+            });
+
+        return response()->json($categories);
+    }
+
+    public function getItemsList()
+    {
+        // Get unique items from completed sales
+        $items = CartItem::where('status', 'completed')
+            ->select('item_id', 'item_type', 'item_name')
+            ->groupBy('item_id', 'item_type', 'item_name')
+            ->orderBy('item_name')
+            ->get()
+            ->map(function($item) {
+                return [
+                    'id' => $item->item_id,
+                    'type' => $item->item_type,
+                    'name' => $item->item_name
+                ];
+            });
+
+        return response()->json($items);
     }
 
 }

@@ -28,6 +28,9 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        // Log user login activity
+        \App\Helpers\ActivityLogger::log('login', 'User logged in via AuthenticatedSessionController');
+
         // Get the authenticated user's role
         $authUserRole = Auth::user()->role;
 
@@ -38,10 +41,10 @@ class AuthenticatedSessionController extends Controller
         } elseif($authUserRole === 'businessowner'){
             return redirect()->intended(route('businessdashboard', absolute: false));
         } elseif($authUserRole === 'staff'){
-            return redirect()->intended(route('staffs', absolute: false));
-        } else {
             return redirect()->intended(route('dashboard', absolute: false));
         }
+
+        return redirect()->intended('/');
     }
 
     /**
