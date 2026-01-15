@@ -207,15 +207,19 @@
 		.item-details-panel {
 		  position: fixed;
 		  top: 0;
-		  right: -500px;
+		  right: -600px;
 		  width: 500px;
 		  height: 100vh;
 		  z-index: 1050;
-		  transition: right 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+		  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+		  opacity: 0;
+		  visibility: hidden;
 		}
 
 		.item-details-panel.active {
 		  right: 0;
+		  opacity: 1;
+		  visibility: visible;
 		}
 
 		.panel-overlay {
