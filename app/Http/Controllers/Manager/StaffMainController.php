@@ -16,7 +16,7 @@ class StaffMainController extends Controller
         try {
             // Validate the incoming request data
             $validatedData = $request->validate([
-                'staff_id' => 'required|string|unique:staffs,staff_id',
+                'staff_id' => 'required|string|unique:staffs,staffsid',
                 'fullname' => 'required|string|max:255',
                 'username' => 'required|string|max:255|unique:staffs,username',
                 'email' => 'required|string|email|max:255|unique:staffs,email',
@@ -38,6 +38,10 @@ class StaffMainController extends Controller
 
             // Hash the password
             $validatedData['password'] = Hash::make($validatedData['password']);
+
+            // Map staff_id to staffsid for database
+            $validatedData['staffsid'] = $validatedData['staff_id'];
+            unset($validatedData['staff_id']);
 
             // Handle file upload
             if($request->hasFile('passport_photo')) {
@@ -103,7 +107,7 @@ class StaffMainController extends Controller
 
             // Validate the incoming request data
             $validatedData = $request->validate([
-                'staff_id' => 'required|string|unique:staffs,staff_id,'.$staff->id,
+                'staff_id' => 'required|string|unique:staffs,staffsid,'.$staff->id,
                 'fullname' => 'required|string|max:255',
                 'username' => 'required|string|max:255|unique:staffs,username,'.$staff->id,
                 'email' => 'required|string|email|max:255|unique:staffs,email,'.$staff->id,
@@ -128,6 +132,12 @@ class StaffMainController extends Controller
                 $validatedData['password'] = Hash::make($validatedData['password']);
             } else {
                 unset($validatedData['password']);
+            }
+
+            // Map staff_id to staffsid for database
+            if (isset($validatedData['staff_id'])) {
+                $validatedData['staffsid'] = $validatedData['staff_id'];
+                unset($validatedData['staff_id']);
             }
 
             // Handle file upload
