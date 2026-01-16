@@ -10,28 +10,94 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      
-      - name: Setup SSH
-        uses: webfactory/ssh-agent@v0.5.4
+
+      - name: Deploy with Backup
+        uses: appleboy/ssh-action@v0.1.5
         with:
-          ssh-private-key: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
-      
-      - name: Show SSH key status
-        run: ssh-add -l || echo "No SSH keys added"
-      
-      - name: Deploy to VPS
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+          port: 22
+          script: |
+            echo "🚀 Automated Deployment Process"
+            echo "================================"
+            
+            cd /opt/salespilot
+            
+            # Step 1: Backup
+            echo "📦 Step 1: Creating backup..."
+            if [ -f "backup_enhanced.sh" ]; then
+                ./backup_enhanced.sh
+            elif [ -f "backup.sh" ]; then
+                ./backup.sh
+            else
+                echo "⚠️  Creating basic backup..."
+                BACKUP_DIR="/backup"
+                mkdir -p $BACKUP_DIR
+                TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+                docker exec salespilot-mysql mysqldump -u root -pOluwaTobi60 --all-databases > $BACKUP_DIR/mysql_backup_$TIMESTAMP.sql && \
+                gzip $BACKUP_DIR/mysql_backup_$TIMESTAMP.sql && \
+                echo "✅ Basic backup created"
+            fi
+            
+            # Step 2: Pull code
+            echo "📥 Step 2: Pulling latest code..."
+            git pull origin master
+            
+            # Step 3: Deploy
+            echo "🛑 Step 3: Stopping old containers..."
+            docker-compose down
+            
+            echo "🚀 Step 4: Starting new containers..."
+            docker-compose up -d --build
+            
+            # Step 4: Verify
+            echo "⏳ Step 5: Waiting for startup..."
+            sleep 40
+            
+            echo "📊 Step 6: Verifying deployment..."
+            echo ""
+            echo "🐳 Container Status:"
+            docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+            
+            echo ""
+            echo "✅ Deployment process completed!"
+            
+            # Show status
+            if [ -f "status.sh" ]; then
+                echo ""
+                ./status.sh
+            fi
+            
+      - name: Verify Application
         run: |
-          # Debug output (secrets are masked in logs)
-          echo "Deploying to ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}"
+          echo "🌐 Verifying application access..."
+          MAX_RETRIES=6
+          RETRY_DELAY=10
           
-          # The actual deploy command
+          for i in $(seq 1 $MAX_RETRIES); do
+            echo "Attempt $i/$MAX_RETRIES to connect..."
+            if curl -s -f --max-time 30 http://${{ secrets.VPS_HOST }}:8787 > /dev/null; then
+              echo "✅ SUCCESS: Application is accessible at http://${{ secrets.VPS_HOST }}:8787"
+              echo ""
+              echo "📋 Deployment Summary:"
+              echo "• ✅ Backup created before deployment"
+              echo "• ✅ Code updated from GitHub"
+              echo "• ✅ Docker containers restarted"
+              echo "• ✅ Application verified as accessible"
+              exit 0
+            else
+              echo "Attempt $i failed, retrying in $RETRY_DELAY seconds..."
+              sleep $RETRY_DELAY
+            fi
+          done
+          
+          echo "❌ Application verification failed after $MAX_RETRIES attempts"
+          echo "Checking error logs..."
+          
+          # Get error logs via SSH
           ssh -o StrictHostKeyChecking=no \
-              -o ConnectTimeout=30 \
+              -i <(echo "${{ secrets.VPS_SSH_PRIVATE_KEY }}") \
               "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" \
-              "cd /opt/salespilot && ./deploy.sh"
-      
-      - name: Verify deployment
-        run: |
-          sleep 20
-          echo "Checking if application is up..."
-          curl -s -f http://${{ secrets.VPS_HOST }}:8787 && echo "✅ Application is running" || echo "⚠️  Application check failed"
+              "cd /opt/salespilot && docker-compose logs --tail=100"
+          exit 1
