@@ -219,8 +219,8 @@ Route::middleware(['auth:staff'])->prefix('staff')->group(function () {
 
 
     Route::controller(StaffProfileController::class)->group(function () {
-        Route::get('/staff/profile', 'staff_profile')->name('staff.profile');
-
+        Route::get('/profile', 'staff_profile')->name('staff.profile');
+        Route::post('/update-password', 'updatePassword')->name('staff.update.password');
     });
 
      Route::controller(StaffAddDiscountController::class)->group(function () {
