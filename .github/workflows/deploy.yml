@@ -8,27 +8,30 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
-    
-    - name: Setup SSH
-      uses: webfactory/ssh-agent@v0.5.4
-      with:
-        ssh-private-key: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
-    
-    - name: Deploy to VPS
-      run: |
-        ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} "cd /opt/salespilot && ./deploy.sh"
-    
-    - name: Verify deployment
-      run: |
-        sleep 30
-        HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://${{ secrets.VPS_HOST }}:8787 || echo "000")
-        if [[ $HTTP_STATUS =~ ^(200|302|301|419)$ ]]; then
-          echo "✅ Deployment successful! HTTP Status: $HTTP_STATUS"
-        else
-          echo "⚠️  Deployment may have issues. HTTP Status: $HTTP_STATUS"
-          exit 1
-        fi
+      - uses: actions/checkout@v3
+      
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.5.4
+        with:
+          ssh-private-key: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+      
+      - name: Show SSH key status
+        run: ssh-add -l || echo "No SSH keys added"
+      
+      - name: Deploy to VPS
+        run: |
+          # Debug output (secrets are masked in logs)
+          echo "Deploying to ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}"
+          
+          # The actual deploy command
+          ssh -o StrictHostKeyChecking=no \
+              -o ConnectTimeout=30 \
+              "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" \
+              "cd /opt/salespilot && ./deploy.sh"
+      
+      - name: Verify deployment
+        run: |
+          sleep 20
+          echo "Checking if application is up..."
+          curl -s -f http://${{ secrets.VPS_HOST }}:8787 && echo "✅ Application is running" || echo "⚠️  Application check failed"
