@@ -25,8 +25,17 @@ git pull origin master
 
 echo ""
 echo "3. Deploying containers..."
-# Use -v to remove volumes, --remove-orphans to clean up
-docker-compose down --remove-orphans
+
+# Try to stop and remove containers, but don't fail if network can't be removed
+echo "Stopping containers..."
+docker-compose stop || echo "Warning: Some containers already stopped"
+
+echo "Removing containers..."
+docker-compose rm -f || echo "Warning: Could not remove some containers"
+
+# Try to remove network, but don't fail if it's in use
+echo "Removing network (if possible)..."
+docker network rm salespilot_salespilot-network 2>/dev/null || echo "Network in use by monitoring containers, skipping..."
 
 echo ""
 echo "4. Building and starting..."
