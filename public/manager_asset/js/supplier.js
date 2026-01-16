@@ -1,4 +1,4 @@
-CustomerCartdocument.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function() {
 
   // Side panel controls for adding supplier
   var openAddSupplierBtn = document.getElementById('openAddSupplierBtn');
