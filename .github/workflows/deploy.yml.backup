@@ -1,0 +1,37 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches: [ master ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.5.4
+        with:
+          ssh-private-key: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+      
+      - name: Show SSH key status
+        run: ssh-add -l || echo "No SSH keys added"
+      
+      - name: Deploy to VPS
+        run: |
+          # Debug output (secrets are masked in logs)
+          echo "Deploying to ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}"
+          
+          # The actual deploy command
+          ssh -o StrictHostKeyChecking=no \
+              -o ConnectTimeout=30 \
+              "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" \
+              "cd /opt/salespilot && ./deploy.sh"
+      
+      - name: Verify deployment
+        run: |
+          sleep 20
+          echo "Checking if application is up..."
+          curl -s -f http://${{ secrets.VPS_HOST }}:8787 && echo "✅ Application is running" || echo "⚠️  Application check failed"

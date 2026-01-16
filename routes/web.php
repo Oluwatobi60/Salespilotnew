@@ -5,7 +5,7 @@ use App\Http\Controllers\Manager\AddDiscountController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Manager\AllItemsController;
-use App\Http\Controllers\Manager\CategoryCOntroller;
+use App\Http\Controllers\Manager\CategoryController;
 use App\Http\Controllers\Manager\CustomerController;
 use App\Http\Controllers\Manager\SupplierController;
 use App\Http\Controllers\Manager\StaffMainController;
