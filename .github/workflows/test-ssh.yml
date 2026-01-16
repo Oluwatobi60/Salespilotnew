@@ -1,14 +1,14 @@
 name: Test SSH Connection
 
 on:
-  workflow_dispatch:
+  workflow_dispatch:  # Manual trigger
 
 jobs:
   test-ssh:
     runs-on: ubuntu-latest
     
     steps:
-    - name: Test SSH Connection
+    - name: Check SSH Connection
       uses: appleboy/ssh-action@v0.1.5
       with:
         host: ${{ secrets.VPS_HOST }}
@@ -17,10 +17,16 @@ jobs:
         port: 22
         script: |
           echo "✅ Successfully connected to VPS!"
+          echo "================================"
           echo "Date: $(date)"
           echo "User: $(whoami)"
-          echo "Directory: $(pwd)"
-          echo "Listing files:"
-          ls -la
-          echo "Docker status:"
+          echo "Hostname: $(hostname)"
+          echo "Current directory: $(pwd)"
+          echo ""
+          echo "📁 Listing /opt/salespilot:"
+          ls -la /opt/salespilot/
+          echo ""
+          echo "🐳 Docker containers:"
           docker ps
+          echo ""
+          echo "✅ SSH test completed successfully!"

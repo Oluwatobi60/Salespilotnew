@@ -10,28 +10,43 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      
-      - name: Setup SSH
-        uses: webfactory/ssh-agent@v0.5.4
-        with:
-          ssh-private-key: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
-      
-      - name: Show SSH key status
-        run: ssh-add -l || echo "No SSH keys added"
-      
+
       - name: Deploy to VPS
-        run: |
-          # Debug output (secrets are masked in logs)
-          echo "Deploying to ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}"
-          
-          # The actual deploy command
-          ssh -o StrictHostKeyChecking=no \
-              -o ConnectTimeout=30 \
-              "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" \
-              "cd /opt/salespilot && ./deploy.sh"
-      
-      - name: Verify deployment
-        run: |
-          sleep 20
-          echo "Checking if application is up..."
-          curl -s -f http://${{ secrets.VPS_HOST }}:8787 && echo "✅ Application is running" || echo "⚠️  Application check failed"
+        uses: appleboy/ssh-action@v0.1.5
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+          port: 22
+          script: |
+            echo "🚀 Starting deployment..."
+            echo "================================"
+            
+            # Navigate to application directory
+            cd /opt/salespilot
+            
+            # Pull latest code
+            echo "📥 Pulling latest code..."
+            git pull origin master
+            
+            # Stop and restart containers
+            echo "🛑 Stopping containers..."
+            docker-compose down
+            
+            echo "🚀 Starting containers..."
+            docker-compose up -d --build
+            
+            # Wait for containers to start
+            echo "⏳ Waiting for containers to start..."
+            sleep 30
+            
+            # Check status
+            echo "📊 Checking deployment status..."
+            echo ""
+            echo "🐳 Docker containers:"
+            docker ps
+            echo ""
+            echo "📈 Container logs:"
+            docker-compose logs --tail=20
+            echo ""
+            echo "✅ Deployment completed successfully!"
