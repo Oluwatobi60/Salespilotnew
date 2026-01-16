@@ -68,8 +68,8 @@
       <div class="collapse" id="sales-menu">
         <ul class="nav flex-column sub-menu">
           <li class="nav-item"> <a class="nav-link" href="{{ route('staff.completed_sales') }}">Completed Sales</a></li>
-          <li class="nav-item"> <a class="nav-link" href="pending_sales.php">Pending Sales</a></li>
-          <li class="nav-item"> <a class="nav-link" href="returns.php">Returns</a></li>
+         {{--   <li class="nav-item"> <a class="nav-link" href="pending_sales.php">Pending Sales</a></li>
+          <li class="nav-item"> <a class="nav-link" href="returns.php">Returns</a></li>  --}}
         </ul>
       </div>
     </li>
