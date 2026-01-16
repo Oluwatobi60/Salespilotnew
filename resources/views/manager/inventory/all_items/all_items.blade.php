@@ -3,11 +3,9 @@
 All Items
 @endsection
 @section('manager_layout_content')
-<div class="container-scroller">
 
-    <div class="container-fluid page-body-wrapper">
 
-	    <div class="content-wrapper">
+ <div class="content-wrapper d-flex">
 						<!-- All Items content starts here -->
 
 <!-- Success and Error Messages -->
@@ -289,10 +287,8 @@ All Items
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
 						<!-- End of All Items content -->
-</div>
+
 
 	<!-- Item Details Side Panel -->
         <div class="item-details-panel" id="itemDetailsPanel">
@@ -410,7 +406,7 @@ All Items
             </button>
         </div>
     </div>
-        </div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="{{ asset('manager_asset/js/all_items.js') }}"></script>
