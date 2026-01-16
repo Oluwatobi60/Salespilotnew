@@ -8,96 +8,84 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    
     steps:
-      - uses: actions/checkout@v3
-
-      - name: Deploy with Backup
-        uses: appleboy/ssh-action@v0.1.5
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
-          port: 22
-          script: |
-            echo "🚀 Automated Deployment Process"
-            echo "================================"
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Deploy to VPS
+      uses: appleboy/ssh-action@v0.1.5
+      with:
+        host: ${{ secrets.VPS_HOST }}
+        username: ${{ secrets.VPS_USER }}
+        key: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+        port: 22
+        script_stop: true
+        script: |
+          set -e  # Exit on any error
+          
+          echo "🚀 STARTING DEPLOYMENT"
+          echo "======================"
+          
+          cd /opt/salespilot
+          
+          # Use the deploy script if it exists
+          if [ -f "deploy.sh" ]; then
+            ./deploy.sh
+          else
+            echo "⚠️  Using fallback deployment..."
             
-            cd /opt/salespilot
+            # Backup
+            BACKUP_DIR="/backup"
+            mkdir -p $BACKUP_DIR
+            TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+            docker exec salespilot-mysql mysqldump -u root -pOluwaTobi60 --all-databases > $BACKUP_DIR/backup_$TIMESTAMP.sql
+            gzip $BACKUP_DIR/backup_$TIMESTAMP.sql
             
-            # Step 1: Backup
-            echo "📦 Step 1: Creating backup..."
-            if [ -f "backup_enhanced.sh" ]; then
-                ./backup_enhanced.sh
-            elif [ -f "backup.sh" ]; then
-                ./backup.sh
-            else
-                echo "⚠️  Creating basic backup..."
-                BACKUP_DIR="/backup"
-                mkdir -p $BACKUP_DIR
-                TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-                docker exec salespilot-mysql mysqldump -u root -pOluwaTobi60 --all-databases > $BACKUP_DIR/mysql_backup_$TIMESTAMP.sql && \
-                gzip $BACKUP_DIR/mysql_backup_$TIMESTAMP.sql && \
-                echo "✅ Basic backup created"
-            fi
+            # Pull code
+            git stash
+            git clean -fd
+            git fetch origin
+            git reset --hard origin/master
             
-            # Step 2: Pull code
-            echo "📥 Step 2: Pulling latest code..."
-            git pull origin master
-            
-            # Step 3: Deploy
-            echo "🛑 Step 3: Stopping old containers..."
-            docker-compose down
-            
-            echo "🚀 Step 4: Starting new containers..."
+            # Deploy
+            docker-compose down --remove-orphans
             docker-compose up -d --build
             
-            # Step 4: Verify
-            echo "⏳ Step 5: Waiting for startup..."
-            sleep 40
-            
-            echo "📊 Step 6: Verifying deployment..."
-            echo ""
-            echo "🐳 Container Status:"
-            docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
-            
-            echo ""
-            echo "✅ Deployment process completed!"
-            
-            # Show status
-            if [ -f "status.sh" ]; then
-                echo ""
-                ./status.sh
-            fi
-            
-      - name: Verify Application
-        run: |
-          echo "🌐 Verifying application access..."
-          MAX_RETRIES=6
-          RETRY_DELAY=10
-          
-          for i in $(seq 1 $MAX_RETRIES); do
-            echo "Attempt $i/$MAX_RETRIES to connect..."
-            if curl -s -f --max-time 30 http://${{ secrets.VPS_HOST }}:8787 > /dev/null; then
-              echo "✅ SUCCESS: Application is accessible at http://${{ secrets.VPS_HOST }}:8787"
-              echo ""
-              echo "📋 Deployment Summary:"
-              echo "• ✅ Backup created before deployment"
-              echo "• ✅ Code updated from GitHub"
-              echo "• ✅ Docker containers restarted"
-              echo "• ✅ Application verified as accessible"
-              exit 0
+            # Verify
+            sleep 20
+            if curl -s -f http://localhost:8787 > /dev/null; then
+              echo "✅ Deployment successful"
             else
-              echo "Attempt $i failed, retrying in $RETRY_DELAY seconds..."
-              sleep $RETRY_DELAY
+              echo "❌ Deployment failed"
+              exit 1
             fi
-          done
+          fi
           
-          echo "❌ Application verification failed after $MAX_RETRIES attempts"
-          echo "Checking error logs..."
+          echo ""
+          echo "🎉 DEPLOYMENT COMPLETE"
+          echo "Version deployed: $(git log --oneline -1)"
           
-          # Get error logs via SSH
-          ssh -o StrictHostKeyChecking=no \
-              -i <(echo "${{ secrets.VPS_SSH_PRIVATE_KEY }}") \
-              "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" \
-              "cd /opt/salespilot && docker-compose logs --tail=100"
-          exit 1
+    - name: Verify Remote Access
+      run: |
+        echo "🌐 Verifying application is publicly accessible..."
+        sleep 25
+        
+        for i in {1..5}; do
+          echo "Attempt $i/5..."
+          if curl -s -f --max-time 30 http://${{ secrets.VPS_HOST }}:8787 > /dev/null; then
+            echo "✅ SUCCESS: Application is live at http://${{ secrets.VPS_HOST }}:8787"
+            echo ""
+            echo "📋 Deployment Summary:"
+            echo "• Code: $(curl -s http://${{ secrets.VPS_HOST }}:8787 | grep -o 'Version:.*' | head -1 || echo 'Version info not found')"
+            echo "• Status: Running"
+            echo "• Port: 8787"
+            exit 0
+          else
+            echo "Attempt $i failed, retrying in 10s..."
+            sleep 10
+          fi
+        done
+        
+        echo "❌ Application not accessible after deployment"
+        exit 1
