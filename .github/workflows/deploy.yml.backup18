@@ -1,0 +1,112 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches: [ master ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Deploy to VPS
+      uses: appleboy/ssh-action@v0.1.5
+      with:
+        host: ${{ secrets.VPS_HOST }}
+        username: ${{ secrets.VPS_USER }}
+        key: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+        port: 22
+        script_stop: true
+        script: |
+          echo "🚀 DEPLOYMENT STARTED"
+          echo "===================="
+          
+          cd /opt/salespilot
+          
+          echo "1. Checking container status..."
+          # Start containers if they're not running
+          if ! docker-compose ps 2>/dev/null | grep -q "Up"; then
+            echo "Starting containers first..."
+            docker-compose up -d
+            sleep 10
+          fi
+          
+          echo ""
+          echo "2. Backup..."
+          if [ -f "backup_enhanced.sh" ]; then
+            ./backup_enhanced.sh
+          else
+            echo "Quick backup (if MySQL is running)..."
+            BACKUP_DIR="/backup"
+            mkdir -p $BACKUP_DIR
+            TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+            if docker ps | grep -q "salespilot-mysql"; then
+              docker exec salespilot-mysql mysqldump -u root -pOluwaTobi60 --all-databases > $BACKUP_DIR/backup_$TIMESTAMP.sql 2>/dev/null && \
+              gzip $BACKUP_DIR/backup_$TIMESTAMP.sql || echo "Backup failed"
+            else
+              echo "MySQL not running, skipping backup"
+            fi
+          fi
+          
+          echo ""
+          echo "3. Update code..."
+          git stash 2>/dev/null || true
+          git clean -fd
+          git fetch origin
+          git reset --hard origin/master
+          
+          echo ""
+          echo "4. Deploy containers..."
+          
+          # Try gentle restart first
+          echo "Restarting containers..."
+          docker-compose restart 2>/dev/null || {
+            echo "Restart failed, doing stop/start..."
+            docker-compose stop 2>/dev/null
+            docker-compose up -d --build
+          }
+          
+          echo ""
+          echo "5. Verify..."
+          sleep 20
+          
+          echo "Container status:"
+          docker-compose ps 2>/dev/null || docker ps | grep salespilot
+          
+          echo ""
+          echo "Application check:"
+          if curl -s -f --max-time 15 http://localhost:8787 > /dev/null; then
+            echo "✅ Application is running"
+            echo ""
+            echo "🎉 DEPLOYMENT SUCCESSFUL"
+            echo "Version: $(git log --oneline -1)"
+          else
+            echo "❌ Application check failed"
+            echo "Showing logs..."
+            docker-compose logs --tail=30 2>/dev/null || echo "Cannot get logs"
+            exit 1
+          fi
+          
+    - name: Verify Remote
+      run: |
+        echo "🌐 Final verification..."
+        sleep 30
+        
+        for i in {1..3}; do
+          echo "Check $i/3..."
+          if curl -s -f --max-time 30 http://${{ secrets.VPS_HOST }}:8787 > /dev/null; then
+            echo "✅ SUCCESS: Application deployed"
+            echo "URL: http://${{ secrets.VPS_HOST }}:8787"
+            exit 0
+          else
+            echo "Check $i failed, waiting..."
+            sleep 10
+          fi
+        done
+        
+        echo "❌ Application not accessible"
+        exit 1
