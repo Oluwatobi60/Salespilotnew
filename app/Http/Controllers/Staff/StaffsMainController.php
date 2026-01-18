@@ -421,11 +421,17 @@ class StaffsMainController extends Controller
         // Create new customer
         $customer = AddCustomer::create($validatedData);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Customer added successfully',
-            'customer' => $customer,
-        ]);
+        // Check if request expects JSON (AJAX request)
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Customer added successfully',
+                'customer' => $customer,
+            ]);
+        }
+
+        // Regular form submission - redirect with flash message
+        return redirect()->back()->with('success', 'Customer added successfully!');
     }
 
     public function edit_customer($id)

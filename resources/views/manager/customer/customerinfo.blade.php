@@ -6,6 +6,49 @@ Customer Information
 <link rel="stylesheet" href="{{ asset('manager_asset/css/customer_style.css') }}">
    <div class="content-wrapper">
             <!-- Customers content starts here -->
+
+            @if(session('success'))
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success!',
+                            text: '{{ session('success') }}',
+                            timer: 3000,
+                            showConfirmButton: false,
+                            toast: true,
+                            position: 'top-end'
+                        });
+                    });
+                </script>
+            @endif
+
+            @if(session('error'))
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error!',
+                            text: '{{ session('error') }}',
+                            confirmButtonColor: '#d33'
+                        });
+                    });
+                </script>
+            @endif
+
+            @if($errors->any())
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Validation Error!',
+                            html: '<ul style="text-align: left;">@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>',
+                            confirmButtonColor: '#d33'
+                        });
+                    });
+                </script>
+            @endif
+
             <div class="row">
               <div class="col-12 grid-margin stretch-card">
                 <div class="card card-rounded">

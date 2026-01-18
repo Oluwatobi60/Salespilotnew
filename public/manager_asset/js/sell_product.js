@@ -467,23 +467,39 @@ document.addEventListener('DOMContentLoaded', function() {
       });
 
       // Save New Customer Button
-      saveNewCustomerBtn.addEventListener('click', function() {
+      saveNewCustomerBtn.addEventListener('click', function(e) {
+        e.preventDefault(); // Prevent any default behavior
+
+        // Prevent double submission
+        if (this.disabled) return;
+
         const name = document.getElementById('newCustomerName').value.trim();
         const phone = document.getElementById('newCustomerPhone').value.trim();
         const email = document.getElementById('newCustomerEmail').value.trim();
         const address = document.getElementById('newCustomerAddress').value.trim();
 
         if (!name) {
-          alert('Please enter customer name');
+          Swal.fire({
+            icon: 'warning',
+            title: 'Missing Information',
+            text: 'Please enter customer name',
+            confirmButtonColor: '#3085d6'
+          });
           return;
         }
+
+        // Disable button to prevent double submission
+        this.disabled = true;
+        const originalText = this.innerHTML;
+        this.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Saving...';
 
         // Send AJAX request to save customer to database
         fetch('/manager/add_customer', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'Accept': 'application/json'
           },
           body: JSON.stringify({
             customer_name: name,
@@ -492,8 +508,22 @@ document.addEventListener('DOMContentLoaded', function() {
             address: address
           })
         })
-        .then(response => response.json())
+        .then(response => {
+          console.log('Response status:', response.status);
+          return response.json().then(data => {
+            if (!response.ok) {
+              // Handle validation errors (422) or other errors
+              if (response.status === 422 && data.errors) {
+                const errorMessages = Object.values(data.errors).flat().join('\n');
+                throw new Error(errorMessages);
+              }
+              throw new Error(data.message || 'Network response was not ok');
+            }
+            return data;
+          });
+        })
         .then(data => {
+          console.log('Response data:', data);
           if (data.success) {
             // Add to dropdown list
             allCustomers.push({
@@ -522,14 +552,37 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('customerList').style.display = 'block';
             selectCustomerBtn.style.display = 'block';
 
-            alert('Customer added successfully!');
+            Swal.fire({
+              icon: 'success',
+              title: 'Success!',
+              text: 'Customer added successfully!',
+              timer: 2000,
+              showConfirmButton: false,
+              toast: true,
+              position: 'top-end'
+            });
           } else {
-            alert('Failed to add customer: ' + (data.message || 'Unknown error'));
+            Swal.fire({
+              icon: 'error',
+              title: 'Failed!',
+              text: 'Failed to add customer: ' + (data.message || 'Unknown error'),
+              confirmButtonColor: '#d33'
+            });
           }
         })
         .catch(error => {
           console.error('Error:', error);
-          alert('An error occurred while adding the customer. Please try again.');
+          Swal.fire({
+            icon: 'error',
+            title: 'Error!',
+            text: 'An error occurred while adding the customer. Please try again.',
+            confirmButtonColor: '#d33'
+          });
+        })
+        .finally(() => {
+          // Re-enable button
+          this.disabled = false;
+          this.innerHTML = originalText;
         });
       });
 
