@@ -87,8 +87,13 @@ Suppliers Page
                             title="Edit Supplier">
                       <i class="bi bi-pencil" style="font-size: 0.875rem;"></i>
                     </button>
-                    <!-- Future Delete Button (commented out) -->
-
+                    <button class="btn btn-sm btn-outline-danger delete-btn"
+                            style="padding: 0.25rem 0.5rem; line-height: 1; min-width: 32px; height: 28px;"
+                            data-id="{{ $supplier->id }}"
+                            data-name="{{ $supplier->name }}"
+                            title="Delete Supplier">
+                      <i class="bi bi-trash" style="font-size: 0.875rem;"></i>
+                    </button>
                   </div>
                 </td>
               </tr>
@@ -177,6 +182,60 @@ Suppliers Page
           </button>
           <button type="submit" form="addSupplierForm" class="btn btn-primary">
             <i class="bi bi-person-plus me-1"></i>Add Supplier
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit Supplier Side Panel -->
+    <div class="side-panel-overlay" id="editSidePanelOverlay"></div>
+    <div class="side-panel" id="editSupplierPanel">
+      <div class="side-panel-content">
+        <div class="side-panel-header">
+          <h5 class="side-panel-title">
+            <i class="bi bi-pencil-square me-2"></i>Edit Supplier
+          </h5>
+          <button type="button" class="btn-close" id="closeEditSidePanel" aria-label="Close"></button>
+        </div>
+        <div class="side-panel-body">
+          <form id="editSupplierForm" method="POST">
+            @csrf
+            @method('PUT')
+            <input type="hidden" id="editSupplierId" name="id">
+            <div class="row mb-3">
+              <div class="col-md-6 mb-2">
+                <label for="edit_supplier_name" class="form-label">Supplier/Company Name <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="edit_supplier_name" name="name" placeholder="Enter supplier or company name" required>
+              </div>
+              <div class="col-md-6 mb-2">
+                <label for="edit_contact_person" class="form-label">Contact Person</label>
+                <input type="text" class="form-control" id="edit_contact_person" name="contact_person" placeholder="Enter contact person">
+              </div>
+            </div>
+            <div class="row mb-3">
+              <div class="col-md-6 mb-2">
+                <label for="edit_email" class="form-label">Email Address <span class="text-danger">*</span></label>
+                <input type="email" class="form-control" id="edit_email" name="email" placeholder="Enter email address" required>
+              </div>
+              <div class="col-md-6 mb-2">
+                <label for="edit_phone" class="form-label">Phone Number</label>
+                <input type="tel" class="form-control" id="edit_phone" name="phone" placeholder="Enter phone number">
+              </div>
+            </div>
+            <div class="row mb-3">
+              <div class="col-md-12 mb-2">
+                <label for="edit_address" class="form-label">Address</label>
+                <input type="text" class="form-control" id="edit_address" name="address" placeholder="Enter address">
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="side-panel-footer">
+          <button type="button" class="btn btn-secondary" id="cancelEditSupplier">
+            <i class="bi bi-x-circle me-1"></i>Cancel
+          </button>
+          <button type="submit" form="editSupplierForm" class="btn btn-primary">
+            <i class="bi bi-check-circle me-1"></i>Update Supplier
           </button>
         </div>
       </div>

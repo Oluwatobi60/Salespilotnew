@@ -146,6 +146,7 @@ Route::middleware(['auth', 'verified','rolemanager:manager'])->group(function ()
          Route::post('/supplier/create', 'create_supplier')->name('supplier.create');
          Route::get('/edit_supplier/{id}', 'edit_supplier')->name('supplier.edit');
          Route::put('/update_supplier/{id}', 'update_supplier')->name('supplier.update');
+         Route::delete('/delete_supplier/{id}', 'delete_supplier')->name('supplier.delete');
     });
 
     Route::controller(SellProductController::class)->group(function () {

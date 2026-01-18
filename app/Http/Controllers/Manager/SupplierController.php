@@ -70,6 +70,22 @@ class SupplierController extends Controller
         // Update the supplier
         $supplier->update($validatedData);
 
+        // Check if the request expects JSON (AJAX request)
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Supplier updated successfully',
+                'supplier' => [
+                    'id' => $supplier->id,
+                    'name' => $supplier->name,
+                    'email' => $supplier->email,
+                    'contact_person' => $supplier->contact_person,
+                    'phone' => $supplier->phone,
+                    'address' => $supplier->address
+                ]
+            ], 200);
+        }
+
         // Redirect back with success message
         return redirect()->route('manager.suppliers')->with('success', 'Supplier updated successfully.');
     }
@@ -79,6 +95,14 @@ class SupplierController extends Controller
     {
         $supplier = Supplier::findOrFail($id);
         $supplier->delete();
+
+        // Check if the request expects JSON (AJAX request)
+        if (request()->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Supplier deleted successfully'
+            ], 200);
+        }
 
         // Redirect back with success message
         return redirect()->route('manager.suppliers')->with('success', 'Supplier deleted successfully.');
