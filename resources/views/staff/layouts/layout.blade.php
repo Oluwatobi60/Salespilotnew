@@ -152,6 +152,9 @@
     <!-- Bootstrap JavaScript Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
+    <!-- SweetAlert2 JS - Load globally for all pages -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <!-- Include Sidebar Scripts -->
     <script src="{{ asset('manager_asset/js/sidebar_scripts.js') }}"></script>
 

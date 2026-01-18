@@ -3,12 +3,10 @@
 Sell Product
 @endsection
 
-@push('styles')
+@section('manager_layout_content')
+
 <!-- SweetAlert2 CSS -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
-@endpush
-
-@section('manager_layout_content')
 
  <div class="container-scroller">
 
@@ -488,8 +486,5 @@ Sell Product
 
 
 <script src="{{ asset('manager_asset/js/sell_product.js') }}"></script>
-
-<!-- SweetAlert2 JS -->
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 @endsection

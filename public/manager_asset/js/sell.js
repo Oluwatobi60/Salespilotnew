@@ -331,19 +331,20 @@
         .then(response => {
           console.log('Response status:', response.status);
           return response.json().then(data => {
+            console.log('Response data:', data);
             if (!response.ok) {
               // Handle validation errors (422) or other errors
               if (response.status === 422 && data.errors) {
-                const errorMessages = Object.values(data.errors).flat().join('\n');
-                throw new Error(errorMessages);
+                const errorMessages = Object.values(data.errors).flat().join('<br>');
+                return Promise.reject({ isValidation: true, message: errorMessages });
               }
-              throw new Error(data.message || 'Network response was not ok');
+              return Promise.reject({ isValidation: false, message: data.message || 'Network response was not ok' });
             }
             return data;
           });
         })
         .then(data => {
-          console.log('Response data:', data);
+          console.log('Success data:', data);
           if (data.success) {
             // Add to dropdown list
             allCustomers.push({
@@ -391,13 +392,24 @@
           }
         })
         .catch(error => {
-          console.error('Error:', error);
-          Swal.fire({
-            icon: 'error',
-            title: 'Error!',
-            text: 'An error occurred while adding the customer. Please try again.',
-            confirmButtonColor: '#d33'
-          });
+          console.error('Caught error:', error);
+
+          // Handle validation errors differently
+          if (error.isValidation) {
+            Swal.fire({
+              icon: 'warning',
+              title: 'Validation Error',
+              html: error.message,
+              confirmButtonColor: '#f39c12'
+            });
+          } else {
+            Swal.fire({
+              icon: 'error',
+              title: 'Error!',
+              text: error.message || 'An error occurred while adding the customer. Please try again.',
+              confirmButtonColor: '#d33'
+            });
+          }
         })
         .finally(() => {
           // Re-enable button
