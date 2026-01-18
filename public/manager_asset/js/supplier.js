@@ -132,12 +132,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
       const formData = new FormData(this);
       const supplierId = document.getElementById('editSupplierId').value;
-      const submitButton = this.querySelector('button[type="submit"]');
-      const originalButtonText = submitButton.innerHTML;
+      // Find the submit button by form attribute since it's outside the form
+      const submitButton = document.querySelector('button[form="editSupplierForm"][type="submit"]');
+      const originalButtonText = submitButton ? submitButton.innerHTML : '';
 
       // Disable submit button
-      submitButton.disabled = true;
-      submitButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Updating...';
+      if (submitButton) {
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Updating...';
+      }
 
       fetch('/manager/update_supplier/' + supplierId, {
         method: 'POST',
@@ -179,8 +182,10 @@ document.addEventListener('DOMContentLoaded', function() {
       })
       .finally(() => {
         // Re-enable submit button
-        submitButton.disabled = false;
-        submitButton.innerHTML = originalButtonText;
+        if (submitButton) {
+          submitButton.disabled = false;
+          submitButton.innerHTML = originalButtonText;
+        }
       });
     });
   }
