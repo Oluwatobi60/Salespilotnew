@@ -39,6 +39,17 @@ class CategoryController extends Controller
         $category = Category::create($validatedata);
         \App\Helpers\ActivityLogger::log('create_category', 'Created category: ' . $category->category_name);
 
+        // Check if the request expects JSON (AJAX request)
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Category created successfully',
+                'category' => [
+                    'id' => $category->id,
+                    'category_name' => $category->category_name
+                ]
+            ], 201);
+        }
 
         // Redirect back with success message
         return redirect()->route('all_categories')->with('success', 'Category created successfully.');

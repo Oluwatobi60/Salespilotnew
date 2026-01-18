@@ -1053,3 +1053,201 @@
           toggleText.style.color = '#dc3545';
         }
       });
+
+      // ============================
+      // Add New Category Functionality
+      // ============================
+
+      // Category select change handler
+      const categorySelect = document.getElementById('category');
+      const categoryPanel = document.getElementById('addCategoryPanel');
+      const categoryOverlay = document.getElementById('categoryPanelOverlay');
+      const closeCategoryPanel = document.getElementById('closeCategoryPanel');
+      const cancelCategoryBtn = document.getElementById('cancelCategoryBtn');
+
+      // Function to open category panel
+      function openCategoryPanel() {
+        if (categoryPanel && categoryOverlay) {
+          categoryPanel.classList.add('active');
+          categoryOverlay.classList.add('active');
+          document.body.style.overflow = 'hidden';
+          // Focus on input
+          setTimeout(() => {
+            document.getElementById('newCategoryName')?.focus();
+          }, 300);
+        }
+      }
+
+      // Function to close category panel
+      function closeCategoryPanelFunc() {
+        if (categoryPanel && categoryOverlay) {
+          categoryPanel.classList.remove('active');
+          categoryOverlay.classList.remove('active');
+          document.body.style.overflow = '';
+          // Reset form
+          const form = document.getElementById('addCategoryForm');
+          if (form) {
+            form.reset();
+            document.getElementById('newCategoryName')?.classList.remove('is-invalid');
+            const errorDiv = document.getElementById('categoryNameError');
+            if (errorDiv) errorDiv.textContent = '';
+          }
+        }
+      }
+
+      if (categorySelect) {
+        categorySelect.addEventListener('change', function() {
+          if (this.value === 'add_new_category') {
+            // Reset the select to empty
+            this.value = '';
+            // Show the panel
+            openCategoryPanel();
+          }
+        });
+      }
+
+      // Close panel event listeners
+      if (closeCategoryPanel) {
+        closeCategoryPanel.addEventListener('click', closeCategoryPanelFunc);
+      }
+      if (cancelCategoryBtn) {
+        cancelCategoryBtn.addEventListener('click', closeCategoryPanelFunc);
+      }
+      if (categoryOverlay) {
+        categoryOverlay.addEventListener('click', closeCategoryPanelFunc);
+      }
+
+      // Close on Escape key
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && categoryPanel?.classList.contains('active')) {
+          closeCategoryPanelFunc();
+        }
+      });
+      const addCategoryForm = document.getElementById('addCategoryForm');
+      if (addCategoryForm) {
+        addCategoryForm.addEventListener('submit', function(e) {
+          e.preventDefault();
+
+          const saveCategoryBtn = document.getElementById('saveCategoryBtn');
+          const categoryNameInput = document.getElementById('newCategoryName');
+          const categoryNameError = document.getElementById('categoryNameError');
+
+          // Check if button is already disabled
+          if (saveCategoryBtn.disabled) {
+            return;
+          }
+
+          // Get category name
+          const categoryName = categoryNameInput.value.trim();
+
+          // Basic validation
+          if (!categoryName) {
+            categoryNameInput.classList.add('is-invalid');
+            categoryNameError.textContent = 'Please enter a category name';
+            return;
+          }
+
+          if (categoryName.length < 5) {
+            categoryNameInput.classList.add('is-invalid');
+            categoryNameError.textContent = 'Category name must be at least 5 characters';
+            return;
+          }
+
+          if (categoryName.length > 100) {
+            categoryNameInput.classList.add('is-invalid');
+            categoryNameError.textContent = 'Category name must not exceed 100 characters';
+            return;
+          }
+
+          // Disable button and show loading state
+          saveCategoryBtn.disabled = true;
+          saveCategoryBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
+
+          // Get CSRF token
+          const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+                           || document.querySelector('input[name="_token"]')?.value;
+
+          // Send AJAX request
+          fetch('/manager/category/create', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRF-TOKEN': csrfToken,
+              'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+              category_name: categoryName
+            })
+          })
+          .then(response => {
+            if (!response.ok) {
+              return response.json().then(data => {
+                throw { isValidation: true, errors: data.errors || {}, message: data.message };
+              });
+            }
+            return response.json();
+          })
+          .then(data => {
+            // Success - add the new category to the dropdown
+            const newOption = document.createElement('option');
+            newOption.value = data.category.id;
+            newOption.textContent = data.category.category_name;
+            newOption.selected = true;
+
+            // Insert before the "Add New Category" option
+            const addNewOption = categorySelect.querySelector('option[value="add_new_category"]');
+            categorySelect.insertBefore(newOption, addNewOption);
+
+            // Close panel
+            closeCategoryPanelFunc();
+
+            // Show success message
+            if (typeof Swal !== 'undefined') {
+              Swal.fire({
+                icon: 'success',
+                title: 'Success!',
+                text: 'Category created successfully',
+                timer: 2000,
+                showConfirmButton: false
+              });
+            } else {
+              alert('Category created successfully');
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+
+            if (error.isValidation && error.errors) {
+              // Handle validation errors
+              const errorMessages = Object.values(error.errors).flat();
+              categoryNameInput.classList.add('is-invalid');
+              categoryNameError.textContent = errorMessages[0] || 'Validation error occurred';
+            } else {
+              // Handle general errors
+              if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                  icon: 'error',
+                  title: 'Error',
+                  text: error.message || 'An error occurred while creating the category',
+                });
+              } else {
+                alert('Error: ' + (error.message || 'An error occurred while creating the category'));
+              }
+            }
+          })
+          .finally(() => {
+            // Re-enable button
+            saveCategoryBtn.disabled = false;
+            saveCategoryBtn.innerHTML = '<i class="mdi mdi-content-save"></i> Save Category';
+          });
+        });
+      }
+
+      // Clear validation error when user types
+      const newCategoryNameInput = document.getElementById('newCategoryName');
+      if (newCategoryNameInput) {
+        newCategoryNameInput.addEventListener('input', function() {
+          this.classList.remove('is-invalid');
+          document.getElementById('categoryNameError').textContent = '';
+        });
+      }
