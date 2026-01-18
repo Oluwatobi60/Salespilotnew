@@ -70,8 +70,9 @@ Add Item Variant
                                       {{ $category->category_name }}
                                     </option>
                                   @endforeach
+                                  <option value="add_new_category" style="color: #667eea; font-weight: 600;">+ Add New Category</option>
                                 </select>
-                    <small class="form-text text-muted">Select existing or type new category name</small>
+                    <small class="form-text text-muted">Select existing or add new category</small>
                   </div>
                 </div>
                   <div class="col-md-6">
@@ -84,6 +85,7 @@ Add Item Variant
                                       {{ $supplier->name }}
                                     </option>
                                   @endforeach
+                                  <option value="add_new_supplier" style="color: #28a745; font-weight: 600;">+ Add New Supplier</option>
                                 </select>
 
                               </div>
@@ -1293,8 +1295,371 @@ Add Item Variant
         margin-bottom: 10px;
         background: rgba(102, 126, 234, 0.1);
       }
+
+      /* Category Side Panel Styles */
+      .category-panel-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 9998;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
+
+      .category-panel-overlay.active {
+        display: block;
+        opacity: 1;
+      }
+
+      .category-side-panel {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(0.9);
+        width: 90%;
+        max-width: 420px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        z-index: 9999;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      }
+
+      .category-side-panel.active {
+        opacity: 1;
+        visibility: visible;
+        transform: translate(-50%, -50%) scale(1);
+      }
+
+      .category-panel-header {
+        padding: 25px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-radius: 20px 20px 0 0;
+      }
+
+      .category-panel-header h5 {
+        margin: 0;
+        color: white;
+        font-size: 1.5rem;
+        font-weight: 600;
+      }
+
+      .category-panel-close {
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        color: white;
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 1.5rem;
+        line-height: 1;
+      }
+
+      .category-panel-close:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: rotate(90deg);
+      }
+
+      .category-panel-body {
+        padding: 30px 25px;
+        background: white;
+        border-radius: 0 0 20px 20px;
+      }
+
+      .category-panel-body .form-label {
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 8px;
+      }
+
+      .category-panel-body .form-control {
+        border: 2px solid #e0e0e0;
+        border-radius: 10px;
+        padding: 12px 15px;
+        transition: all 0.3s ease;
+      }
+
+      .category-panel-body .form-control:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+      }
+
+      .category-panel-footer {
+        padding: 0 25px 25px;
+        background: white;
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        border-radius: 0 0 20px 20px;
+      }
+
+      .category-panel-footer .btn {
+        padding: 12px 30px;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+      }
+
+      .category-panel-footer .btn-secondary {
+        background: #6c757d;
+        border: none;
+      }
+
+      .category-panel-footer .btn-secondary:hover {
+        background: #5a6268;
+        transform: translateY(-2px);
+      }
+
+      .category-panel-footer .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+      }
+
+      .category-panel-footer .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+      }
+
+      /* Supplier Side Panel Styles */
+      .supplier-panel-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 99998 !important;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
+
+      .supplier-panel-overlay.active {
+        display: block !important;
+        opacity: 1 !important;
+      }
+
+      .supplier-side-panel {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(0.9);
+        width: 90%;
+        max-width: 500px;
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        z-index: 99999 !important;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      }
+
+      .supplier-side-panel.active {
+        opacity: 1 !important;
+        visibility: visible !important;
+        transform: translate(-50%, -50%) scale(1) !important;
+      }
+
+      .supplier-panel-header {
+        padding: 25px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-radius: 20px 20px 0 0;
+      }
+
+      .supplier-panel-title {
+        margin: 0;
+        color: white;
+        font-size: 1.5rem;
+        font-weight: 600;
+      }
+
+      .supplier-close-btn {
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        color: white;
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 1.5rem;
+        line-height: 1;
+      }
+
+      .supplier-close-btn:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: rotate(90deg);
+      }
+
+      .supplier-panel-body {
+        padding: 30px 25px;
+        background: white;
+        max-height: 60vh;
+        overflow-y: auto;
+      }
+
+      .supplier-panel-body .form-label {
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 8px;
+      }
+
+      .supplier-panel-body .form-control {
+        border: 2px solid #e0e0e0;
+        border-radius: 10px;
+        padding: 12px 15px;
+        transition: all 0.3s ease;
+      }
+
+      .supplier-panel-body .form-control:focus {
+        border-color: #28a745;
+        box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+      }
+
+      .supplier-panel-footer {
+        padding: 20px 25px;
+        background: white;
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        border-radius: 0 0 20px 20px;
+      }
+
+      .supplier-panel-footer .btn {
+        padding: 12px 30px;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+      }
+
+      .supplier-panel-footer .btn-secondary {
+        background: #6c757d;
+        border: none;
+      }
+
+      .supplier-panel-footer .btn-secondary:hover {
+        background: #5a6268;
+        transform: translateY(-2px);
+      }
+
+      .supplier-panel-footer .btn-primary {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        border: none;
+      }
+
+      .supplier-panel-footer .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
+      }
     </style>
 
+    <!-- Category Side Panel -->
+    <div class="category-panel-overlay" id="categoryPanelOverlay"></div>
+    <div class="category-side-panel" id="addCategoryPanel">
+      <div class="category-panel-header">
+        <h5><i class="mdi mdi-tag-plus"></i> Add New Category</h5>
+        <button type="button" class="category-panel-close" id="closeCategoryPanel">&times;</button>
+      </div>
+      <form id="addCategoryForm">
+        @csrf
+        <div class="category-panel-body">
+          <div class="form-group">
+            <label for="newCategoryName" class="form-label">Category Name <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="newCategoryName" name="category_name"
+                   placeholder="Enter category name" required minlength="5" maxlength="100">
+            <div class="invalid-feedback" id="categoryNameError"></div>
+          </div>
+        </div>
+        <div class="category-panel-footer">
+          <button type="button" class="btn btn-secondary" id="cancelCategoryBtn">
+            <i class="mdi mdi-close"></i> Cancel
+          </button>
+          <button type="submit" class="btn btn-primary" id="saveCategoryBtn">
+            <i class="mdi mdi-content-save"></i> Save
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Supplier Side Panel -->
+    <div class="supplier-panel-overlay" id="supplierPanelOverlay"></div>
+    <div class="supplier-side-panel" id="addSupplierPanel">
+      <div class="supplier-panel-header">
+        <h5 class="supplier-panel-title">
+          <i class="mdi mdi-truck"></i> Add New Supplier
+        </h5>
+        <button type="button" class="supplier-close-btn" id="closeSupplierPanel">
+          <i class="mdi mdi-close"></i>
+        </button>
+      </div>
+
+      <div class="supplier-panel-body">
+        <form id="addSupplierForm">
+          @csrf
+          <div class="mb-3">
+            <label for="newSupplierName" class="form-label">Supplier/Company Name <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="newSupplierName" name="name" placeholder="Enter supplier or company name" required autocomplete="off">
+            <div class="invalid-feedback" id="supplierNameError"></div>
+          </div>
+
+          <div class="mb-3">
+            <label for="newSupplierEmail" class="form-label">Email Address <span class="text-danger">*</span></label>
+            <input type="email" class="form-control" id="newSupplierEmail" name="email" placeholder="Enter email address" required autocomplete="off">
+            <div class="invalid-feedback" id="supplierEmailError"></div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label for="newSupplierContact" class="form-label">Contact Person</label>
+              <input type="text" class="form-control" id="newSupplierContact" name="contact_person" placeholder="Enter contact person" autocomplete="off">
+            </div>
+            <div class="col-md-6 mb-3">
+              <label for="newSupplierPhone" class="form-label">Phone Number</label>
+              <input type="tel" class="form-control" id="newSupplierPhone" name="phone" placeholder="Enter phone number" autocomplete="off">
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label for="newSupplierAddress" class="form-label">Address</label>
+            <textarea class="form-control" id="newSupplierAddress" name="address" rows="2" placeholder="Enter supplier address" autocomplete="off"></textarea>
+          </div>
+        </form>
+      </div>
+
+      <div class="supplier-panel-footer">
+        <button type="button" class="btn btn-secondary" id="cancelSupplierBtn">
+          <i class="mdi mdi-close"></i> Cancel
+        </button>
+        <button type="submit" form="addSupplierForm" class="btn btn-primary" id="saveSupplierBtn">
+          <i class="mdi mdi-content-save"></i> Save
+        </button>
+      </div>
+    </div>
 
      <script src="{{ asset('manager_asset/js/add_item_variant.js') }}"></script>
 

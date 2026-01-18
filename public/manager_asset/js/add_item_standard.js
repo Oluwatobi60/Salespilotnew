@@ -1123,6 +1123,8 @@
           closeCategoryPanelFunc();
         }
       });
+
+      // Handle category form submission
       const addCategoryForm = document.getElementById('addCategoryForm');
       if (addCategoryForm) {
         addCategoryForm.addEventListener('submit', function(e) {
@@ -1238,7 +1240,7 @@
           .finally(() => {
             // Re-enable button
             saveCategoryBtn.disabled = false;
-            saveCategoryBtn.innerHTML = '<i class="mdi mdi-content-save"></i> Save Category';
+            saveCategoryBtn.innerHTML = '<i class="mdi mdi-content-save"></i> Save';
           });
         });
       }
@@ -1249,5 +1251,233 @@
         newCategoryNameInput.addEventListener('input', function() {
           this.classList.remove('is-invalid');
           document.getElementById('categoryNameError').textContent = '';
+        });
+      }
+
+      // ============================
+      // Add New Supplier Functionality
+      // ============================
+
+      // Supplier select change handler
+      const supplierSelect = document.getElementById('supplier');
+      const supplierPanel = document.getElementById('addSupplierPanel');
+      const supplierOverlay = document.getElementById('supplierPanelOverlay');
+      const closeSupplierPanel = document.getElementById('closeSupplierPanel');
+      const cancelSupplierBtn = document.getElementById('cancelSupplierBtn');
+
+      // Function to open supplier panel
+      function openSupplierPanel() {
+        if (supplierPanel && supplierOverlay) {
+          supplierPanel.classList.add('active');
+          supplierOverlay.classList.add('active');
+          document.body.style.overflow = 'hidden';
+          setTimeout(() => {
+            document.getElementById('newSupplierName')?.focus();
+          }, 300);
+        }
+      }
+
+      // Function to close supplier panel
+      function closeSupplierPanelFunc() {
+        if (supplierPanel && supplierOverlay) {
+          supplierPanel.classList.remove('active');
+          supplierOverlay.classList.remove('active');
+          document.body.style.overflow = '';
+          // Reset form
+          const form = document.getElementById('addSupplierForm');
+          if (form) {
+            form.reset();
+            // Clear validation errors
+            document.querySelectorAll('#addSupplierForm .form-control').forEach(input => {
+              input.classList.remove('is-invalid');
+            });
+            document.getElementById('supplierNameError').textContent = '';
+            document.getElementById('supplierEmailError').textContent = '';
+          }
+        }
+      }
+
+      if (supplierSelect) {
+        supplierSelect.addEventListener('change', function() {
+          if (this.value === 'add_new_supplier') {
+            this.value = '';
+            openSupplierPanel();
+          }
+        });
+      }
+
+      // Close panel event listeners
+      if (closeSupplierPanel) {
+        closeSupplierPanel.addEventListener('click', closeSupplierPanelFunc);
+      }
+      if (cancelSupplierBtn) {
+        cancelSupplierBtn.addEventListener('click', closeSupplierPanelFunc);
+      }
+      if (supplierOverlay) {
+        supplierOverlay.addEventListener('click', closeSupplierPanelFunc);
+      }
+
+      // Close on Escape key (if category panel is not active)
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && supplierPanel?.classList.contains('active')) {
+          closeSupplierPanelFunc();
+        }
+      });
+
+      // Handle supplier form submission
+      const addSupplierForm = document.getElementById('addSupplierForm');
+      if (addSupplierForm) {
+        addSupplierForm.addEventListener('submit', function(e) {
+          e.preventDefault();
+
+          const saveSupplierBtn = document.getElementById('saveSupplierBtn');
+          const supplierNameInput = document.getElementById('newSupplierName');
+          const supplierEmailInput = document.getElementById('newSupplierEmail');
+          const supplierContactInput = document.getElementById('newSupplierContact');
+          const supplierPhoneInput = document.getElementById('newSupplierPhone');
+          const supplierAddressInput = document.getElementById('newSupplierAddress');
+
+          // Check if button is already disabled
+          if (saveSupplierBtn.disabled) {
+            return;
+          }
+
+          // Get values
+          const supplierName = supplierNameInput.value.trim();
+          const supplierEmail = supplierEmailInput.value.trim();
+          const supplierContact = supplierContactInput.value.trim();
+          const supplierPhone = supplierPhoneInput.value.trim();
+          const supplierAddress = supplierAddressInput.value.trim();
+
+          // Basic validation
+          let hasError = false;
+
+          if (!supplierName) {
+            supplierNameInput.classList.add('is-invalid');
+            document.getElementById('supplierNameError').textContent = 'Supplier name is required';
+            hasError = true;
+          }
+
+          if (!supplierEmail) {
+            supplierEmailInput.classList.add('is-invalid');
+            document.getElementById('supplierEmailError').textContent = 'Email address is required';
+            hasError = true;
+          } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(supplierEmail)) {
+            supplierEmailInput.classList.add('is-invalid');
+            document.getElementById('supplierEmailError').textContent = 'Please enter a valid email address';
+            hasError = true;
+          }
+
+          if (hasError) {
+            return;
+          }
+
+          // Disable button and show loading state
+          saveSupplierBtn.disabled = true;
+          saveSupplierBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
+
+          // Get CSRF token
+          const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+                           || document.querySelector('input[name="_token"]')?.value;
+
+          // Send AJAX request
+          fetch('/manager/supplier/create', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRF-TOKEN': csrfToken,
+              'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+              name: supplierName,
+              email: supplierEmail,
+              contact_person: supplierContact,
+              phone: supplierPhone,
+              address: supplierAddress
+            })
+          })
+          .then(response => {
+            if (!response.ok) {
+              return response.json().then(data => {
+                throw { isValidation: true, errors: data.errors || {}, message: data.message };
+              });
+            }
+            return response.json();
+          })
+          .then(data => {
+            // Success - add the new supplier to the dropdown
+            const newOption = document.createElement('option');
+            newOption.value = data.supplier.id;
+            newOption.textContent = data.supplier.name;
+            newOption.selected = true;
+
+            // Insert before the "Add New Supplier" option
+            const addNewOption = supplierSelect.querySelector('option[value="add_new_supplier"]');
+            supplierSelect.insertBefore(newOption, addNewOption);
+
+            // Close panel
+            closeSupplierPanelFunc();
+
+            // Show success message
+            if (typeof Swal !== 'undefined') {
+              Swal.fire({
+                icon: 'success',
+                title: 'Success!',
+                text: 'Supplier created successfully',
+                timer: 2000,
+                showConfirmButton: false
+              });
+            } else {
+              alert('Supplier created successfully');
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+
+            if (error.isValidation && error.errors) {
+              // Handle validation errors
+              if (error.errors.name) {
+                supplierNameInput.classList.add('is-invalid');
+                document.getElementById('supplierNameError').textContent = error.errors.name[0];
+              }
+              if (error.errors.email) {
+                supplierEmailInput.classList.add('is-invalid');
+                document.getElementById('supplierEmailError').textContent = error.errors.email[0];
+              }
+            } else {
+              // Handle general errors
+              if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                  icon: 'error',
+                  title: 'Error',
+                  text: error.message || 'An error occurred while creating the supplier',
+                });
+              } else {
+                alert('Error: ' + (error.message || 'An error occurred while creating the supplier'));
+              }
+            }
+          })
+          .finally(() => {
+            // Re-enable button
+            saveSupplierBtn.disabled = false;
+            saveSupplierBtn.innerHTML = '<i class="mdi mdi-content-save"></i> Save';
+          });
+        });
+      }
+
+      // Clear validation errors when user types
+      const newSupplierNameInput = document.getElementById('newSupplierName');
+      if (newSupplierNameInput) {
+        newSupplierNameInput.addEventListener('input', function() {
+          this.classList.remove('is-invalid');
+          document.getElementById('supplierNameError').textContent = '';
+        });
+      }
+
+      const newSupplierEmailInput = document.getElementById('newSupplierEmail');
+      if (newSupplierEmailInput) {
+        newSupplierEmailInput.addEventListener('input', function() {
+          this.classList.remove('is-invalid');
+          document.getElementById('supplierEmailError').textContent = '';
         });
       }

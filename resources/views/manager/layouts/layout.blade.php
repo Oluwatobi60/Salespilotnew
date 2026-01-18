@@ -216,6 +216,10 @@
     <!-- Minimal Bootstrap Collapse Test Script and Add Item Modal Fallback -->
 
     <script src="{{ asset('manager_asset/js/sidebar1.js') }}"></script>
+
+    <!-- Page-specific scripts -->
+    @yield('page_scripts')
+
     <!-- Modal for selecting item type - Properly positioned at body level -->
     <div class="modal fade" id="itemTypeModal" tabindex="-1" aria-labelledby="itemTypeModalLabel" aria-hidden="true" style="z-index: 1055;">
       <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" style="max-width: 900px; max-height: 90vh;">

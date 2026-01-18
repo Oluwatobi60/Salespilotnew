@@ -1503,47 +1503,391 @@
         setupEditPricingHandlers();
       });
 
-      // Initialize Select2 after page and scripts load
-      $(document).ready(function() {
-        // Initialize unit with Select2 and tags support (allows creating new units)
-        $('#unit').select2({
-          theme: 'bootstrap',
-          width: '100%',
-          placeholder: 'Select or type to create unit',
-          tags: true,
-          dropdownParent: $('body'),
-          createTag: function (params) {
-            var term = $.trim(params.term);
-            if (term === '' || term.toLowerCase() === '+ add new unit') {
-              return null;
-            }
-            return {
-              id: term,
-              text: term,
-              newTag: true
-            }
-          }
-        });
+      // ============================
+      // Add New Category Functionality
+      // ============================
 
-        // Initialize category with tags support (allows creating new options)
-        $('#category').select2({
-          theme: 'bootstrap',
-          width: '100%',
-          placeholder: 'Select or type to create category',
-          tags: true,
-          dropdownParent: $('body'),
-          createTag: function (params) {
-            var term = $.trim(params.term);
-            if (term === '') {
-              return null;
-            }
-            return {
-              id: term,
-              text: term,
-              newTag: true
-            }
+      // Category panel elements
+      const categoryPanel = document.getElementById('addCategoryPanel');
+      const categoryOverlay = document.getElementById('categoryPanelOverlay');
+      const closeCategoryPanel = document.getElementById('closeCategoryPanel');
+      const cancelCategoryBtn = document.getElementById('cancelCategoryBtn');
+
+      // Function to open category panel
+      function openCategoryPanel() {
+        if (categoryPanel && categoryOverlay) {
+          categoryPanel.classList.add('active');
+          categoryOverlay.classList.add('active');
+          document.body.style.overflow = 'hidden';
+          setTimeout(() => {
+            document.getElementById('newCategoryName')?.focus();
+          }, 300);
+        }
+      }
+
+      // Function to close category panel
+      function closeCategoryPanelFunc() {
+        if (categoryPanel && categoryOverlay) {
+          categoryPanel.classList.remove('active');
+          categoryOverlay.classList.remove('active');
+          document.body.style.overflow = '';
+          const form = document.getElementById('addCategoryForm');
+          if (form) {
+            form.reset();
+            document.getElementById('newCategoryName')?.classList.remove('is-invalid');
+            const errorDiv = document.getElementById('categoryNameError');
+            if (errorDiv) errorDiv.textContent = '';
           }
+        }
+      }
+
+      // Close panel listeners
+      if (closeCategoryPanel) closeCategoryPanel.addEventListener('click', closeCategoryPanelFunc);
+      if (cancelCategoryBtn) cancelCategoryBtn.addEventListener('click', closeCategoryPanelFunc);
+      if (categoryOverlay) categoryOverlay.addEventListener('click', closeCategoryPanelFunc);
+
+      // Escape key listener
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && categoryPanel?.classList.contains('active')) {
+          closeCategoryPanelFunc();
+        }
+      });
+
+      // Handle form submission
+      const addCategoryForm = document.getElementById('addCategoryForm');
+      if (addCategoryForm) {
+        addCategoryForm.addEventListener('submit', function(e) {
+          e.preventDefault();
+
+          const saveCategoryBtn = document.getElementById('saveCategoryBtn');
+          const categoryNameInput = document.getElementById('newCategoryName');
+          const categoryNameError = document.getElementById('categoryNameError');
+
+          if (saveCategoryBtn.disabled) return;
+
+          const categoryName = categoryNameInput.value.trim();
+
+          if (!categoryName || categoryName.length < 5 || categoryName.length > 100) {
+            categoryNameInput.classList.add('is-invalid');
+            categoryNameError.textContent = !categoryName ? 'Please enter a category name' :
+              categoryName.length < 5 ? 'Category name must be at least 5 characters' :
+              'Category name must not exceed 100 characters';
+            return;
+          }
+
+          saveCategoryBtn.disabled = true;
+          saveCategoryBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
+
+          const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ||
+                           document.querySelector('input[name="_token"]')?.value;
+
+          fetch('/manager/category/create', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRF-TOKEN': csrfToken,
+              'Accept': 'application/json'
+            },
+            body: JSON.stringify({ category_name: categoryName })
+          })
+          .then(response => response.ok ? response.json() : response.json().then(data => {
+            throw { isValidation: true, errors: data.errors || {}, message: data.message };
+          }))
+          .then(data => {
+            const newOption = document.createElement('option');
+            newOption.value = data.category.id;
+            newOption.textContent = data.category.category_name;
+            newOption.selected = true;
+
+            const addNewOption = categorySelect.querySelector('option[value="add_new_category"]');
+            if (addNewOption) {
+              categorySelect.insertBefore(newOption, addNewOption);
+            } else {
+              categorySelect.appendChild(newOption);
+            }
+
+            if (typeof $ !== 'undefined' && $.fn.select2) $('#category').trigger('change');
+
+            closeCategoryPanelFunc();
+
+            if (typeof Swal !== 'undefined') {
+              Swal.fire({ icon: 'success', title: 'Success!', text: 'Category created successfully', timer: 2000, showConfirmButton: false });
+            } else {
+              alert('Category created successfully');
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+            if (error.isValidation && error.errors) {
+              const errorMessages = Object.values(error.errors).flat();
+              categoryNameInput.classList.add('is-invalid');
+              categoryNameError.textContent = errorMessages[0] || 'Validation error occurred';
+            } else {
+              if (typeof Swal !== 'undefined') {
+                Swal.fire({ icon: 'error', title: 'Error', text: error.message || 'An error occurred while creating the category' });
+              } else {
+                alert('Error: ' + (error.message || 'An error occurred'));
+              }
+            }
+          })
+          .finally(() => {
+            saveCategoryBtn.disabled = false;
+            saveCategoryBtn.innerHTML = '<i class="mdi mdi-content-save"></i> Save';
+          });
         });
+      }
+
+      // Clear validation on input
+      const newCategoryNameInput = document.getElementById('newCategoryName');
+      if (newCategoryNameInput) {
+        newCategoryNameInput.addEventListener('input', function() {
+          this.classList.remove('is-invalid');
+          document.getElementById('categoryNameError').textContent = '';
+        });
+      }
+
+      // ============================
+      // Add New Supplier Functionality
+      // ============================
+
+      // Supplier panel elements
+      const supplierPanel = document.getElementById('addSupplierPanel');
+      const supplierOverlay = document.getElementById('supplierPanelOverlay');
+      const closeSupplierPanel = document.getElementById('closeSupplierPanel');
+      const cancelSupplierBtn = document.getElementById('cancelSupplierBtn');
+
+      // Function to open supplier panel
+      function openSupplierPanel() {
+        if (supplierPanel && supplierOverlay) {
+          supplierPanel.classList.add('active');
+          supplierOverlay.classList.add('active');
+          document.body.style.overflow = 'hidden';
+          setTimeout(() => {
+            document.getElementById('newSupplierName')?.focus();
+          }, 300);
+        }
+      }
+
+      // Function to close supplier panel
+      function closeSupplierPanelFunc() {
+        if (supplierPanel && supplierOverlay) {
+          supplierPanel.classList.remove('active');
+          supplierOverlay.classList.remove('active');
+          document.body.style.overflow = '';
+          const form = document.getElementById('addSupplierForm');
+          if (form) {
+            form.reset();
+            document.querySelectorAll('#addSupplierForm .form-control').forEach(input => {
+              input.classList.remove('is-invalid');
+            });
+            document.getElementById('supplierNameError').textContent = '';
+            document.getElementById('supplierEmailError').textContent = '';
+          }
+        }
+      }
+
+      // Close panel listeners
+      if (closeSupplierPanel) closeSupplierPanel.addEventListener('click', closeSupplierPanelFunc);
+      if (cancelSupplierBtn) cancelSupplierBtn.addEventListener('click', closeSupplierPanelFunc);
+      if (supplierOverlay) supplierOverlay.addEventListener('click', closeSupplierPanelFunc);
+
+      // Handle supplier form submission
+      const addSupplierForm = document.getElementById('addSupplierForm');
+      if (addSupplierForm) {
+        addSupplierForm.addEventListener('submit', function(e) {
+          e.preventDefault();
+
+          const saveSupplierBtn = document.getElementById('saveSupplierBtn');
+          const supplierNameInput = document.getElementById('newSupplierName');
+          const supplierEmailInput = document.getElementById('newSupplierEmail');
+          const supplierContactInput = document.getElementById('newSupplierContact');
+          const supplierPhoneInput = document.getElementById('newSupplierPhone');
+          const supplierAddressInput = document.getElementById('newSupplierAddress');
+          const supplierNameError = document.getElementById('supplierNameError');
+          const supplierEmailError = document.getElementById('supplierEmailError');
+
+          if (saveSupplierBtn.disabled) return;
+
+          const supplierName = supplierNameInput.value.trim();
+          const supplierEmail = supplierEmailInput.value.trim();
+          const supplierContact = supplierContactInput.value.trim();
+          const supplierPhone = supplierPhoneInput.value.trim();
+          const supplierAddress = supplierAddressInput.value.trim();
+
+          // Basic validation
+          let hasError = false;
+          if (!supplierName) {
+            supplierNameInput.classList.add('is-invalid');
+            supplierNameError.textContent = 'Supplier name is required';
+            hasError = true;
+          }
+          if (!supplierEmail) {
+            supplierEmailInput.classList.add('is-invalid');
+            supplierEmailError.textContent = 'Email address is required';
+            hasError = true;
+          } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(supplierEmail)) {
+            supplierEmailInput.classList.add('is-invalid');
+            supplierEmailError.textContent = 'Please enter a valid email address';
+            hasError = true;
+          }
+
+          if (hasError) return;
+
+          saveSupplierBtn.disabled = true;
+          saveSupplierBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
+
+          const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ||
+                           document.querySelector('input[name="_token"]')?.value;
+
+          fetch('/manager/supplier/create', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRF-TOKEN': csrfToken,
+              'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+              name: supplierName,
+              email: supplierEmail,
+              contact_person: supplierContact,
+              phone: supplierPhone,
+              address: supplierAddress
+            })
+          })
+          .then(response => response.ok ? response.json() : response.json().then(data => {
+            throw { isValidation: true, errors: data.errors || {}, message: data.message };
+          }))
+          .then(data => {
+            const supplierSelect = document.getElementById('supplier');
+            const newOption = document.createElement('option');
+            newOption.value = data.supplier.id;
+            newOption.textContent = data.supplier.name;
+            newOption.selected = true;
+
+            const addNewOption = supplierSelect.querySelector('option[value="add_new_supplier"]');
+            if (addNewOption) {
+              supplierSelect.insertBefore(newOption, addNewOption);
+            } else {
+              supplierSelect.appendChild(newOption);
+            }
+
+            if (typeof $ !== 'undefined' && $.fn.select2) $('#supplier').trigger('change');
+
+            closeSupplierPanelFunc();
+
+            if (typeof Swal !== 'undefined') {
+              Swal.fire({ icon: 'success', title: 'Success!', text: 'Supplier created successfully', timer: 2000, showConfirmButton: false });
+            } else {
+              alert('Supplier created successfully');
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+            if (error.isValidation && error.errors) {
+              if (error.errors.name) {
+                supplierNameInput.classList.add('is-invalid');
+                supplierNameError.textContent = error.errors.name[0];
+              }
+              if (error.errors.email) {
+                supplierEmailInput.classList.add('is-invalid');
+                supplierEmailError.textContent = error.errors.email[0];
+              }
+            } else {
+              if (typeof Swal !== 'undefined') {
+                Swal.fire({ icon: 'error', title: 'Error', text: error.message || 'An error occurred while creating the supplier' });
+              } else {
+                alert('Error: ' + (error.message || 'An error occurred'));
+              }
+            }
+          })
+          .finally(() => {
+            saveSupplierBtn.disabled = false;
+            saveSupplierBtn.innerHTML = '<i class="mdi mdi-content-save"></i> Save';
+          });
+        });
+      }
+
+      // Clear validation on input
+      const newSupplierNameInput = document.getElementById('newSupplierName');
+      if (newSupplierNameInput) {
+        newSupplierNameInput.addEventListener('input', function() {
+          this.classList.remove('is-invalid');
+          document.getElementById('supplierNameError').textContent = '';
+        });
+      }
+
+      const newSupplierEmailInput = document.getElementById('newSupplierEmail');
+      if (newSupplierEmailInput) {
+        newSupplierEmailInput.addEventListener('input', function() {
+          this.classList.remove('is-invalid');
+          document.getElementById('supplierEmailError').textContent = '';
+        });
+      }
+
+      // Initialize Select2 and category panel after DOM loads
+      document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM loaded - initializing select2 and category panel');
+
+        // Initialize Select2 if available
+        if (typeof $ !== 'undefined' && $.fn.select2) {
+          console.log('Select2 is available, initializing...');
+
+          // Initialize unit with Select2 and tags support (allows creating new units)
+          $('#unit').select2({
+            theme: 'bootstrap',
+            width: '100%',
+            placeholder: 'Select or type to create unit',
+            tags: true,
+            dropdownParent: $('body'),
+            createTag: function (params) {
+              var term = $.trim(params.term);
+              if (term === '' || term.toLowerCase() === '+ add new unit') {
+                return null;
+              }
+              return {
+                id: term,
+                text: term,
+                newTag: true
+              }
+            }
+          });
+
+          console.log('Initializing category select2...');
+          // Initialize category with tags support (allows creating new options)
+          $('#category').select2({
+            theme: 'bootstrap',
+            width: '100%',
+            placeholder: 'Select or type to create category',
+            tags: true,
+            dropdownParent: $('body'),
+            createTag: function (params) {
+              var term = $.trim(params.term);
+              if (term === '') {
+                return null;
+              }
+              return {
+                id: term,
+                text: term,
+                newTag: true
+              }
+            }
+          });
+
+          console.log('Category select2 initialized, attaching event handler...');
+
+          // Attach event handler to category select
+          $('#category').on('select2:select', function(e) {
+            console.log('Category selected EVENT FIRED:', e.params.data);
+            const selectedValue = e.params.data.id;
+            console.log('Selected value:', selectedValue);
+            if (selectedValue === 'add_new_category') {
+              console.log('Opening category panel...');
+              // Reset the select to empty
+              $(this).val('').trigger('change');
+              // Show the panel
+              openCategoryPanel();
+            }
+          });
 
         // Initialize supplier with tags support
         $('#supplier').select2({
@@ -1564,6 +1908,17 @@
             }
           }
         });
+
+          // Attach event handler to supplier select (after Select2 initialization)
+          $('#supplier').on('select2:select', function(e) {
+            const selectedValue = e.params.data.id;
+            if (selectedValue === 'add_new_supplier') {
+              // Reset the select to empty
+              $(this).val('').trigger('change');
+              // Show the panel
+              openSupplierPanel();
+            }
+          });
 
         // Initialize tax rate dropdowns in edit variant modal
         $('#editTaxRate').select2({
@@ -1589,6 +1944,189 @@
           minimumResultsForSearch: -1, // Hide search box
           dropdownParent: $('#editVariantModalOverlay')
         });
+
+        // ============================
+        // Add New Category Functionality
+        // ============================
+
+        // Category panel elements
+        const closeCategoryPanel = document.getElementById('closeCategoryPanel');
+        const cancelCategoryBtn = document.getElementById('cancelCategoryBtn');
+        const categoryPanel = document.getElementById('addCategoryPanel');
+        const categoryOverlay = document.getElementById('categoryPanelOverlay');
+
+        // Function to close category panel
+        function closeCategoryPanelFunc() {
+          if (categoryPanel && categoryOverlay) {
+            categoryPanel.classList.remove('active');
+            categoryOverlay.classList.remove('active');
+            document.body.style.overflow = '';
+            // Reset form
+            const form = document.getElementById('addCategoryForm');
+            if (form) {
+              form.reset();
+              // Clear validation errors
+              document.querySelectorAll('#addCategoryForm .form-control').forEach(input => {
+                input.classList.remove('is-invalid');
+              });
+              document.getElementById('categoryNameError').textContent = '';
+            }
+          }
+        }
+
+        // Close panel event listeners
+        if (closeCategoryPanel) {
+          closeCategoryPanel.addEventListener('click', closeCategoryPanelFunc);
+        }
+        if (cancelCategoryBtn) {
+          cancelCategoryBtn.addEventListener('click', closeCategoryPanelFunc);
+        }
+        if (categoryOverlay) {
+          categoryOverlay.addEventListener('click', closeCategoryPanelFunc);
+        }
+
+        // Close on Escape key
+        document.addEventListener('keydown', function(e) {
+          if (e.key === 'Escape' && categoryPanel?.classList.contains('active')) {
+            closeCategoryPanelFunc();
+          }
+        });
+
+        // Handle category form submission
+        const addCategoryForm = document.getElementById('addCategoryForm');
+        if (addCategoryForm) {
+          addCategoryForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const saveCategoryBtn = document.getElementById('saveCategoryBtn');
+            const categoryNameInput = document.getElementById('newCategoryName');
+            const categoryNameError = document.getElementById('categoryNameError');
+
+            // Check if button is already disabled
+            if (saveCategoryBtn.disabled) {
+              return;
+            }
+
+            // Get category name
+            const categoryName = categoryNameInput.value.trim();
+
+            // Basic validation
+            if (!categoryName) {
+              categoryNameInput.classList.add('is-invalid');
+              categoryNameError.textContent = 'Please enter a category name';
+              return;
+            }
+
+            if (categoryName.length < 5) {
+              categoryNameInput.classList.add('is-invalid');
+              categoryNameError.textContent = 'Category name must be at least 5 characters';
+              return;
+            }
+
+            if (categoryName.length > 100) {
+              categoryNameInput.classList.add('is-invalid');
+              categoryNameError.textContent = 'Category name must not exceed 100 characters';
+              return;
+            }
+
+            // Disable button and show loading state
+            saveCategoryBtn.disabled = true;
+            saveCategoryBtn.innerHTML = '<span class=\"spinner-border spinner-border-sm me-2\"></span>Saving...';
+
+            // Get CSRF token
+            const csrfToken = document.querySelector('meta[name=\"csrf-token\"]')?.getAttribute('content')
+                             || document.querySelector('input[name=\"_token\"]')?.value;
+
+            // Send AJAX request
+            fetch('/manager/category/create', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json'
+              },
+              body: JSON.stringify({
+                category_name: categoryName
+              })
+            })
+            .then(response => {
+              if (!response.ok) {
+                return response.json().then(data => {
+                  throw { isValidation: true, errors: data.errors || {}, message: data.message };
+                });
+              }
+              return response.json();
+            })
+            .then(data => {
+              // Success - add the new category to the dropdown
+              const newOption = new Option(data.category.category_name, data.category.id, true, true);
+
+              // Find the \"Add New Category\" option and insert before it
+              const $select = $('#category');
+              const $addNewOption = $select.find('option[value=\"add_new_category\"]');
+              if ($addNewOption.length) {
+                $addNewOption.before(newOption);
+              } else {
+                $select.append(newOption);
+              }
+              $select.trigger('change');
+
+              // Close panel
+              closeCategoryPanelFunc();
+
+              // Show success message
+              if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                  icon: 'success',
+                  title: 'Success!',
+                  text: 'Category created successfully',
+                  timer: 2000,
+                  showConfirmButton: false
+                });
+              } else {
+                alert('Category created successfully');
+              }
+            })
+            .catch(error => {
+              console.error('Error:', error);
+
+              if (error.isValidation && error.errors) {
+                // Handle validation errors
+                const errorMessages = Object.values(error.errors).flat();
+                categoryNameInput.classList.add('is-invalid');
+                categoryNameError.textContent = errorMessages[0] || 'Validation error occurred';
+              } else {
+                // Handle general errors
+                if (typeof Swal !== 'undefined') {
+                  Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message || 'An error occurred while creating the category',
+                  });
+                } else {
+                  alert('Error: ' + (error.message || 'An error occurred while creating the category'));
+                }
+              }
+            })
+            .finally(() => {
+              // Re-enable button
+              saveCategoryBtn.disabled = false;
+              saveCategoryBtn.innerHTML = '<i class=\"mdi mdi-content-save\"></i> Save';
+            });
+          });
+        }
+
+        // Clear validation error when user types
+        const newCategoryNameInput = document.getElementById('newCategoryName');
+        if (newCategoryNameInput) {
+          newCategoryNameInput.addEventListener('input', function() {
+            this.classList.remove('is-invalid');
+            document.getElementById('categoryNameError').textContent = '';
+          });
+        }
+        } else {
+          console.warn('jQuery or Select2 not available. Dropdowns will use standard HTML select.');
+        }
       });
 
 
