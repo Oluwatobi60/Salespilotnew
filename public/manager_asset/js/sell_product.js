@@ -576,19 +576,29 @@ document.addEventListener('DOMContentLoaded', function() {
 
           // Handle validation errors differently
           if (error.isValidation) {
-            Swal.fire({
-              icon: 'warning',
-              title: 'Validation Error',
-              html: error.message,
-              confirmButtonColor: '#f39c12'
-            });
+            // Check if SweetAlert is available, fallback to alert
+            if (typeof Swal !== 'undefined') {
+              Swal.fire({
+                icon: 'warning',
+                title: 'Validation Error',
+                html: error.message,
+                confirmButtonColor: '#f39c12'
+              });
+            } else {
+              alert('Validation Error:\n\n' + error.message.replace(/<br>/g, '\n'));
+            }
           } else {
-            Swal.fire({
-              icon: 'error',
-              title: 'Error!',
-              text: error.message || 'An error occurred while adding the customer. Please try again.',
-              confirmButtonColor: '#d33'
-            });
+            // Check if SweetAlert is available, fallback to alert
+            if (typeof Swal !== 'undefined') {
+              Swal.fire({
+                icon: 'error',
+                title: 'Error!',
+                text: error.message || 'An error occurred while adding the customer. Please try again.',
+                confirmButtonColor: '#d33'
+              });
+            } else {
+              alert('Error!\n\n' + (error.message || 'An error occurred while adding the customer. Please try again.'));
+            }
           }
         })
         .finally(() => {
