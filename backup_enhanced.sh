@@ -23,25 +23,30 @@ log_error() { echo -e "${RED}❌ $1${NC}"; }
 log_warning() { echo -e "${YELLOW}⚠️  $1${NC}"; }
 log_info() { echo -e "📝 $1"; }
 
-# 1. Backup MySQL databases
+# 1. Backup MySQL databases - ONLY IF CONTAINER EXISTS
 log_info "🗄️  Backing up MySQL databases..."
-MYSQL_BACKUP_FILE="$BACKUP_DIR/mysql_backup_$TIMESTAMP.sql"
-docker exec salespilot-mysql mysqldump -u root -p$MYSQL_ROOT_PASSWORD --all-databases --single-transaction > $MYSQL_BACKUP_FILE 2>/tmp/mysql_backup_error.log
 
-if [ $? -eq 0 ]; then
-    log_success "MySQL backup created: $MYSQL_BACKUP_FILE"
+# Check if MySQL container exists and is running
+if docker ps --filter "name=salespilot-mysql" --format "{{.Names}}" | grep -q "salespilot-mysql"; then
+    MYSQL_BACKUP_FILE="$BACKUP_DIR/mysql_backup_$TIMESTAMP.sql"
+    docker exec salespilot-mysql mysqldump -u root -p$MYSQL_ROOT_PASSWORD --all-databases --single-transaction > $MYSQL_BACKUP_FILE 2>/tmp/mysql_backup_error.log
     
-    # Compress the backup
-    gzip $MYSQL_BACKUP_FILE
-    log_success "Backup compressed: ${MYSQL_BACKUP_FILE}.gz"
-    
-    # Calculate backup size
-    BACKUP_SIZE=$(du -h "${MYSQL_BACKUP_FILE}.gz" | cut -f1)
-    log_info "Backup size: $BACKUP_SIZE"
+    if [ $? -eq 0 ]; then
+        log_success "MySQL backup created: $MYSQL_BACKUP_FILE"
+        
+        # Compress the backup
+        gzip $MYSQL_BACKUP_FILE
+        log_success "Backup compressed: ${MYSQL_BACKUP_FILE}.gz"
+        
+        # Calculate backup size
+        BACKUP_SIZE=$(du -h "${MYSQL_BACKUP_FILE}.gz" | cut -f1)
+        log_info "Backup size: $BACKUP_SIZE"
+    else
+        log_error "MySQL backup failed!"
+        cat /tmp/mysql_backup_error.log
+    fi
 else
-    log_error "MySQL backup failed!"
-    cat /tmp/mysql_backup_error.log
-    exit 1
+    log_warning "MySQL container not found or not running. Skipping database backup."
 fi
 
 # 2. Backup important configuration files
@@ -50,8 +55,8 @@ CONFIG_BACKUP_DIR="$BACKUP_DIR/config_backup_$TIMESTAMP"
 mkdir -p $CONFIG_BACKUP_DIR
 
 # Backup docker-compose.yml and .env files
-cp /opt/salespilot/docker-compose.yml $CONFIG_BACKUP_DIR/
-cp /opt/salespilot/.env $CONFIG_BACKUP_DIR/ 2>/dev/null || true
+cp /opt/salespilot/docker-compose.yml $CONFIG_BACKUP_DIR/ 2>/dev/null || log_warning "Could not copy docker-compose.yml"
+cp /opt/salespilot/.env $CONFIG_BACKUP_DIR/ 2>/dev/null || log_warning "No .env file found"
 
 # Backup nginx config if exists
 if [ -d "/opt/salespilot/nginx" ]; then
@@ -59,14 +64,14 @@ if [ -d "/opt/salespilot/nginx" ]; then
 fi
 
 # Create tar archive of configs
-tar -czf "$CONFIG_BACKUP_DIR.tar.gz" -C $BACKUP_DIR "config_backup_$TIMESTAMP"
+tar -czf "$CONFIG_BACKUP_DIR.tar.gz" -C $BACKUP_DIR "config_backup_$TIMESTAMP" 2>/dev/null
 rm -rf $CONFIG_BACKUP_DIR
 log_success "Configuration backup created: $CONFIG_BACKUP_DIR.tar.gz"
 
 # 3. Cleanup old backups
 log_info "🧹 Cleaning up old backups (older than $RETENTION_DAYS days)..."
-find $BACKUP_DIR -name "mysql_backup_*.sql.gz" -mtime +$RETENTION_DAYS -delete
-find $BACKUP_DIR -name "config_backup_*.tar.gz" -mtime +$RETENTION_DAYS -delete
+find $BACKUP_DIR -name "mysql_backup_*.sql.gz" -mtime +$RETENTION_DAYS -delete 2>/dev/null
+find $BACKUP_DIR -name "config_backup_*.tar.gz" -mtime +$RETENTION_DAYS -delete 2>/dev/null
 log_success "Old backups cleaned up"
 
 # 4. List current backups
@@ -78,7 +83,7 @@ echo "Config backups:"
 ls -lh $BACKUP_DIR/config_backup_*.tar.gz 2>/dev/null || echo "No config backups found"
 
 # 5. Calculate total backup size
-TOTAL_SIZE=$(du -sh $BACKUP_DIR | cut -f1)
+TOTAL_SIZE=$(du -sh $BACKUP_DIR 2>/dev/null | cut -f1 || echo "0")
 log_info "Total backup directory size: $TOTAL_SIZE"
 
 echo ""

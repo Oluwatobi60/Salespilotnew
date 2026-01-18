@@ -1,0 +1,31 @@
+name: Emergency Rollback
+
+on:
+  workflow_dispatch:
+    inputs:
+      backup_file:
+        description: 'Backup file to restore (from /backup/)'
+        required: true
+        default: 'latest'
+
+jobs:
+  rollback:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Rollback Database
+        uses: appleboy/ssh-action@v0.1.5
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+          port: 22
+          script: |
+            echo "🔄 Starting emergency rollback..."
+            cd /opt/salespilot
+            
+            if [ -f "restore.sh" ]; then
+                ./restore.sh
+            else
+                echo "❌ Restore script not found"
+                exit 1
+            fi

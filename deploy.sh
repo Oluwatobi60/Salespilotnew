@@ -1,103 +1,69 @@
 #!/bin/bash
-set -e
+echo "🚀 Salespilot Deployment Script"
+echo "================================"
 
-echo "🚀 Deploying SalesPilot..."
-echo "========================="
-echo "Start time: $(date)"
+set -e  # Exit on error
 
-cd /opt/salespilot
+cd /opt/salespilot || { echo "❌ Cannot cd to /opt/salespilot"; exit 1; }
 
-# Configure git
-git config pull.rebase false 2>/dev/null || true
-
-# Update code safely
-if [ -d .git ]; then
-    echo "📦 Updating code..."
-
-    # Backup critical files
-    cp docker-compose.yml /tmp/docker-compose-backup.yml 2>/dev/null || true
-    cp .env /tmp/env-backup 2>/dev/null || true
-
-    # Stash local changes to critical files
-    git stash push -m "deploy-backup" -- docker-compose.yml .env deploy.sh 2>/dev/null || true
-
-    # Pull changes
-    git pull origin master || echo "⚠️  Git pull failed, continuing with existing code"
-
-    # Restore stashed files if needed
-    git stash pop 2>/dev/null || true
-
-    # Restore backups if files were deleted
-    if [ ! -f docker-compose.yml ] && [ -f /tmp/docker-compose-backup.yml ]; then
-        cp /tmp/docker-compose-backup.yml docker-compose.yml
-    fi
-    if [ ! -f .env ] && [ -f /tmp/env-backup ]; then
-        cp /tmp/env-backup .env
-    fi
-fi
-
-# Restart services
-echo "🐳 Restarting services..."
-docker-compose down 2>/dev/null || true
-sleep 2
-docker-compose up -d --build
-
-# Wait for services
-echo "⏳ Waiting for services to start..."
-sleep 30
-
-# Check services
-echo "🏥 Checking services..."
-if docker ps | grep -q "salespilot-app" && docker ps | grep -q "salespilot-mysql"; then
-    echo "✅ Services are running"
-else
-    echo "❌ Services failed to start"
-    docker-compose ps
-    docker-compose logs --tail=50
-    exit 1
-fi
-
-# Install dependencies
-echo "📦 Installing dependencies..."
-docker-compose exec -T app composer install --no-interaction --optimize-autoloader
-
-# Run migrations
-echo "🔄 Running migrations..."
-docker-compose exec -T app php artisan migrate --force
-
-# Clear cache (skip route cache to avoid conflicts)
-echo "⚡ Optimizing application..."
-docker-compose exec -T app php artisan optimize:clear
-docker-compose exec -T app php artisan config:cache
-docker-compose exec -T app php artisan view:cache
-# Skip route:cache to avoid "Unable to prepare route" errors
-# docker-compose exec -T app php artisan route:cache
-
-# Set permissions
-echo "🔒 Setting permissions..."
-docker-compose exec -T app chown -R www-data:www-data \
-    /var/www/html/storage/ \
-    /var/www/html/bootstrap/cache/ \
-    /var/www/html/public/uploads/ 2>/dev/null || true
-    
-docker-compose exec -T app chmod -R 775 \
-    /var/www/html/storage/ \
-    /var/www/html/bootstrap/cache/ \
-    /var/www/html/public/uploads/ 2>/dev/null || true
-
-# Health check
-echo "🔍 Health check..."
-sleep 15
-
-if curl -s -f http://localhost:8787 > /dev/null; then
-    echo "✅ Application is healthy!"
-    echo "🌐 Access: http://89.117.59.206:8787"
-else
-    echo "⚠️  Health check failed"
-    echo "Checking logs..."
-    docker-compose logs app --tail=20
+echo "1. Checking if containers are running..."
+if ! docker-compose ps | grep -q "Up"; then
+    echo "Containers not running, starting them first..."
+    docker-compose up -d
+    sleep 10
 fi
 
 echo ""
-echo "🎉 Deployment completed at: $(date)"
-echo "=================================="
+echo "2. Creating backup..."
+if [ -f "backup_enhanced.sh" ]; then
+    ./backup_enhanced.sh
+else
+    echo "Using quick backup..."
+    BACKUP_DIR="/backup"
+    mkdir -p $BACKUP_DIR
+    TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+    # Only backup if MySQL container exists
+    if docker ps --filter "name=salespilot-mysql" | grep -q "salespilot-mysql"; then
+        docker exec salespilot-mysql mysqldump -u root -pOluwaTobi60 --all-databases > $BACKUP_DIR/deploy_$TIMESTAMP.sql 2>/dev/null
+        gzip $BACKUP_DIR/deploy_$TIMESTAMP.sql 2>/dev/null || echo "Backup compression failed"
+    else
+        echo "MySQL container not found, skipping database backup"
+    fi
+fi
+
+echo ""
+echo "3. Pulling latest code..."
+git fetch origin
+git pull origin master
+
+echo ""
+echo "4. Deploying containers..."
+echo "Restarting containers..."
+docker-compose restart 2>/dev/null || {
+    echo "Restart failed, trying stop/start..."
+    docker-compose stop 2>/dev/null
+    docker-compose up -d --build
+}
+
+echo ""
+echo "5. Waiting for startup..."
+sleep 15
+
+echo ""
+echo "6. Verifying deployment..."
+echo "Containers:"
+docker-compose ps
+
+echo ""
+echo "Application check:"
+if curl -s -f --max-time 10 http://localhost:8787 > /dev/null; then
+    echo "✅ Application is running on port 8787"
+    echo ""
+    echo "✅ Deployment completed successfully!"
+    echo "Version: $(git log --oneline -1)"
+else
+    echo "❌ Application check failed"
+    echo "Trying alternative check..."
+    docker-compose logs --tail=20
+    exit 1
+fi
