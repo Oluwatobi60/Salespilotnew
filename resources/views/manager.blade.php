@@ -130,7 +130,7 @@
                         <tr>
                           <td>#{{ $sale->receipt_number }}</td>
                           <td>{{ $sale->customer_name ?? 'N/A' }}</td>
-                          <td>${{ number_format($sale->total, 2) }}</td>
+                          <td>₦{{ number_format($sale->total, 2) }}</td>
                           <td>{{ $sale->created_at->diffForHumans() }}</td>
                           <td>
                             @if($sale->status === 'completed')

@@ -105,9 +105,9 @@ Customer Information
                             <td>{{ $customer->created_at }}</td>
                             <td>
                               @if($customer->user)
-                                {{ $customer->user->name }}
+                                {{ $customer->user->name }} <span class="badge bg-primary">Manager</span>
                               @elseif($customer->staff)
-                                {{ $customer->staff->fullname }}
+                                {{ $customer->staff->fullname }} <span class="badge bg-info">Staff</span>
                               @else
                                 -
                               @endif

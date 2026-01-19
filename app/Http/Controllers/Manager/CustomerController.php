@@ -8,6 +8,7 @@ use App\Models\AddCustomer;
 use App\Models\CartItem;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 
 
 class CustomerController extends Controller
@@ -49,6 +50,9 @@ class CustomerController extends Controller
             'phone_number' => 'nullable|string|max:20|unique:add_customers,phone_number',
             'address' => 'nullable|string|max:500',
         ]);
+
+        // Add the user_id of the logged-in user (manager)
+        $validatedData['user_id'] = Auth::id();
 
         // Create new customer
         $customer = AddCustomer::create($validatedData);

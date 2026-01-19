@@ -418,6 +418,9 @@ class StaffsMainController extends Controller
             'address' => 'nullable|string|max:500',
         ]);
 
+        // Add the staff_id of the logged-in staff
+        $validatedData['staff_id'] = Auth::guard('staff')->id();
+
         // Create new customer
         $customer = AddCustomer::create($validatedData);
 

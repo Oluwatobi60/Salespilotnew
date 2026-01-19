@@ -292,7 +292,7 @@ Create Customer Discount
         <i class="bi bi-x-circle me-1"></i>Cancel
       </button>
       <button type="submit" form="editDiscountForm" class="btn btn-primary">
-        <i class="bi bi-check-circle me-1"></i>Update Discount
+        <i class="bi bi-check-circle me-1"></i>Update
       </button>
     </div>
   </div>
