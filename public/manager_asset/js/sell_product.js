@@ -284,14 +284,30 @@ document.addEventListener('DOMContentLoaded', function() {
               sessionStorage.removeItem('restoreCartSessionId');
 
               // Show success message
-              alert('Cart restored successfully! ' + cartItems.length + ' items loaded.');
+              Swal.fire({
+                icon: 'success',
+                title: 'Cart Restored!',
+                text: cartItems.length + ' items loaded successfully',
+                showConfirmButton: false,
+                timer: 1500
+              });
             } else {
               console.error('No items found in cart data');
-              alert('No items found in the saved cart.');
+              Swal.fire({
+                icon: 'warning',
+                title: 'No Items Found',
+                text: 'No items found in the saved cart.',
+                confirmButtonColor: '#3085d6'
+              });
             }
           } catch (error) {
             console.error('Error restoring cart:', error);
-            alert('Error restoring cart: ' + error.message);
+            Swal.fire({
+              icon: 'error',
+              title: 'Error!',
+              text: 'Error restoring cart: ' + error.message,
+              confirmButtonColor: '#d33'
+            });
             sessionStorage.removeItem('restoreCartData');
             sessionStorage.removeItem('restoreCartSessionId');
           }
@@ -486,8 +502,6 @@ document.addEventListener('DOMContentLoaded', function() {
               text: 'Please enter customer name',
               confirmButtonColor: '#3085d6'
             });
-          } else {
-            alert('Missing Information\n\nPlease enter customer name');
           }
           return;
         }
@@ -576,8 +590,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 text: 'Failed to add customer: ' + (data.message || 'Unknown error'),
                 confirmButtonColor: '#d33'
               });
-            } else {
-              alert('Failed!\n\nFailed to add customer: ' + (data.message || 'Unknown error'));
             }
           }
         })
@@ -594,8 +606,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 html: error.message,
                 confirmButtonColor: '#f39c12'
               });
-            } else {
-              alert('Validation Error:\n\n' + error.message.replace(/<br>/g, '\n'));
             }
           } else {
             // Check if SweetAlert is available, fallback to alert
@@ -606,8 +616,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 text: error.message || 'An error occurred while adding the customer. Please try again.',
                 confirmButtonColor: '#d33'
               });
-            } else {
-              alert('Error!\n\n' + (error.message || 'An error occurred while adding the customer. Please try again.'));
             }
           }
         })
@@ -651,7 +659,12 @@ document.addEventListener('DOMContentLoaded', function() {
       // Save Cart functionality
       saveCartBtn.addEventListener('click', function() {
         if (cartItems.length === 0) {
-          alert('Cart is empty. Add items before saving.');
+          Swal.fire({
+            icon: 'warning',
+            title: 'Cart Empty',
+            text: 'Add items before saving the cart.',
+            confirmButtonColor: '#3085d6'
+          });
           return;
         }
         // Prevent double open
@@ -681,7 +694,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const cartNote = document.getElementById('savedCartNote').value.trim();
 
         if (!cartName) {
-          alert('Please enter a name for the cart');
+          Swal.fire({
+            icon: 'warning',
+            title: 'Cart Name Required',
+            text: 'Please enter a name for the cart',
+            confirmButtonColor: '#3085d6'
+          });
           confirmSaveCartBtn.disabled = false;
           return;
         }
@@ -723,7 +741,13 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(data => {
           confirmSaveCartBtn.disabled = false;
           if (data.success) {
-            alert('Cart saved successfully!');
+            Swal.fire({
+              icon: 'success',
+              title: 'Cart Saved!',
+              text: 'Cart saved successfully',
+              showConfirmButton: false,
+              timer: 1500
+            });
 
             // Clear current cart
             cartItems = [];
@@ -733,13 +757,23 @@ document.addEventListener('DOMContentLoaded', function() {
 
             saveCartModal.classList.remove('active');
           } else {
-            alert('Failed to save cart: ' + (data.message || 'Unknown error'));
+            Swal.fire({
+              icon: 'error',
+              title: 'Failed!',
+              text: 'Failed to save cart: ' + (data.message || 'Unknown error'),
+              confirmButtonColor: '#d33'
+            });
           }
         })
         .catch(error => {
           confirmSaveCartBtn.disabled = false;
           console.error('Error:', error);
-          alert('An error occurred while saving the cart. Please try again.');
+          Swal.fire({
+            icon: 'error',
+            title: 'Error!',
+            text: 'An error occurred while saving the cart. Please try again.',
+            confirmButtonColor: '#d33'
+          });
         });
       });
 
@@ -819,24 +853,16 @@ document.addEventListener('DOMContentLoaded', function() {
               id: data.cart.customer_id,
               name: data.cart.customer_name
             };
-            document.getElementById('customerName').textContent = selectedCustomer.name;
+            document.getElementById('customerName').textContent = data.cart.customer_name;
 
             // Load cart items
             data.cart.items.forEach(function(item) {
-              // Determine correct type and id
-              let itemType = 'standard';
-              let itemId = item.item_id;
-              // If item_type is explicitly 'variant', or if product_variant_id exists, treat as variant
-              if ((item.item_type && item.item_type === 'variant') || item.product_variant_id) {
-                itemType = 'variant';
-                itemId = item.product_variant_id || item.item_id;
-              }
               cartItems.push({
-                id: itemId,
-                type: itemType,
+                id: item.item_id,
+                type: item.item_type,
                 name: item.item_name,
-                price: parseFloat(item.item_price),
-                quantity: item.quantity,
+                price: parseFloat(item.price),
+                quantity: parseInt(item.quantity),
                 note: item.note || '',
                 img: item.item_image || '/manager_asset/images/salespilot logo1.png'
               });
@@ -844,42 +870,83 @@ document.addEventListener('DOMContentLoaded', function() {
 
             updateCartUI();
             saveCartModal.classList.remove('active');
-            alert('Cart loaded successfully!');
+            Swal.fire({
+              icon: 'success',
+              title: 'Cart Loaded!',
+              text: 'Cart loaded successfully',
+              showConfirmButton: false,
+              timer: 1500
+            });
           } else {
-            alert('Failed to load cart: ' + (data.message || 'Unknown error'));
+            Swal.fire({
+              icon: 'error',
+              title: 'Failed!',
+              text: 'Failed to load cart: ' + (data.message || 'Unknown error'),
+              confirmButtonColor: '#d33'
+            });
           }
         })
         .catch(error => {
           console.error('Error:', error);
-          alert('An error occurred while loading the cart.');
+          Swal.fire({
+            icon: 'error',
+            title: 'Error!',
+            text: 'An error occurred while loading the cart.',
+            confirmButtonColor: '#d33'
+          });
         });
       }
 
       // Delete cart from database
       function deleteCartFromDatabase(sessionId) {
-        if (!confirm('Are you sure you want to delete this saved cart?')) {
-          return;
-        }
-
-        fetch(`/manager/delete_saved_cart/${sessionId}`, {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        Swal.fire({
+          title: 'Are you sure?',
+          text: 'Do you want to delete this saved cart?',
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#d33',
+          cancelButtonColor: '#6c757d',
+          confirmButtonText: 'Yes, delete it!',
+          cancelButtonText: 'Cancel'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            fetch(`/manager/delete_saved_cart/${sessionId}`, {
+              method: 'DELETE',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+              }
+            })
+            .then(response => response.json())
+            .then(data => {
+              if (data.success) {
+                Swal.fire({
+                  icon: 'success',
+                  title: 'Deleted!',
+                  text: 'Cart deleted successfully',
+                  showConfirmButton: false,
+                  timer: 1500
+                });
+                loadSavedCartsList();
+              } else {
+                Swal.fire({
+                  icon: 'error',
+                  title: 'Failed!',
+                  text: 'Failed to delete cart: ' + (data.message || 'Unknown error'),
+                  confirmButtonColor: '#d33'
+                });
+              }
+            })
+            .catch(error => {
+              console.error('Error:', error);
+              Swal.fire({
+                icon: 'error',
+                title: 'Error!',
+                text: 'An error occurred while deleting the cart.',
+                confirmButtonColor: '#d33'
+              });
+            });
           }
-        })
-        .then(response => response.json())
-        .then(data => {
-          if (data.success) {
-            alert('Cart deleted successfully!');
-            loadSavedCartsList();
-          } else {
-            alert('Failed to delete cart: ' + (data.message || 'Unknown error'));
-          }
-        })
-        .catch(error => {
-          console.error('Error:', error);
-          alert('An error occurred while deleting the cart.');
         });
       }
 
@@ -888,7 +955,12 @@ document.addEventListener('DOMContentLoaded', function() {
         if (checkoutBtn.disabled) return;
         checkoutBtn.disabled = true;
         if (cartItems.length === 0) {
-          alert('Cart is empty. Add items before checkout.');
+          Swal.fire({
+            icon: 'warning',
+            title: 'Cart Empty',
+            text: 'Add items before checkout.',
+            confirmButtonColor: '#3085d6'
+          });
           checkoutBtn.disabled = false;
           return;
         }
@@ -938,19 +1010,34 @@ document.addEventListener('DOMContentLoaded', function() {
           checkoutBtn.disabled = false;
           if (data.success) {
             // Show success message
-            alert('Order has been sold successfully! Receipt #' + (data.receipt_number || 'N/A'));
+            Swal.fire({
+              icon: 'success',
+              title: 'Sale Complete!',
+              text: 'Order has been sold successfully! Receipt #' + (data.receipt_number || 'N/A'),
+              confirmButtonColor: '#28a745'
+            });
 
             // Generate and show receipt
             generateReceipt();
             receiptModal.classList.add('active');
           } else {
-            alert('Checkout failed: ' + (data.message || 'Unknown error'));
+            Swal.fire({
+              icon: 'error',
+              title: 'Checkout Failed',
+              text: data.message || 'Unknown error',
+              confirmButtonColor: '#d33'
+            });
           }
         })
         .catch(error => {
           checkoutBtn.disabled = false;
           console.error('Error:', error);
-          alert('An error occurred during checkout. Please try again.');
+          Swal.fire({
+            icon: 'error',
+            title: 'Error!',
+            text: 'An error occurred during checkout. Please try again.',
+            confirmButtonColor: '#d33'
+          });
         });
       });
 
