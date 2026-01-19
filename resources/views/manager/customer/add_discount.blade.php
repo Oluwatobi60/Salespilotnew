@@ -83,7 +83,14 @@ Create Customer Discount
                               <td>{{ $discount->customers_group }}</td>
                               <td>{{ $discount->discount_rate }}</td>
                               <td>
-                                <a href="#" class="btn btn-sm btn-warning me-1"><i class="bi bi-pencil me-2"></i>Edit</a>
+                                <button class="btn btn-sm btn-warning me-1 edit-discount-btn"
+                                        data-id="{{ $discount->id }}"
+                                        data-name="{{ $discount->discount_name }}"
+                                        data-type="{{ $discount->type }}"
+                                        data-group="{{ $discount->customers_group }}"
+                                        data-rate="{{ $discount->discount_rate }}">
+                                  <i class="bi bi-pencil me-2"></i>Edit
+                                </button>
                                 <form action="#" method="POST" style="display:inline-block;" class="delete-discount-form">
                                   @csrf
                                   @method('DELETE')
@@ -235,6 +242,59 @@ Create Customer Discount
             </form>
     </div>
 
+  </div>
+</div>
+
+<!-- Edit Discount Side Panel -->
+<div class="side-panel-overlay" id="editSidePanelOverlay"></div>
+<div class="side-panel" id="editDiscountPanel">
+  <div class="side-panel-content">
+    <div class="side-panel-header">
+      <h5 class="side-panel-title">
+        <i class="bi bi-pencil-square me-2"></i>Edit Discount
+      </h5>
+      <button type="button" class="btn-close" id="closeEditSidePanel" aria-label="Close"></button>
+    </div>
+    <div class="side-panel-body">
+      <form id="editDiscountForm" method="POST">
+        @csrf
+        @method('PUT')
+        <input type="hidden" id="edit_discount_id" name="id">
+        <div class="form-section mb-4">
+          <div class="mb-3">
+            <label for="edit_discount_name" class="form-label">Discount Name <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="edit_discount_name" name="discount_name" placeholder="Enter discount name" required>
+          </div>
+
+          <div class="mb-3">
+            <label for="edit_type" class="form-label">Discount Type <span class="text-danger">*</span></label>
+            <select class="form-select" id="edit_type" name="type" required>
+              <option value="" disabled>Select Type</option>
+              <option value="percentage">Percentage</option>
+              <option value="fixed_amount">Fixed Amount</option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label for="edit_customers_group" class="form-label">Customers Group <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="edit_customers_group" name="customers_group" placeholder="Enter customers group" required>
+          </div>
+
+          <div class="mb-3">
+            <label for="edit_discount_rate" class="form-label">Amount Discounted <span class="text-danger">*</span></label>
+            <input type="number" step="0.01" class="form-control" id="edit_discount_rate" name="discount_rate" placeholder="Enter amount discounted" required>
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="side-panel-footer">
+      <button type="button" class="btn btn-secondary" id="cancelEditDiscount">
+        <i class="bi bi-x-circle me-1"></i>Cancel
+      </button>
+      <button type="submit" form="editDiscountForm" class="btn btn-primary">
+        <i class="bi bi-check-circle me-1"></i>Update Discount
+      </button>
+    </div>
   </div>
 </div>
 

@@ -96,6 +96,8 @@ Route::middleware(['auth', 'verified','rolemanager:manager'])->group(function ()
         Route::get('/add_discount', 'add_discount')->name('manager.add_discount');
         Route::post('/discount/create', 'create_discount')->name('discount.create');
         Route::get('/get_discounts', 'get_discounts')->name('manager.get_discounts');
+        Route::put('/discount/update/{id}', 'update_discount')->name('discount.update');
+        Route::delete('/discount/delete/{id}', 'delete_discount')->name('discount.delete');
    });
 
 

@@ -143,6 +143,51 @@ class AddDiscountController extends Controller
         ]);
     }
 
+    public function update_discount(Request $request, $id)
+    {
+        $discount = AddDiscount::findOrFail($id);
+
+        // Validate the request data
+        $validatedData = $request->validate([
+            'discount_name' => 'required|string|max:255',
+            'type' => 'required|string|max:255',
+            'customers_group' => 'required|string|max:255',
+            'discount_rate' => 'required|numeric|min:0',
+        ]);
+
+        // Update the discount
+        $discount->update($validatedData);
+
+        // Check if the request expects JSON (AJAX request)
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Discount updated successfully',
+                'discount' => $discount
+            ], 200);
+        }
+
+        // Redirect back with success message
+        return redirect()->route('manager.add_discount')->with('success', 'Discount updated successfully.');
+    }
+
+    public function delete_discount($id)
+    {
+        $discount = AddDiscount::findOrFail($id);
+        $discount->delete();
+
+        // Check if the request expects JSON (AJAX request)
+        if (request()->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Discount deleted successfully'
+            ], 200);
+        }
+
+        // Redirect back with success message
+        return redirect()->route('manager.add_discount')->with('success', 'Discount deleted successfully.');
+    }
+
 
 
 }

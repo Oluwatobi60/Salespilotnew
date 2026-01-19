@@ -954,6 +954,11 @@ document.addEventListener('DOMContentLoaded', function() {
       checkoutBtn.addEventListener('click', function() {
         if (checkoutBtn.disabled) return;
         checkoutBtn.disabled = true;
+
+        // Show loading spinner
+        const originalButtonText = checkoutBtn.innerHTML;
+        checkoutBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
+
         if (cartItems.length === 0) {
           Swal.fire({
             icon: 'warning',
@@ -962,6 +967,7 @@ document.addEventListener('DOMContentLoaded', function() {
             confirmButtonColor: '#3085d6'
           });
           checkoutBtn.disabled = false;
+          checkoutBtn.innerHTML = originalButtonText;
           return;
         }
 
@@ -1007,19 +1013,23 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .then(response => response.json())
         .then(data => {
-          checkoutBtn.disabled = false;
           if (data.success) {
-            // Show success message
+            // Generate and show receipt first
+            generateReceipt();
+            receiptModal.classList.add('active');
+
+            // Show success message then reload
             Swal.fire({
               icon: 'success',
               title: 'Sale Complete!',
               text: 'Order has been sold successfully! Receipt #' + (data.receipt_number || 'N/A'),
-              confirmButtonColor: '#28a745'
+              confirmButtonColor: '#28a745',
+              timer: 2000,
+              showConfirmButton: false
+            }).then(() => {
+              // Reload the page after SweetAlert closes
+              location.reload();
             });
-
-            // Generate and show receipt
-            generateReceipt();
-            receiptModal.classList.add('active');
           } else {
             Swal.fire({
               icon: 'error',
@@ -1027,10 +1037,13 @@ document.addEventListener('DOMContentLoaded', function() {
               text: data.message || 'Unknown error',
               confirmButtonColor: '#d33'
             });
+            checkoutBtn.disabled = false;
+            checkoutBtn.innerHTML = originalButtonText;
           }
         })
         .catch(error => {
           checkoutBtn.disabled = false;
+          checkoutBtn.innerHTML = originalButtonText;
           console.error('Error:', error);
           Swal.fire({
             icon: 'error',
@@ -1226,15 +1239,29 @@ document.addEventListener('DOMContentLoaded', function() {
         const quantity = parseInt(itemQuantity.value);
         const note = itemNote.value.trim();
         let price = currentItem.price;
+
+        // Show loading spinner
+        const originalButtonText = this.innerHTML;
+        this.disabled = true;
+        this.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Adding...';
+
         // If manual price is needed, get from input
         if (sellingPriceGroup.style.display !== 'none') {
           price = parseFloat(modalSellingPrice.value);
           if (!price || price <= 0) {
-            alert('Please enter a valid selling price');
+            Swal.fire({
+              icon: 'warning',
+              title: 'Invalid Price',
+              text: 'Please enter a valid selling price',
+              confirmButtonColor: '#3085d6'
+            });
+            this.disabled = false;
+            this.innerHTML = originalButtonText;
             modalSellingPrice.focus();
             return;
           }
         }
+
         const existingIndex = cartItems.findIndex(item => item.id === currentItem.id && item.type === currentItem.type);
         if (existingIndex >= 0) {
           cartItems[existingIndex].quantity += quantity;
@@ -1255,8 +1282,24 @@ document.addEventListener('DOMContentLoaded', function() {
             img: currentItem.img
           });
         }
+
         updateCartUI();
         modal.classList.remove('active');
+
+        // Show success notification
+        Swal.fire({
+          icon: 'success',
+          title: 'Added to Cart!',
+          text: currentItem.name + ' has been added to your cart',
+          timer: 1500,
+          showConfirmButton: false,
+          toast: true,
+          position: 'top-end'
+        });
+
+        // Reset button
+        this.disabled = false;
+        this.innerHTML = originalButtonText;
       });
 
       // Search functionality
@@ -1423,6 +1466,16 @@ document.addEventListener('DOMContentLoaded', function() {
             if (cartItems[index].quantity > 1) {
               cartItems[index].quantity--;
               updateCartUI();
+              Swal.fire({
+                icon: 'info',
+                title: 'Quantity decreased',
+                text: cartItems[index].name,
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 1500,
+                timerProgressBar: true
+              });
             }
           });
         });
@@ -1442,15 +1495,35 @@ document.addEventListener('DOMContentLoaded', function() {
               stock = typeof cartItem.stock !== 'undefined' ? cartItem.stock : null;
             }
             if (stock === 0) {
-              alert('Cannot increase quantity. This item is SOLD OUT.');
+              Swal.fire({
+                icon: 'warning',
+                title: 'Out of Stock',
+                text: 'Cannot increase quantity. This item is SOLD OUT.',
+                confirmButtonColor: '#d33'
+              });
               return;
             }
             if (cartItem.quantity >= stock) {
-              alert('Cannot increase quantity beyond available stock.');
+              Swal.fire({
+                icon: 'warning',
+                title: 'Stock Limit Reached',
+                text: 'Cannot increase quantity beyond available stock.',
+                confirmButtonColor: '#d33'
+              });
               return;
             }
             cartItems[index].quantity++;
             updateCartUI();
+            Swal.fire({
+              icon: 'success',
+              title: 'Quantity increased',
+              text: cartItem.name,
+              toast: true,
+              position: 'top-end',
+              showConfirmButton: false,
+              timer: 1500,
+              timerProgressBar: true
+            });
           });
         });
 
@@ -1471,10 +1544,30 @@ document.addEventListener('DOMContentLoaded', function() {
         document.querySelectorAll('.cart-item-remove').forEach(function(btn) {
           btn.addEventListener('click', function() {
             const index = parseInt(this.dataset.index);
-            if (confirm('Remove ' + cartItems[index].name + ' from cart?')) {
-              cartItems.splice(index, 1);
-              updateCartUI();
-            }
+            Swal.fire({
+              title: 'Remove Item?',
+              text: 'Remove ' + cartItems[index].name + ' from cart?',
+              icon: 'warning',
+              showCancelButton: true,
+              confirmButtonColor: '#d33',
+              cancelButtonColor: '#3085d6',
+              confirmButtonText: 'Yes, remove it!',
+              cancelButtonText: 'Cancel'
+            }).then((result) => {
+              if (result.isConfirmed) {
+                cartItems.splice(index, 1);
+                updateCartUI();
+                Swal.fire({
+                  icon: 'success',
+                  title: 'Item removed',
+                  toast: true,
+                  position: 'top-end',
+                  showConfirmButton: false,
+                  timer: 1500,
+                  timerProgressBar: true
+                });
+              }
+            });
           });
         });
       }
