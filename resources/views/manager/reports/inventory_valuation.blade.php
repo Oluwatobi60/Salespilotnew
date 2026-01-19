@@ -19,36 +19,16 @@ Inventory Valuation
                           <input type="text" class="form-control form-control-sm" id="searchInput" placeholder="Search Item Name or Category" value="{{ request('search') }}">
                         </div>
                         <div class="col-md-3 col-8">
-                          <div class="dropdown">
-                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle w-100 text-start" type="button" id="categoryDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                              <span id="selectedCategoryLabel">All Categories</span>
-                            </button>
-                            <ul class="dropdown-menu w-100 px-2" aria-labelledby="categoryDropdown" style="min-width: 100%;">
-                              <li>
-                                <label class="dropdown-item mb-1">
-                                  <input type="checkbox" class="categoryCheckbox" value="Electronics"> Electronics
-                                </label>
-                              </li>
-                              <li>
-                                <label class="dropdown-item mb-1">
-                                  <input type="checkbox" class="categoryCheckbox" value="Accessories"> Accessories
-                                </label>
-                              </li>
-                              <li>
-                                <label class="dropdown-item mb-1">
-                                  <input type="checkbox" class="categoryCheckbox" value="Furniture"> Furniture
-                                </label>
-                              </li>
-                              <li>
-                                <label class="dropdown-item mb-1">
-                                  <input type="checkbox" class="categoryCheckbox" value="Stationery"> Stationery
-                                </label>
-                              </li>
-                              <li class="text-center mt-2 mb-1">
-                                <button type="button" class="btn btn-sm btn-primary w-100" onclick="updateCategoryFilter()">Apply Filter</button>
-                              </li>
-                            </ul>
-                          </div>
+                          <select class="form-select form-select-sm" id="categoryFilter">
+                            <option value="">All Categories</option>
+                            @if($allCategories && $allCategories->count() > 0)
+                              @foreach($allCategories as $category)
+                                <option value="{{ $category->category_name }}" {{ request('category') == $category->category_name ? 'selected' : '' }}>
+                                  {{ $category->category_name }}
+                                </option>
+                              @endforeach
+                            @endif
+                          </select>
                         </div>
                       </form>
                       <div class="row mb-4">
@@ -110,7 +90,7 @@ Inventory Valuation
                             </tr>
                           </thead>
                           <tbody>
-                            @foreach($paginatedItems as $i => $item)
+                            @forelse($paginatedItems as $i => $item)
                             <tr>
                               <td>{{ ($paginatedItems->firstItem() ?? 0) + $i }}</td>
                               <td>{{ $item['item_name'] }}</td>
@@ -122,7 +102,22 @@ Inventory Valuation
                               <td>₦{{ number_format($item['potential_profit'], 2) }}</td>
                               <td>{{ number_format($item['margin'], 2) }}%</td>
                             </tr>
-                            @endforeach
+                            @empty
+                            <tr>
+                              <td colspan="9" class="text-center py-5">
+                                <i class="bi bi-inbox" style="font-size: 3rem; color: #ccc;"></i>
+                                <p class="text-muted mt-3 mb-0">
+                                  @if(request('category'))
+                                    No items found in category "{{ request('category') }}"
+                                  @elseif(request('search'))
+                                    No items found matching "{{ request('search') }}"
+                                  @else
+                                    No inventory items available
+                                  @endif
+                                </p>
+                              </td>
+                            </tr>
+                            @endforelse
                                                     </tbody>
                                                   </table>
 

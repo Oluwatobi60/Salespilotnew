@@ -98,11 +98,10 @@ class ValuationReportController extends Controller
         }
 
         // Apply category filter
-        if ($request->filled('categories')) {
-            $selectedCategories = explode(',', $request->categories);
-            $itemsCollection = $itemsCollection->filter(function($item) use ($selectedCategories, $categories) {
-                // Match by category name
-                return in_array($item['category_name'], $selectedCategories);
+        if ($request->filled('category')) {
+            $selectedCategory = $request->category;
+            $itemsCollection = $itemsCollection->filter(function($item) use ($selectedCategory) {
+                return $item['category_name'] === $selectedCategory;
             });
         }
 
@@ -117,6 +116,10 @@ class ValuationReportController extends Controller
             $page,
             ['path' => request()->url(), 'query' => request()->query()]
         );
-        return view('manager.reports.inventory_valuation', compact('paginatedItems', 'totalInventoryValue', 'totalSellingValue', 'totalPotentialProfit', 'overallMargin'));
+
+        // Get all unique categories from items
+        $allCategories = Category::orderBy('category_name')->get();
+
+        return view('manager.reports.inventory_valuation', compact('paginatedItems', 'totalInventoryValue', 'totalSellingValue', 'totalPotentialProfit', 'overallMargin', 'allCategories'));
     }
 }
