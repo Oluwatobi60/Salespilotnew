@@ -27,7 +27,7 @@ Sell Product
     <div class="filter-controls">
     <div class="filter-left">
         <div class="search-box">
-        <i class="bi bi-search search-icon"></i>
+       {{--   <i class="bi bi-search search-icon"></i>  --}}
         <input type="text" id="searchInput" placeholder="Search items by name..." autocomplete="off">
         <i class="bi bi-x-circle clear-icon" id="clearSearch"></i>
         </div>
