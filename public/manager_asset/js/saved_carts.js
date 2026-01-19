@@ -169,7 +169,12 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .catch(error => {
             console.error('Error loading cart details:', error);
-            alert('Failed to load cart details');
+            Swal.fire({
+                icon: 'error',
+                title: 'Failed to Load',
+                text: 'Failed to load cart details',
+                confirmButtonColor: '#d33'
+            });
         });
     }
 
@@ -230,33 +235,63 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (deleteData.success) {
                         showSuccessMessage('Cart restored and removed from saved carts!');
                     } else {
-                        alert('Cart restored, but failed to delete from database: ' + (deleteData.message || 'Unknown error'));
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Partially Restored',
+                            text: 'Cart restored, but failed to delete from database: ' + (deleteData.message || 'Unknown error'),
+                            confirmButtonColor: '#3085d6'
+                        });
                     }
                     // Redirect to sell product page
                     window.location.href = '/manager/sell_product';
                 })
                 .catch(deleteError => {
-                    alert('Cart restored, but error deleting from database.');
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Partially Restored',
+                        text: 'Cart restored, but error deleting from database.',
+                        confirmButtonColor: '#3085d6'
+                    });
                     window.location.href = '/manager/sell_product';
                 });
             } else {
                 if (restoreCartBtn) restoreCartBtn.disabled = false;
                 console.error('Failed to load cart data:', data.message);
-                alert('Failed to load cart data: ' + (data.message || 'Unknown error'));
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Load Failed',
+                    text: 'Failed to load cart data: ' + (data.message || 'Unknown error'),
+                    confirmButtonColor: '#d33'
+                });
             }
         })
         .catch(error => {
             if (restoreCartBtn) restoreCartBtn.disabled = false;
             console.error('Error loading cart for restore:', error);
-            alert('An error occurred while loading the cart.');
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'An error occurred while loading the cart.',
+                confirmButtonColor: '#d33'
+            });
         });
     }
 
     // Delete cart with page reload
     function deleteCart(sessionId) {
-        if (!confirm('Are you sure you want to delete this saved cart? This action cannot be undone.')) {
-            return;
-        }
+        Swal.fire({
+            title: 'Delete Saved Cart?',
+            text: 'Are you sure you want to delete this saved cart? This action cannot be undone.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (!result.isConfirmed) {
+                return;
+            }
 
         fetch(`/manager/delete_saved_cart/${sessionId}`, {
             method: 'DELETE',
@@ -285,12 +320,23 @@ document.addEventListener('DOMContentLoaded', function() {
                     window.location.reload();
                 }, 1000);
             } else {
-                alert('Failed to delete cart: ' + (data.message || 'Unknown error'));
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Delete Failed',
+                    text: 'Failed to delete cart: ' + (data.message || 'Unknown error'),
+                    confirmButtonColor: '#d33'
+                });
             }
         })
         .catch(error => {
             console.error('Error deleting cart:', error);
-            alert('An error occurred while deleting the cart.');
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'An error occurred while deleting the cart.',
+                confirmButtonColor: '#d33'
+            });
+        });
         });
     }
 
@@ -497,7 +543,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const visibleCarts = allCarts.filter(cart => cart.rowElement.style.display !== 'none');
 
         if (visibleCarts.length === 0) {
-            alert('No data to export');
+            Swal.fire({
+                icon: 'info',
+                title: 'No Data',
+                text: 'No data to export',
+                confirmButtonColor: '#3085d6'
+            });
             return;
         }
 

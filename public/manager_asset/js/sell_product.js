@@ -796,13 +796,13 @@ document.addEventListener('DOMContentLoaded', function() {
               const date = new Date(cart.created_at).toLocaleString();
               const cartItem = document.createElement('div');
               cartItem.className = 'saved-cart-item';
-              cartItem.style.cursor = 'pointer';
+              cartItem.style.cssText = 'cursor: pointer; position: relative;';
               cartItem.dataset.sessionId = cart.session_id;
               cartItem.innerHTML = `
                 <div class="saved-cart-item-name">${cart.cart_name}</div>
                 <div class="saved-cart-item-details">${cart.customer_name} • ${cart.items_count} items • ₦${parseFloat(cart.total).toLocaleString()}</div>
                 <div class="saved-cart-item-date">${date}</div>
-                <button class="delete-cart-btn" data-session-id="${cart.session_id}" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">
+                <button class="delete-cart-btn" data-session-id="${cart.session_id}" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; z-index: 10;">
                   <i class="bi bi-trash"></i>
                 </button>
               `;
