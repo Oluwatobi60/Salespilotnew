@@ -16,14 +16,14 @@ Inventory Valuation
                       <p class="card-description">Current inventory value and stock levels.</p>
                       <form class="row g-2 align-items-center mb-4" id="inventoryFilterForm" style="margin-bottom: 1.5rem !important;">
                         <div class="col-md-4 col-12">
-                          <input type="text" class="form-control form-control-sm" id="searchInput" placeholder="Search Item Name or Category" value="{{ request('search') }}">
+                          <input type="text" class="form-control form-control-sm" id="searchInput" placeholder="Search Item Name or Category">
                         </div>
                         <div class="col-md-3 col-8">
                           <select class="form-select form-select-sm" id="categoryFilter">
                             <option value="">All Categories</option>
                             @if($allCategories && $allCategories->count() > 0)
                               @foreach($allCategories as $category)
-                                <option value="{{ $category->category_name }}" {{ request('category') == $category->category_name ? 'selected' : '' }}>
+                                <option value="{{ $category->category_name }}">
                                   {{ $category->category_name }}
                                 </option>
                               @endforeach
