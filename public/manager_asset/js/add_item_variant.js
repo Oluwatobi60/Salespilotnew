@@ -1507,26 +1507,30 @@
       // Add New Category Functionality
       // ============================
 
-      // Category panel elements
-      const categoryPanel = document.getElementById('addCategoryPanel');
-      const categoryOverlay = document.getElementById('categoryPanelOverlay');
-      const closeCategoryPanel = document.getElementById('closeCategoryPanel');
-      const cancelCategoryBtn = document.getElementById('cancelCategoryBtn');
-
-      // Function to open category panel
-      function openCategoryPanel() {
+      // Make openCategoryPanel a global function that gets elements fresh each time
+      window.openCategoryPanel = function() {
+        console.log('openCategoryPanel called!');
+        const categoryPanel = document.getElementById('addCategoryPanel');
+        const categoryOverlay = document.getElementById('categoryPanelOverlay');
+        console.log('categoryPanel:', categoryPanel);
+        console.log('categoryOverlay:', categoryOverlay);
         if (categoryPanel && categoryOverlay) {
+          console.log('Adding active classes...');
           categoryPanel.classList.add('active');
           categoryOverlay.classList.add('active');
           document.body.style.overflow = 'hidden';
           setTimeout(() => {
             document.getElementById('newCategoryName')?.focus();
           }, 300);
+        } else {
+          console.log('ERROR: categoryPanel or categoryOverlay not found!');
         }
-      }
+      };
 
-      // Function to close category panel
-      function closeCategoryPanelFunc() {
+      // Make closeCategoryPanel a global function
+      window.closeCategoryPanelFunc = function() {
+        const categoryPanel = document.getElementById('addCategoryPanel');
+        const categoryOverlay = document.getElementById('categoryPanelOverlay');
         if (categoryPanel && categoryOverlay) {
           categoryPanel.classList.remove('active');
           categoryOverlay.classList.remove('active');
@@ -1539,12 +1543,18 @@
             if (errorDiv) errorDiv.textContent = '';
           }
         }
-      }
+      };
 
-      // Close panel listeners
-      if (closeCategoryPanel) closeCategoryPanel.addEventListener('click', closeCategoryPanelFunc);
-      if (cancelCategoryBtn) cancelCategoryBtn.addEventListener('click', closeCategoryPanelFunc);
-      if (categoryOverlay) categoryOverlay.addEventListener('click', closeCategoryPanelFunc);
+      // Close panel listeners - attach when DOM is ready
+      $(document).ready(function() {
+        const closeCategoryPanel = document.getElementById('closeCategoryPanel');
+        const cancelCategoryBtn = document.getElementById('cancelCategoryBtn');
+        const categoryOverlay = document.getElementById('categoryPanelOverlay');
+
+        if (closeCategoryPanel) closeCategoryPanel.addEventListener('click', window.closeCategoryPanelFunc);
+        if (cancelCategoryBtn) cancelCategoryBtn.addEventListener('click', window.closeCategoryPanelFunc);
+        if (categoryOverlay) categoryOverlay.addEventListener('click', window.closeCategoryPanelFunc);
+      });
 
       // Escape key listener
       document.addEventListener('keydown', function(e) {
@@ -1594,11 +1604,15 @@
             throw { isValidation: true, errors: data.errors || {}, message: data.message };
           }))
           .then(data => {
+            // Get the category select element
+            const categorySelect = document.getElementById('category');
+
+            // Create new option element
             const newOption = document.createElement('option');
             newOption.value = data.category.id;
             newOption.textContent = data.category.category_name;
-            newOption.selected = true;
 
+            // Find the "Add New Category" option and insert before it
             const addNewOption = categorySelect.querySelector('option[value="add_new_category"]');
             if (addNewOption) {
               categorySelect.insertBefore(newOption, addNewOption);
@@ -1606,14 +1620,25 @@
               categorySelect.appendChild(newOption);
             }
 
-            if (typeof $ !== 'undefined' && $.fn.select2) $('#category').trigger('change');
-
-            closeCategoryPanelFunc();
-
-            if (typeof Swal !== 'undefined') {
-              Swal.fire({ icon: 'success', title: 'Success!', text: 'Category created successfully', timer: 2000, showConfirmButton: false });
+            // Update Select2 and select the new option
+            if (typeof $ !== 'undefined' && $.fn.select2) {
+              $('#category').val(data.category.id).trigger('change');
             } else {
-              alert('Category created successfully');
+              categorySelect.value = data.category.id;
+            }
+
+            // Close the panel
+            window.closeCategoryPanelFunc();
+
+            // Show success message
+            if (typeof Swal !== 'undefined') {
+              Swal.fire({
+                icon: 'success',
+                title: 'Success!',
+                text: 'Category created and selected successfully',
+                timer: 2000,
+                showConfirmButton: false
+              });
             }
           })
           .catch(error => {
@@ -1825,7 +1850,7 @@
       }
 
       // Initialize Select2 and category panel after DOM loads
-      document.addEventListener('DOMContentLoaded', function() {
+      $(document).ready(function() {
         console.log('DOM loaded - initializing select2 and category panel');
 
         // Initialize Select2 if available
@@ -1884,8 +1909,8 @@
               console.log('Opening category panel...');
               // Reset the select to empty
               $(this).val('').trigger('change');
-              // Show the panel
-              openCategoryPanel();
+              // Show the panel using the global function
+              window.openCategoryPanel();
             }
           });
 

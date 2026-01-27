@@ -198,7 +198,7 @@ Sell Product
 
 
             <!-- Discount Selection Side Panel -->
-            <div class="side-panel-overlay" id="discountPanelOverlay" style="display:none;"></div>
+            <div class="side-panel-overlay" id="discountPanelOverlay"></div>
             <div class="side-panel" id="discountSidePanel">
               <div class="side-panel-content">
                 <div class="side-panel-header d-flex justify-content-between align-items-center">

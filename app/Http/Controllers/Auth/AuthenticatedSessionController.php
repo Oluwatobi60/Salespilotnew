@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Models\Welcome\SignupRequest;
+use App\Models\UserSubscription;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -28,11 +30,39 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        // Get the authenticated user
+        $user = Auth::user();
+
+        // Check if email was verified via signup_request
+        $signupRequest = SignupRequest::where('email', $user->email)
+            ->where('is_used', true)
+            ->first();
+
+        if (!$signupRequest) {
+            Auth::logout();
+            return redirect()->route('login')->withErrors([
+                'email' => 'Your email has not been verified. Please complete the signup process first.',
+            ]);
+        }
+
+        // Check if user has an active subscription
+        $activeSubscription = UserSubscription::where('user_id', $user->id)
+            ->where('status', 'active')
+            ->where('end_date', '>=', now())
+            ->first();
+
+        if (!$activeSubscription) {
+            Auth::logout();
+            return redirect()->route('login')->withErrors([
+                'email' => 'You do not have an active subscription. Please subscribe to a plan to continue.',
+            ])->with('redirect_to_plans', true);
+        }
+
         // Log user login activity
         \App\Helpers\ActivityLogger::log('login', 'User logged in via AuthenticatedSessionController');
 
         // Get the authenticated user's role
-        $authUserRole = Auth::user()->role;
+        $authUserRole = $user->role;
 
         if($authUserRole === 'superadmin'){
             return redirect()->intended(route('superadmin', absolute: false));

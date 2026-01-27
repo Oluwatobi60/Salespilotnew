@@ -1,0 +1,52 @@
+
+.pricing-card:hover {
+    transform: translateY(-5px) !important;
+}
+.pricing-card button:hover {
+    background: #45a049 !important;
+}
+.pricing-card.popular {
+    box-shadow: 0 8px 30px rgba(76, 175, 80, 0.3) !important;
+}
+
+/* Responsive Design */
+@media screen and (max-width: 1200px) {
+    .pricing-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 25px !important;
+    }
+}
+
+@media screen and (max-width: 768px) {
+    .pricing-grid {
+        grid-template-columns: 1fr !important;
+        gap: 30px !important;
+    }
+
+    .container {
+        max-width: 100% !important;
+        padding: 0 15px;
+    }
+
+    .section-header h2 {
+        font-size: 28px !important;
+    }
+
+    .section-header p {
+        font-size: 16px !important;
+    }
+
+    .pricing-card.popular {
+        transform: none !important;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .pricing-card {
+        padding: 30px 20px !important;
+    }
+
+    .price span:first-child {
+        font-size: 36px !important;
+    }
+}

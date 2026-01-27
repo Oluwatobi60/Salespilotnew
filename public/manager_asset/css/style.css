@@ -12,9 +12,11 @@
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+  visibility: hidden;
 }
 .side-panel.open {
   right: 0;
+  visibility: visible;
 }
 .side-panel-overlay {
   position: fixed;
@@ -27,10 +29,19 @@
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.3s cubic-bezier(0.4,0,0.2,1);
+  visibility: hidden;
 }
 .side-panel-overlay.active {
   opacity: 1;
   pointer-events: auto;
+  visibility: visible;
+}
+/* Specific styles for discount panel */
+#discountSidePanel {
+  right: -100%;
+}
+#discountSidePanel.open {
+  right: 0;
 }
 .side-panel-content {
   padding: 2rem 1.5rem 1.5rem 1.5rem;

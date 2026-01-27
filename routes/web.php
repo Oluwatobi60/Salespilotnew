@@ -22,21 +22,33 @@ use App\Http\Controllers\Staff\StaffAuthController;
 use App\Http\Controllers\Staff\StaffProfileController;
 use App\Http\Controllers\Manager\ValuationReportController;
 use App\Http\Controllers\Staff\StaffAddDiscountController;
+use App\Http\Controllers\Welcome\SignupController;
 
-
-Route::get('/', function () {
-    return view('welcome');
-});
 
 /* Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified', 'rolemanager:staff'])->name('dashboard'); */
 
 
-Route::get('/superadmin/dashboard', function () {
+/* Route::get('/superadmin/dashboard', function () {
     return view('superadmin');
 })->middleware(['auth', 'verified', 'rolemanager:superadmin'])->name('superadmin');
+ */
 
+Route::get('/', function () {
+    return view('welcome');
+});
+
+// Signup routes
+Route::prefix('signup')->controller(SignupController::class)->group(function () {
+    Route::get('/get_started', 'index')->name('get_started');
+    Route::post('/get_started_store', 'store')->name('get_started.store');
+    Route::get('/verify/{token}', 'verifyToken')->name('signup.verify');
+    Route::get('/plan_pricing', 'plan_pricing')->name('plan_pricing');
+    Route::post('/plan_pricing', 'selectPlan')->name('select.plan');
+    Route::get('/payment', 'showPayment')->name('payment.show')->middleware('auth');
+    Route::post('/payment', 'processPayment')->name('payment.process')->middleware('auth');
+});
 
 
 

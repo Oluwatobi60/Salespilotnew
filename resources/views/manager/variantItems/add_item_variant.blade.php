@@ -1298,43 +1298,43 @@ Add Item Variant
 
       /* Category Side Panel Styles */
       .category-panel-overlay {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.5);
-        z-index: 9998;
-        opacity: 0;
-        transition: opacity 0.3s ease;
+        display: none !important;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        background: rgba(0, 0, 0, 0.5) !important;
+        z-index: 99998 !important;
+        opacity: 0 !important;
+        transition: opacity 0.3s ease !important;
       }
 
       .category-panel-overlay.active {
-        display: block;
-        opacity: 1;
+        display: block !important;
+        opacity: 1 !important;
       }
 
       .category-side-panel {
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%) scale(0.9);
-        width: 90%;
-        max-width: 420px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border-radius: 20px;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-        z-index: 9999;
-        opacity: 0;
-        visibility: hidden;
-        transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        position: fixed !important;
+        top: 50% !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%) scale(0.9) !important;
+        width: 90% !important;
+        max-width: 420px !important;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        border-radius: 20px !important;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3) !important;
+        z-index: 99999 !important;
+        opacity: 0 !important;
+        visibility: hidden !important;
+        transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55) !important;
       }
 
       .category-side-panel.active {
-        opacity: 1;
-        visibility: visible;
-        transform: translate(-50%, -50%) scale(1);
+        opacity: 1 !important;
+        visibility: visible !important;
+        transform: translate(-50%, -50%) scale(1) !important;
       }
 
       .category-panel-header {
@@ -1662,5 +1662,57 @@ Add Item Variant
     </div>
 
      <script src="{{ asset('manager_asset/js/add_item_variant.js') }}"></script>
+
+     <script>
+     // Test if script loads
+     console.log('INLINE SCRIPT LOADED - checking category functionality');
+
+     // Wait for everything to load
+     window.addEventListener('load', function() {
+       console.log('Window loaded, setting up category handler');
+
+       // Use native change event as fallback
+       const categorySelect = document.getElementById('category');
+       if (categorySelect) {
+         console.log('Category select found:', categorySelect);
+
+         categorySelect.addEventListener('change', function() {
+           console.log('Native change event fired, value:', this.value);
+
+           if (this.value === 'add_new_category') {
+             console.log('ADD NEW CATEGORY SELECTED!');
+
+             // Reset selection
+             this.value = '';
+
+             // Open panel
+             const panel = document.getElementById('addCategoryPanel');
+             const overlay = document.getElementById('categoryPanelOverlay');
+
+             console.log('Panel:', panel);
+             console.log('Overlay:', overlay);
+
+             if (panel && overlay) {
+               console.log('Adding active classes...');
+               panel.classList.add('active');
+               overlay.classList.add('active');
+               document.body.style.overflow = 'hidden';
+
+               // Force display with inline styles
+               panel.style.cssText = 'position: fixed !important; top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) scale(1) !important; z-index: 999999 !important; opacity: 1 !important; visibility: visible !important; display: block !important;';
+               overlay.style.cssText = 'position: fixed !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; background: rgba(0,0,0,0.7) !important; z-index: 999998 !important; display: block !important; opacity: 1 !important;';
+
+               setTimeout(() => {
+                 const input = document.getElementById('newCategoryName');
+                 if (input) input.focus();
+               }, 300);
+             }
+           }
+         });
+       } else {
+         console.error('Category select NOT FOUND!');
+       }
+     });
+     </script>
 
 @endsection

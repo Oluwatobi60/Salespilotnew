@@ -20,7 +20,7 @@
     if (addDiscountBtn) {
       addDiscountBtn.addEventListener('click', function() {
         if (discountPanel) discountPanel.classList.add('open');
-        if (discountPanelOverlay) discountPanelOverlay.style.display = 'block';
+        if (discountPanelOverlay) discountPanelOverlay.classList.add('active');
         if (discountSelect) {
           discountSelect.innerHTML = '<option value="" selected disabled>Loading discounts...</option>';
           applyDiscountBtn.disabled = true;
@@ -58,7 +58,7 @@
     // Close side panel function
     function closeDiscountSidePanel() {
       if (discountPanel) discountPanel.classList.remove('open');
-      if (discountPanelOverlay) discountPanelOverlay.style.display = 'none';
+      if (discountPanelOverlay) discountPanelOverlay.classList.remove('active');
     }
     if (closeDiscountPanel) closeDiscountPanel.addEventListener('click', closeDiscountSidePanel);
     if (cancelDiscountBtn) cancelDiscountBtn.addEventListener('click', closeDiscountSidePanel);
