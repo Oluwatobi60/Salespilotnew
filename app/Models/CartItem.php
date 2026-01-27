@@ -12,6 +12,9 @@ use App\Models\Staffs;
 class CartItem extends Model
 {
     protected $fillable = [
+        'business_name',
+        'manager_name',
+        'manager_email',
         'cart_name',
         'customer_id',
         'customer_name',

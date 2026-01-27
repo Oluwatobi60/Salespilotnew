@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Manager;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use App\Models\CartItem;
 use App\Models\StandardItem;
 use App\Models\ProductVariant;
@@ -15,7 +16,12 @@ class SalesbyItemController extends Controller
 {
      public function sales_by_item(Request $request)
     {
-        $query = CartItem::where('status', 'completed');
+        // Get manager information
+        $manager = Auth::user();
+        $businessName = $manager->business_name;
+
+        $query = CartItem::where('status', 'completed')
+            ->where('business_name', $businessName);
 
         // Apply date range filter
         if ($request->filled('date_range')) {
@@ -203,8 +209,13 @@ class SalesbyItemController extends Controller
 
     public function getCategoriesList()
     {
-        // Get unique categories from items that have been sold
+        // Get manager information
+        $manager = Auth::user();
+        $businessName = $manager->business_name;
+
+        // Get unique categories from items that have been sold filtered by business_name
         $categoryIds = CartItem::where('status', 'completed')
+            ->where('business_name', $businessName)
             ->whereNotNull('item_id')
             ->get()
             ->map(function($cartItem) {
@@ -244,8 +255,13 @@ class SalesbyItemController extends Controller
 
     public function getItemsList()
     {
-        // Get unique items from completed sales
+        // Get manager information
+        $manager = Auth::user();
+        $businessName = $manager->business_name;
+
+        // Get unique items from completed sales filtered by business_name
         $items = CartItem::where('status', 'completed')
+            ->where('business_name', $businessName)
             ->select('item_id', 'item_type', 'item_name')
             ->groupBy('item_id', 'item_type', 'item_name')
             ->orderBy('item_name')

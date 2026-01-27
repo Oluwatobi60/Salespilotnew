@@ -4,21 +4,28 @@ namespace App\Http\Controllers\Manager;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use App\Models\CartItem;
+use App\Models\Staffs;
 use Carbon\Carbon;
 
 class StaffSalesController extends Controller
 {
       public function staff_sales(Request $request)
     {
-        $query = CartItem::where('status', 'completed');
+        // Get manager information
+        $manager = Auth::user();
+        $businessName = $manager->business_name;
+
+        $query = CartItem::where('cart_items.status', 'completed')
+            ->where('cart_items.business_name', $businessName);
 
         // Apply staff filter
         if ($request->filled('staff_id')) {
             $staffId = $request->staff_id;
             $query->where(function($q) use ($staffId) {
-                $q->where('staff_id', $staffId)
-                  ->orWhere('user_id', $staffId);
+                $q->where('cart_items.staff_id', $staffId)
+                  ->orWhere('cart_items.user_id', $staffId);
             });
         }
 
@@ -64,33 +71,52 @@ class StaffSalesController extends Controller
             }
 
             if ($startDate) {
-                $query->where('created_at', '>=', $startDate);
+                $query->where('cart_items.created_at', '>=', $startDate);
             }
             if ($endDate) {
-                $query->where('created_at', '<=', $endDate);
+                $query->where('cart_items.created_at', '<=', $endDate);
             }
         }
 
         $salesbystaff = $query
-            ->select('staff_id', 'user_id')
-            ->selectRaw('SUM(total) as total_sales')
-            ->selectRaw('COUNT(DISTINCT receipt_number) as transactions_count')
-            ->selectRaw('SUM(quantity) as items_sold')
-            ->selectRaw('MAX(created_at) as last_transaction_date')
-            ->groupBy('staff_id', 'user_id')
+            ->leftJoin('staffs', 'cart_items.staff_id', '=', 'staffs.id')
+            ->selectRaw("
+                CASE
+                    WHEN cart_items.staff_id IS NULL THEN CONCAT('Manager: ', cart_items.manager_name)
+                    ELSE cart_items.manager_name
+                END as seller_name
+            ")
+            ->selectRaw("
+                CASE
+                    WHEN cart_items.staff_id IS NULL THEN 'Manager'
+                    ELSE staffs.role
+                END as seller_role
+            ")
+            ->select(
+                'cart_items.staff_id',
+                'cart_items.user_id',
+                'cart_items.manager_name',
+                'staffs.fullname as staff_name',
+                'staffs.email as staff_email'
+            )
+            ->selectRaw('SUM(cart_items.total) as total_sales')
+            ->selectRaw('COUNT(DISTINCT cart_items.receipt_number) as transactions_count')
+            ->selectRaw('SUM(cart_items.quantity) as items_sold')
+            ->selectRaw('MAX(cart_items.created_at) as last_transaction_date')
+            ->groupBy('cart_items.manager_name', 'cart_items.staff_id', 'cart_items.user_id', 'staffs.fullname', 'staffs.email', 'staffs.role')
             ->orderBy('total_sales', 'desc')
-            ->with(['user', 'staff'])
             ->paginate(15);
 
         // Calculate totals with same filters
-        $totalsQuery = CartItem::where('status', 'completed');
+        $totalsQuery = CartItem::where('cart_items.status', 'completed')
+            ->where('cart_items.business_name', $businessName);
 
         // Apply same staff filter
         if ($request->filled('staff_id')) {
             $staffId = $request->staff_id;
             $totalsQuery->where(function($q) use ($staffId) {
-                $q->where('staff_id', $staffId)
-                  ->orWhere('user_id', $staffId);
+                $q->where('cart_items.staff_id', $staffId)
+                  ->orWhere('cart_items.user_id', $staffId);
             });
         }
 
@@ -136,10 +162,10 @@ class StaffSalesController extends Controller
             }
 
             if ($startDate) {
-                $totalsQuery->where('created_at', '>=', $startDate);
+                $totalsQuery->where('cart_items.created_at', '>=', $startDate);
             }
             if ($endDate) {
-                $totalsQuery->where('created_at', '<=', $endDate);
+                $totalsQuery->where('cart_items.created_at', '<=', $endDate);
             }
         }
 
@@ -149,6 +175,12 @@ class StaffSalesController extends Controller
             ->selectRaw('SUM(quantity) as items_sold')
             ->first();
 
-        return view('manager.reports.sales_by_staff', ['salesbystaff' => $salesbystaff], compact('totals'));
+        // Get all staff members from manager's business for the filter dropdown
+        $staffList = Staffs::where('business_name', $businessName)
+            ->select('id', 'fullname', 'staffsid')
+            ->orderBy('fullname')
+            ->get();
+
+        return view('manager.reports.sales_by_staff', compact('salesbystaff', 'totals', 'staffList'));
     }
 }

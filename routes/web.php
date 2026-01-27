@@ -55,7 +55,7 @@ Route::prefix('signup')->controller(SignupController::class)->group(function () 
 // (Removed duplicate staff routes)
 
 //Manager routes
-Route::middleware(['auth', 'verified','rolemanager:manager'])->group(function () {
+Route::middleware(['auth', 'verified', 'rolemanager:manager', 'check.subscription'])->group(function () {
   Route::prefix('manager')->group(function () {
 
     //managers main controller
@@ -63,7 +63,6 @@ Route::middleware(['auth', 'verified','rolemanager:manager'])->group(function ()
         Route::get('/', 'index')->name('manager');
         Route::get('/add_item_standard', 'add_item_standard')->name('manager.add_item_standard');
         Route::get('/add_item_variant', 'add_item_variant')->name('manager.add_item_variant');
-        Route::get('/add_bundle', 'add_item_bundle')->name('manager.add_item_bundle');
         Route::get('/suppliers', 'suppliers')->name('manager.suppliers');
         Route::get('/sell_product', 'sell_product')->name('manager.sell_product');
     });

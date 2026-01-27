@@ -8,8 +8,11 @@ use App\Models\Supplier;
 use App\Models\Unit;
 use App\Models\StandardItem;
 use App\Models\Category;
+use App\Models\UserSubscription;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use App\Models\CartItem;
+use Carbon\Carbon;
 
 class ManagerMainController extends Controller
 {
@@ -90,6 +93,31 @@ class ManagerMainController extends Controller
                 ];
             });
 
+        // Check subscription expiry status for notifications
+        $user = Auth::user();
+        $subscription = UserSubscription::where('user_id', $user->id)
+            ->where('status', 'active')
+            ->orderBy('end_date', 'desc')
+            ->first();
+
+        $subscriptionAlert = null;
+        $daysRemaining = null;
+
+        if ($subscription) {
+            $daysRemaining = Carbon::today()->diffInDays($subscription->end_date, false);
+
+            // Show alert if expiring within 5 days or already expired
+            if ($daysRemaining <= 5) {
+                $subscriptionAlert = [
+                    'days_remaining' => max(0, $daysRemaining),
+                    'end_date' => $subscription->end_date->format('F j, Y'),
+                    'plan_name' => $subscription->plan->name,
+                    'is_expired' => $daysRemaining < 0,
+                    'is_urgent' => $daysRemaining <= 2,
+                ];
+            }
+        }
+
         return view('manager', [
             'totalItemsSold' => $totalItemsSold,
             'numberOfSales' => $numberOfSales,
@@ -102,6 +130,7 @@ class ManagerMainController extends Controller
             'endDate' => $endDate,
             'salesOverview' => $salesOverview->toArray(),
             'topProducts' => $topProducts->toArray(),
+            'subscriptionAlert' => $subscriptionAlert,
         ]);
     }
 
@@ -119,16 +148,6 @@ class ManagerMainController extends Controller
         $units = Unit::all();
         $categories = Category::all();
         return view('manager.variantItems.add_item_variant', compact('suppliers', 'units', 'categories'));
-    }
-
-    public function add_item_bundle()
-    {
-        $suppliers = Supplier::all();
-        $units = Unit::all();
-        $standardItems = StandardItem::where('current_stock', '>', 0)->get();
-        $variantItems = ProductVariant::where('stock_quantity', '>', 0)->get();
-
-        return view('manager.bundleItems.add_item_bundle', compact('suppliers', 'units', 'standardItems', 'variantItems'));
     }
 
 

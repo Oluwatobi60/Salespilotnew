@@ -1,5 +1,4 @@
-
-    // --- Discount Side Panel Logic ---
+// --- Discount Side Panel Logic ---
     let availableDiscounts = [];
     let selectedDiscount = null;
 
@@ -23,7 +22,7 @@
         if (discountPanelOverlay) discountPanelOverlay.style.display = 'block';
         if (discountSelect) {
           discountSelect.innerHTML = '<option value="" selected disabled>Loading discounts...</option>';
-          applyDiscountBtn.disabled = true;
+          if (applyDiscountBtn) applyDiscountBtn.disabled = true;
           selectedDiscount = null;
           fetch('/staff/get_discounts', {
             method: 'GET',
@@ -70,7 +69,7 @@
       discountSelect.addEventListener('change', function() {
         const selectedId = this.value;
         selectedDiscount = availableDiscounts.find(d => d.id == selectedId);
-        applyDiscountBtn.disabled = !selectedDiscount;
+        if (applyDiscountBtn) applyDiscountBtn.disabled = !selectedDiscount;
       });
     }
 
@@ -93,97 +92,124 @@
     function getDiscountAmount() {
       return window.selectedDiscount ? parseFloat(window.selectedDiscount.discount_rate) : 0;
     }
-document.addEventListener('DOMContentLoaded', function() {
-  // --- Discount Side Panel Logic ---
-  let availableDiscounts = [];
-  let selectedDiscount = null;
 
-  const addDiscountBtn = document.getElementById('addDiscountBtn');
-  const discountPanel = document.getElementById('discountSidePanel');
-  const discountPanelOverlay = document.getElementById('discountPanelOverlay');
-  const discountSelect = document.getElementById('discountSelect');
-  const applyDiscountBtn = document.getElementById('applyDiscountBtn');
-  const closeDiscountPanel = document.getElementById('closeDiscountPanel');
-  const cancelDiscountBtn = document.getElementById('cancelDiscountBtn');
+    // SweetAlert2 helpers (should be loaded from blade)
+    function showSuccess(message) {
+        Swal.fire({
+            icon: 'success',
+            title: 'Success',
+            text: message,
+            confirmButtonColor: '#3085d6',
+        });
+    }
+    function showError(message) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: message,
+            confirmButtonColor: '#d33',
+        });
+    }
+    function showInfo(message) {
+        Swal.fire({
+            icon: 'info',
+            title: 'Info',
+            text: message,
+            confirmButtonColor: '#3085d6',
+        });
+    }
 
-  // Helper to format currency
-  function formatCurrency(amount) {
-    return '₦' + parseFloat(amount).toLocaleString();
-  }
+    document.addEventListener('DOMContentLoaded', function() {
+      // --- Discount Side Panel Logic ---
+      let availableDiscounts = [];
+      let selectedDiscount = null;
 
-  // Open side panel and fetch discounts
-  if (addDiscountBtn) {
-    addDiscountBtn.addEventListener('click', function() {
-      if (discountPanel) discountPanel.classList.add('open');
-      if (discountPanelOverlay) discountPanelOverlay.style.display = 'block';
-      if (discountSelect) {
-        discountSelect.innerHTML = '<option value="" selected disabled>Loading discounts...</option>';
-        if (applyDiscountBtn) applyDiscountBtn.disabled = true;
-        selectedDiscount = null;
-        fetch('/staff/get_discounts', {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-          }
-        })
-        .then(response => response.json())
-        .then(data => {
-          if (data.success && data.discounts.length > 0) {
-            availableDiscounts = data.discounts;
-            discountSelect.innerHTML = '<option value="" selected disabled>Select a discount</option>';
-            data.discounts.forEach(function(discount, idx) {
-              const option = document.createElement('option');
-              option.value = discount.id;
-              option.textContent = `${discount.discount_name} (₦${parseFloat(discount.discount_rate).toLocaleString()})`;
-              option.dataset.rate = discount.discount_rate;
-              discountSelect.appendChild(option);
+      const addDiscountBtn = document.getElementById('addDiscountBtn');
+      const discountPanel = document.getElementById('discountSidePanel');
+      const discountPanelOverlay = document.getElementById('discountPanelOverlay');
+      const discountSelect = document.getElementById('discountSelect');
+      const applyDiscountBtn = document.getElementById('applyDiscountBtn');
+      const closeDiscountPanel = document.getElementById('closeDiscountPanel');
+      const cancelDiscountBtn = document.getElementById('cancelDiscountBtn');
+
+      // Helper to format currency
+      function formatCurrency(amount) {
+        return '₦' + parseFloat(amount).toLocaleString();
+      }
+
+      // Open side panel and fetch discounts
+      if (addDiscountBtn) {
+        addDiscountBtn.addEventListener('click', function() {
+          if (discountPanel) discountPanel.classList.add('open');
+          if (discountPanelOverlay) discountPanelOverlay.style.display = 'block';
+          if (discountSelect) {
+            discountSelect.innerHTML = '<option value="" selected disabled>Loading discounts...</option>';
+            if (applyDiscountBtn) applyDiscountBtn.disabled = true;
+            selectedDiscount = null;
+            fetch('/staff/get_discounts', {
+              method: 'GET',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+              }
+            })
+            .then(response => response.json())
+            .then(data => {
+              if (data.success && data.discounts.length > 0) {
+                availableDiscounts = data.discounts;
+                discountSelect.innerHTML = '<option value="" selected disabled>Select a discount</option>';
+                data.discounts.forEach(function(discount, idx) {
+                  const option = document.createElement('option');
+                  option.value = discount.id;
+                  option.textContent = `${discount.discount_name} (₦${parseFloat(discount.discount_rate).toLocaleString()})`;
+                  option.dataset.rate = discount.discount_rate;
+                  discountSelect.appendChild(option);
+                });
+              } else {
+                discountSelect.innerHTML = '<option value="" disabled>No discounts available</option>';
+              }
+            })
+            .catch(() => {
+              discountSelect.innerHTML = '<option value="" disabled>Failed to load discounts</option>';
             });
-          } else {
-            discountSelect.innerHTML = '<option value="" disabled>No discounts available</option>';
           }
-        })
-        .catch(() => {
-          discountSelect.innerHTML = '<option value="" disabled>Failed to load discounts</option>';
         });
       }
-    });
-  }
 
-  // Close side panel function
-  function closeDiscountSidePanel() {
-    if (discountPanel) discountPanel.classList.remove('open');
-    if (discountPanelOverlay) discountPanelOverlay.style.display = 'none';
-  }
-  if (closeDiscountPanel) closeDiscountPanel.addEventListener('click', closeDiscountSidePanel);
-  if (cancelDiscountBtn) cancelDiscountBtn.addEventListener('click', closeDiscountSidePanel);
-  if (discountPanelOverlay) discountPanelOverlay.addEventListener('click', closeDiscountSidePanel);
+      // Close side panel function
+      function closeDiscountSidePanel() {
+        if (discountPanel) discountPanel.classList.remove('open');
+        if (discountPanelOverlay) discountPanelOverlay.style.display = 'none';
+      }
+      if (closeDiscountPanel) closeDiscountPanel.addEventListener('click', closeDiscountSidePanel);
+      if (cancelDiscountBtn) cancelDiscountBtn.addEventListener('click', closeDiscountSidePanel);
+      if (discountPanelOverlay) discountPanelOverlay.addEventListener('click', closeDiscountSidePanel);
 
-  // Handle discount selection
-  if (discountSelect) {
-    discountSelect.addEventListener('change', function() {
-      const selectedId = this.value;
-      selectedDiscount = availableDiscounts.find(d => d.id == selectedId);
-      if (applyDiscountBtn) applyDiscountBtn.disabled = !selectedDiscount;
-    });
-  }
+      // Handle discount selection
+      if (discountSelect) {
+        discountSelect.addEventListener('change', function() {
+          const selectedId = this.value;
+          selectedDiscount = availableDiscounts.find(d => d.id == selectedId);
+          if (applyDiscountBtn) applyDiscountBtn.disabled = !selectedDiscount;
+        });
+      }
 
-  // Apply discount to cart
-  if (applyDiscountBtn) {
-    applyDiscountBtn.addEventListener('click', function() {
-      if (!selectedDiscount) return;
-      window.selectedDiscount = selectedDiscount;
-      updateCartUI();
-      closeDiscountSidePanel();
-    });
-  }
+      // Apply discount to cart
+      if (applyDiscountBtn) {
+        applyDiscountBtn.addEventListener('click', function() {
+          if (!selectedDiscount) return;
+          window.selectedDiscount = selectedDiscount;
+          updateCartUI();
+          closeDiscountSidePanel();
+        });
+      }
 
-  // Cart state
-  let cartItems = [];
-  let selectedCustomer = {
-    id: null,
-    name: 'Walk-in Customer'
-  };
+      // Cart state
+      let cartItems = [];
+      let selectedCustomer = {
+        id: null,
+        name: 'Walk-in Customer'
+      };
 
       // Customers array - will be populated from database
       let allCustomers = [
@@ -284,7 +310,7 @@ document.addEventListener('DOMContentLoaded', function() {
               sessionStorage.removeItem('restoreCartSessionId');
 
               // Show success message
-              alert('Cart restored successfully! ' + cartItems.length + ' items loaded.');
+              showSuccess('Cart restored successfully! ' + cartItems.length + ' items loaded.');
             } else {
               console.error('No items found in cart data');
               alert('No items found in the saved cart.');
@@ -296,14 +322,14 @@ document.addEventListener('DOMContentLoaded', function() {
             sessionStorage.removeItem('restoreCartSessionId');
           }
         } else {
-          console.log('No restore cart data found');
+              showSuccess('Cart restored successfully! ' + cartItems.length + ' items loaded.');
         }
       }
-
+              showInfo('No items found in the saved cart.');
       // Restore saved cart on page load (after a small delay to ensure DOM is ready)
       setTimeout(restoreSavedCart, 100);
 
-      // Elements
+            showError('Error restoring cart: ' + error.message);
       const itemCards = document.querySelectorAll('.item-card');
       const cartItemsContainer = document.getElementById('cartItems');
       const cartTotalElement = document.getElementById('cartTotal');
@@ -631,7 +657,7 @@ document.addEventListener('DOMContentLoaded', function() {
       // Save Cart functionality
       saveCartBtn.addEventListener('click', function() {
         if (cartItems.length === 0) {
-          alert('Cart is empty. Add items before saving.');
+          showError('Cart is empty. Add items before saving.');
           return;
         }
         // Prevent double open
@@ -661,7 +687,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const cartNote = document.getElementById('savedCartNote').value.trim();
 
         if (!cartName) {
-          alert('Please enter a name for the cart');
+          showInfo('Please enter a name for the cart');
           confirmSaveCartBtn.disabled = false;
           return;
         }
@@ -703,7 +729,7 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(data => {
           confirmSaveCartBtn.disabled = false;
           if (data.success) {
-            alert('Cart saved successfully!');
+            showSuccess('Cart saved successfully!');
 
             // Clear current cart
             cartItems = [];
@@ -713,13 +739,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
             saveCartModal.classList.remove('active');
           } else {
-            alert('Failed to save cart: ' + (data.message || 'Unknown error'));
+            showError('Failed to save cart: ' + (data.message || 'Unknown error'));
           }
         })
         .catch(error => {
           confirmSaveCartBtn.disabled = false;
           console.error('Error:', error);
-          alert('An error occurred while saving the cart. Please try again.');
+          showError('An error occurred while saving the cart. Please try again.');
         });
       });
 
@@ -851,15 +877,15 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => response.json())
         .then(data => {
           if (data.success) {
-            alert('Cart deleted successfully!');
+            showSuccess('Cart deleted successfully!');
             loadSavedCartsList();
           } else {
-            alert('Failed to delete cart: ' + (data.message || 'Unknown error'));
+            showError('Failed to delete cart: ' + (data.message || 'Unknown error'));
           }
         })
         .catch(error => {
           console.error('Error:', error);
-          alert('An error occurred while deleting the cart.');
+          showError('An error occurred while deleting the cart.');
         });
       }
 
@@ -868,7 +894,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (checkoutBtn.disabled) return;
         checkoutBtn.disabled = true;
         if (cartItems.length === 0) {
-          alert('Cart is empty. Add items before checkout.');
+          showError('Cart is empty. Add items before checkout.');
           checkoutBtn.disabled = false;
           return;
         }
@@ -918,19 +944,19 @@ document.addEventListener('DOMContentLoaded', function() {
           checkoutBtn.disabled = false;
           if (data.success) {
             // Show success message
-            alert('Order has been sold successfully! Receipt #' + (data.receipt_number || 'N/A'));
+            showSuccess('Order has been sold successfully! Receipt #' + (data.receipt_number || 'N/A'));
 
             // Generate and show receipt
             generateReceipt();
             receiptModal.classList.add('active');
           } else {
-            alert('Checkout failed: ' + (data.message || 'Unknown error'));
+            showError('Checkout failed: ' + (data.message || 'Unknown error'));
           }
         })
         .catch(error => {
           checkoutBtn.disabled = false;
           console.error('Error:', error);
-          alert('An error occurred during checkout. Please try again.');
+          showError('An error occurred during checkout. Please try again.');
         });
       });
 
@@ -1090,11 +1116,11 @@ document.addEventListener('DOMContentLoaded', function() {
           stock = typeof cartItem.stock !== 'undefined' ? cartItem.stock : null;
         }
         if (stock === 0) {
-          alert('Cannot increase quantity. This item is SOLD OUT.');
+          showError('Cannot increase quantity. This item is SOLD OUT.');
           return;
         }
         if (cartItem.quantity >= stock) {
-          alert('Cannot increase quantity beyond available stock.');
+          showError('Cannot increase quantity beyond available stock.');
           return;
         }
         cartItems[index].quantity++;
@@ -1123,7 +1149,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (sellingPriceGroup.style.display !== 'none') {
           price = parseFloat(modalSellingPrice.value);
           if (!price || price <= 0) {
-            alert('Please enter a valid selling price');
+            showInfo('Please enter a valid selling price');
             modalSellingPrice.focus();
             return;
           }

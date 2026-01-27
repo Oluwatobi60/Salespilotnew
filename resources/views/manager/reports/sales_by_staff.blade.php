@@ -42,7 +42,13 @@ Sales Summary
                       <div class="col-md-4">
                         <select class="form-select form-select-sm" id="staffFilter">
                           <option value="">All Staff</option>
+                          @foreach($staffList as $staffMember)
+                            <option value="{{ $staffMember->id }}" {{ request('staff_id') == $staffMember->id ? 'selected' : '' }}>
+                              {{ $staffMember->fullname }} ({{ $staffMember->staffsid }})
+                            </option>
+                          @endforeach
                         </select>
+                        <small class="form-text text-muted">Filter by specific staff member.</small>
                       </div>
                     </div>
 
@@ -65,8 +71,12 @@ Sales Summary
                             <tr>
                               <td>{{ $index + 1 }}</td>
                               <td>
-                                @if(!empty($staff->user->name)){{ $staff->user->name }}<br>@endif
-                                @if(!empty($staff->staff->fullname)){{ $staff->staff->fullname }}@endif
+                                {{ $staff->seller_name ?? $staff->staff_name ?? $staff->manager_name ?? 'N/A' }}
+                                @if($staff->seller_role)
+                                  <span class="badge badge-sm {{ $staff->seller_role == 'Manager' ? 'badge-info' : 'badge-secondary' }}">
+                                    {{ $staff->seller_role }}
+                                  </span>
+                                @endif
                               </td>
                               <td>{{ $staff->transactions_count ?? 0 }}</td>
                               <td>{{ $staff->items_sold ?? 0 }}</td>

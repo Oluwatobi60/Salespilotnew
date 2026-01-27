@@ -4,13 +4,17 @@ namespace App\Http\Controllers\Manager;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use App\Models\Supplier;
 
 class SupplierController extends Controller
 {
    public function suppliers()
     {
-        $suppliers = Supplier::all();
+        $manager = Auth::user();
+        $businessName = $manager->business_name;
+
+        $suppliers = Supplier::where('business_name', $businessName)->get();
         return view('manager.supplier.supplier', compact('suppliers'));
     }
 
@@ -24,6 +28,15 @@ class SupplierController extends Controller
             'phone' => 'nullable|string|max:20',
             'address' => 'nullable|string|max:500',
         ]);
+
+        // Get manager information
+        $manager = Auth::user();
+        $managerName = trim(($manager->firstname ?? '') . ' ' . ($manager->othername ?? '') . ' ' . ($manager->surname ?? ''));
+
+        // Add manager info to validated data
+        $validatedData['business_name'] = $manager->business_name;
+        $validatedData['manager_name'] = $managerName;
+        $validatedData['manager_email'] = $manager->email;
 
         // Create a new supplier
         $supplier = Supplier::create($validatedData);

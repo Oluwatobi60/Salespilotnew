@@ -21,13 +21,18 @@ class SalesReportController extends Controller
     // Display completed sales with pagination
     public function completed_sales()
     {
-        $completedSales = CartItem::where('status', 'completed')
-            ->select('receipt_number', 'customer_name', 'customer_id', 'created_at', 'user_id', 'staff_id')
-            ->selectRaw('SUM(total) as total')
-            ->selectRaw('SUM(discount) as discount')
+        $manager = \Illuminate\Support\Facades\Auth::user();
+        $businessName = $manager->business_name;
+
+        $completedSales = CartItem::where('cart_items.status', 'completed')
+            ->where('cart_items.business_name', $businessName)
+            ->leftJoin('staffs', 'cart_items.staff_id', '=', 'staffs.id')
+            ->select('cart_items.receipt_number', 'cart_items.customer_name', 'cart_items.customer_id', 'cart_items.created_at', 'cart_items.user_id', 'cart_items.staff_id', 'cart_items.manager_name', 'staffs.fullname as staff_name')
+            ->selectRaw('SUM(cart_items.total) as total')
+            ->selectRaw('SUM(cart_items.discount) as discount')
             ->selectRaw('COUNT(*) as items_count')
-            ->groupBy('receipt_number', 'customer_name', 'customer_id', 'created_at', 'user_id', 'staff_id')
-            ->orderBy('created_at', 'desc')
+            ->groupBy('cart_items.receipt_number', 'cart_items.customer_name', 'cart_items.customer_id', 'cart_items.created_at', 'cart_items.user_id', 'cart_items.staff_id', 'cart_items.manager_name', 'staffs.fullname')
+            ->orderBy('cart_items.created_at', 'desc')
             ->paginate(15);
 
         return view('manager.sales.completed_sales', compact('completedSales'));
@@ -430,12 +435,13 @@ class SalesReportController extends Controller
         $users = collect();
         if ($userIds->isNotEmpty()) {
             $users = User::whereIn('id', $userIds)
-                ->select('id', 'name')
+                ->select('id', 'firstname', 'othername', 'surname')
                 ->get()
                 ->map(function ($user) {
+                    $userName = trim(($user->firstname ?? '') . ' ' . ($user->othername ?? '') . ' ' . ($user->surname ?? '')) ?: 'Unknown User';
                     return [
                         'id' => 'user_' . $user->id,
-                        'name' => $user->name,
+                        'name' => $userName,
                         'type' => 'user'
                     ];
                 });

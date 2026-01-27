@@ -30,9 +30,9 @@
                         <form method="POST" action="{{ route('staff.login.submit') }}">
                             @csrf
                             <div class="mb-3">
-                                <label for="email" class="form-label">Email</label>
-                                <input id="email" type="email" name="email" class="form-control @error('email') is-invalid @enderror" value="{{ old('email') }}" required autofocus autocomplete="username">
-                                @error('email')
+                                <label for="login" class="form-label">Email or Staff ID</label>
+                                <input id="login" type="text" name="login" class="form-control @error('login') is-invalid @enderror" value="{{ old('login') }}" required autofocus autocomplete="username" placeholder="Enter your email or staff ID">
+                                @error('login')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>

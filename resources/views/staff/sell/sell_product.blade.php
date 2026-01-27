@@ -8,6 +8,38 @@ Sell Product
 <!-- SweetAlert2 CSS -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 
+<!-- SweetAlert2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+// Replace alert() with SweetAlert2
+function showSuccess(message) {
+    Swal.fire({
+        icon: 'success',
+        title: 'Success',
+        text: message,
+        confirmButtonColor: '#3085d6',
+    });
+}
+function showError(message) {
+    Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: message,
+        confirmButtonColor: '#d33',
+    });
+}
+function showInfo(message) {
+    Swal.fire({
+        icon: 'info',
+        title: 'Info',
+        text: message,
+        confirmButtonColor: '#3085d6',
+    });
+}
+// Example: Replace alert('Cart saved!') with showSuccess('Cart saved!')
+// You can now use showSuccess(), showError(), showInfo() in your JS code
+</script>
+
 <div class="container-scroller">
 
 

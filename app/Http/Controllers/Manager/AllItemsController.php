@@ -4,9 +4,9 @@ namespace App\Http\Controllers\Manager;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use App\Models\StandardItem;
 use App\Models\VariantItem;
-use App\Models\BundleItem;
 use App\Models\ProductVariant;
 use App\Models\Supplier;
 use App\Models\Unit;
@@ -16,25 +16,26 @@ class AllItemsController extends Controller
 {
     public function all_items()
     {
-        // Fetch Standard Items with related data
+        // Get manager information
+        $manager = Auth::user();
+        $businessName = $manager->business_name;
+
+        // Fetch Standard Items with related data filtered by business_name
         $standardItems = StandardItem::with([
             'supplier',
             'pricingTiers'
-        ])->latest()->get();
+        ])
+        ->where('business_name', $businessName)
+        ->latest()->get();
 
-        // Fetch Variant Items with related data
+        // Fetch Variant Items with related data filtered by business_name
         $variantItems = VariantItem::with([
             'supplier',
             'unit',
             'variants.pricingTiers'
-        ])->latest()->get();
-
-        // Fetch Bundle Items with related data
-        $bundleItems = BundleItem::with([
-            'supplier',
-            'components.standardItem',
-            'components.variantItem'
-        ])->latest()->get();
+        ])
+        ->where('business_name', $businessName)
+        ->latest()->get();
 
         // Fetch all Product Variants with related data
         $productVariants = ProductVariant::with([
@@ -47,14 +48,13 @@ class AllItemsController extends Controller
         $categories = collect();
         $categories = $categories->merge($standardItems->pluck('category_name'))
                                  ->merge($variantItems->pluck('category_name'))
-                                 ->merge($bundleItems->pluck('category'))
                                  ->filter()
                                  ->unique()
                                  ->sort()
                                  ->values();
 
-        // Get all suppliers
-        $suppliers = Supplier::orderBy('name')->get();
+        // Get all suppliers filtered by business_name
+        $suppliers = Supplier::where('business_name', $businessName)->orderBy('name')->get();
 
         // Combine all items into a single collection
         $allItems = collect();
@@ -101,29 +101,6 @@ class AllItemsController extends Controller
             ]);
         }
 
-        // Add bundle items with type identifier
-        foreach ($bundleItems as $item) {
-            $allItems->push([
-                'id' => $item->id,
-                'type' => 'bundle',
-                'name' => $item->bundle_name,
-                'code' => $item->bundle_code,
-                'barcode' => $item->barcode,
-                'category' => $item->category,
-                'supplier' => $item->supplier,
-                'unit' => $item->unit,
-                'image' => $item->bundle_image,
-                'cost_price' => $item->total_bundle_cost,
-                'selling_price' => $item->bundle_selling_price,
-                'profit_margin' => $item->profit_margin,
-                'current_stock' => $item->current_stock,
-                'low_stock_threshold' => $item->low_stock_threshold,
-                'components' => $item->components,
-                'created_at' => $item->created_at,
-                'data' => $item
-            ]);
-        }
-
         // Sort by created_at descending
         $allItems = $allItems->sortByDesc('created_at');
 
@@ -142,7 +119,6 @@ class AllItemsController extends Controller
             'allItemsPaginated',
             'standardItems',
             'variantItems',
-            'bundleItems',
             'productVariants',
             'categories',
             'suppliers'
@@ -152,15 +128,15 @@ class AllItemsController extends Controller
 
     public function delete_item($type, $id)
     {
+        $manager = Auth::user();
+        $businessName = $manager->business_name;
+
         switch ($type) {
             case 'standard':
-                $item = StandardItem::findOrFail($id);
+                $item = StandardItem::where('business_name', $businessName)->findOrFail($id);
                 break;
             case 'variant':
-                $item = VariantItem::findOrFail($id);
-                break;
-            case 'bundle':
-                $item = BundleItem::findOrFail($id);
+                $item = VariantItem::where('business_name', $businessName)->findOrFail($id);
                 break;
             default:
                 return redirect()->back()->with('error', 'Invalid item type specified.');
@@ -176,9 +152,14 @@ class AllItemsController extends Controller
     public function show_item_details($type, $id)
     {
         try {
+            $manager = Auth::user();
+            $businessName = $manager->business_name;
+
             switch ($type) {
                 case 'standard':
-                    $item = StandardItem::with(['supplier', 'pricingTiers'])->findOrFail($id);
+                    $item = StandardItem::with(['supplier', 'pricingTiers'])
+                        ->where('business_name', $businessName)
+                        ->findOrFail($id);
                     $formattedItem = [
                         'id' => $item->id,
                         'type' => 'standard',
@@ -222,35 +203,6 @@ class AllItemsController extends Controller
                     ];
                     break;
 
-                case 'bundle':
-                    $item = BundleItem::with(['supplier', 'components.standardItem', 'components.variantItem'])->findOrFail($id);
-                    $formattedItem = [
-                        'id' => $item->id,
-                        'type' => 'bundle',
-                        'bundle_name' => $item->bundle_name,
-                        'item_name' => $item->bundle_name,
-                        'bundle_code' => $item->bundle_code,
-                        'item_code' => $item->bundle_code,
-                        'barcode' => $item->barcode,
-                        'category' => $item->category,
-                        'unit' => $item->unit,
-                        'bundle_image' => $item->bundle_image,
-                        'item_image' => $item->bundle_image,
-                        'total_bundle_cost' => $item->total_bundle_cost,
-                        'cost_price' => $item->total_bundle_cost,
-                        'bundle_selling_price' => $item->bundle_selling_price,
-                        'selling_price' => $item->bundle_selling_price,
-                        'profit_margin' => $item->profit_margin,
-                        'current_stock' => $item->current_stock,
-                        'low_stock_threshold' => $item->low_stock_threshold,
-                        'supplier' => $item->supplier,
-                        'components' => $item->components,
-                        'description' => $item->description,
-                        'updated_at' => $item->updated_at,
-                        'created_at' => $item->created_at
-                    ];
-                    break;
-
                 default:
                     return response()->json(['error' => 'Invalid item type specified.'], 400);
             }
@@ -268,21 +220,24 @@ class AllItemsController extends Controller
     public function edit_item($type, $id)
     {
         try {
-            $suppliers = Supplier::all();
+            $manager = Auth::user();
+            $businessName = $manager->business_name;
+
+            $suppliers = Supplier::where('business_name', $businessName)->get();
             $units = Unit::all();
             $itemType = $type; // Define itemType variable
 
             switch ($type) {
                 case 'standard':
-                    $item = StandardItem::with(['supplier', 'pricingTiers'])->findOrFail($id);
+                    $item = StandardItem::with(['supplier', 'pricingTiers'])
+                        ->where('business_name', $businessName)
+                        ->findOrFail($id);
                     break;
 
                 case 'variant':
-                    $item = VariantItem::with(['supplier', 'unit', 'variants.pricingTiers'])->findOrFail($id);
-                    break;
-
-                case 'bundle':
-                    $item = BundleItem::with(['supplier', 'components.standardItem', 'components.variantItem'])->findOrFail($id);
+                    $item = VariantItem::with(['supplier', 'unit', 'variants.pricingTiers'])
+                        ->where('business_name', $businessName)
+                        ->findOrFail($id);
                     break;
 
                 default:
@@ -299,9 +254,12 @@ class AllItemsController extends Controller
     public function update_item(Request $request, $type, $id)
     {
         try {
+            $manager = Auth::user();
+            $businessName = $manager->business_name;
+
             switch ($type) {
                 case 'standard':
-                    $item = StandardItem::findOrFail($id);
+                    $item = StandardItem::where('business_name', $businessName)->findOrFail($id);
 
                     $validatedData = $request->validate([
                         'item_name' => 'required|string|max:255',
@@ -337,7 +295,7 @@ class AllItemsController extends Controller
                     break;
 
                 case 'variant':
-                    $item = VariantItem::findOrFail($id);
+                    $item = VariantItem::where('business_name', $businessName)->findOrFail($id);
 
                     $validatedData = $request->validate([
                         'item_name' => 'required|string|max:255',
@@ -362,34 +320,6 @@ class AllItemsController extends Controller
                     $item->update($validatedData);
                     break;
 
-                case 'bundle':
-                    $item = BundleItem::findOrFail($id);
-
-                    $validatedData = $request->validate([
-                        'bundle_name' => 'required|string|max:255',
-                        'bundle_code' => 'required|string|max:255',
-                        'barcode' => 'nullable|string|max:255',
-                        'category' => 'required|string|max:255',
-                        'supplier_id' => 'nullable|exists:suppliers,id',
-                        'unit' => 'nullable|string|max:255',
-                        'description' => 'nullable|string',
-                        'bundle_selling_price' => 'required|numeric|min:0',
-                        'current_stock' => 'nullable|integer|min:0',
-                        'low_stock_threshold' => 'nullable|integer|min:0',
-                        'bundle_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
-                    ]);
-
-                    // Handle image upload
-                    if ($request->hasFile('bundle_image')) {
-                        $image = $request->file('bundle_image');
-                        $imageName = time() . '_' . $image->getClientOriginalName();
-                        $imagePath = $image->move(public_path('uploads/item_images'), $imageName);
-                        $validatedData['bundle_image'] = 'uploads/item_images/' . $imageName;
-                    }
-
-                    $item->update($validatedData);
-                    break;
-
                 default:
                     return redirect()->route('all_items')->with('error', 'Invalid item type specified.');
             }
@@ -404,6 +334,9 @@ class AllItemsController extends Controller
     public function delete_multiple(Request $request)
     {
         try {
+            $manager = Auth::user();
+            $businessName = $manager->business_name;
+
             // Validate input
             $items = $request->input('items');
 
@@ -432,7 +365,7 @@ class AllItemsController extends Controller
                     $itemName = '';
                     switch ($type) {
                         case 'standard':
-                            $item = StandardItem::find($id);
+                            $item = StandardItem::where('business_name', $businessName)->find($id);
                             if ($item) {
                                 $itemName = $item->item_name;
                                 $item->forceDelete();
@@ -442,19 +375,9 @@ class AllItemsController extends Controller
                             break;
 
                         case 'variant':
-                            $item = VariantItem::find($id);
+                            $item = VariantItem::where('business_name', $businessName)->find($id);
                             if ($item) {
                                 $itemName = $item->item_name;
-                                $item->forceDelete();
-                                $deletedCount++;
-                                \App\Helpers\ActivityLogger::log('Delete item (multiple)', json_encode(['type' => $type, 'id' => $id, 'name' => $itemName]));
-                            }
-                            break;
-
-                        case 'bundle':
-                            $item = BundleItem::find($id);
-                            if ($item) {
-                                $itemName = $item->bundle_name;
                                 $item->forceDelete();
                                 $deletedCount++;
                                 \App\Helpers\ActivityLogger::log('Delete item (multiple)', json_encode(['type' => $type, 'id' => $id, 'name' => $itemName]));

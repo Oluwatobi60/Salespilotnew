@@ -7,6 +7,7 @@ use App\Models\VariantItem;
 use App\Models\ProductVariant;
 use App\Models\VariantPricingTier;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -82,6 +83,15 @@ class VariantItemController extends Controller
             // Extract variant sets configuration from the first variant
             $variantSets = $this->extractVariantSets($request->input('variants'));
             $validatedData['variant_sets'] = $variantSets;
+
+            // Get manager information
+            $manager = Auth::user();
+            $managerName = trim(($manager->firstname ?? '') . ' ' . ($manager->othername ?? '') . ' ' . ($manager->surname ?? ''));
+
+            // Add manager info to validated data
+            $validatedData['business_name'] = $manager->business_name;
+            $validatedData['manager_name'] = $managerName;
+            $validatedData['manager_email'] = $manager->email;
 
             // Create the variant item (base item)
             $variantItem = VariantItem::create($validatedData);

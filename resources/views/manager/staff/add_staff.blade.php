@@ -123,7 +123,7 @@ Add Staff Member
                                 <img src="{{ $staff->passport_photo ? asset($staff->passport_photo) : asset('manager_asset/images/faces/face1.jpg') }}" alt="Profile" class="me-2" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
                                 <div>
                                   <h6 class="mb-0">{{ $staff->fullname }}</h6>
-                                  <p class="text-muted mb-0">{{ '@' . $staff->username }}</p>
+                                  <p class="text-muted mb-0">{{ 'ID: ' . $staff->staffsid }}</p>
                                 </div>
                               </div>
                             </td>
@@ -201,21 +201,14 @@ Add Staff Member
                   <i class="bi bi-person-badge me-2"></i>Personal Information
                 </h6>
               <div class="row">
-                <div class="col-md-4 mb-3">
+                <div class="col-md-6 mb-3">
                   <label for="fullname" class="form-label">Full Name <span class="text-danger">*</span></label>
                   <input type="text" class="form-control" id="fullname" name="fullname" placeholder="Enter full name" required value="{{ old('fullname') }}">
                   @error('fullname')
                     <small class="text-danger">{{ $message }}</small>
                   @enderror
                 </div>
-                <div class="col-md-4 mb-3">
-                  <label for="username" class="form-label">Username <span class="text-danger">*</span></label>
-                  <input type="text" class="form-control" id="username" name="username" placeholder="Enter username" required value="{{ old('username') }}">
-                  @error('username')
-                    <small class="text-danger">{{ $message }}</small>
-                  @enderror
-                </div>
-                <div class="col-md-4 mb-3">
+                <div class="col-md-6 mb-3">
                   <label for="staff_id" class="form-label">Staff ID <span class="text-danger">*</span></label>
                   <input type="text" class="form-control" id="staff_id" name="staff_id" placeholder="Auto-generated" value="{{ old('staff_id') }}" readonly required>
                   <small class="text-muted">Auto-generated: 3 letters of surname + 3 digits</small>

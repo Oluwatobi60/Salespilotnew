@@ -58,6 +58,9 @@ class SuppliersSeeder extends Seeder
 
         foreach ($suppliers as $supplier) {
             DB::table('suppliers')->insert(array_merge($supplier, [
+                'business_name' => null,
+                'manager_name' => null,
+                'manager_email' => null,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]));

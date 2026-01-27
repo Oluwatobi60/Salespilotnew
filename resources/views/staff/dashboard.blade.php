@@ -187,10 +187,10 @@ Staff Dashboard
         </div>
 
         <div class="cart-summary">
-            <!-- Add Discount Button -->
-            <button class="cart-action-btn" id="addDiscountBtn">
+            <!-- Add Discount Button (disabled for staff) -->
+            {{-- <button class="cart-action-btn" id="addDiscountBtn">
             <i class="bi bi-percent"></i> Add Discount
-            </button>
+            </button> --}}
 
             <div class="cart-total">
             <span>Total:</span>

@@ -4,8 +4,12 @@ namespace App\Http\Controllers\Manager;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use App\Models\AddDiscount;
 use App\Models\CartItem;
+use App\Models\Welcome\SignupRequest;
+use App\Models\UserSubscription;
+use App\Models\User;
 use Carbon\Carbon;
 
 class AddDiscountController extends Controller
@@ -103,7 +107,13 @@ class AddDiscountController extends Controller
 
    public function add_discount()
     {
-         $discounnts = AddDiscount::all(); // Fetch all discounts
+         // Get logged-in manager's business name
+         $manager = Auth::user();
+         $businessName = $manager->business_name;
+
+         // Fetch discounts only for this manager's business
+         $discounnts = AddDiscount::where('business_name', $businessName)->get();
+
         return view('manager.customer.add_discount', compact('discounnts'));
     }
 
@@ -118,8 +128,15 @@ class AddDiscountController extends Controller
             'discount_rate' => 'required|numeric|min:0',
         ]);
 
+        // Get manager info from logged-in user
+        $manager = Auth::user();
+        $managerFullName = trim(($manager->firstname ?? '') . ' ' . ($manager->othername ?? '') . ' ' . ($manager->surname ?? ''));
+
         // Create a new discount record in the database
         $discount = new AddDiscount();
+        $discount->business_name = $manager->business_name ?? null;
+        $discount->manager_name = $managerFullName ?: null;
+        $discount->manager_email = $manager->email ?? null;
         $discount->discount_name = $validatedData['discount_name'];
         $discount->type = $validatedData['type'];
         $discount->customers_group = $validatedData['customers_group'];
@@ -136,7 +153,14 @@ class AddDiscountController extends Controller
 
     public function get_discounts()
     {
-        $discounts = AddDiscount::all(['id', 'discount_name', 'discount_rate', 'time_used']);
+        // Get logged-in manager's business name
+        $manager = Auth::user();
+        $businessName = $manager->business_name;
+
+        // Fetch discounts only for this manager's business
+        $discounts = AddDiscount::where('business_name', $businessName)
+            ->get(['id', 'discount_name', 'discount_rate', 'time_used']);
+
         return response()->json([
             'success' => true,
             'discounts' => $discounts

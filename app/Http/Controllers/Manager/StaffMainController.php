@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use App\Models\Staffs;
+use App\Mail\StaffCredentials;
 
 class StaffMainController extends Controller
 {
@@ -18,7 +20,6 @@ class StaffMainController extends Controller
             $validatedData = $request->validate([
                 'staff_id' => 'required|string|unique:staffs,staffsid',
                 'fullname' => 'required|string|max:255',
-                'username' => 'required|string|max:255|unique:staffs,username',
                 'email' => 'required|string|email|max:255|unique:staffs,email',
                 'phone' => 'nullable|string|regex:/^([0-9\s\-\+\(\)]*)$/|min:10|max:15|unique:staffs,phone',
                 'password' => 'required|string|min:8|confirmed',
@@ -27,7 +28,6 @@ class StaffMainController extends Controller
                 'address' => 'nullable|string',
                 'passport_photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             ], [
-                'username.unique' => 'This username is already taken. Please choose a different one.',
                 'email.unique' => 'This email address is already registered. Please use a different email.',
                 'phone.unique' => 'This phone number is already registered. Please use a different phone number.',
                 'phone.regex' => 'Please enter a valid phone number with only numbers, spaces, dashes, or parentheses.',
@@ -36,12 +36,22 @@ class StaffMainController extends Controller
                 'password.confirmed' => 'Password confirmation does not match.',
             ]);
 
+            // Store plain password before hashing (for email)
+            $plainPassword = $validatedData['password'];
+
             // Hash the password
             $validatedData['password'] = Hash::make($validatedData['password']);
 
             // Map staff_id to staffsid for database
             $validatedData['staffsid'] = $validatedData['staff_id'];
             unset($validatedData['staff_id']);
+
+            // Auto-populate business_name, manager_name, and manager_email from the logged-in manager's user record
+            $manager = Auth::user();
+            $validatedData['business_name'] = $manager->business_name ?? null;
+            $managerFullName = trim(($manager->firstname ?? '') . ' ' . ($manager->othername ?? '') . ' ' . ($manager->surname ?? ''));
+            $validatedData['manager_name'] = $managerFullName ?: null;
+            $validatedData['manager_email'] = $manager->email ?? null;
 
             // Handle file upload
             if($request->hasFile('passport_photo')) {
@@ -52,18 +62,40 @@ class StaffMainController extends Controller
             }
 
             // Create a new staff member
-            Staffs::create($validatedData);
+            $staff = Staffs::create($validatedData);
+
+            // Send email with login credentials
+            $emailSent = false;
+            $emailMessage = '';
+            try {
+                Mail::to($staff->email)->send(new StaffCredentials(
+                    $staff,
+                    $plainPassword,
+                    $validatedData['business_name'],
+                    $validatedData['manager_name']
+                ));
+                $emailSent = true;
+                $emailMessage = 'Login credentials have been sent to the staff member\'s email.';
+            } catch (\Exception $e) {
+                $emailMessage = 'Staff created but email could not be sent: ' . $e->getMessage();
+            }
 
             // Check if it's an AJAX request
             if ($request->expectsJson() || $request->ajax()) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'Staff member added successfully!'
+                    'message' => 'Staff member added successfully!',
+                    'email_sent' => $emailSent,
+                    'email_message' => $emailMessage
                 ]);
             }
 
             // Redirect back with a success message
-            return redirect()->route('manager.staff')->with('success', 'Staff member added successfully.');
+            $successMessage = 'Staff member added successfully.';
+            if ($emailSent) {
+                $successMessage .= ' Login credentials have been sent to their email.';
+            }
+            return redirect()->route('manager.staff')->with('success', $successMessage);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
             // Return validation errors as JSON for AJAX requests
@@ -88,13 +120,22 @@ class StaffMainController extends Controller
 
     public function add_staff()
     {
-        $staffdata = Staffs::latest()->paginate(4);
+        $manager = Auth::user();
+        $businessName = $manager->business_name;
+
+        $staffdata = Staffs::where('business_name', $businessName)
+            ->latest()
+            ->paginate(4);
         return view('manager.staff.add_staff', compact('staffdata'));
     }
 
     public function editstaff($id)
     {
-        $staffedit = Staffs::findOrFail($id);
+        $manager = Auth::user();
+        $businessName = $manager->business_name;
+
+        $staffedit = Staffs::where('business_name', $businessName)
+            ->findOrFail($id);
         return view('manager.staff.edit', compact('staffedit'));
     }
 
@@ -102,14 +143,15 @@ class StaffMainController extends Controller
     public function updatestaff(Request $request, $id)
     {
         try {
-            // Find the staff member
-            $staff = Staffs::findOrFail($id);
+            // Find the staff member - ensure they belong to manager's business
+            $manager = Auth::user();
+            $businessName = $manager->business_name;
+            $staff = Staffs::where('business_name', $businessName)->findOrFail($id);
 
             // Validate the incoming request data
             $validatedData = $request->validate([
                 'staff_id' => 'required|string|unique:staffs,staffsid,'.$staff->id,
                 'fullname' => 'required|string|max:255',
-                'username' => 'required|string|max:255|unique:staffs,username,'.$staff->id,
                 'email' => 'required|string|email|max:255|unique:staffs,email,'.$staff->id,
                 'phone' => 'nullable|string|regex:/^([0-9\s\-\+\(\)]*)$/|min:10|max:15|unique:staffs,phone,'.$staff->id,
                 'password' => 'nullable|string|min:8|confirmed',
@@ -118,7 +160,6 @@ class StaffMainController extends Controller
                 'address' => 'nullable|string',
                 'passport_photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             ], [
-                'username.unique' => 'This username is already taken. Please choose a different one.',
                 'email.unique' => 'This email address is already registered. Please use a different email.',
                 'phone.unique' => 'This phone number is already registered. Please use a different phone number.',
                 'phone.regex' => 'Please enter a valid phone number with only numbers, spaces, dashes, or parentheses.',
@@ -139,6 +180,13 @@ class StaffMainController extends Controller
                 $validatedData['staffsid'] = $validatedData['staff_id'];
                 unset($validatedData['staff_id']);
             }
+
+            // Auto-populate business_name, manager_name, and manager_email from the logged-in manager's user record
+            $manager = Auth::user();
+            $validatedData['business_name'] = $manager->business_name ?? null;
+            $managerFullName = trim(($manager->firstname ?? '') . ' ' . ($manager->othername ?? '') . ' ' . ($manager->surname ?? ''));
+            $validatedData['manager_name'] = $managerFullName ?: null;
+            $validatedData['manager_email'] = $manager->email ?? null;
 
             // Handle file upload
             if($request->hasFile('passport_photo')) {
@@ -170,8 +218,10 @@ class StaffMainController extends Controller
     public function deletestaff($id)
     {
         try {
-            // Find the staff member
-            $staff = Staffs::findOrFail($id);
+            // Find the staff member - ensure they belong to manager's business
+            $manager = Auth::user();
+            $businessName = $manager->business_name;
+            $staff = Staffs::where('business_name', $businessName)->findOrFail($id);
 
             // Delete passport photo if exists
             if($staff->passport_photo && file_exists(public_path($staff->passport_photo))) {

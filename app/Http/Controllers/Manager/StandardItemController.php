@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\StandardItem;
 use App\Models\PricingTier;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 
@@ -71,6 +72,13 @@ class StandardItemController extends Controller
             if (empty($validatedData['item_code'])) {
                 $validatedData['item_code'] = 'STD-' . strtoupper(substr($validatedData['item_name'], 0, 3)) . '-' . time();
             }
+
+            // Get manager info from logged-in user
+            $manager = Auth::user();
+            $managerFullName = trim(($manager->firstname ?? '') . ' ' . ($manager->othername ?? '') . ' ' . ($manager->surname ?? ''));
+            $validatedData['business_name'] = $manager->business_name ?? null;
+            $validatedData['manager_name'] = $managerFullName ?: null;
+            $validatedData['manager_email'] = $manager->email ?? null;
 
             // Create the standard item
             $standardItem = StandardItem::create($validatedData);

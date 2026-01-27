@@ -4,24 +4,26 @@ namespace App\Http\Controllers\Manager;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use App\Models\Category;
 use App\Models\StandardItem;
 use App\Models\VariantItem;
-use App\Models\BundleItem;
 
 class CategoryController extends Controller
 {
     public function all_category()
     {
-        $categories = Category::all();
+        $manager = Auth::user();
+        $businessName = $manager->business_name;
+
+        $categories = Category::where('business_name', $businessName)->get();
 
         // Count items for each category
         foreach ($categories as $category) {
             $standardCount = StandardItem::where('category', $category->id)->count();
             $variantCount = VariantItem::where('category', $category->id)->count();
-            $bundleCount = BundleItem::where('category', $category->id)->count();
 
-            $category->items_count = $standardCount + $variantCount + $bundleCount;
+            $category->items_count = $standardCount + $variantCount;
         }
 
         return view('manager.category.all_category', compact('categories'));
@@ -34,6 +36,15 @@ class CategoryController extends Controller
        $validatedata = $request->validate([
              'category_name' => 'unique:categories|max:100|min:5|required',
         ]);
+
+        // Get manager information
+        $manager = Auth::user();
+        $managerName = trim(($manager->firstname ?? '') . ' ' . ($manager->othername ?? '') . ' ' . ($manager->surname ?? ''));
+
+        // Add manager info to validated data
+        $validatedata['business_name'] = $manager->business_name;
+        $validatedata['manager_name'] = $managerName;
+        $validatedata['manager_email'] = $manager->email;
 
         // Create a new category
         $category = Category::create($validatedata);
@@ -86,9 +97,8 @@ class CategoryController extends Controller
         // Check if any items are associated with this category
         $standardCount = StandardItem::where('category', $category->id)->count();
         $variantCount = VariantItem::where('category', $category->id)->count();
-        $bundleCount = BundleItem::where('category', $category->id)->count();
 
-        if ($standardCount > 0 || $variantCount > 0 || $bundleCount > 0) {
+        if ($standardCount > 0 || $variantCount > 0) {
             return redirect()->route('all_categories')->with('error', 'Cannot delete category. There are items associated with this category.');
         }
 

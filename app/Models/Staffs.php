@@ -13,8 +13,10 @@ class Staffs extends Authenticatable
 
     protected $fillable = [
         'staffsid',
+        'business_name',
+        'manager_name',
+        'manager_email',
         'fullname',
-        'username',
         'email',
         'phone',
         'password',

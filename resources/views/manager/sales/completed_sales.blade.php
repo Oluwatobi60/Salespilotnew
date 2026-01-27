@@ -111,10 +111,10 @@ Completed Sales
                             <td><small>{{ \Carbon\Carbon::parse($sale->created_at)->format('M d, Y h:i A') }}</small></td>
                             <td>{{ $sale->customer_name ?? 'Walk-in Customer' }}</td>
                             <td>
-                                @if($sale->staff_id && $sale->staff)
-                                {{ $sale->staff->fullname }}
-                                @elseif($sale->user)
-                                {{ $sale->user->name }}
+                                @if($sale->staff_id && $sale->staff_name)
+                                {{ $sale->staff_name }}
+                                @elseif($sale->manager_name)
+                                {{ $sale->manager_name }}
                                 @else
                                 Unknown
                                 @endif

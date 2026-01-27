@@ -5,6 +5,10 @@ namespace App\Http\Controllers\Staff;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Welcome\SignupRequest;
+use App\Models\UserSubscription;
+use App\Models\User;
+use Carbon\Carbon;
 
 class StaffAuthController extends Controller
 {
@@ -16,16 +20,67 @@ class StaffAuthController extends Controller
     // Handle the login request
     public function login(Request $request)
     {
-
         // Validate the login form data
-        $credentials = $request->only('email', 'password');
+        $request->validate([
+            'login' => 'required|string',
+            'password' => 'required|string',
+        ]);
+
+        $loginField = $request->input('login');
+        $password = $request->input('password');
+
+        // Determine if login is email or staffsid
+        $fieldType = filter_var($loginField, FILTER_VALIDATE_EMAIL) ? 'email' : 'staffsid';
+
+        $credentials = [
+            $fieldType => $loginField,
+            'password' => $password,
+        ];
+
         if (Auth::guard('staff')->attempt($credentials, $request->filled('remember'))) {
             $request->session()->regenerate();
-            // Log staff login activity
+
+            // Get the authenticated staff
             $staff = Auth::guard('staff')->user();
+
+            // Verify manager's subscription status
+            if ($staff->manager_email) {
+                // Find the user by manager email
+                $manager = User::where('email', $staff->manager_email)->first();
+
+                if ($manager) {
+                    // Check if manager has an active subscription
+                    $subscription = UserSubscription::where('user_id', $manager->id)
+                        ->where('status', 'active')
+                        ->where('end_date', '>=', Carbon::today())
+                        ->first();
+
+                    if (!$subscription) {
+                        // Manager's subscription is expired or inactive
+                        Auth::guard('staff')->logout();
+                        $request->session()->invalidate();
+                        $request->session()->regenerateToken();
+
+                        return back()->withErrors([
+                            'login' => 'Access denied. Your manager\'s subscription has expired. Please contact your manager to renew the subscription.',
+                        ])->withInput($request->only('login'));
+                    }
+                } else {
+                    // Manager not found
+                    Auth::guard('staff')->logout();
+                    $request->session()->invalidate();
+                    $request->session()->regenerateToken();
+
+                    return back()->withErrors([
+                        'login' => 'Access denied. Manager account not found. Please contact support.',
+                    ])->withInput($request->only('login'));
+                }
+            }
+
+            // Log staff login activity
             $details = [
-                'staff_id' => $staff ? $staff->staff_id : null,
-                'email' => $staff ? $staff->email : $request->input('email'),
+                'staff_id' => $staff ? $staff->staffsid : null,
+                'email' => $staff ? $staff->email : $loginField,
                 'device' => $request->header('User-Agent'),
                 'ip_address' => $request->ip(),
             ];
@@ -33,8 +88,8 @@ class StaffAuthController extends Controller
             return redirect()->intended('/staff/dashboard');
         }
         return back()->withErrors([
-            'email' => 'Invalid credentials or inactive account.',
-        ])->withInput($request->only('email', 'remember'));
+            'login' => 'Invalid credentials or inactive account.',
+        ])->withInput($request->only('login', 'remember'));
     }
 
     public function logout(Request $request)

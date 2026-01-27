@@ -17,23 +17,32 @@ class SellProductController extends Controller
 {
     public function sell_product()
     {
-        // Fetch all StandardItems with their associated relationships
+        // Get manager information
+        $manager = Auth::user();
+        $businessName = $manager->business_name;
+
+        // Fetch all StandardItems with their associated relationships filtered by business_name
         $standard_items = StandardItem::with([
             'supplier',           // Supplier relationship
             'pricingTiers'       // Pricing tiers for bulk/quantity pricing
-        ])->where('enable_sale', true)->get();
+        ])
+        ->where('enable_sale', true)
+        ->where('business_name', $businessName)
+        ->get();
 
-        // Fetch all VariantItems with their associated relationships
+        // Fetch all VariantItems with their associated relationships filtered by business_name
         $variant_items = VariantItem::with([
             'supplier',          // Supplier relationship
             'unit',              // Unit of measurement
             'variants' => function($query) {
                 $query->where('sell_item', true)->with('pricingTiers'); // Only sellable variants with their pricing tiers
             }
-        ])->get();
+        ])
+        ->where('business_name', $businessName)
+        ->get();
 
-        // Get all unique categories
-        $categories = Category::orderBy('category_name')->get();
+        // Get all unique categories filtered by business_name
+        $categories = Category::where('business_name', $businessName)->orderBy('category_name')->get();
 
         // Merge both collections for a unified item list
         $all_items = collect([]);
@@ -75,10 +84,17 @@ class SellProductController extends Controller
 
             $sessionId = Str::uuid();
 
+            // Get manager information
+            $manager = Auth::user();
+            $managerName = trim(($manager->firstname ?? '') . ' ' . ($manager->othername ?? '') . ' ' . ($manager->surname ?? ''));
+
             foreach ($validated['items'] as $item) {
                 $itemType = isset($item['type']) ? $item['type'] : 'standard';
                 $itemCode = isset($item['code']) ? $item['code'] : null;
                 CartItem::create([
+                    'business_name' => $manager->business_name,
+                    'manager_name' => $managerName,
+                    'manager_email' => $manager->email,
                     'cart_name' => $validated['cart_name'],
                     'customer_id' => $validated['customer_id'],
                     'customer_name' => $validated['customer_name'] ?? 'Walk-in Customer',
@@ -150,6 +166,10 @@ class SellProductController extends Controller
             $discount = $validated['discount'] ?? 0;
             $discountId = $validated['discount_id'] ?? null;
 
+            // Get manager information
+            $manager = Auth::user();
+            $managerName = trim(($manager->firstname ?? '') . ' ' . ($manager->othername ?? '') . ' ' . ($manager->surname ?? ''));
+
             $cartSubtotal = 0;
             foreach ($validated['items'] as $item) {
                 $cartSubtotal += $item['price'] * $item['quantity'];
@@ -164,6 +184,9 @@ class SellProductController extends Controller
                 $itemType = isset($item['type']) ? $item['type'] : 'standard';
                 $itemCode = isset($item['code']) ? $item['code'] : null;
                 CartItem::create([
+                    'business_name' => $manager->business_name,
+                    'manager_name' => $managerName,
+                    'manager_email' => $manager->email,
                     'cart_name' => 'Sale - ' . now()->format('Y-m-d H:i'),
                     'customer_id' => $validated['customer_id'],
                     'customer_name' => $validated['customer_name'] ?? 'Walk-in Customer',
@@ -224,14 +247,18 @@ class SellProductController extends Controller
     public function get_saved_carts()
     {
         try {
-            // Admin view - show all saved carts from all staff members
+            // Get manager information
+            $manager = Auth::user();
+            $businessName = $manager->business_name;
+
+            // Admin view - show all saved carts from all staff members filtered by business_name
             $savedCarts = CartItem::where('status', 'saved')
-                ->join('users', 'cart_items.user_id', '=', 'users.id')
-                ->select('cart_items.session_id', 'cart_items.cart_name', 'cart_items.customer_name', 'cart_items.customer_id', 'cart_items.created_at', 'users.name as user_name')
-                ->selectRaw('SUM(cart_items.total) as total')
+                ->where('business_name', $businessName)
+                ->select('session_id', 'cart_name', 'customer_name', 'customer_id', 'created_at', 'manager_name as user_name')
+                ->selectRaw('SUM(total) as total')
                 ->selectRaw('COUNT(*) as items_count')
-                ->groupBy('cart_items.session_id', 'cart_items.cart_name', 'cart_items.customer_name', 'cart_items.customer_id', 'cart_items.created_at', 'users.name')
-                ->orderBy('cart_items.created_at', 'desc')
+                ->groupBy('session_id', 'cart_name', 'customer_name', 'customer_id', 'created_at', 'manager_name')
+                ->orderBy('created_at', 'desc')
                 ->get();
 
             return response()->json([
@@ -249,9 +276,12 @@ class SellProductController extends Controller
     public function load_saved_cart($sessionId)
     {
         try {
+            $manager = Auth::user();
+            $businessName = $manager->business_name;
+
             $cartItems = CartItem::where('session_id', $sessionId)
                 ->where('status', 'saved')
-                ->where('user_id', Auth::id())
+                ->where('business_name', $businessName)
                 ->get();
 
             if ($cartItems->isEmpty()) {
@@ -264,7 +294,10 @@ class SellProductController extends Controller
             // Get cart summary
             $firstItem = $cartItems->first();
             $total = $cartItems->sum('total');
-            $userName = $firstItem->user ? $firstItem->user->name : 'Unknown User';
+            $userName = 'Unknown User';
+            if ($firstItem->user) {
+                $userName = trim(($firstItem->user->firstname ?? '') . ' ' . ($firstItem->user->othername ?? '') . ' ' . ($firstItem->user->surname ?? '')) ?: 'Unknown User';
+            }
 
             return response()->json([
                 'success' => true,
@@ -289,8 +322,12 @@ class SellProductController extends Controller
     public function delete_saved_cart($sessionId)
     {
         try {
+            $manager = Auth::user();
+            $businessName = $manager->business_name;
+
             CartItem::where('session_id', $sessionId)
                 ->where('status', 'saved')
+                ->where('business_name', $businessName)
                 ->delete();
 
             return response()->json([
@@ -308,14 +345,18 @@ class SellProductController extends Controller
 
     public function view_saved_carts()
     {
-        // Admin view - show all saved carts from all staff members
-        $savedCarts = CartItem::where('cart_items.status', 'saved')
-            ->join('users', 'cart_items.user_id', '=', 'users.id')
-            ->select('cart_items.session_id', 'cart_items.cart_name', 'cart_items.customer_name', 'cart_items.customer_id', 'cart_items.created_at', 'cart_items.user_id', 'users.name as user_name')
-            ->selectRaw('SUM(cart_items.total) as total')
+        // Get manager information
+        $manager = Auth::user();
+        $businessName = $manager->business_name;
+
+        // Admin view - show all saved carts from all staff members filtered by business_name
+        $savedCarts = CartItem::where('status', 'saved')
+            ->where('business_name', $businessName)
+            ->select('session_id', 'cart_name', 'customer_name', 'customer_id', 'created_at', 'user_id', 'manager_name as user_name')
+            ->selectRaw('SUM(total) as total')
             ->selectRaw('COUNT(*) as items_count')
-            ->groupBy('cart_items.session_id', 'cart_items.cart_name', 'cart_items.customer_name', 'cart_items.customer_id', 'cart_items.created_at', 'cart_items.user_id', 'users.name')
-            ->orderBy('cart_items.created_at', 'desc')
+            ->groupBy('session_id', 'cart_name', 'customer_name', 'customer_id', 'created_at', 'user_id', 'manager_name')
+            ->orderBy('created_at', 'desc')
             ->paginate(15);
 
         return view('manager.sales.saved_carts', compact('savedCarts'));
@@ -324,8 +365,13 @@ class SellProductController extends Controller
     public function get_all_staff()
     {
         try {
-            $staff = User::select('id', 'name', 'email')
-                ->orderBy('name')
+            $manager = Auth::user();
+            $businessName = $manager->business_name;
+
+            $staff = \App\Models\Staffs::select('staffsid', 'fullname', 'email', 'role')
+                ->where('business_name', $businessName)
+                ->where('status', 'active')
+                ->orderBy('fullname')
                 ->get();
 
             return response()->json([

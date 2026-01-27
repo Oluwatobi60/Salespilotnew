@@ -18,13 +18,21 @@ class StaffsMainController extends Controller
 {
     public function index()
     {
-        $categories = Category::orderBy('category_name')->get();
+        $staff = Auth::guard('staff')->user();
+        $businessName = $staff->business_name;
+
+        $categories = Category::where('business_name', $businessName)
+            ->orderBy('category_name')
+            ->get();
 
         // Fetch all StandardItems with their associated relationships
         $standard_items = StandardItem::with([
             'supplier',
             'pricingTiers'
-        ])->where('enable_sale', true)->get();
+        ])
+        ->where('business_name', $businessName)
+        ->where('enable_sale', true)
+        ->get();
 
         // Fetch all VariantItems with their associated relationships
         $variant_items = VariantItem::with([
@@ -33,7 +41,9 @@ class StaffsMainController extends Controller
             'variants' => function($query) {
                 $query->where('sell_item', true)->with('pricingTiers');
             }
-        ])->get();
+        ])
+        ->where('business_name', $businessName)
+        ->get();
 
         // Merge both collections for a unified item list
         $all_items = collect([]);
@@ -52,11 +62,17 @@ class StaffsMainController extends Controller
 
      public function sell_product()
     {
+        $staff = Auth::guard('staff')->user();
+        $businessName = $staff->business_name;
+
         // Fetch all StandardItems with their associated relationships
         $standard_items = StandardItem::with([
             'supplier',           // Supplier relationship
             'pricingTiers'       // Pricing tiers for bulk/quantity pricing
-        ])->where('enable_sale', true)->get();
+        ])
+        ->where('business_name', $businessName)
+        ->where('enable_sale', true)
+        ->get();
 
         // Fetch all VariantItems with their associated relationships
         $variant_items = VariantItem::with([
@@ -65,10 +81,14 @@ class StaffsMainController extends Controller
             'variants' => function($query) {
                 $query->where('sell_item', true)->with('pricingTiers'); // Only sellable variants with their pricing tiers
             }
-        ])->get();
+        ])
+        ->where('business_name', $businessName)
+        ->get();
 
         // Get all unique categories
-        $categories = Category::orderBy('category_name')->get();
+        $categories = Category::where('business_name', $businessName)
+            ->orderBy('category_name')
+            ->get();
 
         // Merge both collections for a unified item list
         $all_items = collect([]);
@@ -111,6 +131,9 @@ class StaffsMainController extends Controller
 
             $sessionId = Str::uuid();
 
+            $staff = Auth::guard('staff')->user();
+            $managerName = trim(($staff->firstname ?? '') . ' ' . ($staff->othername ?? '') . ' ' . ($staff->surname ?? ''));
+
             foreach ($validated['items'] as $item) {
                 $itemType = isset($item['type']) ? $item['type'] : 'standard';
                 $itemCode = isset($item['code']) ? $item['code'] : null;
@@ -131,7 +154,10 @@ class StaffsMainController extends Controller
                     'total' => $item['price'] * $item['quantity'],
                     'status' => 'saved',
                     'session_id' => $sessionId,
-                    'staff_id' => Auth::guard('staff')->id()
+                    'staff_id' => Auth::guard('staff')->id(),
+                    'business_name' => $staff->business_name,
+                    'manager_name' => $managerName,
+                    'manager_email' => $staff->email
                 ]);
                 \App\Helpers\ActivityLogger::log('add_to_cart', 'Staff added item to cart: ' . ($item['name'] ?? ''));
             }
@@ -175,6 +201,9 @@ class StaffsMainController extends Controller
             $receiptNumber = 'RCPT-' . strtoupper(substr($sessionId, 0, 8));
             $discount = $validated['discount'] ?? 0;
 
+            $staff = Auth::guard('staff')->user();
+            $managerName = trim(($staff->firstname ?? '') . ' ' . ($staff->othername ?? '') . ' ' . ($staff->surname ?? ''));
+
             // Log checkout activity for staff
             $details = [
                 'customer_id' => $request->input('customer_id'),
@@ -210,12 +239,17 @@ class StaffsMainController extends Controller
                     'status' => 'completed',
                     'session_id' => $sessionId,
                     'receipt_number' => $receiptNumber,
-                    'staff_id' => Auth::guard('staff')->id()
+                    'staff_id' => Auth::guard('staff')->id(),
+                    'business_name' => $staff->business_name,
+                    'manager_name' => $managerName,
+                    'manager_email' => $staff->email
                 ]);
 
                 // Update stock for standard and variant items
                 if ($itemType === 'standard') {
-                    $standardItem = StandardItem::find($item['id']);
+                    $standardItem = StandardItem::where('id', $item['id'])
+                        ->where('business_name', $staff->business_name)
+                        ->first();
                     if ($standardItem) {
                         $standardItem->current_stock -= $item['quantity'];
                         if ($standardItem->current_stock < 0) {
@@ -224,7 +258,9 @@ class StaffsMainController extends Controller
                         $standardItem->save();
                     }
                 } elseif ($itemType === 'variant') {
-                    $productVariant = ProductVariant::find($item['id']);
+                    $productVariant = ProductVariant::whereHas('variantItem', function($query) use ($staff) {
+                        $query->where('business_name', $staff->business_name);
+                    })->find($item['id']);
                     if ($productVariant) {
                         $productVariant->stock_quantity -= $item['quantity'];
                         if ($productVariant->stock_quantity < 0) {
@@ -252,8 +288,12 @@ class StaffsMainController extends Controller
     public function get_saved_carts()
     {
         try {
-            // Show all saved carts from all staff members (join with staffs table)
+            $staff = Auth::guard('staff')->user();
+            $businessName = $staff->business_name;
+
+            // Show all saved carts from staff members in same business
             $savedCarts = CartItem::where('status', 'saved')
+                ->where('cart_items.business_name', $businessName)
                 ->join('staffs', 'cart_items.staff_id', '=', 'staffs.id')
                 ->select('cart_items.session_id', 'cart_items.cart_name', 'cart_items.customer_name', 'cart_items.customer_id', 'cart_items.created_at', 'staffs.fullname as user_name')
                 ->selectRaw('SUM(cart_items.total) as total')
@@ -277,8 +317,12 @@ class StaffsMainController extends Controller
     public function load_saved_cart($sessionId)
     {
         try {
+            $staff = Auth::guard('staff')->user();
+            $businessName = $staff->business_name;
+
             $cartItems = CartItem::where('session_id', $sessionId)
                 ->where('status', 'saved')
+                ->where('business_name', $businessName)
                 ->where('staff_id', Auth::guard('staff')->id())
                 ->get();
 
@@ -319,8 +363,12 @@ class StaffsMainController extends Controller
     public function delete_saved_cart($sessionId)
     {
         try {
+            $staff = Auth::guard('staff')->user();
+            $businessName = $staff->business_name;
+
             CartItem::where('session_id', $sessionId)
                 ->where('status', 'saved')
+                ->where('business_name', $businessName)
                 ->delete();
 
             return response()->json([
@@ -338,8 +386,12 @@ class StaffsMainController extends Controller
 
     public function view_saved_carts()
     {
-        // Show all saved carts from all staff members (join with staffs table)
+        $staff = Auth::guard('staff')->user();
+        $businessName = $staff->business_name;
+
+        // Show all saved carts from staff members in same business
         $savedCarts = CartItem::where('cart_items.status', 'saved')
+            ->where('cart_items.business_name', $businessName)
             ->join('staffs', 'cart_items.staff_id', '=', 'staffs.id')
             ->select('cart_items.session_id', 'cart_items.cart_name', 'cart_items.customer_name', 'cart_items.customer_id', 'cart_items.created_at', 'cart_items.staff_id', 'staffs.fullname as user_name')
             ->selectRaw('SUM(cart_items.total) as total')
@@ -354,8 +406,11 @@ class StaffsMainController extends Controller
 
      public function completed_sales()
     {
+        $staff = Auth::guard('staff')->user();
+        $businessName = $staff->business_name;
 
         $completedSales = CartItem::where('status', 'completed')
+            ->where('business_name', $businessName)
             ->where('staff_id', Auth::guard('staff')->id())
             ->select('receipt_number', 'customer_name', 'customer_id', 'created_at', 'staff_id')
             ->selectRaw('SUM(total) as total')
@@ -371,8 +426,12 @@ class StaffsMainController extends Controller
     // Return sale items for a given receipt number (for completed sales AJAX)
     public function get_sale_items($receiptNumber)
     {
+        $staff = Auth::guard('staff')->user();
+        $businessName = $staff->business_name;
+
         $items = CartItem::where('receipt_number', $receiptNumber)
             ->where('status', 'completed')
+            ->where('business_name', $businessName)
             ->where('staff_id', Auth::guard('staff')->id())
             ->get();
 
@@ -393,12 +452,21 @@ class StaffsMainController extends Controller
 
 
   public function customers() {
-        $customers = AddCustomer::latest()->paginate(4);
+        $staff = Auth::guard('staff')->user();
+        $businessName = $staff->business_name;
+
+        $customers = AddCustomer::where('business_name', $businessName)
+            ->latest()
+            ->paginate(4);
         return view('staff.customer.customerinfo', compact('customers'));
     }
 
     public function get_all_customers() {
-        $customers = AddCustomer::select('id', 'customer_name', 'email', 'phone_number')
+        $staff = Auth::guard('staff')->user();
+        $businessName = $staff->business_name;
+
+        $customers = AddCustomer::where('business_name', $businessName)
+                                ->select('id', 'customer_name', 'email', 'phone_number')
                                 ->orderBy('customer_name', 'asc')
                                 ->get();
 
@@ -419,7 +487,11 @@ class StaffsMainController extends Controller
         ]);
 
         // Add the staff_id of the logged-in staff
+        $staff = Auth::guard('staff')->user();
         $validatedData['staff_id'] = Auth::guard('staff')->id();
+        $validatedData['business_name'] = $staff->business_name;
+        $validatedData['manager_name'] = trim(($staff->firstname ?? '') . ' ' . ($staff->othername ?? '') . ' ' . ($staff->surname ?? ''));
+        $validatedData['manager_email'] = $staff->email;
 
         // Create new customer
         $customer = AddCustomer::create($validatedData);
@@ -439,15 +511,23 @@ class StaffsMainController extends Controller
 
     public function edit_customer($id)
     {
-        $customer = AddCustomer::findOrFail($id);
+        $staff = Auth::guard('staff')->user();
+        $businessName = $staff->business_name;
+
+        $customer = AddCustomer::where('business_name', $businessName)
+            ->findOrFail($id);
         return view('staff.customer.edit_customer', compact('customer'));
     }
 
  public function print_receipt($receiptNumber)
     {
+        $staff = Auth::guard('staff')->user();
+        $businessName = $staff->business_name;
+
         // Get all items for this receipt
         $items = CartItem::where('receipt_number', $receiptNumber)
             ->where('status', 'completed')
+            ->where('business_name', $businessName)
             ->get();
 
         if ($items->isEmpty()) {

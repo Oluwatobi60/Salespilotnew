@@ -166,7 +166,7 @@ class SignupController extends Controller
         }
 
         $plan = SubscriptionPlan::find(session('selected_plan'));
-        $duration = session('selected_duration');
+        $duration = (int) session('selected_duration');
         $pricing = session('pricing');
 
         // Create subscription
@@ -196,6 +196,8 @@ class SignupController extends Controller
      */
     protected function activateFreePlan($plan, $duration)
     {
+        $duration = (int) $duration;
+
         $subscription = UserSubscription::create([
             'user_id' => Auth::id(),
             'subscription_plan_id' => $plan->id,

@@ -10,6 +10,9 @@ class StandardItem extends Model
     use SoftDeletes;
 
     protected $fillable = [
+        'business_name',
+        'manager_name',
+        'manager_email',
         'item_name',
         'item_code',
         'category',

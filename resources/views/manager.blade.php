@@ -19,6 +19,47 @@
         </div>
     @endif
 
+    <!-- Subscription Expiry Alert -->
+    @if(isset($subscriptionAlert))
+        @php
+            $alertClass = 'alert-danger';
+            $icon = 'mdi-alert-circle';
+            $title = 'Subscription Expired!';
+
+            if ($subscriptionAlert['days_remaining'] > 2) {
+                $alertClass = 'alert-warning';
+                $icon = 'mdi-alert-outline';
+                $title = 'Subscription Expiring Soon';
+            } elseif ($subscriptionAlert['days_remaining'] > 0) {
+                $alertClass = 'alert-danger';
+                $icon = 'mdi-alert';
+                $title = 'Urgent: Subscription Expiring';
+            }
+        @endphp
+
+        <div class="alert {{ $alertClass }} alert-dismissible fade show" role="alert" style="border-left: 4px solid {{ $subscriptionAlert['is_urgent'] ? '#dc3545' : '#ffc107' }};">
+            <div class="d-flex align-items-start">
+                <i class="mdi {{ $icon }} me-3" style="font-size: 24px;"></i>
+                <div class="flex-grow-1">
+                    <h5 class="alert-heading mb-2">{{ $title }}</h5>
+                    @if($subscriptionAlert['is_expired'])
+                        <p class="mb-2">Your <strong>{{ $subscriptionAlert['plan_name'] }}</strong> subscription has expired on {{ $subscriptionAlert['end_date'] }}.</p>
+                        <p class="mb-0">Please renew your subscription to continue using SalesPilot without interruption.</p>
+                    @else
+                        <p class="mb-2">Your <strong>{{ $subscriptionAlert['plan_name'] }}</strong> subscription will expire in <strong>{{ $subscriptionAlert['days_remaining'] }} {{ $subscriptionAlert['days_remaining'] == 1 ? 'day' : 'days' }}</strong> on {{ $subscriptionAlert['end_date'] }}.</p>
+                        <p class="mb-0">Renew now to avoid service interruption and continue enjoying all features.</p>
+                    @endif
+                    <div class="mt-3">
+                        <a href="{{ url('/plan-pricing') }}" class="btn btn-sm {{ $subscriptionAlert['is_urgent'] ? 'btn-danger' : 'btn-warning' }}">
+                            <i class="mdi mdi-refresh me-1"></i>Renew Subscription
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
    <!-- Welcome Section -->
             <div class="welcome-section">
               <h1 class="welcome-title">Welcome to SalesPilot</h1>

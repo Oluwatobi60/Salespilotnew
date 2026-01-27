@@ -9,6 +9,9 @@ use App\Models\StandardItem;
 class Category extends Model
 {
     protected $fillable = [
+        'business_name',
+        'manager_name',
+        'manager_email',
         'category_name',
     ];
 

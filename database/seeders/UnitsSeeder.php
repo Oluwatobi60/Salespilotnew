@@ -33,6 +33,9 @@ class UnitsSeeder extends Seeder
 
         foreach ($units as $unit) {
             DB::table('units')->insert(array_merge($unit, [
+                'business_name' => null,
+                'manager_name' => null,
+                'manager_email' => null,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]));

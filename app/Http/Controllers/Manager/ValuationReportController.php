@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Manager;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use App\Models\StandardItem;
 use App\Models\ProductVariant;
 use App\Models\Category;
@@ -13,10 +14,14 @@ class ValuationReportController extends Controller
 {
       public function valuation_report(Request $request)
     {
-        // Fetch all standard items and product variants
-        $standardItems = StandardItem::all();
-        $productVariants = ProductVariant::all();
-        $categories = Category::pluck('category_name', 'id');
+        // Get manager information
+        $manager = Auth::user();
+        $businessName = $manager->business_name;
+
+        // Fetch all standard items and product variants filtered by business_name
+        $standardItems = StandardItem::where('business_name', $businessName)->get();
+        $productVariants = ProductVariant::where('business_name', $businessName)->get();
+        $categories = Category::where('business_name', $businessName)->pluck('category_name', 'id');
 
         $items = [];
         $totalInventoryValue = 0;
@@ -117,8 +122,8 @@ class ValuationReportController extends Controller
             ['path' => request()->url(), 'query' => request()->query()]
         );
 
-        // Get all unique categories from items
-        $allCategories = Category::orderBy('category_name')->get();
+        // Get all unique categories from items filtered by business_name
+        $allCategories = Category::where('business_name', $businessName)->orderBy('category_name')->get();
 
         return view('manager.reports.inventory_valuation', compact('paginatedItems', 'totalInventoryValue', 'totalSellingValue', 'totalPotentialProfit', 'overallMargin', 'allCategories'));
     }

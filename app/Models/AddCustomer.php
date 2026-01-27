@@ -11,6 +11,9 @@ class AddCustomer extends Model
     protected $table = 'add_customers';
 
     protected $fillable = [
+        'business_name',
+        'manager_name',
+        'manager_email',
         'customer_name',
         'email',
         'phone_number',
