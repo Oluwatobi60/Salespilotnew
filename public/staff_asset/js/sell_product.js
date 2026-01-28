@@ -321,15 +321,10 @@
             sessionStorage.removeItem('restoreCartData');
             sessionStorage.removeItem('restoreCartSessionId');
           }
-        } else {
-              showSuccess('Cart restored successfully! ' + cartItems.length + ' items loaded.');
         }
       }
-              showInfo('No items found in the saved cart.');
       // Restore saved cart on page load (after a small delay to ensure DOM is ready)
       setTimeout(restoreSavedCart, 100);
-
-            showError('Error restoring cart: ' + error.message);
       const itemCards = document.querySelectorAll('.item-card');
       const cartItemsContainer = document.getElementById('cartItems');
       const cartTotalElement = document.getElementById('cartTotal');
