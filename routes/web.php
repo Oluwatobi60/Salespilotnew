@@ -57,6 +57,14 @@ Route::prefix('signup')->controller(SignupController::class)->group(function () 
 //Manager routes
 Route::middleware(['auth', 'verified', 'rolemanager:manager', 'check.subscription'])->group(function () {
   Route::prefix('manager')->group(function () {
+    // Manager Profile routes
+    Route::controller(\App\Http\Controllers\Manager\ProfileController::class)->group(function () {
+        Route::get('/profile', 'show')->name('manager.profile.show');
+        Route::get('/profile/edit', 'edit')->name('manager.profile.edit');
+        Route::patch('/profile', 'update')->name('manager.profile.update');
+        Route::get('/profile/change-password', 'changePasswordForm')->name('manager.profile.change_password');
+        Route::post('/profile/change-password', 'changePassword')->name('manager.profile.change_password.post');
+    });
 
     //managers main controller
     Route::controller(ManagerMainController::class)->group(function () {

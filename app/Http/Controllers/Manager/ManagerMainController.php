@@ -111,7 +111,7 @@ class ManagerMainController extends Controller
                 $subscriptionAlert = [
                     'days_remaining' => max(0, $daysRemaining),
                     'end_date' => $subscription->end_date->format('F j, Y'),
-                    'plan_name' => $subscription->plan->name,
+                    'plan_name' => ($subscription->subscriptionPlan && isset($subscription->subscriptionPlan->name)) ? $subscription->subscriptionPlan->name : 'N/A',
                     'is_expired' => $daysRemaining < 0,
                     'is_urgent' => $daysRemaining <= 2,
                 ];

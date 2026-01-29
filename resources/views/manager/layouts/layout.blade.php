@@ -147,16 +147,17 @@
 
 
    <li class="nav-item dropdown user-dropdown">
+      @php $manager = Auth::user(); @endphp
       <a class="nav-link dropdown-toggle" id="UserDropdown" href="#" data-bs-toggle="dropdown" aria-expanded="false" role="button" style="cursor: pointer; display: flex; align-items: center; padding: 15px 20px;">
-        <img class="img-xs rounded-circle" src="assets/images/faces/face8.jpg" alt="Profile image" style="width: 40px; height: 40px; object-fit: cover;">
+        <img class="img-xs rounded-circle" src="{{ $manager && $manager->business_logo ? asset('storage/' . $manager->business_logo) : asset('manager_asset/assets/images/faces/face8.jpg') }}" alt="Profile image" style="width: 40px; height: 40px; object-fit: cover;">
       </a>
       <div class="dropdown-menu dropdown-menu-end navbar-dropdown" aria-labelledby="UserDropdown" style="min-width: 250px;">
         <div class="dropdown-header text-center" style="padding: 20px;">
-          <img class="img-md rounded-circle" src="assets/images/faces/face8.jpg" alt="Profile image" style="width: 80px; height: 80px; object-fit: cover;">
-          <p class="mb-1 mt-3 fw-semibold">Allen Moreno</p>
-          <p class="fw-light text-muted mb-0">allenmoreno@gmail.com</p>
+          <img class="img-md rounded-circle" src="{{ $manager && $manager->business_logo ? asset('storage/' . $manager->business_logo) : asset('manager_asset/assets/images/faces/face8.jpg') }}" alt="Profile image" style="width: 80px; height: 80px; object-fit: cover;">
+          <p class="mb-1 mt-3 fw-semibold">{{ $manager && $manager->business_name ? $manager->business_name : 'Business Name' }}</p>
+          <p class="fw-light text-muted mb-0">{{ $manager && $manager->email ? $manager->email : 'email@example.com' }}</p>
         </div>
-        <a class="dropdown-item" href="views/profile.php" style="padding: 10px 20px;"><i class="dropdown-item-icon mdi mdi-account-outline text-primary me-2"></i> My Profile <span class="badge badge-pill badge-danger">1</span></a>
+        <a class="dropdown-item" href="{{ route('manager.profile.show') }}" style="padding: 10px 20px;"><i class="dropdown-item-icon mdi mdi-account-outline text-primary me-2"></i> My Profile <span class="badge badge-pill badge-danger">1</span></a>
         <a class="dropdown-item" href="views/settings.php" style="padding: 10px 20px;"><i class="dropdown-item-icon bi bi-gear-wide text-primary me-2"></i> System Preference</a>
         <a class="dropdown-item" href="#" style="padding: 10px 20px;"><i class="dropdown-item-icon mdi mdi-message-text-outline text-primary me-2"></i> Messages</a>
         <a class="dropdown-item" href="views/activity_logs.php" style="padding: 10px 20px;"><i class="dropdown-item-icon mdi mdi-calendar-check-outline text-primary me-2"></i> Activity</a>

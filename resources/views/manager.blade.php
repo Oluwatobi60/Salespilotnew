@@ -50,7 +50,7 @@
                         <p class="mb-0">Renew now to avoid service interruption and continue enjoying all features.</p>
                     @endif
                     <div class="mt-3">
-                        <a href="{{ url('/plan-pricing') }}" class="btn btn-sm {{ $subscriptionAlert['is_urgent'] ? 'btn-danger' : 'btn-warning' }}">
+                        <a href="{{ url('/signup/plan_pricing') }}" class="btn btn-sm {{ $subscriptionAlert['is_urgent'] ? 'btn-danger' : 'btn-warning' }}">
                             <i class="mdi mdi-refresh me-1"></i>Renew Subscription
                         </a>
                     </div>
