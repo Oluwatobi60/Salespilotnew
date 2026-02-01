@@ -47,6 +47,7 @@
 </div>
 
 <!-- Sidebar Navigation -->
+@php $manager = Auth::user(); @endphp
 <nav class="sidebar sidebar-offcanvas" id="sidebar">
   <ul class="nav">
     <li class="nav-item">
@@ -78,6 +79,8 @@
         </ul>
       </div>
     </li>
+
+
     <li class="nav-item">
       <a class="nav-link" data-bs-toggle="collapse" href="#form-elements" aria-expanded="false" aria-controls="form-elements">
         <i class="menu-icon mdi mdi-card-text-outline"></i>
@@ -109,12 +112,23 @@
       </div>
     </li>
 
-   <li class="nav-item">
-      <a class="nav-link" href="{{ route('manager.staff') }}">
+
+    @if(empty($manager->addby))
+    <li class="nav-item">
+      <a class="nav-link" data-bs-toggle="collapse" href="#add-staff" aria-expanded="false" aria-controls="add-staff">
         <i class="menu-icon bi bi-person-workspace"></i>
-        <span class="menu-title">Staffs</span>
+        <span class="menu-title">Add Staff</span>
+        <i class="menu-arrow"></i>
       </a>
+      <div class="collapse" id="add-staff">
+        <ul class="nav flex-column sub-menu">
+          <li class="nav-item"> <a class="nav-link" href="{{ route('manager.staff') }}">Staffs</a></li>
+          <li class="nav-item"> <a class="nav-link" href="{{ route('manager.manager') }}">Managers</a></li>
+        </ul>
+      </div>
     </li>
+    @endif
+
 
     <li class="nav-item">
       <a class="nav-link" href="{{ route('manager.activity_logs') }}">
@@ -147,7 +161,6 @@
 
 
    <li class="nav-item dropdown user-dropdown">
-      @php $manager = Auth::user(); @endphp
       <a class="nav-link dropdown-toggle" id="UserDropdown" href="#" data-bs-toggle="dropdown" aria-expanded="false" role="button" style="cursor: pointer; display: flex; align-items: center; padding: 15px 20px;">
         <img class="img-xs rounded-circle" src="{{ $manager && $manager->business_logo ? asset('storage/' . $manager->business_logo) : asset('manager_asset/assets/images/faces/face8.jpg') }}" alt="Profile image" style="width: 40px; height: 40px; object-fit: cover;">
       </a>
@@ -220,6 +233,20 @@
 
     <!-- Page-specific scripts -->
     @yield('page_scripts')
+
+    <script>
+      // Force all sidebar dropdowns to stay closed on page load
+      document.addEventListener('DOMContentLoaded', function() {
+        var dropdownIds = ['form-elements', 'crm-menu', 'add-staff', 'icons'];
+        dropdownIds.forEach(function(id) {
+          var el = document.getElementById(id);
+          if (el && el.classList.contains('show')) {
+            var collapse = bootstrap.Collapse.getOrCreateInstance(el, {toggle: false});
+            collapse.hide();
+          }
+        });
+      });
+    </script>
 
     <!-- Modal for selecting item type - Properly positioned at body level -->
     <div class="modal fade" id="itemTypeModal" tabindex="-1" aria-labelledby="itemTypeModalLabel" aria-hidden="true" style="z-index: 1055;">

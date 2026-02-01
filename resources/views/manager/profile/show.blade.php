@@ -35,6 +35,12 @@ Manager Profile
     <div class="row">
         <div class="col-12">
             <div class="profile-header text-center position-relative">
+                @php $manager = isset($manager) ? $manager : Auth::user(); @endphp
+                {{-- Debug: Show business_logo value and path --}}
+                {{--  <div style="font-size:12px;color:#c00;background:#fffbe6;padding:2px 8px;margin-bottom:4px;display:inline-block;">
+                    business_logo: {{ $manager->business_logo ?? 'NULL' }}<br>
+                    path: {{ $manager->business_logo ? asset('storage/' . $manager->business_logo) : 'default avatar' }}
+                </div>  --}}
                 @if($manager->business_logo)
                     <img src="{{ asset('storage/' . $manager->business_logo) }}" alt="Business Logo" class="profile-avatar mb-3">
                 @else
@@ -53,9 +59,9 @@ Manager Profile
             </div>
         </div>
     </div>
-    <div class="row">
+    <div class="row justify-content-center">
         <div class="col-md-6 col-12">
-            <div class="profile-info-card">
+            <div class="profile-info-card text-center">
                 <h5><i class="bi bi-person-circle me-2"></i>Personal Information</h5>
                 <div class="info-row"><span class="info-label"><i class="bi bi-person"></i>Full Name</span><span class="info-value">{{ $manager->first_name }} {{ $manager->other_name }} {{ $manager->surname }}</span></div>
                 <div class="info-row"><span class="info-label"><i class="bi bi-envelope"></i>Email</span><span class="info-value">{{ $manager->email }}</span></div>
@@ -65,6 +71,7 @@ Manager Profile
                 <div class="info-row"><span class="info-label"><i class="bi bi-calendar-check"></i>Account Created</span><span class="info-value">{{ $manager->created_at ? $manager->created_at->format('F d, Y') : '-' }}</span></div>
             </div>
         </div>
+        @if(!$manager->addby)
         <div class="col-md-6 col-12">
             <div class="profile-info-card">
                 <h5><i class="bi bi-building me-2"></i>Subscription Information</h5>
@@ -79,6 +86,7 @@ Manager Profile
                 </span></div>
             </div>
         </div>
+        @endif
     </div>
     <!-- Edit Profile Side Panel -->
     <div class="edit-panel" id="editPanel" style="display:none;">
@@ -204,5 +212,5 @@ Manager Profile
       </div>
     </div>
 </div>
-
+<script src="{{ asset('manager_asset/js/profile.js') }}"></script>
 @endsection

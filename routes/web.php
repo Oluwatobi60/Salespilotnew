@@ -23,6 +23,7 @@ use App\Http\Controllers\Staff\StaffProfileController;
 use App\Http\Controllers\Manager\ValuationReportController;
 use App\Http\Controllers\Staff\StaffAddDiscountController;
 use App\Http\Controllers\Welcome\SignupController;
+use App\Http\Controllers\Manager\AddManagerController;
 
 
 /* Route::get('/dashboard', function () {
@@ -85,7 +86,25 @@ Route::middleware(['auth', 'verified', 'rolemanager:manager', 'check.subscriptio
             return redirect()->route('staff.edit', $id);
         });
         Route::delete('/staff_member/delete/{id}', 'deletestaff')->name('staff.delete');
+         // Enable/Disable Manager
+         Route::patch('/staff_member/toggle_status/{id}', 'toggleStatus')->name('staff.toggle_status');
     });
+
+     Route::controller(AddManagerController::class)->group(function () {
+         Route::get('/manager_member/show', 'add_manager')->name('manager.manager');
+          Route::post('/manager_member/create', 'createmanager')->name('manager.create');
+         Route::get('/manager_member/edit/{id}', 'editmanager')->name('manager.edit');
+         Route::put('/manager_member/update/{id}', 'updatemanager')->name('manager.update');
+         // Enable/Disable Manager
+         Route::patch('/manager_member/toggle_status/{id}', 'toggleStatus')->name('manager.toggle_status');
+          // Redirect GET request for update to edit page
+          Route::get('/manager_member/update/{id}', function($id) {
+                return redirect()->route('manager.edit', $id);
+          });
+          Route::delete('/manager_member/delete/{id}', 'deletemanager')->name('manager.delete');
+
+     });
+
 
      Route::controller(StandardItemController::class)->group(function () {
        Route::post('/standard_item/create', 'createstandard')->name('standard.create');

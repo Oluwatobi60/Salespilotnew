@@ -77,12 +77,10 @@ Staff Profile
                   <div class="info-row">
                     <span class="info-label">Status</span>
                     <span class="info-value">
-                      @if(strtolower($staff->status) === 'active')
+                      @if(strtolower($staff->status) === '1')
                         <span class="badge bg-success">Active</span>
-                      @elseif(strtolower($staff->status) === 'inactive')
+                      @elseif(strtolower($staff->status) === '0')
                         <span class="badge bg-danger">Inactive</span>
-                      @elseif(strtolower($staff->status) === 'suspended')
-                        <span class="badge bg-warning">Suspended</span>
                       @else
                         <span class="badge bg-secondary">{{ ucfirst($staff->status) }}</span>
                       @endif
@@ -100,10 +98,6 @@ Staff Profile
               <div class="col-md-6">
                 <div class="profile-info-card">
                   <h5 class="mb-3"><i class="bi bi-building me-2"></i>Work Information</h5>
-                  <div class="info-row">
-                    <span class="info-label">Username</span>
-                    <span class="info-value">{{ $staff->username }}</span>
-                  </div>
                   <div class="info-row">
                     <span class="info-label">Employee ID</span>
                     <span class="info-value">{{ $staff->staffsid }}</span>
@@ -151,10 +145,7 @@ Staff Profile
                     <span class="info-label">Account Created</span>
                     <span class="info-value">{{ $staff->created_at->format('F d, Y') }}</span>
                   </div>
-                  <div class="info-row">
-                    <span class="info-label">Username</span>
-                    <span class="info-value">{{ $staff->username }}</span>
-                  </div>
+
                 </div>
               </div>
             </div>

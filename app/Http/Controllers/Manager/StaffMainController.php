@@ -238,4 +238,19 @@ class StaffMainController extends Controller
             return redirect()->route('manager.staff')->with('error', 'An error occurred: ' . $e->getMessage());
         }
     }
+
+
+
+    public function toggleStatus(Request $request, $id)
+    {
+        // Find the manager by ID
+        $staff = Staffs::findOrFail($id);
+        // Toggle the status
+        $staff->status = !$staff->status;
+        $staff->save();
+
+        // Prepare status text for the flash message
+        $statusText = $staff->status ? 'activated' : 'deactivated';
+        return redirect()->back()->with('success', "Staff has been {$statusText} successfully.");
+    }
 }

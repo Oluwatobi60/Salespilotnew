@@ -97,14 +97,20 @@
 
 
     <li class="nav-item dropdown user-dropdown">
+      @php
+        $staffUser = Auth::guard('staff')->user();
+        $staffImg = $staffUser && $staffUser->passport_photo ? asset($staffUser->passport_photo) : asset('manager_asset/images/faces/face8.jpg');
+        $staffName = $staffUser ? ($staffUser->fullname ?? ($staffUser->surname . ' ' . $staffUser->first_name)) : 'Staff User';
+        $staffEmail = $staffUser ? $staffUser->email : 'staff@salespilot.com';
+      @endphp
       <a class="nav-link dropdown-toggle" id="UserDropdown" href="#" data-bs-toggle="dropdown" aria-expanded="false" role="button" style="cursor: pointer; display: flex; align-items: center; padding: 15px 20px;">
-        <img class="img-xs rounded-circle" src="../Manager/assets/images/faces/face8.jpg" alt="Profile image" style="width: 40px; height: 40px; object-fit: cover;">
+        <img class="img-xs rounded-circle" src="{{ $staffImg }}" alt="Profile image" style="width: 40px; height: 40px; object-fit: cover;">
       </a>
       <div class="dropdown-menu dropdown-menu-end navbar-dropdown" aria-labelledby="UserDropdown" style="min-width: 250px;">
         <div class="dropdown-header text-center" style="padding: 20px;">
-          <img class="img-md rounded-circle" src="../Manager/assets/images/faces/face8.jpg" alt="Profile image" style="width: 80px; height: 80px; object-fit: cover;">
-          <p class="mb-1 mt-3 fw-semibold">Staff User</p>
-          <p class="fw-light text-muted mb-0">staff@salespilot.com</p>
+          <img class="img-md rounded-circle" src="{{ $staffImg }}" alt="Profile image" style="width: 80px; height: 80px; object-fit: cover;">
+          <p class="mb-1 mt-3 fw-semibold">{{ $staffName }}</p>
+          <p class="fw-light text-muted mb-0">{{ $staffEmail }}</p>
         </div>
         <a class="dropdown-item" href="{{ route('staff.profile') }}" style="padding: 10px 20px;"><i class="dropdown-item-icon mdi mdi-account-outline text-primary me-2"></i> My Profile</a>
 

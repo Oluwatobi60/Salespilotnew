@@ -1,4 +1,3 @@
-
 (function() {
   'use strict';
 
@@ -54,7 +53,6 @@
   } else {
     initSidebarToggle();
   }
-  // ...existing code...
 
   // Backup initialization with longer delay
   setTimeout(function() {
@@ -430,3 +428,17 @@ document.addEventListener('DOMContentLoaded', function () {
   // Ensure a fallback call on DOMContentLoaded in case initSidebarCollapses didn't run in time
   document.addEventListener('DOMContentLoaded', function() { setTimeout(applyActiveSidebarLinkWithRetries, 150); });
 });
+
+// Final override: force all sidebar dropdowns to stay closed after all other scripts
+setTimeout(function() {
+  ['form-elements', 'crm-menu', 'add-staff', 'icons'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el && el.classList.contains('show')) {
+      try {
+        bootstrap.Collapse.getOrCreateInstance(el, {toggle: false}).hide();
+      } catch (e) {
+        el.classList.remove('show');
+      }
+    }
+  });
+}, 500);

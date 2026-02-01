@@ -26,12 +26,14 @@ class User extends Authenticatable
         'business_logo',
         'state',
         'local_govt',
+        'addby',
         'address',
         'phone_number',
         'referral_code',
         'email',
         'password',
         'role',
+        'status',
     ];
 
     /**

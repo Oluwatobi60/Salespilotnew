@@ -43,6 +43,16 @@ class StaffAuthController extends Controller
             // Get the authenticated staff
             $staff = Auth::guard('staff')->user();
 
+            // Prevent login if status is 0 or not active
+            if (!$staff->status || $staff->status == 0 || $staff->status === 'Inactive') {
+                Auth::guard('staff')->logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+                return back()->withErrors([
+                    'login' => 'Your account is disabled. Please contact your manager.',
+                ])->withInput($request->only('login'));
+            }
+
             // Verify manager's subscription status
             if ($staff->manager_email) {
                 // Find the user by manager email

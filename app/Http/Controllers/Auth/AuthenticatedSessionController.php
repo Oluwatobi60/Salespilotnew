@@ -10,6 +10,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
+use App\Models\User;
+
 
 class AuthenticatedSessionController extends Controller
 {
@@ -38,11 +40,57 @@ class AuthenticatedSessionController extends Controller
             ->where('is_used', true)
             ->first();
 
-        if (!$signupRequest) {
+        // Allow login for managers created by another user (addby) if creator is verified and has active subscription
+        if (!$signupRequest && $user->role === 'manager' && $user->addby) {
+            $creator = User::where('email', $user->addby)->first();
+            $creatorSignup = $creator ? SignupRequest::where('email', $creator->email)->where('is_used', true)->first() : null;
+            $creatorActiveSub = $creator ? UserSubscription::where('user_id', $creator->id)
+                ->where('status', 'active')
+                ->where('end_date', '>=', now())
+                ->first() : null;
+            if ($creator && $creatorSignup && $creatorActiveSub) {
+                // Allow login, skip this check
+            } else {
+                Auth::logout();
+                return redirect()->route('login')->withErrors([
+                    'email' => 'Your email has not been verified. Please complete the signup process first.',
+                ]);
+            }
+        } elseif (!$signupRequest) {
             Auth::logout();
             return redirect()->route('login')->withErrors([
                 'email' => 'Your email has not been verified. Please complete the signup process first.',
             ]);
+        }
+
+        // Check if user status is 0 (disabled) - only for managers created by another user
+        if ($user->role === 'manager' && $user->addby && $user->status == 0) {
+            Auth::logout();
+            return redirect()->route('login')->withErrors([
+                'email' => 'Your account has been disabled. Contact your administrator.'
+            ]);
+        }
+
+        // If user is a manager created by another user, check addby and creator's subscription
+        if ($user->role === 'manager' && $user->addby) {
+            $creator = User::where('email', $user->addby)->first();
+            if (!$creator) {
+                Auth::logout();
+                return redirect()->route('login')->withErrors([
+                    'email' => 'Your account cannot be verified. Contact your administrator.'
+                ]);
+            }
+            // Check creator's subscription
+            $creatorActiveSub = UserSubscription::where('user_id', $creator->id)
+                ->where('status', 'active')
+                ->where('end_date', '>=', now())
+                ->first();
+            if (!$creatorActiveSub) {
+                Auth::logout();
+                return redirect()->route('login')->withErrors([
+                    'email' => 'Your account cannot be used because your creator does not have an active subscription.'
+                ]);
+            }
         }
 
         // Check if user has an active subscription
@@ -51,7 +99,22 @@ class AuthenticatedSessionController extends Controller
             ->where('end_date', '>=', now())
             ->first();
 
-        if (!$activeSubscription) {
+        // For managers created by another user, allow login if creator has active subscription
+        if (!$activeSubscription && $user->role === 'manager' && $user->addby) {
+            $creator = User::where('email', $user->addby)->first();
+            $creatorActiveSub = $creator ? UserSubscription::where('user_id', $creator->id)
+                ->where('status', 'active')
+                ->where('end_date', '>=', now())
+                ->first() : null;
+            if ($creatorActiveSub) {
+                // Allow login, skip this check
+            } else {
+                Auth::logout();
+                return redirect()->route('login')->withErrors([
+                    'email' => 'You do not have an active subscription. Please subscribe to a plan to continue.',
+                ])->with('redirect_to_plans', true);
+            }
+        } elseif (!$activeSubscription) {
             Auth::logout();
             return redirect()->route('login')->withErrors([
                 'email' => 'You do not have an active subscription. Please subscribe to a plan to continue.',
