@@ -103,7 +103,11 @@ Staff Profile
                     <span class="info-value">{{ $staff->staffsid }}</span>
                   </div>
                   <div class="info-row">
-                    <span class="info-label">Join Date</span>
+                    <span class="info-label">Branch</span>
+                    <span class="info-value">{{ $staff->branch ? $staff->branch->branch_name : 'Not assigned' }}</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="info-label"></span>Join Date</span>
                     <span class="info-value">{{ $staff->created_at->format('F d, Y') }}</span>
                   </div>
                   <div class="info-row">

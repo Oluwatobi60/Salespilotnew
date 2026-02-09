@@ -10,9 +10,14 @@ use App\Models\Category;
 use App\Models\CartItem;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 use App\Models\staffs;
 use App\Models\ProductVariant;
 use App\Models\AddCustomer;
+use App\Models\BranchInventory;
+use App\Models\User;
+use App\Models\Branch\Branch;
 
 class StaffsMainController extends Controller
 {
@@ -60,30 +65,218 @@ class StaffsMainController extends Controller
     }
 
 
-     public function sell_product()
+    public function sell_product()
     {
         $staff = Auth::guard('staff')->user();
         $businessName = $staff->business_name;
 
-        // Fetch all StandardItems with their associated relationships
-        $standard_items = StandardItem::with([
-            'supplier',           // Supplier relationship
-            'pricingTiers'       // Pricing tiers for bulk/quantity pricing
+        // Get staff's branch (staff_id branch) to find their branch manager
+        $staffBranch = $staff->branch;
+        // Get the manager_id from the staff's branch (if exists)
+        $managerId = $staffBranch ? $staffBranch->manager_id : null;
+
+        // Get the branch manager
+        $manager = null;
+        if ($managerId) {
+            // Try to find the manager by ID first
+            $manager = User::find($managerId);
+        }
+
+        // Get the branch with manager_id matching (for inventory) - not staff_id branch
+        $branch = null;
+        if ($managerId) {
+            // First try to find the branch where manager_id matches and staff_id is null (in case there are multiple branches for the same manager)
+            $branch = Branch::where('business_name', $businessName)
+                ->where('manager_id', $managerId)
+                ->whereNull('staff_id')
+                ->first();
+        }
+
+        // Fallback to staff's branch if no manager branch found
+        if (!$branch) {
+            $branch = $staffBranch;
+        }
+
+        $branchId = $branch ? $branch->id : null;
+
+        $managerName = null;
+        $managerEmail = null;
+        $standardBranchItemIds = [];
+        $variantBranchItemIds = [];
+
+        if ($manager) {
+            $managerName = trim(($manager->first_name ?? '') . ' ' . ($manager->other_name ?? '') . ' ' . ($manager->surname ?? ''));
+            $managerEmail = $manager->email;
+        }
+
+        // Debug logging
+        Log::info('Staff Sell Product - Branch Selection', [
+            'staff_id' => $staff->id,
+            'staff_branch_id' => $staffBranch ? $staffBranch->id : null,
+            'manager_id' => $managerId,
+            'manager_email' => $managerEmail,
+            'selected_branch_id' => $branchId,
+            'branch_name' => $branch ? $branch->branch_name : null
+        ]);
+
+        // Get item IDs from branch_inventory
+        if ($branchId) {
+            $branchInventory = BranchInventory::where('branch_id', $branchId)
+                ->where('business_name', $businessName)
+                ->where('current_quantity', '>', 0)
+                ->get();
+
+            foreach ($branchInventory as $inventory) {
+                if ($inventory->item_type === 'standard') {
+                    $standardBranchItemIds[] = $inventory->item_id;
+                } elseif ($inventory->item_type === 'variant') {
+                    $variantBranchItemIds[] = $inventory->item_id;
+                }
+            }
+        }
+
+        // Debug logging
+        Log::info('Staff Sell Product - Inventory Check', [
+            'branch_id' => $branchId,
+            'standard_item_ids' => $standardBranchItemIds,
+            'variant_item_ids' => $variantBranchItemIds,
+            'manager_name' => $managerName,
+            'manager_email' => $managerEmail
+        ]);
+
+        // Fetch StandardItems
+        $standardQuery = StandardItem::with([
+            'supplier',
+            'pricingTiers'
         ])
         ->where('business_name', $businessName)
-        ->where('enable_sale', true)
-        ->get();
+        ->where('enable_sale', true);
 
-        // Fetch all VariantItems with their associated relationships
-        $variant_items = VariantItem::with([
-            'supplier',          // Supplier relationship
-            'unit',              // Unit of measurement
-            'variants' => function($query) {
-                $query->where('sell_item', true)->with('pricingTiers'); // Only sellable variants with their pricing tiers
+
+
+        // Apply filtering if staff has branch
+        if ($branchId && ($managerName || $managerEmail || !empty($standardBranchItemIds))) {
+            $standardQuery->where(function($query) use ($managerName, $managerEmail, $standardBranchItemIds) {
+                // Build the query with OR conditions based on available filters
+                $started = false;
+                if ($managerName) {
+                    $query->where('manager_name', $managerName);
+                    $started = true;
+                }
+                if ($managerEmail) {
+                    if ($started) {
+                        $query->orWhere('manager_email', $managerEmail);
+                    } else {
+                        $query->where('manager_email', $managerEmail);
+                        $started = true;
+                    }
+                }
+                if (!empty($standardBranchItemIds)) {
+                    if ($started) {
+                        $query->orWhereIn('id', $standardBranchItemIds);
+                    } else {
+                        $query->whereIn('id', $standardBranchItemIds);
+                    }
+                }
+            });
+        }
+
+
+
+        $standard_items = $standardQuery->get();
+
+        // Get variant item IDs for items added by the branch manager
+        $managerVariantItemIds = [];
+        if ($managerEmail) {
+            $managerVariantItemIds = VariantItem::where('business_name', $businessName)
+                ->where('manager_email', $managerEmail)
+                ->pluck('id')
+                ->toArray();
+        }
+
+        // Fetch VariantItems
+        $variantQuery = VariantItem::with([
+            'supplier',
+            'unit',
+            'variants' => function($query) use ($variantBranchItemIds, $managerVariantItemIds) {
+                $query->where('sell_item', true)
+                    ->where(function($q) use ($variantBranchItemIds, $managerVariantItemIds) {
+                        // Include variants that are in branch inventory OR whose parent was added by manager
+                        if (!empty($variantBranchItemIds)) {
+                            $q->whereIn('id', $variantBranchItemIds);
+                        }
+                        if (!empty($managerVariantItemIds)) {
+                            $q->orWhereIn('variant_item_id', $managerVariantItemIds);
+                        }
+                    })
+                    ->with('pricingTiers');
             }
         ])
-        ->where('business_name', $businessName)
-        ->get();
+        ->where('business_name', $businessName);
+
+        // Apply filtering if staff has branch
+        if ($branchId && ($managerName || $managerEmail || !empty($variantBranchItemIds))) {
+            $variantQuery->where(function($query) use ($managerName, $managerEmail, $variantBranchItemIds) {
+                $started = false;
+                if ($managerName) {
+                    $query->where('manager_name', $managerName);
+                    $started = true;
+                }
+                if ($managerEmail) {
+                    if ($started) {
+                        $query->orWhere('manager_email', $managerEmail);
+                    } else {
+                        $query->where('manager_email', $managerEmail);
+                        $started = true;
+                    }
+                }
+                if (!empty($variantBranchItemIds)) {
+                    // Check if any of the item's variants are in branch inventory
+                    if ($started) {
+                        $query->orWhereHas('variants', function($q) use ($variantBranchItemIds) {
+                            $q->whereIn('id', $variantBranchItemIds);
+                        });
+                    } else {
+                        $query->whereHas('variants', function($q) use ($variantBranchItemIds) {
+                            $q->whereIn('id', $variantBranchItemIds);
+                        });
+                    }
+                }
+            });
+        }
+
+        $variant_items = $variantQuery->get();
+
+        // Replace stock quantities with branch inventory quantities
+        if ($branchId) {
+            $branchInventory = BranchInventory::where('branch_id', $branchId)
+                ->where('business_name', $businessName)
+                ->get();
+
+            // Replace standard item stock with branch inventory stock
+            foreach ($standard_items as $item) {
+                $branchStock = $branchInventory->where('item_type', 'standard')
+                    ->where('item_id', $item->id)
+                    ->first();
+                if ($branchStock) {
+                    $item->current_stock = $branchStock->current_quantity;
+                    $item->branch_inventory_id = $branchStock->id;
+                }
+            }
+
+            // Replace variant stock with branch inventory stock
+            foreach ($variant_items as $variantItem) {
+                foreach ($variantItem->variants as $variant) {
+                    $branchStock = $branchInventory->where('item_type', 'variant')
+                        ->where('item_id', $variant->id)
+                        ->first();
+                    if ($branchStock) {
+                        $variant->stock_quantity = $branchStock->current_quantity;
+                        $variant->branch_inventory_id = $branchStock->id;
+                    }
+                }
+            }
+        }
 
         // Get all unique categories
         $categories = Category::where('business_name', $businessName)
@@ -134,6 +327,12 @@ class StaffsMainController extends Controller
             $staff = Auth::guard('staff')->user();
             $managerName = trim(($staff->firstname ?? '') . ' ' . ($staff->othername ?? '') . ' ' . ($staff->surname ?? ''));
 
+            // Get staff's branch information
+            $branch = $staff->branch;
+            $branchId = $branch ? $branch->id : null;
+            $branchName = $branch ? $branch->branch_name : null;
+            $managerId = $branch ? $branch->manager_id : null;
+
             foreach ($validated['items'] as $item) {
                 $itemType = isset($item['type']) ? $item['type'] : 'standard';
                 $itemCode = isset($item['code']) ? $item['code'] : null;
@@ -157,7 +356,10 @@ class StaffsMainController extends Controller
                     'staff_id' => Auth::guard('staff')->id(),
                     'business_name' => $staff->business_name,
                     'manager_name' => $managerName,
-                    'manager_email' => $staff->email
+                    'manager_email' => $staff->email,
+                    'branch_id' => $branchId,
+                    'branch_name' => $branchName,
+                    'user_id' => $managerId
                 ]);
                 \App\Helpers\ActivityLogger::log('add_to_cart', 'Staff added item to cart: ' . ($item['name'] ?? ''));
             }
@@ -204,6 +406,28 @@ class StaffsMainController extends Controller
             $staff = Auth::guard('staff')->user();
             $managerName = trim(($staff->firstname ?? '') . ' ' . ($staff->othername ?? '') . ' ' . ($staff->surname ?? ''));
 
+            // Get staff's branch information - use the same logic as sell_product
+            $staffBranch = $staff->branch;
+            $managerId = $staffBranch ? $staffBranch->manager_id : null;
+
+            // Get the branch with manager_id matching (for inventory) - not staff_id branch
+            $branch = null;
+            if ($managerId) {
+                // Find the branch where manager_id matches and staff_id is null (the manager's main branch with inventory)
+                $branch = Branch::where('business_name', $staff->business_name)
+                    ->where('manager_id', $managerId)
+                    ->whereNull('staff_id')
+                    ->first();
+            }
+
+            // Fallback to staff's branch if no manager branch found
+            if (!$branch) {
+                $branch = $staffBranch;
+            }
+
+            $branchId = $branch ? $branch->id : null;
+            $branchName = $branch ? $branch->branch_name : null;
+
             // Log checkout activity for staff
             $details = [
                 'customer_id' => $request->input('customer_id'),
@@ -242,31 +466,118 @@ class StaffsMainController extends Controller
                     'staff_id' => Auth::guard('staff')->id(),
                     'business_name' => $staff->business_name,
                     'manager_name' => $managerName,
-                    'manager_email' => $staff->email
+                    'manager_email' => $staff->email,
+                    'branch_id' => $branchId,
+                    'branch_name' => $branchName,
+                    'user_id' => $managerId
                 ]);
 
-                // Update stock for standard and variant items
-                if ($itemType === 'standard') {
-                    $standardItem = StandardItem::where('id', $item['id'])
-                        ->where('business_name', $staff->business_name)
+                // Update branch inventory if applicable
+                if ($branchId) {
+                    $branchInventory = BranchInventory::where('branch_id', $branchId)
+                        ->where('item_id', $item['id'])
+                        ->where('item_type', $itemType)
                         ->first();
-                    if ($standardItem) {
-                        $standardItem->current_stock -= $item['quantity'];
-                        if ($standardItem->current_stock < 0) {
-                            $standardItem->current_stock = 0;
+
+                    if ($branchInventory) {
+                        // Item is in branch inventory - use branch stock
+                        if ($branchInventory->current_quantity < $item['quantity']) {
+                            return response()->json([
+                                'success' => false,
+                                'message' => 'Insufficient stock in branch inventory for item: ' . $item['name']
+                            ], 400);
                         }
-                        $standardItem->save();
+
+                        // Deduct from branch inventory
+                        $branchInventory->deductStock($item['quantity']);
+                    } else {
+                        // Item not in branch inventory - check if it was added by the branch manager
+                        // If so, deduct from main inventory instead
+                        $manager = $managerId ? User::find($managerId) : null;
+
+                        if ($itemType === 'standard') {
+                            $standardItem = null;
+                            if ($manager) {
+                                $standardItem = StandardItem::where('id', $item['id'])
+                                    ->where('business_name', $staff->business_name)
+                                    ->where('manager_email', $manager->email)
+                                    ->first();
+                            }
+
+                            if (!$standardItem) {
+                                return response()->json([
+                                    'success' => false,
+                                    'message' => 'Item not found in branch inventory: ' . $item['name']
+                                ], 400);
+                            }
+
+                            if ($standardItem->current_stock < $item['quantity']) {
+                                return response()->json([
+                                    'success' => false,
+                                    'message' => 'Insufficient stock for item: ' . $item['name']
+                                ], 400);
+                            }
+
+                            $standardItem->current_stock -= $item['quantity'];
+                            if ($standardItem->current_stock < 0) {
+                                $standardItem->current_stock = 0;
+                            }
+                            $standardItem->save();
+
+                        } elseif ($itemType === 'variant') {
+                            $productVariant = null;
+                            if ($manager) {
+                                $productVariant = ProductVariant::whereHas('variantItem', function($query) use ($manager, $staff) {
+                                    $query->where('business_name', $staff->business_name)
+                                          ->where('manager_email', $manager->email);
+                                })->find($item['id']);
+                            }
+
+                            if (!$productVariant) {
+                                return response()->json([
+                                    'success' => false,
+                                    'message' => 'Variant not found in branch inventory: ' . $item['name']
+                                ], 400);
+                            }
+
+                            if ($productVariant->stock_quantity < $item['quantity']) {
+                                return response()->json([
+                                    'success' => false,
+                                    'message' => 'Insufficient stock for variant: ' . $item['name']
+                                ], 400);
+                            }
+
+                            $productVariant->stock_quantity -= $item['quantity'];
+                            if ($productVariant->stock_quantity < 0) {
+                                $productVariant->stock_quantity = 0;
+                            }
+                            $productVariant->save();
+                        }
                     }
-                } elseif ($itemType === 'variant') {
-                    $productVariant = ProductVariant::whereHas('variantItem', function($query) use ($staff) {
-                        $query->where('business_name', $staff->business_name);
-                    })->find($item['id']);
-                    if ($productVariant) {
-                        $productVariant->stock_quantity -= $item['quantity'];
-                        if ($productVariant->stock_quantity < 0) {
-                            $productVariant->stock_quantity = 0;
+                } else {
+                    // No branch assigned - update main inventory
+                    if ($itemType === 'standard') {
+                        $standardItem = StandardItem::where('id', $item['id'])
+                            ->where('business_name', $staff->business_name)
+                            ->first();
+                        if ($standardItem) {
+                            $standardItem->current_stock -= $item['quantity'];
+                            if ($standardItem->current_stock < 0) {
+                                $standardItem->current_stock = 0;
+                            }
+                            $standardItem->save();
                         }
-                        $productVariant->save();
+                    } elseif ($itemType === 'variant') {
+                        $productVariant = ProductVariant::whereHas('variantItem', function($query) use ($staff) {
+                            $query->where('business_name', $staff->business_name);
+                        })->find($item['id']);
+                        if ($productVariant) {
+                            $productVariant->stock_quantity -= $item['quantity'];
+                            if ($productVariant->stock_quantity < 0) {
+                                $productVariant->stock_quantity = 0;
+                            }
+                            $productVariant->save();
+                        }
                     }
                 }
             }
@@ -456,6 +767,7 @@ class StaffsMainController extends Controller
         $businessName = $staff->business_name;
 
         $customers = AddCustomer::where('business_name', $businessName)
+            ->where('staff_id', $staff->id)
             ->latest()
             ->paginate(4);
         return view('staff.customer.customerinfo', compact('customers'));
@@ -466,6 +778,7 @@ class StaffsMainController extends Controller
         $businessName = $staff->business_name;
 
         $customers = AddCustomer::where('business_name', $businessName)
+                                ->where('staff_id', $staff->id)
                                 ->select('id', 'customer_name', 'email', 'phone_number')
                                 ->orderBy('customer_name', 'asc')
                                 ->get();
@@ -517,6 +830,132 @@ class StaffsMainController extends Controller
         $customer = AddCustomer::where('business_name', $businessName)
             ->findOrFail($id);
         return view('staff.customer.edit_customer', compact('customer'));
+    }
+
+    public function update_customer(Request $request, $id)
+    {
+        $staff = Auth::guard('staff')->user();
+        $businessName = $staff->business_name;
+
+        $customer = AddCustomer::where('business_name', $businessName)
+            ->where('staff_id', $staff->id)
+            ->findOrFail($id);
+
+        // Validate incoming request data
+        $validatedData = $request->validate([
+            'customer_name' => 'required|string|max:255',
+            'email' => 'nullable|email|max:255|unique:add_customers,email,' . $id,
+            'phone_number' => 'nullable|string|max:20|unique:add_customers,phone_number,' . $id,
+            'address' => 'nullable|string|max:500',
+        ]);
+
+        // Update customer
+        $customer->update($validatedData);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Customer updated successfully',
+            'customer' => $customer,
+        ]);
+    }
+
+    public function delete_customer($id)
+    {
+        $staff = Auth::guard('staff')->user();
+        $businessName = $staff->business_name;
+
+        $customer = AddCustomer::where('business_name', $businessName)
+            ->where('staff_id', $staff->id)
+            ->findOrFail($id);
+
+        $customer->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Customer deleted successfully',
+        ]);
+    }
+
+    public function get_customer_details($id)
+    {
+        $staff = Auth::guard('staff')->user();
+        $businessName = $staff->business_name;
+
+        $customer = AddCustomer::with(['user', 'staff'])
+            ->where('business_name', $businessName)
+            ->where('staff_id', $staff->id)
+            ->findOrFail($id);
+
+        // Get added by name
+        $addedBy = '-';
+        if ($customer->user) {
+            $addedBy = $customer->user->name;
+        } elseif ($customer->staff) {
+            $addedBy = $customer->staff->fullname ?? ($customer->staff->firstname . ' ' . $customer->staff->surname);
+        }
+
+        // Get order statistics - check both customer_id and customer_name
+        $orders = CartItem::where(function($query) use ($id, $customer) {
+                            $query->where('customer_id', $id)
+                                  ->orWhere('customer_name', $customer->customer_name);
+                         })
+                         ->where('status', 'completed')
+                         ->select('receipt_number',
+                                 DB::raw('SUM(total) as order_total'),
+                                 DB::raw('MIN(created_at) as order_date'))
+                         ->groupBy('receipt_number')
+                         ->orderBy('order_date', 'desc')
+                         ->get();
+
+        $totalOrders = $orders->count();
+        $totalSpent = $orders->sum('order_total');
+        $lastPurchaseDate = $orders->first() ? $orders->first()->order_date : null;
+
+        // Get order details with items
+        $orderDetails = [];
+        foreach ($orders->take(10) as $order) { // Limit to last 10 orders
+            $items = CartItem::where(function($query) use ($id, $customer) {
+                                $query->where('customer_id', $id)
+                                      ->orWhere('customer_name', $customer->customer_name);
+                             })
+                           ->where('receipt_number', $order->receipt_number)
+                           ->where('status', 'completed')
+                           ->get();
+
+            $orderDetails[] = [
+                'receipt_number' => $order->receipt_number,
+                'date' => date('M d, Y', strtotime($order->order_date)),
+                'items_count' => $items->count(),
+                'total' => number_format((float)$order->order_total, 2),
+                'items' => $items->map(function($item) {
+                    return [
+                        'name' => $item->item_name,
+                        'quantity' => $item->quantity,
+                        'price' => number_format((float)$item->item_price, 2),
+                        'subtotal' => number_format((float)$item->subtotal, 2),
+                    ];
+                })
+            ];
+        }
+
+        return response()->json([
+            'success' => true,
+            'customer' => [
+                'id' => $customer->id,
+                'name' => $customer->customer_name,
+                'email' => $customer->email ?? '-',
+                'phone' => $customer->phone_number ?? '-',
+                'address' => $customer->address ?? '-',
+                'registrationDate' => $customer->created_at->format('M d, Y'),
+                'addedBy' => $addedBy,
+                'lastUpdated' => $customer->updated_at->format('M d, Y'),
+                'status' => 'Active',
+                'totalOrders' => $totalOrders,
+                'totalSpent' => '₦' . number_format($totalSpent, 2),
+                'lastPurchase' => $lastPurchaseDate ? date('M d, Y', strtotime($lastPurchaseDate)) : 'Never',
+                'orders' => $orderDetails
+            ]
+        ]);
     }
 
  public function print_receipt($receiptNumber)

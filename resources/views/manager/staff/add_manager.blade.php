@@ -103,6 +103,7 @@ Add Staff Member
                             <th>Staff Member</th>
                             <th>Role</th>
                             <th>Contact</th>
+                            <th>Branch & Location</th>
                             <th>Status</th>
                             <th>Date Added</th>
                             <th class="text-center">Actions</th>
@@ -136,6 +137,16 @@ Add Staff Member
                               <div>
                                 <p class="mb-1">{{ $manager->email }}  </p>
                                 <p class="text-muted mb-0">{{ $manager->phone_number }}  </p>
+                              </div>
+                            </td>
+                            <td>
+                              <div>
+                                @if($manager->managedBranch)
+                                  <p class="mb-1"><strong>{{ $manager->managedBranch->branch_name }}</strong></p>
+                                  <p class="text-muted mb-0 small">{{ $manager->managedBranch->address }}, {{ $manager->managedBranch->local_govt }}</p>
+                                @else
+                                  <span class="badge bg-secondary">No Branch</span>
+                                @endif
                               </div>
                             </td>
                               <td>
@@ -416,13 +427,13 @@ Add Staff Member
                 </div>
 
 
-                <div class="col-md-6 mb-2">
+              {{--    <div class="col-md-6 mb-2">
                            <div class="input_box">
                              <label for="address" class="form-label">Brance name:</label>
                                 <input type="text" class="form-control" id="branch_name" name="branch_name" placeholder="Enter branch name" required>
                                 <i class="uil uil-map-marker"></i>
                           </div>
-                </div>
+                </div>  --}}
             </div>
 
               <!-- Profile Photo Section -->

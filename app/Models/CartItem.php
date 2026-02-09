@@ -33,7 +33,10 @@ class CartItem extends Model
         'session_id',
         'receipt_number',
         'user_id',
-        'staff_id'
+        'staff_id',
+        'branch_id',
+        'branch_name',
+        'branch_manager_id'
     ];
     public function discount()
     {
@@ -61,5 +64,10 @@ class CartItem extends Model
     public function staff()
     {
         return $this->belongsTo(Staffs::class, 'staff_id');
+    }
+
+    public function branch()
+    {
+        return $this->belongsTo(\App\Models\Branch\Branch::class);
     }
 }

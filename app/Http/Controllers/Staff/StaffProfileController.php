@@ -12,8 +12,10 @@ class StaffProfileController extends Controller
 {
     public function staff_profile()
     {
-        // Get the authenticated staff member
+        // Get the authenticated staff member with branch relationship
+        /** @var \App\Models\Staffs $staff */
         $staff = Auth::guard('staff')->user();
+        $staff->load('branch');
 
         // If no staff is authenticated, redirect to login
         if (!$staff) {

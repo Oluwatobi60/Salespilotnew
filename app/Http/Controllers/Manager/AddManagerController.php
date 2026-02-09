@@ -29,6 +29,7 @@ class AddManagerController extends Controller
         $delegatedManagers = User::where('business_name', $businessName)
             ->whereNotNull('addby')
             ->where('addby', '!=', '')
+            ->with('managedBranch')
             ->latest()
             ->get();
 
@@ -65,13 +66,64 @@ class AddManagerController extends Controller
         }
 
         $sessionManager = Auth::user();
-        // Check subscription expiry directly using UserSubscription
+
+        // Check subscription and enforce limits
         $subscription = UserSubscription::where('user_id', $sessionManager->id)
             ->where('status', 'active')
+            ->with('subscriptionPlan')
             ->orderByDesc('end_date')
             ->first();
+
         if (!$subscription || ($subscription->end_date < now())) {
             return redirect()->back()->with('error', 'Your subscription has expired. You cannot add a new manager.');
+        }
+
+        // Check manager creation limits based on plan
+        $plan = $subscription->subscriptionPlan;
+        if (!$plan || empty($plan->name)) {
+            // If no plan found, treat as free plan (most restrictive)
+            return redirect()->back()
+                ->with('error', 'Unable to verify your subscription plan. Please contact support or subscribe to a valid plan.');
+        }
+
+        $planName = strtolower(trim($plan->name));
+
+        // Count existing managers created by this business (delegated managers)
+        $currentManagerCount = User::where('business_name', $sessionManager->business_name)
+            ->whereNotNull('addby')
+            ->where('addby', '!=', '')
+            ->count();
+
+        // Debug: Log the values
+        \Log::info('Manager Creation Check', [
+            'plan_name' => $planName,
+            'current_count' => $currentManagerCount,
+            'business_name' => $sessionManager->business_name,
+            'plan_id' => $subscription->subscription_plan_id ?? 'null'
+        ]);
+
+        // Free plan: max 1 manager
+        if ($planName === 'free' && $currentManagerCount >= 1) {
+            return redirect()->back()
+                ->with('error', 'You have reached your manager limit (1 manager). Upgrade your plan for more managers.');
+        }
+
+        // Basic plan: max 1 manager
+        if ($planName === 'basic' && $currentManagerCount >= 1) {
+            return redirect()->back()
+                ->with('error', 'You have reached your manager limit (1 manager). Upgrade to Standard or Premium for more managers.');
+        }
+
+        // Standard plan: max 2 managers
+        if ($planName === 'standard' && $currentManagerCount >= 2) {
+            return redirect()->back()
+                ->with('error', 'You have reached your manager limit (2 managers). Upgrade to Premium for more managers.');
+        }
+
+        // Premium plan: max 3 managers
+        if ($planName === 'premium' && $currentManagerCount >= 3) {
+            return redirect()->back()
+                ->with('error', 'You have reached your manager limit (3 managers).');
         }
 
         // Handle file upload for business_logo

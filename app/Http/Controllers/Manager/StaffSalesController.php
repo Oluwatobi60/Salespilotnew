@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\CartItem;
 use App\Models\Staffs;
+use App\Models\User;
 use Carbon\Carbon;
 
 class StaffSalesController extends Controller
@@ -15,10 +16,31 @@ class StaffSalesController extends Controller
     {
         // Get manager information
         $manager = Auth::user();
-        $businessName = $manager->business_name;
+        $branchName = $manager->branch_name;
+
+        // If user was added by another manager, get the creator's business_name
+        if ($manager->addby) {
+            $creator = User::where('email', $manager->addby)->first();
+            $businessName = $creator ? $creator->business_name : $manager->business_name;
+        } else {
+            $businessName = $manager->business_name;
+        }
 
         $query = CartItem::where('cart_items.status', 'completed')
             ->where('cart_items.business_name', $businessName);
+
+        // If the user was added by another manager, filter by user_id, staff_id, or branch_name
+        if ($manager->addby) {
+            $query->where(function($q) use ($manager, $branchName) {
+                $q->where('cart_items.user_id', $manager->id)
+                  ->orWhereIn('cart_items.staff_id', function($subQuery) use ($manager) {
+                      $subQuery->select('id')
+                          ->from('staffs')
+                          ->where('manager_email', $manager->email);
+                  })
+                  ->orWhere('cart_items.branch_name', $branchName);
+            });
+        }
 
         // Apply staff filter
         if ($request->filled('staff_id')) {
@@ -111,6 +133,19 @@ class StaffSalesController extends Controller
         $totalsQuery = CartItem::where('cart_items.status', 'completed')
             ->where('cart_items.business_name', $businessName);
 
+        // If the user was added by another manager, filter by user_id, staff_id, or branch_name
+        if ($manager->addby) {
+            $totalsQuery->where(function($q) use ($manager, $branchName) {
+                $q->where('cart_items.user_id', $manager->id)
+                  ->orWhereIn('cart_items.staff_id', function($subQuery) use ($manager) {
+                      $subQuery->select('id')
+                          ->from('staffs')
+                          ->where('manager_email', $manager->email);
+                  })
+                  ->orWhere('cart_items.branch_name', $branchName);
+            });
+        }
+
         // Apply same staff filter
         if ($request->filled('staff_id')) {
             $staffId = $request->staff_id;
@@ -175,9 +210,15 @@ class StaffSalesController extends Controller
             ->selectRaw('SUM(quantity) as items_sold')
             ->first();
 
-        // Get all staff members from manager's business for the filter dropdown
-        $staffList = Staffs::where('business_name', $businessName)
-            ->select('id', 'fullname', 'staffsid')
+        // Get staff members from manager's business for the filter dropdown
+        $staffQuery = Staffs::where('business_name', $businessName);
+
+        // If the user was added by another manager, show only staff they manage
+        if ($manager->addby) {
+            $staffQuery->where('manager_email', $manager->email);
+        }
+
+        $staffList = $staffQuery->select('id', 'fullname', 'staffsid')
             ->orderBy('fullname')
             ->get();
 

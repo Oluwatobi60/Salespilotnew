@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('surname')->after('first_name');
             $table->string('other_name')->nullable()->after('surname');
             $table->string('business_name')->after('other_name');
-            $table->string('branch_name')->after('business_name');
+            $table->string('branch_name')->nullable()->after('business_name');
             $table->string('business_logo')->nullable()->after('branch_name');
             $table->string('state')->after('business_logo');
             $table->string('local_govt')->after('state');

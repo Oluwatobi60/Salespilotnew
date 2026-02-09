@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use App\Models\Staffs;
 use App\Mail\StaffCredentials;
+use App\Models\UserSubscription;
+use App\Models\Branch\Branch;
 
 class StaffMainController extends Controller
 {
@@ -27,6 +29,7 @@ class StaffMainController extends Controller
                 'status' => 'nullable|string',
                 'address' => 'nullable|string',
                 'passport_photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+                'branch_id' => 'nullable|exists:branches,id',
             ], [
                 'email.unique' => 'This email address is already registered. Please use a different email.',
                 'phone.unique' => 'This phone number is already registered. Please use a different phone number.',
@@ -53,6 +56,37 @@ class StaffMainController extends Controller
             $validatedData['manager_name'] = $managerFullName ?: null;
             $validatedData['manager_email'] = $manager->email ?? null;
 
+            // Check subscription and enforce staff limits
+            $subscription = UserSubscription::where('user_id', $manager->id)
+                ->where('status', 'active')
+                ->orderByDesc('end_date')
+                ->first();
+
+            if ($subscription && $subscription->subscriptionPlan) {
+                $planName = strtolower($subscription->subscriptionPlan->name);
+                $currentStaffCount = Staffs::where('business_name', $manager->business_name)->count();
+
+                // Free plan: max 1 staff
+                if ($planName === 'free' && $currentStaffCount >= 1) {
+                    return redirect()->back()
+                        ->with('error', 'You have reached your staff limit (1 staff member). Upgrade your plan for more staff.');
+                }
+
+                // Basic plan: max 2 staff
+                if ($planName === 'basic' && $currentStaffCount >= 2) {
+                    return redirect()->back()
+                        ->with('error', 'You have reached your staff limit (2 staff members). Upgrade to Standard or Premium for more staff.');
+                }
+
+                // Standard plan: max 4 staff
+                if ($planName === 'standard' && $currentStaffCount >= 4) {
+                    return redirect()->back()
+                        ->with('error', 'You have reached your staff limit (4 staff members). Upgrade to Premium for unlimited staff.');
+                }
+
+                // Premium plan: unlimited staff (no check needed)
+            }
+
             // Handle file upload
             if($request->hasFile('passport_photo')) {
                 $image = $request->file('passport_photo');
@@ -63,6 +97,27 @@ class StaffMainController extends Controller
 
             // Create a new staff member
             $staff = Staffs::create($validatedData);
+
+            // If branch_id is provided, automatically create a branch record with staff assignment
+            if ($request->filled('branch_id')) {
+                $selectedBranch = Branch::find($request->input('branch_id'));
+
+                if ($selectedBranch) {
+                    Branch::create([
+                        'user_id' => $manager->id,
+                        'staff_id' => $staff->id,
+                        'business_name' => $manager->business_name,
+                        'branch_name' => $selectedBranch->branch_name,
+                        'address' => $selectedBranch->address,
+                        'state' => $selectedBranch->state,
+                        'local_govt' => $selectedBranch->local_govt,
+                        'manager_id' => $selectedBranch->manager_id,
+                        'subscription_plan_id' => $subscription ? $subscription->subscription_plan_id : null,
+                        'user_subscription_id' => $subscription ? $subscription->id : null,
+                        'status' => 1,
+                    ]);
+                }
+            }
 
             // Send email with login credentials
             $emailSent = false;
@@ -126,7 +181,14 @@ class StaffMainController extends Controller
         $staffdata = Staffs::where('business_name', $businessName)
             ->latest()
             ->paginate(4);
-        return view('manager.staff.add_staff', compact('staffdata'));
+
+        // Get branches for the dropdown
+        $branches = Branch::where('business_name', $businessName)
+            ->where('status', 1)
+            ->select('id', 'branch_name', 'manager_id')
+            ->get();
+
+        return view('manager.staff.add_staff', compact('staffdata', 'branches'));
     }
 
     public function editstaff($id)

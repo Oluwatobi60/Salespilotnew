@@ -6,6 +6,49 @@ Customer Information
 <link rel="stylesheet" href="{{ asset('manager_asset/css/customer_style.css') }}">
    <div class="content-wrapper">
             <!-- Customers content starts here -->
+
+            @if(session('success'))
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success!',
+                            text: '{{ session('success') }}',
+                            timer: 3000,
+                            showConfirmButton: false,
+                            toast: true,
+                            position: 'top-end'
+                        });
+                    });
+                </script>
+            @endif
+
+            @if(session('error'))
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error!',
+                            text: '{{ session('error') }}',
+                            confirmButtonColor: '#d33'
+                        });
+                    });
+                </script>
+            @endif
+
+            @if($errors->any())
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Validation Error!',
+                            html: '<ul style="text-align: left;">@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>',
+                            confirmButtonColor: '#d33'
+                        });
+                    });
+                </script>
+            @endif
+
             <div class="row">
               <div class="col-12 grid-margin stretch-card">
                 <div class="card card-rounded">
@@ -28,14 +71,14 @@ Customer Information
                       </div>
                       <div class="col-md-8 d-flex justify-content-end align-items-center gap-2">
                         <!-- Staff Filter -->
-                        <select class="form-select" id="staffFilter" style="max-width: 140px;">
+                    {{--      <select class="form-select" id="staffFilter" style="max-width: 140px;">
                           <option value="">All Staff</option>
                           <option value="Admin">Admin</option>
                           <option value="Staff1">Staff 1</option>
                           <option value="Staff2">Staff 2</option>
                           <option value="Staff3">Staff 3</option>
                           <option value="Staff4">Staff 4</option>
-                        </select>
+                        </select>  --}}
 
 
                         <button class="btn btn-outline-success" id="exportCustomers">
@@ -65,16 +108,25 @@ Customer Information
                             <td>{{ $customer->email }}</td>
                             <td>{{ $customer->phone_number }}</td>
                             <td>{{ $customer->created_at }}</td>
-                            <td>Staff</td>
                             <td>
-                              <div class="action-buttons">
-                                <button class="btn btn-sm btn-outline-info view-btn" data-customer-id="{{ $customer->id }}" title="View Details">
+                              @if($customer->staff)
+                                {{ $customer->staff->fullname ?? 'Staff' }} <span class="badge bg-info">Staff</span>
+                              @else
+                                Staff
+                              @endif
+                            </td>
+                            <td>
+                              <div class="d-flex gap-1 justify-content-center">
+                                <button class="btn btn-sm btn-info view-btn" data-customer-id="{{ $customer->id }}" title="View Details">
                                   <i class="bi bi-eye"></i>
                                 </button>
-                                <button class="btn btn-sm btn-outline-primary edit-btn" data-customer-id="{{ $customer->id }}" title="Edit Customer">
+                                <button class="btn btn-sm btn-primary edit-btn" data-customer-id="{{ $customer->id }}" title="Edit Customer">
                                   <i class="bi bi-pencil"></i>
                                 </button>
-                                <button class="btn btn-sm btn-outline-danger delete-btn" data-customer-id="{{ $customer->id }}" title="Delete Customer">
+                                <button class="btn btn-sm btn-danger delete-btn"
+                                        data-customer-id="{{ $customer->id }}"
+                                        data-customer-name="{{ $customer->customer_name }}"
+                                        title="Delete Customer">
                                   <i class="bi bi-trash"></i>
                                 </button>
                               </div>
@@ -283,5 +335,59 @@ Customer Information
             <!-- Customers content ends here -->
           </div>
 
+          <!-- Edit Customer Panel -->
+          <div class="edit-customer-panel" id="editCustomerPanel">
+            <div class="customer-details-container">
+              <div class="customer-details-header">
+                <h5 class="customer-details-title">
+                  <i class="bi bi-pencil-square me-2"></i>Edit Customer
+                </h5>
+                <button class="close-details-btn" id="closeEditPanelBtn">
+                  <i class="bi bi-x-lg"></i>
+                </button>
+              </div>
+
+              <div class="customer-details-content p-4">
+                <form id="editCustomerForm">
+                  <input type="hidden" id="editCustomerId" name="customer_id">
+
+                  <div class="mb-3">
+                    <label for="editCustomerName" class="form-label">Customer Name <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="editCustomerName" name="customer_name" required>
+                  </div>
+
+                  <div class="mb-3">
+                    <label for="editCustomerEmail" class="form-label">Email Address</label>
+                    <input type="email" class="form-control" id="editCustomerEmail" name="email">
+                  </div>
+
+                  <div class="mb-3">
+                    <label for="editCustomerPhone" class="form-label">Phone Number</label>
+                    <input type="tel" class="form-control" id="editCustomerPhone" name="phone_number">
+                  </div>
+
+                  <div class="mb-3">
+                    <label for="editCustomerAddress" class="form-label">Address</label>
+                    <textarea class="form-control" id="editCustomerAddress" name="address" rows="3"></textarea>
+                  </div>
+
+                  <div class="d-flex justify-content-end gap-2 mt-4">
+                    <button type="button" class="btn btn-secondary" id="cancelEditBtn">
+                      <i class="bi bi-x-circle me-1"></i>Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                      <span id="editCustomerSpinner" class="spinner-border spinner-border-sm me-1 d-none" role="status" aria-hidden="true"></span>
+                      <i class="bi bi-check-circle me-1"></i>Update Customer
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+
+          <!-- Edit Panel Backdrop -->
+          <div class="panel-backdrop" id="editPanelBackdrop"></div>
+
+          <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
           <script src="{{ asset('staff_asset/js/customer.js') }}"></script>
 @endsection

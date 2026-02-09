@@ -113,20 +113,14 @@ Add Item Standard
                               <div class="form-group">
                                 <label for="unit" class="form-label required-field">Unit of Measurement</label>
                                 <div class="unit-input-container">
-                                  <select class="form-select" id="unit" name="unit" required>
-                                    <option value="">Select Unit</option>
-                                    <option value="pcs" {{ old('unit') == 'pcs' ? 'selected' : '' }}>Piece (pcs)</option>
-                                    <option value="ct" {{ old('unit') == 'ct' ? 'selected' : '' }}>Carton (ct)</option>
-                                    <option value="cm" {{ old('unit') == 'cm' ? 'selected' : '' }}>Centimeter (cm)</option>
-                                    <option value="L" {{ old('unit') == 'L' ? 'selected' : '' }}>Litre (L)</option>
-                                    <option value="g" {{ old('unit') == 'g' ? 'selected' : '' }}>Gram (g)</option>
-                                    <option value="kg" {{ old('unit') == 'kg' ? 'selected' : '' }}>Kilogram (kg)</option>
-                                    <option value="pi" {{ old('unit') == 'pi' ? 'selected' : '' }}>Per item (pi)</option>
-                                    <option value="yd" {{ old('unit') == 'yd' ? 'selected' : '' }}>Yard (yd)</option>
-                                    <option value="m" {{ old('unit') == 'm' ? 'selected' : '' }}>Metre (m)</option>
-                                    <option value="mm" {{ old('unit') == 'mm' ? 'selected' : '' }}>Millimetre (mm)</option>
-                                    <option value="custom" {{ old('unit') == 'custom' ? 'selected' : '' }}>+ Add New Unit</option>
-                                  </select>
+                                  <select class="form-select" id="unit" name="unit">
+                                  <option value="">Select Unit</option>
+                                  @foreach($units as $unit)
+                                    <option value="{{ $unit->id }}" {{ old('unit') == $unit->id ? 'selected' : '' }}>
+                                      {{ $unit->name }}
+                                    </option>
+                                  @endforeach
+                         </select>
 
                                   <div id="customUnitContainer" class="mt-2" style="display: none;">
                                     <div class="input-group">
@@ -546,97 +540,16 @@ Add Item Standard
 
     </div> <!-- End Modal Container -->
 
-<!-- Add New Category Side Panel -->
-<div class="category-panel-overlay" id="categoryPanelOverlay"></div>
-<div class="category-side-panel" id="addCategoryPanel">
-  <div class="category-panel-header">
-    <h5 class="category-panel-title">
-      <i class="mdi mdi-plus-circle"></i> Add New Category
-    </h5>
-    <button type="button" class="category-close-btn" id="closeCategoryPanel">
-      <i class="mdi mdi-close"></i>
-    </button>
-  </div>
+<!-- Category Panel Component -->
+<x-category-panel />
 
-  <div class="category-panel-body">
-    <form id="addCategoryForm">
-      @csrf
-      <div class="mb-3">
-        <label for="newCategoryName" class="form-label">Category Name <span class="text-danger">*</span></label>
-        <input type="text" class="form-control" id="newCategoryName" name="category_name" placeholder="Enter category name" required autocomplete="off">
-        <div class="invalid-feedback" id="categoryNameError"></div>
-        <small class="form-text text-muted">Must be 5-100 characters</small>
-      </div>
-    </form>
-  </div>
-
-  <div class="category-panel-footer">
-    <button type="button" class="btn btn-secondary" id="cancelCategoryBtn">
-      <i class="mdi mdi-close"></i> Cancel
-    </button>
-    <button type="submit" form="addCategoryForm" class="btn btn-primary" id="saveCategoryBtn">
-      <i class="mdi mdi-content-save"></i> Save
-    </button>
-  </div>
-</div>
-
-<!-- Add New Supplier Side Panel -->
-<div class="supplier-panel-overlay" id="supplierPanelOverlay"></div>
-<div class="supplier-side-panel" id="addSupplierPanel">
-  <div class="supplier-panel-header">
-    <h5 class="supplier-panel-title">
-      <i class="mdi mdi-truck"></i> Add New Supplier
-    </h5>
-    <button type="button" class="supplier-close-btn" id="closeSupplierPanel">
-      <i class="mdi mdi-close"></i>
-    </button>
-  </div>
-
-  <div class="supplier-panel-body">
-    <form id="addSupplierForm">
-      @csrf
-      <div class="mb-3">
-        <label for="newSupplierName" class="form-label">Supplier/Company Name <span class="text-danger">*</span></label>
-        <input type="text" class="form-control" id="newSupplierName" name="name" placeholder="Enter supplier or company name" required autocomplete="off">
-        <div class="invalid-feedback" id="supplierNameError"></div>
-      </div>
-
-      <div class="mb-3">
-        <label for="newSupplierEmail" class="form-label">Email Address <span class="text-danger">*</span></label>
-        <input type="email" class="form-control" id="newSupplierEmail" name="email" placeholder="Enter email address" required autocomplete="off">
-        <div class="invalid-feedback" id="supplierEmailError"></div>
-      </div>
-
-      <div class="row">
-        <div class="col-md-6 mb-3">
-          <label for="newSupplierContact" class="form-label">Contact Person</label>
-          <input type="text" class="form-control" id="newSupplierContact" name="contact_person" placeholder="Enter contact person" autocomplete="off">
-        </div>
-        <div class="col-md-6 mb-3">
-          <label for="newSupplierPhone" class="form-label">Phone Number</label>
-          <input type="tel" class="form-control" id="newSupplierPhone" name="phone" placeholder="Enter phone number" autocomplete="off">
-        </div>
-      </div>
-
-      <div class="mb-3">
-        <label for="newSupplierAddress" class="form-label">Address</label>
-        <textarea class="form-control" id="newSupplierAddress" name="address" rows="2" placeholder="Enter supplier address" autocomplete="off"></textarea>
-      </div>
-    </form>
-  </div>
-
-  <div class="supplier-panel-footer">
-    <button type="button" class="btn btn-secondary" id="cancelSupplierBtn">
-      <i class="mdi mdi-close"></i> Cancel
-    </button>
-    <button type="submit" form="addSupplierForm" class="btn btn-primary" id="saveSupplierBtn">
-      <i class="mdi mdi-content-save"></i> Save
-    </button>
-  </div>
-</div>
+<!-- Supplier Panel Component -->
+<x-supplier-panel />
 
 
 
+       <script src="{{ asset('manager_asset/js/components/category-panel.js') }}"></script>
+       <script src="{{ asset('manager_asset/js/components/supplier-panel.js') }}"></script>
        <script src="{{ asset('manager_asset/js/add_item_standard.js') }}"></script>
 @endsection
 

@@ -10,6 +10,7 @@ use App\Models\StandardItem;
 use App\Models\ProductVariant;
 use App\Models\VariantItem;
 use App\Models\Category;
+use App\Models\User;
 use Carbon\Carbon;
 
 class SalesbyItemController extends Controller
@@ -18,10 +19,31 @@ class SalesbyItemController extends Controller
     {
         // Get manager information
         $manager = Auth::user();
-        $businessName = $manager->business_name;
+        $branchName = $manager->branch_name;
+
+        // If user was added by another manager, get the creator's business_name
+        if ($manager->addby) {
+            $creator = User::where('email', $manager->addby)->first();
+            $businessName = $creator ? $creator->business_name : $manager->business_name;
+        } else {
+            $businessName = $manager->business_name;
+        }
 
         $query = CartItem::where('status', 'completed')
             ->where('business_name', $businessName);
+
+        // If the user was added by another manager, filter by user_id, staff_id, or branch_name
+        if ($manager->addby) {
+            $query->where(function($q) use ($manager, $branchName) {
+                $q->where('user_id', $manager->id)
+                  ->orWhereIn('staff_id', function($subQuery) use ($manager) {
+                      $subQuery->select('id')
+                          ->from('staffs')
+                          ->where('manager_email', $manager->email);
+                  })
+                  ->orWhere('branch_name', $branchName);
+            });
+        }
 
         // Apply date range filter
         if ($request->filled('date_range')) {
@@ -211,13 +233,36 @@ class SalesbyItemController extends Controller
     {
         // Get manager information
         $manager = Auth::user();
-        $businessName = $manager->business_name;
+        $branchName = $manager->branch_name;
 
-        // Get unique categories from items that have been sold filtered by business_name
-        $categoryIds = CartItem::where('status', 'completed')
+        // If user was added by another manager, get the creator's business_name
+        if ($manager->addby) {
+            $creator = User::where('email', $manager->addby)->first();
+            $businessName = $creator ? $creator->business_name : $manager->business_name;
+        } else {
+            $businessName = $manager->business_name;
+        }
+
+        // Build base query with business_name filter
+        $query = CartItem::where('status', 'completed')
             ->where('business_name', $businessName)
-            ->whereNotNull('item_id')
-            ->get()
+            ->whereNotNull('item_id');
+
+        // If the user was added by another manager, filter by user_id, staff_id, or branch_name
+        if ($manager->addby) {
+            $query->where(function($q) use ($manager, $branchName) {
+                $q->where('user_id', $manager->id)
+                  ->orWhereIn('staff_id', function($subQuery) use ($manager) {
+                      $subQuery->select('id')
+                          ->from('staffs')
+                          ->where('manager_email', $manager->email);
+                  })
+                  ->orWhere('branch_name', $branchName);
+            });
+        }
+
+        // Get unique categories from items that have been sold
+        $categoryIds = $query->get()
             ->map(function($cartItem) {
                 if ($cartItem->item_type === 'standard') {
                     $std = StandardItem::find($cartItem->item_id);
@@ -257,12 +302,35 @@ class SalesbyItemController extends Controller
     {
         // Get manager information
         $manager = Auth::user();
-        $businessName = $manager->business_name;
+        $branchName = $manager->branch_name;
 
-        // Get unique items from completed sales filtered by business_name
-        $items = CartItem::where('status', 'completed')
-            ->where('business_name', $businessName)
-            ->select('item_id', 'item_type', 'item_name')
+        // If user was added by another manager, get the creator's business_name
+        if ($manager->addby) {
+            $creator = User::where('email', $manager->addby)->first();
+            $businessName = $creator ? $creator->business_name : $manager->business_name;
+        } else {
+            $businessName = $manager->business_name;
+        }
+
+        // Build base query with business_name filter
+        $query = CartItem::where('status', 'completed')
+            ->where('business_name', $businessName);
+
+        // If the user was added by another manager, filter by user_id, staff_id, or branch_name
+        if ($manager->addby) {
+            $query->where(function($q) use ($manager, $branchName) {
+                $q->where('user_id', $manager->id)
+                  ->orWhereIn('staff_id', function($subQuery) use ($manager) {
+                      $subQuery->select('id')
+                          ->from('staffs')
+                          ->where('manager_email', $manager->email);
+                  })
+                  ->orWhere('branch_name', $branchName);
+            });
+        }
+
+        // Get unique items from completed sales
+        $items = $query->select('item_id', 'item_type', 'item_name')
             ->groupBy('item_id', 'item_type', 'item_name')
             ->orderBy('item_name')
             ->get()

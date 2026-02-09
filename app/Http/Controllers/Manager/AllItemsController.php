@@ -20,22 +20,30 @@ class AllItemsController extends Controller
         $manager = Auth::user();
         $businessName = $manager->business_name;
 
-        // Fetch Standard Items with related data filtered by business_name
-        $standardItems = StandardItem::with([
+        // Base query for Standard Items
+        $standardQuery = StandardItem::with([
             'supplier',
             'pricingTiers'
-        ])
-        ->where('business_name', $businessName)
-        ->latest()->get();
+        ])->where('business_name', $businessName);
 
-        // Fetch Variant Items with related data filtered by business_name
-        $variantItems = VariantItem::with([
+        // Base query for Variant Items
+        $variantQuery = VariantItem::with([
             'supplier',
             'unit',
             'variants.pricingTiers'
-        ])
-        ->where('business_name', $businessName)
-        ->latest()->get();
+        ])->where('business_name', $businessName);
+
+        // If user is an added manager (has addby), filter by their own email
+        if ($manager->addby) {
+            $standardQuery->where('manager_email', $manager->email);
+            $variantQuery->where('manager_email', $manager->email);
+        }
+
+        // Fetch Standard Items with related data
+        $standardItems = $standardQuery->latest()->get();
+
+        // Fetch Variant Items with related data
+        $variantItems = $variantQuery->latest()->get();
 
         // Fetch all Product Variants with related data
         $productVariants = ProductVariant::with([
@@ -54,7 +62,15 @@ class AllItemsController extends Controller
                                  ->values();
 
         // Get all suppliers filtered by business_name
-        $suppliers = Supplier::where('business_name', $businessName)->orderBy('name')->get();
+        $suppliersQuery = Supplier::where('business_name', $businessName);
+
+        // If user is an added manager, filter by their own email
+        if ($manager->addby) {
+            $suppliersQuery->where('manager_email', $manager->email);
+        }
+
+        $suppliers = $suppliersQuery->orderBy('name')->get();
+
 
         // Combine all items into a single collection
         $allItems = collect();
@@ -82,23 +98,54 @@ class AllItemsController extends Controller
             ]);
         }
 
-        // Add variant items with type identifier
+        // Add variant items - each product variant as a separate row
         foreach ($variantItems as $item) {
-            $allItems->push([
-                'id' => $item->id,
-                'type' => 'variant',
-                'name' => $item->item_name,
-                'code' => $item->item_code,
-                'barcode' => $item->barcode,
-                'category' => $item->category_name,
-                'supplier' => $item->supplier,
-                'unit' => $item->unit,
-                'image' => $item->item_image,
-                'variant_sets' => $item->variant_sets,
-                'variants' => $item->variants,
-                'created_at' => $item->created_at,
-                'data' => $item
-            ]);
+            if ($item->variants && $item->variants->count() > 0) {
+                // Add each variant as a separate row
+                foreach ($item->variants as $variant) {
+                    $allItems->push([
+                        'id' => $variant->id,
+                        'type' => 'product_variant',
+                        'parent_id' => $item->id,
+                        'name' => $item->item_name . ' - ' . $variant->variant_name,
+                        'code' => $variant->sku ?? $item->item_code,
+                        'barcode' => $variant->barcode ?? $item->barcode,
+                        'category' => $item->category_name,
+                        'supplier' => $item->supplier,
+                        'unit' => $item->unit,
+                        'image' => $item->item_image,
+                        'cost_price' => $variant->cost_price ?? $variant->manual_cost_price ?? $variant->margin_cost_price ?? $variant->range_cost_price,
+                        'selling_price' => $variant->selling_price ?? $variant->calculated_price ?? $variant->final_price,
+                        'profit_margin' => $variant->profit_margin ?? $variant->target_margin,
+                        'current_stock' => $variant->stock_quantity,
+                        'low_stock_threshold' => $variant->low_stock_threshold,
+                        'variant_name' => $variant->variant_name,
+                        'variant_options' => $variant->variant_options,
+                        'pricing_tiers' => $variant->pricingTiers,
+                        'created_at' => $variant->created_at ?? $item->created_at,
+                        'data' => $variant,
+                        'parent_data' => $item
+                    ]);
+                }
+            } else {
+                // No variants - add parent item
+                $allItems->push([
+                    'id' => $item->id,
+                    'type' => 'variant',
+                    'name' => $item->item_name,
+                    'code' => $item->item_code,
+                    'barcode' => $item->barcode,
+                    'category' => $item->category_name,
+                    'supplier' => $item->supplier,
+                    'unit' => $item->unit,
+                    'image' => $item->item_image,
+                    'variant_sets' => $item->variant_sets,
+                    'variants' => $item->variants,
+                    'current_stock' => 0,
+                    'created_at' => $item->created_at,
+                    'data' => $item
+                ]);
+            }
         }
 
         // Sort by created_at descending
@@ -134,16 +181,27 @@ class AllItemsController extends Controller
         switch ($type) {
             case 'standard':
                 $item = StandardItem::where('business_name', $businessName)->findOrFail($id);
+                $itemName = $item->item_name;
+                $item->forceDelete();
                 break;
             case 'variant':
                 $item = VariantItem::where('business_name', $businessName)->findOrFail($id);
+                $itemName = $item->item_name;
+                $item->forceDelete();
+                break;
+            case 'product_variant':
+                $variant = ProductVariant::with('variantItem')->findOrFail($id);
+                // Check business_name through parent
+                if ($variant->variantItem->business_name !== $businessName) {
+                    return redirect()->back()->with('error', 'Unauthorized access.');
+                }
+                $itemName = $variant->variantItem->item_name . ' - ' . $variant->variant_name;
+                $variant->forceDelete();
                 break;
             default:
                 return redirect()->back()->with('error', 'Invalid item type specified.');
         }
 
-        $itemName = $item->item_name ?? ($item->bundle_name ?? '');
-        $item->forceDelete();
         \App\Helpers\ActivityLogger::log('Delete item', json_encode(['type' => $type, 'id' => $id, 'name' => $itemName]));
         return redirect()->back()->with('success', ucfirst($type) . ' item permanently deleted successfully.');
     }
@@ -200,6 +258,43 @@ class AllItemsController extends Controller
                         'description' => $item->description,
                         'updated_at' => $item->updated_at,
                         'created_at' => $item->created_at
+                    ];
+                    break;
+
+                case 'product_variant':
+                    $variant = ProductVariant::with(['variantItem.supplier', 'variantItem.unit', 'pricingTiers'])
+                        ->findOrFail($id);
+
+                    // Check business_name through parent variantItem
+                    if ($variant->variantItem->business_name !== $businessName) {
+                        return response()->json(['error' => 'Unauthorized access.'], 403);
+                    }
+
+                    $formattedItem = [
+                        'id' => $variant->id,
+                        'type' => 'product_variant',
+                        'parent_id' => $variant->variant_item_id,
+                        'item_name' => $variant->variantItem->item_name . ' - ' . $variant->variant_name,
+                        'variant_name' => $variant->variant_name,
+                        'sku' => $variant->sku,
+                        'barcode' => $variant->barcode,
+                        'category' => $variant->variantItem->category,
+                        'unit' => $variant->variantItem->unit,
+                        'item_image' => $variant->variantItem->item_image,
+                        'variant_options' => $variant->variant_options,
+                        'cost_price' => $variant->cost_price ?? $variant->manual_cost_price ?? $variant->margin_cost_price ?? $variant->range_cost_price,
+                        'selling_price' => $variant->selling_price ?? $variant->calculated_price ?? $variant->final_price,
+                        'profit_margin' => $variant->profit_margin ?? $variant->target_margin,
+                        'current_stock' => $variant->stock_quantity,
+                        'low_stock_threshold' => $variant->low_stock_threshold,
+                        'supplier' => $variant->variantItem->supplier,
+                        'pricing_tiers' => $variant->pricingTiers,
+                        'pricing_type' => $variant->pricing_type,
+                        'description' => $variant->variantItem->description,
+                        'expiry_date' => $variant->expiry_date,
+                        'location' => $variant->location,
+                        'updated_at' => $variant->updated_at,
+                        'created_at' => $variant->created_at
                     ];
                     break;
 

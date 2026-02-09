@@ -8,10 +8,12 @@ use App\Models\VariantItem;
 use App\Models\ProductVariant;
 use App\Models\Category;
 use App\Models\CartItem;
+use App\Models\BranchInventory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use App\Models\User;
+use App\Models\Staffs;
 
 class SellProductController extends Controller
 {
@@ -21,25 +23,107 @@ class SellProductController extends Controller
         $manager = Auth::user();
         $businessName = $manager->business_name;
 
-        // Fetch all StandardItems with their associated relationships filtered by business_name
-        $standard_items = StandardItem::with([
-            'supplier',           // Supplier relationship
-            'pricingTiers'       // Pricing tiers for bulk/quantity pricing
-        ])
-        ->where('enable_sale', true)
-        ->where('business_name', $businessName)
-        ->get();
+        // Check if manager is managing a branch (delegated manager)
+        $managedBranch = $manager->managedBranch;
 
-        // Fetch all VariantItems with their associated relationships filtered by business_name
-        $variant_items = VariantItem::with([
-            'supplier',          // Supplier relationship
-            'unit',              // Unit of measurement
-            'variants' => function($query) {
-                $query->where('sell_item', true)->with('pricingTiers'); // Only sellable variants with their pricing tiers
+        if ($managedBranch) {
+            // Delegated manager - show items allocated to their branch + items they added themselves
+            $branchInventory = BranchInventory::where('branch_id', $managedBranch->id)
+                ->where('current_quantity', '>', 0)
+                ->get();
+
+            // Get standard item IDs allocated to this branch
+            $standardItemIds = $branchInventory->where('item_type', 'standard')->pluck('item_id');
+            $variantItemIds = $branchInventory->where('item_type', 'variant')->pluck('item_id');
+
+            // Fetch allocated StandardItems + items added by this manager
+            $standard_items = StandardItem::with([
+                'supplier',
+                'pricingTiers'
+            ])
+            ->where('enable_sale', true)
+            ->where('business_name', $businessName)
+            ->where(function($query) use ($standardItemIds, $manager) {
+                $query->whereIn('id', $standardItemIds)
+                      ->orWhere('manager_email', $manager->email);
+            })
+            ->get();
+
+            // Replace stock with branch inventory stock for allocated items
+            foreach ($standard_items as $item) {
+                $branchStock = $branchInventory->where('item_type', 'standard')
+                    ->where('item_id', $item->id)
+                    ->first();
+                if ($branchStock) {
+                    $item->current_stock = $branchStock->current_quantity;
+                    $item->branch_inventory_id = $branchStock->id;
+                }
+                // If item was added by manager but not in branch_inventory yet, keep original stock
+                // This shouldn't happen anymore since we auto-create branch_inventory, but kept as fallback
             }
-        ])
-        ->where('business_name', $businessName)
-        ->get();
+
+            // Get variant item IDs for items added by this manager
+            $managerVariantItemIds = VariantItem::where('business_name', $businessName)
+                ->where('manager_email', $manager->email)
+                ->pluck('id');
+
+            // Fetch parent VariantItems that have allocated variants + items added by this manager
+            $variant_items = VariantItem::with([
+                'supplier',
+                'unit',
+                'variants' => function($query) use ($variantItemIds, $managerVariantItemIds) {
+                    $query->where('sell_item', true)
+                        ->where(function($q) use ($variantItemIds, $managerVariantItemIds) {
+                            // Include variants that are in branch inventory OR whose parent was added by manager
+                            $q->whereIn('id', $variantItemIds)
+                              ->orWhereIn('variant_item_id', $managerVariantItemIds);
+                        })
+                        ->with('pricingTiers');
+                }
+            ])
+            ->where('business_name', $businessName)
+            ->where(function($query) use ($variantItemIds, $managerVariantItemIds) {
+                $query->whereHas('variants', function($q) use ($variantItemIds) {
+                    $q->whereIn('id', $variantItemIds);
+                })
+                ->orWhereIn('id', $managerVariantItemIds);
+            })
+            ->get();
+
+            // Replace variant stock with branch inventory stock for allocated items
+            foreach ($variant_items as $variantItem) {
+                foreach ($variantItem->variants as $variant) {
+                    $branchStock = $branchInventory->where('item_type', 'variant')
+                        ->where('item_id', $variant->id)
+                        ->first();
+                    if ($branchStock) {
+                        $variant->stock_quantity = $branchStock->current_quantity;
+                        $variant->branch_inventory_id = $branchStock->id;
+                    }
+                    // If variant was added by manager but not in branch_inventory yet, keep original stock
+                    // This shouldn't happen anymore since we auto-create branch_inventory, but kept as fallback
+                }
+            }
+        } else {
+            // Business creator - show all items
+            $standard_items = StandardItem::with([
+                'supplier',
+                'pricingTiers'
+            ])
+            ->where('enable_sale', true)
+            ->where('business_name', $businessName)
+            ->get();
+
+            $variant_items = VariantItem::with([
+                'supplier',
+                'unit',
+                'variants' => function($query) {
+                    $query->where('sell_item', true)->with('pricingTiers');
+                }
+            ])
+            ->where('business_name', $businessName)
+            ->get();
+        }
 
         // Get all unique categories filtered by business_name
         $categories = Category::where('business_name', $businessName)->orderBy('category_name')->get();
@@ -88,6 +172,11 @@ class SellProductController extends Controller
             $manager = Auth::user();
             $managerName = trim(($manager->firstname ?? '') . ' ' . ($manager->othername ?? '') . ' ' . ($manager->surname ?? ''));
 
+            // Get user's branch information (either managed branch or assigned branch)
+            $managedBranch = $manager->managedBranch;
+            $branchId = $managedBranch ? $managedBranch->id : null;
+            $branchName = $managedBranch ? $managedBranch->branch_name : null;
+
             foreach ($validated['items'] as $item) {
                 $itemType = isset($item['type']) ? $item['type'] : 'standard';
                 $itemCode = isset($item['code']) ? $item['code'] : null;
@@ -111,7 +200,9 @@ class SellProductController extends Controller
                     'total' => $item['price'] * $item['quantity'],
                     'status' => 'saved',
                     'session_id' => $sessionId,
-                    'user_id' => Auth::id()
+                    'user_id' => Auth::id(),
+                    'branch_id' => $branchId,
+                    'branch_name' => $branchName
                 ]);
                 \App\Helpers\ActivityLogger::log('add_to_cart', 'Manager added item to cart: ' . ($item['name'] ?? ''));
             }
@@ -170,6 +261,11 @@ class SellProductController extends Controller
             $manager = Auth::user();
             $managerName = trim(($manager->firstname ?? '') . ' ' . ($manager->othername ?? '') . ' ' . ($manager->surname ?? ''));
 
+            // Get user's branch information (either managed branch or assigned branch)
+            $managedBranch = $manager->managedBranch;
+            $branchId = $managedBranch ? $managedBranch->id : null;
+            $branchName = $managedBranch ? $managedBranch->branch_name : null;
+
             $cartSubtotal = 0;
             foreach ($validated['items'] as $item) {
                 $cartSubtotal += $item['price'] * $item['quantity'];
@@ -183,6 +279,83 @@ class SellProductController extends Controller
 
                 $itemType = isset($item['type']) ? $item['type'] : 'standard';
                 $itemCode = isset($item['code']) ? $item['code'] : null;
+
+                // Check and deduct from branch inventory if user is assigned to a branch
+                if ($branchId) {
+                    $branchInventory = BranchInventory::where('branch_id', $branchId)
+                        ->where('item_id', $item['id'])
+                        ->where('item_type', $itemType)
+                        ->first();
+
+                    if ($branchInventory) {
+                        // Item is in branch inventory - use branch stock
+                        if (!$branchInventory->hasStock($item['quantity'])) {
+                            return response()->json([
+                                'success' => false,
+                                'message' => "Insufficient stock in branch inventory for item: {$item['name']}"
+                            ], 400);
+                        }
+
+                        // Deduct from branch inventory
+                        $branchInventory->deductStock($item['quantity']);
+                    } else {
+                        // Item not in branch inventory - check if it was added by this manager
+                        // If so, deduct from main inventory instead
+                        if ($itemType === 'standard') {
+                            $standardItem = StandardItem::where('id', $item['id'])
+                                ->where('business_name', $manager->business_name)
+                                ->where('manager_email', $manager->email)
+                                ->first();
+
+                            if (!$standardItem) {
+                                return response()->json([
+                                    'success' => false,
+                                    'message' => "Item not found in your inventory: {$item['name']}"
+                                ], 400);
+                            }
+
+                            if ($standardItem->current_stock < $item['quantity']) {
+                                return response()->json([
+                                    'success' => false,
+                                    'message' => "Insufficient stock for item: {$item['name']}"
+                                ], 400);
+                            }
+
+                            $standardItem->current_stock -= $item['quantity'];
+                            if ($standardItem->current_stock < 0) {
+                                $standardItem->current_stock = 0;
+                            }
+                            $standardItem->save();
+
+                        } elseif ($itemType === 'variant') {
+                            $productVariant = ProductVariant::whereHas('variantItem', function($query) use ($manager) {
+                                $query->where('business_name', $manager->business_name)
+                                      ->where('manager_email', $manager->email);
+                            })->find($item['id']);
+
+                            if (!$productVariant) {
+                                return response()->json([
+                                    'success' => false,
+                                    'message' => "Variant not found in your inventory: {$item['name']}"
+                                ], 400);
+                            }
+
+                            if ($productVariant->stock_quantity < $item['quantity']) {
+                                return response()->json([
+                                    'success' => false,
+                                    'message' => "Insufficient stock for variant: {$item['name']}"
+                                ], 400);
+                            }
+
+                            $productVariant->stock_quantity -= $item['quantity'];
+                            if ($productVariant->stock_quantity < 0) {
+                                $productVariant->stock_quantity = 0;
+                            }
+                            $productVariant->save();
+                        }
+                    }
+                }
+
                 CartItem::create([
                     'business_name' => $manager->business_name,
                     'manager_name' => $managerName,
@@ -205,27 +378,32 @@ class SellProductController extends Controller
                     'status' => 'completed',
                     'session_id' => $sessionId,
                     'receipt_number' => $receiptNumber,
-                    'user_id' => Auth::id()
+                    'user_id' => Auth::id(),
+                    'branch_id' => $branchId,
+                    'branch_name' => $branchName
                 ]);
 
                 // Update stock for standard and variant items
-                if ($itemType === 'standard') {
-                    $standardItem = StandardItem::find($item['id']);
-                    if ($standardItem) {
-                        $standardItem->current_stock -= $item['quantity'];
-                        if ($standardItem->current_stock < 0) {
-                            $standardItem->current_stock = 0;
+                // Only update central inventory if NOT using branch inventory
+                if (!$branchId) {
+                    if ($itemType === 'standard') {
+                        $standardItem = StandardItem::find($item['id']);
+                        if ($standardItem) {
+                            $standardItem->current_stock -= $item['quantity'];
+                            if ($standardItem->current_stock < 0) {
+                                $standardItem->current_stock = 0;
+                            }
+                            $standardItem->save();
                         }
-                        $standardItem->save();
-                    }
-                } elseif ($itemType === 'variant') {
-                    $productVariant = ProductVariant::find($item['id']);
-                    if ($productVariant) {
-                        $productVariant->stock_quantity -= $item['quantity'];
-                        if ($productVariant->stock_quantity < 0) {
-                            $productVariant->stock_quantity = 0;
+                    } elseif ($itemType === 'variant') {
+                        $productVariant = ProductVariant::find($item['id']);
+                        if ($productVariant) {
+                            $productVariant->stock_quantity -= $item['quantity'];
+                            if ($productVariant->stock_quantity < 0) {
+                                $productVariant->stock_quantity = 0;
+                            }
+                            $productVariant->save();
                         }
-                        $productVariant->save();
                     }
                 }
             }
@@ -349,15 +527,28 @@ class SellProductController extends Controller
         $manager = Auth::user();
         $businessName = $manager->business_name;
 
-        // Admin view - show all saved carts from all staff members filtered by business_name
+        // Get all saved carts from all staff members and managers filtered by business_name
         $savedCarts = CartItem::where('status', 'saved')
             ->where('business_name', $businessName)
-            ->select('session_id', 'cart_name', 'customer_name', 'customer_id', 'created_at', 'user_id', 'manager_name as user_name')
+            ->select('session_id', 'cart_name', 'customer_name', 'customer_id', 'created_at', 'user_id', 'staff_id')
             ->selectRaw('SUM(total) as total')
             ->selectRaw('COUNT(*) as items_count')
-            ->groupBy('session_id', 'cart_name', 'customer_name', 'customer_id', 'created_at', 'user_id', 'manager_name')
+            ->groupBy('session_id', 'cart_name', 'customer_name', 'customer_id', 'created_at', 'user_id', 'staff_id')
             ->orderBy('created_at', 'desc')
             ->paginate(15);
+
+        // Add user names (manager or staff)
+        foreach ($savedCarts as $cart) {
+            if ($cart->staff_id) {
+                $staff = Staffs::find($cart->staff_id);
+                $cart->user_name = $staff ? $staff->fullname : 'Unknown Staff';
+            } elseif ($cart->user_id) {
+                $user = User::find($cart->user_id);
+                $cart->user_name = $user ? trim($user->first_name . ' ' . $user->surname) : 'Unknown User';
+            } else {
+                $cart->user_name = 'Unknown';
+            }
+        }
 
         return view('manager.sales.saved_carts', compact('savedCarts'));
     }

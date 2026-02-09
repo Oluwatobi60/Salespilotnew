@@ -102,9 +102,10 @@ Add Staff Member
                             <th>Staff Member</th>
                             <th>Role</th>
                             <th>Contact</th>
+                            <th>Branch</th>
                             <th>Status</th>
                             <th>Date Added</th>
-                            <th>Actions</th>
+                            <th class="text-center">Actions</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -136,6 +137,9 @@ Add Staff Member
                                 <p class="mb-1">{{ $staff->email }}</p>
                                 <p class="text-muted mb-0">{{ $staff->phone }}</p>
                               </div>
+                            </td>
+                            <td>
+                              <span class="">{{ $staff->branch ? $staff->branch->branch_name : 'N/A' }}</span>
                             </td>
                              <td>
                               <span class="badge bg-success">{{ $staff->status  ? 'Active' : 'Inactive'}}</span>
@@ -310,6 +314,21 @@ Add Staff Member
               </div>
               <!-- End Role & Status -->
 
+
+
+              <div class="row mb-3">
+                  <div class="col-md-12 mb-3">
+                    <label for="branch_id" class="form-label">Assign Branch</label>
+                    <select class="form-select" id="branch_id" name="branch_id">
+                        <option value="">Select Branch (Optional)</option>
+                        @foreach($branches as $branch)
+                        <option value="{{ $branch->id }}">
+                            {{ $branch->branch_name }}
+                        </option>
+                        @endforeach
+                    </select>
+                </div>
+              </div>
 
               <div class="row mb-3">
                 <div class="col-md-12 mb-2">

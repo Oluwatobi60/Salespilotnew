@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Manager;
 use App\Http\Controllers\Controller;
 use App\Models\StandardItem;
 use App\Models\PricingTier;
+use App\Models\BranchInventory;
+use App\Models\Branch\Branch;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -82,6 +84,27 @@ class StandardItemController extends Controller
 
             // Create the standard item
             $standardItem = StandardItem::create($validatedData);
+
+            // Automatically add to branch inventory if manager has a branch
+            if ($manager->addby !== null) { // This is an added manager, not creator
+                // Find the branch where this manager is the user_id (branch manager)
+                $managerBranch = Branch::where('user_id', $manager->id)
+                    ->where('business_name', $manager->business_name)
+                    ->whereNull('staff_id')
+                    ->first();
+
+                if ($managerBranch) {
+                    BranchInventory::create([
+                        'branch_id' => $managerBranch->id,
+                        'item_id' => $standardItem->id,
+                        'item_type' => 'standard',
+                        'business_name' => $manager->business_name,
+                        'allocated_quantity' => $validatedData['opening_stock'] ?? 0,
+                        'current_quantity' => $validatedData['opening_stock'] ?? 0,
+                        'sold_quantity' => 0,
+                    ]);
+                }
+            }
 
             // Handle pricing tiers for range pricing
             if ($request->pricing_type === 'range' && $request->has('pricing_tiers')) {

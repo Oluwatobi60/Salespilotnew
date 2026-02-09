@@ -11,6 +11,7 @@ use App\Mail\SubscriptionActivated;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Auth;
+use App\Models\User;
 use Carbon\Carbon;
 
 class SignupController extends Controller
@@ -20,27 +21,152 @@ class SignupController extends Controller
         return view('sign_up');
     }
 
+    /**
+     * Check if email has been verified
+     */
+    public function checkVerification(Request $request)
+    {
+        $validated = $request->validate([
+            'email' => 'required|email',
+        ]);
+
+        $signupRequest = SignupRequest::where('email', $validated['email'])
+            ->orderBy('created_at', 'desc')
+            ->first();
+
+        if (!$signupRequest) {
+            return response()->json(['verified' => false]);
+        }
+
+        return response()->json([
+            'verified' => $signupRequest->is_used == 1,
+            'email' => $signupRequest->email
+        ]);
+    }
+
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'email' => 'required|email|unique:signup_requests,email',
+            'email' => 'required|email',
         ]);
+
+        // Check if email is already registered as a user
+        if (User::where('email', $validated['email'])->exists()) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This email is already registered. Please login instead.',
+                ], 400);
+            }
+            return redirect()->back()->with('error', 'This email is already registered. Please login instead.');
+        }
+
+        // Check for existing signup request
+        $existingRequest = SignupRequest::where('email', $validated['email'])
+            ->orderBy('created_at', 'desc')
+            ->first();
+
+        // If exists and not used and not expired, return error
+        if ($existingRequest && !$existingRequest->is_used && Carbon::now()->lessThan($existingRequest->token_expires_at)) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'A verification link has already been sent to this email. Please check your inbox or wait for it to expire.',
+                    'expires_at' => $existingRequest->token_expires_at->toIso8601String(),
+                ], 400);
+            }
+            return redirect()->back()->with('error', 'A verification link has already been sent to this email. Please check your inbox.');
+        }
 
         // Generate a unique token
         $token = Str::random(64);
 
-        // Create signup request with token and expiration
-        $signupRequest = SignupRequest::create([
-            'email' => $validated['email'],
-            'token' => $token,
-            'token_expires_at' => Carbon::now()->addMinutes(30),
-            'is_used' => false,
-        ]);
+        // Create or update signup request with token and expiration
+        if ($existingRequest) {
+            // Update existing request
+            $existingRequest->update([
+                'token' => $token,
+                'token_expires_at' => Carbon::now()->addMinutes(30),
+                'is_used' => false,
+            ]);
+            $signupRequest = $existingRequest;
+        } else {
+            // Create new signup request
+            $signupRequest = SignupRequest::create([
+                'email' => $validated['email'],
+                'token' => $token,
+                'token_expires_at' => Carbon::now()->addMinutes(30),
+                'is_used' => false,
+            ]);
+        }
 
         // Send email with token
         $this->sendTokenEmail($signupRequest);
 
+        // Return JSON response if requested via AJAX
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'A verification token has been sent to your email. Please check your inbox.',
+                'expires_at' => $signupRequest->token_expires_at->toIso8601String(),
+            ]);
+        }
+
         return redirect()->back()->with('success', 'A verification token has been sent to your email. Please check your inbox.');
+    }
+
+    /**
+     * Resend verification token
+     */
+    public function resend(Request $request)
+    {
+        $validated = $request->validate([
+            'email' => 'required|email',
+        ]);
+
+        // Check if email is already registered
+        if (User::where('email', $validated['email'])->exists()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This email is already registered. Please login instead.',
+            ], 400);
+        }
+
+        // Find the most recent signup request for this email
+        $signupRequest = SignupRequest::where('email', $validated['email'])
+            ->orderBy('created_at', 'desc')
+            ->first();
+
+        if (!$signupRequest) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No verification request found for this email. Please start over.',
+            ], 404);
+        }
+
+        // Check if already used
+        if ($signupRequest->is_used) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This email has already been verified. Please complete your registration.',
+            ], 400);
+        }
+
+        // Generate new token and update expiration
+        $newToken = Str::random(64);
+        $signupRequest->update([
+            'token' => $newToken,
+            'token_expires_at' => Carbon::now()->addMinutes(30),
+        ]);
+
+        // Send new email
+        $this->sendTokenEmail($signupRequest);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'A new verification link has been sent to your email.',
+            'expires_at' => $signupRequest->token_expires_at->toIso8601String(),
+        ]);
     }
 
     /**
@@ -85,9 +211,13 @@ class SignupController extends Controller
         // Mark token as used
         $signupRequest->update(['is_used' => true]);
 
+        // Clear any previous session data and set verified status
+        session()->forget('verificationToken');
+
         // Redirect to registration with verified email
         return redirect()->route('register')->with([
-            'success' => 'Token verified! Please complete your registration.',
+            'success' => 'Email verified! Please complete your registration.',
+            'email_verified' => true,
             'signup_email' => $signupRequest->email
         ]);
     }

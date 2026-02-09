@@ -110,13 +110,13 @@ class AuthenticatedSessionController extends Controller
                 // Allow login, skip this check
             } else {
                 Auth::logout();
-                return redirect()->route('login')->withErrors([
+                return redirect()->route('plan_pricing')->withErrors([
                     'email' => 'You do not have an active subscription. Please subscribe to a plan to continue.',
                 ])->with('redirect_to_plans', true);
             }
         } elseif (!$activeSubscription) {
             Auth::logout();
-            return redirect()->route('login')->withErrors([
+            return redirect()->route('plan_pricing')->withErrors([
                 'email' => 'You do not have an active subscription. Please subscribe to a plan to continue.',
             ])->with('redirect_to_plans', true);
         }
@@ -145,11 +145,38 @@ class AuthenticatedSessionController extends Controller
      */
     public function destroy(Request $request): RedirectResponse
     {
+        $user = Auth::user();
+        $shouldRedirectToPricing = false;
+
+        // Check subscription status before logout
+        if ($user) {
+            $activeSubscription = UserSubscription::where('user_id', $user->id)
+                ->where('status', 'active')
+                ->where('end_date', '>=', now())
+                ->first();
+            
+            // If no active subscription, check if email is in signup_requests
+            if (!$activeSubscription) {
+                $signupRequest = SignupRequest::where('email', $user->email)
+                    ->where('is_used', true)
+                    ->first();
+                
+                // Only redirect to pricing if email exists in signup_requests
+                $shouldRedirectToPricing = (bool) $signupRequest;
+            }
+        }
+
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();
 
         $request->session()->regenerateToken();
+
+        // Redirect based on subscription status and signup verification
+        if ($shouldRedirectToPricing) {
+            return redirect()->route('plan_pricing')
+                ->with('info', 'Your subscription has expired. Please choose a plan to continue.');
+        }
 
         return redirect('/');
     }

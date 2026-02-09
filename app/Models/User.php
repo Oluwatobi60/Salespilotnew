@@ -6,6 +6,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use App\Models\UserSubscription;
+use App\Models\Branch\Branch;
 
 class User extends Authenticatable
 {
@@ -62,5 +64,30 @@ class User extends Authenticatable
     public function currentSubscription()
     {
         return $this->hasOne(UserSubscription::class)->where('status', 'active')->latest('end_date');
+    }
+
+    /**
+     * Get the branch this user is assigned to (if any)
+     */
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class, 'branch_id');
+    }
+
+    /**
+     * Get the branch this user manages (where they are the branch manager)
+     */
+    public function managedBranch()
+    {
+        return $this->hasOne(Branch::class, 'manager_id');
+    }
+
+    /**
+     * Check if this user is the business creator/owner
+     * The creator is identified by addby being null or pointing to themselves
+     */
+    public function isBusinessCreator(): bool
+    {
+        return is_null($this->addby) || $this->addby === $this->email || $this->addby === $this->id;
     }
 }

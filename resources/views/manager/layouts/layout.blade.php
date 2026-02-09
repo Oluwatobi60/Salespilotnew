@@ -127,7 +127,41 @@
         </ul>
       </div>
     </li>
-    @endif
+@endif
+
+@php
+  $currentSubscription = $manager->currentSubscription()->first();
+  $planName = $currentSubscription && $currentSubscription->subscriptionPlan
+      ? strtolower(trim($currentSubscription->subscriptionPlan->name))
+      : 'free';
+  $canAccessBranches = in_array($planName, ['standard', 'premium']);
+
+  // Debug: Log plan name to help troubleshoot
+  \Log::info('Branch Access Check', [
+      'plan_name' => $planName,
+      'raw_plan_name' => $currentSubscription && $currentSubscription->subscriptionPlan ? $currentSubscription->subscriptionPlan->plan_name : 'no plan',
+      'can_access' => $canAccessBranches,
+      'user_id' => $manager->id
+  ]);
+@endphp
+
+@if($canAccessBranches)
+  <li class="nav-item">
+      <a class="nav-link" data-bs-toggle="collapse" href="#add-branches" aria-expanded="false" aria-controls="add-branches">
+        <i class="menu-icon bi bi-person-workspace"></i>
+        <span class="menu-title">Add Branches</span>
+        <i class="menu-arrow"></i>
+      </a>
+      <div class="collapse" id="add-branches">
+        <ul class="nav flex-column sub-menu">
+          <li class="nav-item"> <a class="nav-link" href="{{ route('manager.branches') }} ">Branches</a></li>
+        <li class="nav-item"> <a class="nav-link" href="{{ route('manager.inventory.allocation') }} ">Allocate Branch</a></li>
+        </ul>
+      </div>
+    </li>
+@endif
+
+
 
 
     <li class="nav-item">

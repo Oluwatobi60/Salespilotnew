@@ -13,6 +13,7 @@ use App\Models\Staffs;
 use App\Models\User;
 use App\Models\Category;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 
 class SalesReportController extends Controller
@@ -21,12 +22,38 @@ class SalesReportController extends Controller
     // Display completed sales with pagination
     public function completed_sales()
     {
-        $manager = \Illuminate\Support\Facades\Auth::user();
-        $businessName = $manager->business_name;
+        $manager = Auth::user();
+        $branchName = $manager->branch_name;
 
-        $completedSales = CartItem::where('cart_items.status', 'completed')
-            ->where('cart_items.business_name', $businessName)
-            ->leftJoin('staffs', 'cart_items.staff_id', '=', 'staffs.id')
+        // If user was added by another manager, get the creator's business_name
+        if ($manager->addby) {
+            $creator = User::where('email', $manager->addby)->first();
+            $businessName = $creator ? $creator->business_name : $manager->business_name;
+        } else {
+            $businessName = $manager->business_name;
+        }
+
+        $query = CartItem::where('cart_items.status', 'completed')
+            ->where('cart_items.business_name', $businessName);
+
+        // If the user was added by another manager, filter by user_id, staff_id, or branch_name
+        if ($manager->addby) {
+            // For added managers, show sales for their own transactions, transactions by staff they manage, or transactions from their branch
+            $query->where(function($q) use ($manager, $branchName) {
+                // Check if user_id matches the manager's own ID
+                $q->where('cart_items.user_id', $manager->id)
+                // Check if staff_id is in the list of staff managed by this manager
+                  ->orWhereIn('cart_items.staff_id', function($subQuery) use ($manager) {
+                    // Get staff IDs managed by this manager
+                      $subQuery->select('id')
+                          ->from('staffs')
+                          ->where('manager_email', $manager->email);
+                  })
+                  ->orWhere('cart_items.branch_name', $branchName);
+            });
+        }
+
+        $completedSales = $query->leftJoin('staffs', 'cart_items.staff_id', '=', 'staffs.id')
             ->select('cart_items.receipt_number', 'cart_items.customer_name', 'cart_items.customer_id', 'cart_items.created_at', 'cart_items.user_id', 'cart_items.staff_id', 'cart_items.manager_name', 'staffs.fullname as staff_name')
             ->selectRaw('SUM(cart_items.total) as total')
             ->selectRaw('SUM(cart_items.discount) as discount')
@@ -40,8 +67,36 @@ class SalesReportController extends Controller
 
     public function sales_summary()
     {
+        $manager = Auth::user();
+        $branchName = $manager->branch_name;
+
+        // If user was added by another manager, get the creator's business_name
+        if ($manager->addby) {
+            $creator = User::where('email', $manager->addby)->first();
+            $businessName = $creator ? $creator->business_name : $manager->business_name;
+        } else {
+            $businessName = $manager->business_name;
+        }
+
+        // Build base query with business_name filter
+        $query = CartItem::where('status', 'completed')
+            ->where('business_name', $businessName);
+
+        // If the user was added by another manager, filter by user_id, staff_id, or branch_name
+        if ($manager->addby) {
+            $query->where(function($q) use ($manager, $branchName) {
+                $q->where('user_id', $manager->id)
+                  ->orWhereIn('staff_id', function($subQuery) use ($manager) {
+                      $subQuery->select('id')
+                          ->from('staffs')
+                          ->where('manager_email', $manager->email);
+                  })
+                  ->orWhere('branch_name', $branchName);
+            });
+        }
+
         // Get sales data grouped by date with aggregated calculations
-        $salesData = CartItem::where('status', 'completed')
+        $salesData = (clone $query)
             ->selectRaw('DATE(created_at) as sale_date')
             ->selectRaw('SUM(subtotal) as gross_sales')
             ->selectRaw('SUM(discount) as total_discount')
@@ -53,7 +108,7 @@ class SalesReportController extends Controller
             ->get();
 
         // Debug: Check total completed sales
-        $totalCompletedSales = CartItem::where('status', 'completed')
+        $totalCompletedSales = (clone $query)
             ->distinct('receipt_number')
             ->count('receipt_number');
 
@@ -62,9 +117,9 @@ class SalesReportController extends Controller
         Log::info('Sales data grouped by date: ' . $salesData->count());
 
         // Calculate cost of items, gross profit, margin, and taxes for each day
-        $salesSummary = $salesData->map(function ($sale) {
-            // Get all items sold on this date
-            $items = CartItem::where('status', 'completed')
+        $salesSummary = $salesData->map(function ($sale) use ($query) {
+            // Get all items sold on this date using the same filters
+            $items = (clone $query)
                 ->whereDate('created_at', $sale->sale_date)
                 ->get();
 
@@ -213,8 +268,33 @@ class SalesReportController extends Controller
 
     public function sales_by_category(Request $request)
     {
-        // Get all completed sales items
-        $query = CartItem::where('status', 'completed');
+        $manager = Auth::user();
+        $branchName = $manager->branch_name;
+
+        // If user was added by another manager, get the creator's business_name
+        if ($manager->addby) {
+            $creator = User::where('email', $manager->addby)->first();
+            $businessName = $creator ? $creator->business_name : $manager->business_name;
+        } else {
+            $businessName = $manager->business_name;
+        }
+
+        // Get all completed sales items filtered by business_name
+        $query = CartItem::where('status', 'completed')
+            ->where('business_name', $businessName);
+
+        // If the user was added by another manager, filter by user_id, staff_id, or branch_name
+        if ($manager->addby) {
+            $query->where(function($q) use ($manager, $branchName) {
+                $q->where('user_id', $manager->id)
+                  ->orWhereIn('staff_id', function($subQuery) use ($manager) {
+                      $subQuery->select('id')
+                          ->from('staffs')
+                          ->where('manager_email', $manager->email);
+                  })
+                  ->orWhere('branch_name', $branchName);
+            });
+        }
 
         // Apply date range filter
         if ($request->filled('date_range')) {
@@ -377,9 +457,35 @@ class SalesReportController extends Controller
     public function get_sale_items($receiptNumber)
     {
         try {
-            $items = CartItem::where('receipt_number', $receiptNumber)
+            $manager = Auth::user();
+            $branchName = $manager->branch_name;
+
+            // If user was added by another manager, get the creator's business_name
+            if ($manager->addby) {
+                $creator = User::where('email', $manager->addby)->first();
+                $businessName = $creator ? $creator->business_name : $manager->business_name;
+            } else {
+                $businessName = $manager->business_name;
+            }
+
+            $query = CartItem::where('receipt_number', $receiptNumber)
                 ->where('status', 'completed')
-                ->get();
+                ->where('business_name', $businessName);
+
+            // If the user was added by another manager, filter by user_id, staff_id, or branch_name
+            if ($manager->addby) {
+                $query->where(function($q) use ($manager, $branchName) {
+                    $q->where('user_id', $manager->id)
+                      ->orWhereIn('staff_id', function($subQuery) use ($manager) {
+                          $subQuery->select('id')
+                              ->from('staffs')
+                              ->where('manager_email', $manager->email);
+                      })
+                      ->orWhere('branch_name', $branchName);
+                });
+            }
+
+            $items = $query->get();
 
             if ($items->isEmpty()) {
                 return response()->json([
@@ -402,16 +508,44 @@ class SalesReportController extends Controller
 
 
 
-    public function getStaffUserList()
+    public function getStaffUserList(): \Illuminate\Http\JsonResponse
     {
+        $manager = Auth::user();
+        $branchName = $manager->branch_name;
+
+        // If user was added by another manager, get the creator's business_name
+        if ($manager->addby) {
+            $creator = User::where('email', $manager->addby)->first();
+            $businessName = $creator ? $creator->business_name : $manager->business_name;
+        } else {
+            $businessName = $manager->business_name;
+        }
+
+        // Build base query with business_name filter
+        $query = CartItem::where('status', 'completed')
+            ->where('business_name', $businessName);
+
+        // If the user was added by another manager, filter by user_id, staff_id, or branch_name
+        if ($manager->addby) {
+            $query->where(function($q) use ($manager, $branchName) {
+                $q->where('user_id', $manager->id)
+                  ->orWhereIn('staff_id', function($subQuery) use ($manager) {
+                      $subQuery->select('id')
+                          ->from('staffs')
+                          ->where('manager_email', $manager->email);
+                  })
+                  ->orWhere('branch_name', $branchName);
+            });
+        }
+
         // Get unique staff IDs from completed sales in cart_items
-        $staffIds = CartItem::where('status', 'completed')
+        $staffIds = (clone $query)
             ->whereNotNull('staff_id')
             ->distinct()
             ->pluck('staff_id');
 
         // Get unique user IDs from completed sales in cart_items
-        $userIds = CartItem::where('status', 'completed')
+        $userIds = (clone $query)
             ->whereNotNull('user_id')
             ->distinct()
             ->pluck('user_id');

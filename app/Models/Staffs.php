@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use App\Models\Branch\Branch;
 
 class Staffs extends Authenticatable
 {
@@ -34,4 +35,12 @@ class Staffs extends Authenticatable
     protected $casts = [
         'password' => 'hashed',
     ];
+
+    /**
+     * Get the branch assigned to this staff member.
+     */
+    public function branch()
+    {
+        return $this->hasOne(Branch::class, 'staff_id');
+    }
 }

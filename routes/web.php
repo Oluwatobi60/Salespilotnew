@@ -24,6 +24,8 @@ use App\Http\Controllers\Manager\ValuationReportController;
 use App\Http\Controllers\Staff\StaffAddDiscountController;
 use App\Http\Controllers\Welcome\SignupController;
 use App\Http\Controllers\Manager\AddManagerController;
+use App\Http\Controllers\Branch\BranchController;
+use App\Http\Controllers\Manager\BranchInventoryController;
 
 
 /* Route::get('/dashboard', function () {
@@ -44,6 +46,8 @@ Route::get('/', function () {
 Route::prefix('signup')->controller(SignupController::class)->group(function () {
     Route::get('/get_started', 'index')->name('get_started');
     Route::post('/get_started_store', 'store')->name('get_started.store');
+    Route::post('/resend_verification', 'resend')->name('get_started.resend');
+    Route::post('/check_verification', 'checkVerification')->name('get_started.check_verification');
     Route::get('/verify/{token}', 'verifyToken')->name('signup.verify');
     Route::get('/plan_pricing', 'plan_pricing')->name('plan_pricing');
     Route::post('/plan_pricing', 'selectPlan')->name('select.plan');
@@ -211,6 +215,23 @@ Route::middleware(['auth', 'verified', 'rolemanager:manager', 'check.subscriptio
          Route::delete('/delete_customer/{id}', 'delete_customer')->name('customer.delete');
     });
 
+
+    Route::controller(BranchController::class)->group(function () {
+        Route::get('/branches', 'index')->name('manager.branches');
+        Route::post('/branches/create', 'store')->name('branch.create');
+        Route::get('/branches/{id}', 'show')->name('branch.show');
+        Route::get('/branches/{id}/edit', 'edit')->name('branch.edit');
+        Route::put('/branches/{id}', 'update')->name('branch.update');
+        Route::patch('/branches/{id}/toggle_status', 'toggleStatus')->name('branch.toggle_status');
+        Route::delete('/branches/{id}', 'destroy')->name('branch.delete');
+    });
+
+    Route::controller(BranchInventoryController::class)->group(function () {
+        Route::get('/inventory/branch-allocation', 'index')->name('manager.inventory.allocation');
+        Route::post('/inventory/allocate', 'allocate')->name('manager.inventory.allocate');
+        Route::get('/inventory/branch/{branchId}', 'branchInventory')->name('manager.inventory.branch');
+    });
+
   });
 }); //End of manager router
 
@@ -250,6 +271,7 @@ Route::middleware(['auth:staff'])->prefix('staff')->group(function () {
         Route::get('/get_all_customers', 'get_all_customers')->name('staff.get_all_customers');
         Route::post('/add_customer', 'add_customer')->name('staff.add_customer');
         Route::get('/customers_information', 'customers')->name('staff.customers');
+        Route::get('/get_customer_details/{id}', 'get_customer_details')->name('staff.customer.details');
         Route::get('/edit_customer/{id}', 'edit_customer')->name('customer.edit');
         Route::put('/update_customer/{id}', 'update_customer')->name('customer.update');
         Route::delete('/delete_customer/{id}', 'delete_customer')->name('customer.delete');

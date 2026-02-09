@@ -67,6 +67,9 @@ Manager Profile
                 <div class="info-row"><span class="info-label"><i class="bi bi-envelope"></i>Email</span><span class="info-value">{{ $manager->email }}</span></div>
                 <div class="info-row"><span class="info-label"><i class="bi bi-telephone"></i>Phone</span><span class="info-value">{{ $manager->phone_number ?? 'Not provided' }}</span></div>
                 <div class="info-row"><span class="info-label"><i class="bi bi-briefcase"></i>Business Name</span><span class="info-value">{{ $manager->business_name }}</span></div>
+                @if($manager->addby)
+                <div class="info-row"><span class="info-label"><i class="bi bi-building"></i>Branch</span><span class="info-value">{{ $manager->branch_name ?? ($manager->managedBranch ? $manager->managedBranch->branch_name : 'Not assigned') }}</span></div>
+                @endif
                 <div class="info-row"><span class="info-label"><i class="bi bi-geo-alt"></i>Address</span><span class="info-value">{{ $manager->address ?? '-' }}</span></div>
                 <div class="info-row"><span class="info-label"><i class="bi bi-calendar-check"></i>Account Created</span><span class="info-value">{{ $manager->created_at ? $manager->created_at->format('F d, Y') : '-' }}</span></div>
             </div>

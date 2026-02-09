@@ -9,6 +9,7 @@ use App\Models\Unit;
 use App\Models\StandardItem;
 use App\Models\Category;
 use App\Models\UserSubscription;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\CartItem;
@@ -20,10 +21,42 @@ class ManagerMainController extends Controller
     // Dashboard view with sales metrics
     public function index()
     {
+        // Get authenticated user
+        $user = Auth::user();
+        $branchName = $user->branch_name;
+
+        // If user was added by another manager, get the creator's business_name
+        if ($user->addby) {
+            $creator = User::where('email', $user->addby)->first();
+            $businessName = $creator ? $creator->business_name : $user->business_name;
+        } else {
+            $businessName = $user->business_name;
+        }
+
         // Default: show stats for all time, or filter by date if provided
         $startDate = request('start_date');
         $endDate = request('end_date');
-        $query = CartItem::where('status', 'completed');
+
+        // Filter by business_name and status
+        $query = CartItem::where('status', 'completed')
+            ->where('business_name', $businessName);
+
+        // If the user was added by another manager, filter by user_id, staff_id, or branch_name
+        if ($user->addby) {
+            // For added managers, show sales for their own transactions, transactions by staff they manage, or transactions from their branch
+            $query->where(function($q) use ($user, $branchName) {
+                // Check if user_id matches the manager's own ID
+                $q->where('user_id', $user->id)
+                // Check if staff_id is in the list of staff managed by this manager
+                  ->orWhereIn('staff_id', function($subQuery) use ($user) {
+                      $subQuery->select('id')
+                          ->from('staffs')
+                          ->where('manager_email', $user->email);
+                  })
+                  ->orWhere('branch_name', $branchName);
+            });
+        }
+
         if ($startDate && $endDate) {
             $query->whereDate('created_at', '>=', $startDate)
                   ->whereDate('created_at', '<=', $endDate);
@@ -94,7 +127,6 @@ class ManagerMainController extends Controller
             });
 
         // Check subscription expiry status for notifications
-        $user = Auth::user();
         $subscription = UserSubscription::where('user_id', $user->id)
             ->where('status', 'active')
             ->orderBy('end_date', 'desc')
@@ -137,16 +169,25 @@ class ManagerMainController extends Controller
 
     public function add_item_standard()
     {
-        $suppliers = Supplier::all();
-        $categories = Category::all();
-        return view('manager.standardItems.add_item_standard', compact('suppliers', 'categories'));
+        $user = Auth::user();
+        $businessName = $user->business_name;
+
+        $suppliers = Supplier::where('business_name', $businessName)->get();
+        $units = Unit::all();
+        $categories = Category::where('business_name', $businessName)->get();
+
+        return view('manager.standardItems.add_item_standard', compact('suppliers', 'units', 'categories'));
     }
 
     public function add_item_variant()
     {
-        $suppliers = Supplier::all();
+        $user = Auth::user();
+        $businessName = $user->business_name;
+
+        $suppliers = Supplier::where('business_name', $businessName)->get();
         $units = Unit::all();
-        $categories = Category::all();
+        $categories = Category::where('business_name', $businessName)->get();
+
         return view('manager.variantItems.add_item_variant', compact('suppliers', 'units', 'categories'));
     }
 
