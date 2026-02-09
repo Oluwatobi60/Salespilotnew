@@ -44,9 +44,9 @@ Get Started here
 
           <!-- Resend Link Button -->
           <div id="resendSection" class="d-none" style="text-align:center;margin-top:15px;">
-            <button type="button" class="button" id="resendBtn" style="background:#f59e0b;" disabled>
+            <a href="#" id="resendBtn" style="color:#f59e0b;text-decoration:none;font-weight:600;pointer-events:none;opacity:0.5;">
               <i class="uil uil-redo"></i> Resend Verification Link
-            </button>
+            </a>
           </div>
 
           <div class="login_signup">A verification link will be sent to your E-mail, click the link and continue the sign up process</div>
@@ -122,10 +122,9 @@ Get Started here
 
         countdownDisplay.classList.remove('d-none');
 
-        // Disable resend button while countdown is active
-        resendBtn.disabled = true;
+        // Disable resend link while countdown is active
+        resendBtn.style.pointerEvents = "none";
         resendBtn.style.opacity = "0.5";
-        resendBtn.style.cursor = "not-allowed";
 
         // Start checking verification status every 3 seconds
         verificationCheckInterval = setInterval(checkVerificationStatus, 3000);
@@ -141,10 +140,9 @@ Get Started here
                 countdownElement.style.color = "#dc2626";
                 resendSection.classList.remove('d-none');
 
-                // Enable resend button when expired
-                resendBtn.disabled = false;
+                // Enable resend link when expired
+                resendBtn.style.pointerEvents = "auto";
                 resendBtn.style.opacity = "1";
-                resendBtn.style.cursor = "pointer";
 
                 proceedBtn.disabled = true;
                 proceedBtn.style.opacity = "0.5";
@@ -240,8 +238,9 @@ Get Started here
             return;
         }
 
-        // Disable button during request
-        this.disabled = true;
+        // Disable link during request
+        this.style.pointerEvents = "none";
+        this.style.opacity = "0.5";
         this.innerHTML = '<i class="uil uil-spinner-alt"></i> Sending...';
 
         fetch('{{ route('get_started.resend') }}', {
@@ -300,8 +299,9 @@ Get Started here
             });
         })
         .finally(() => {
-            // Re-enable button
-            this.disabled = false;
+            // Re-enable link
+            this.style.pointerEvents = "auto";
+            this.style.opacity = "1";
             this.innerHTML = '<i class="uil uil-redo"></i> Resend Verification Link';
         });
     });
