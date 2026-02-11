@@ -20,10 +20,9 @@ class BranchController extends Controller
     {
         $user = Auth::user();
 
-        // Get branches for the logged-in user's business with assigned staff only
+        // Get branches for the logged-in user's business
         $branches = Branch::where('user_id', $user->id)
-            ->whereNotNull('staff_id')
-            ->with(['manager', 'staff', 'subscriptionPlan'])
+            ->with(['manager', 'staff', 'staffMembers', 'subscriptionPlan'])
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 

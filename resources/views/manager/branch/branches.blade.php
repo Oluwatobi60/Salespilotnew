@@ -219,7 +219,18 @@ Manage Branches
                               @endif
                             </td>
                             <td>
-                              @if($branch->staff)
+                              @if($branch->staffMembers && $branch->staffMembers->count() > 0)
+                                <div>
+                                  @foreach($branch->staffMembers as $index => $staffMember)
+                                    <div class="{{ $index > 0 ? 'mt-2 pt-2 border-top' : '' }}">
+                                      <p class="mb-0"><strong>{{ $staffMember->fullname }}</strong></p>
+                                      <p class="text-muted mb-0 small">{{ $staffMember->email }}</p>
+                                    </div>
+                                  @endforeach
+                                  <small class="text-muted mt-1 d-block">{{ $branch->staffMembers->count() }} staff member(s)</small>
+                                </div>
+                              @elseif($branch->staff)
+                                {{-- Legacy single staff display --}}
                                 <div>
                                   <p class="mb-0"><strong>{{ $branch->staff->fullname }}</strong></p>
                                   <p class="text-muted mb-0 small">{{ $branch->staff->email }}</p>

@@ -212,7 +212,7 @@ Add Staff Member
                               </div>
                             </td>
                             <td>
-                              <span class="">{{ $staff->branch ? $staff->branch->branch_name : 'N/A' }}</span>
+                              <span class="">{{ $staff->branches->first() ? $staff->branches->first()->branch_name : 'N/A' }}</span>
                             </td>
                              <td>
                               <span class="badge bg-success">{{ $staff->status  ? 'Active' : 'Inactive'}}</span>

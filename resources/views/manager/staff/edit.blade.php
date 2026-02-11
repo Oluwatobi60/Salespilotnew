@@ -6,6 +6,39 @@ Edit Staff
   <div class="modal-body">
 
     <h2> Edit Profile</h2>
+
+    <!-- Success Message -->
+    @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>
+            <strong>Success!</strong> {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
+    <!-- Error Message -->
+    @if(session('error'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <strong>Error!</strong> {{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
+    <!-- Validation Errors -->
+    @if($errors->any())
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <strong>Validation Error!</strong> Please correct the following:
+            <ul class="mb-0 mt-2">
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
             <form action="{{ route('staff.update', $staffedit->id) }}" method="POST" enctype="multipart/form-data">
               @csrf
               @method('PUT')
@@ -17,16 +50,18 @@ Edit Staff
                 </h6>
               <div class="row">
                 <div class="col-md-6 mb-3">
-                  <label for="fullname" class="form-label">Full Name <span class="text-danger">*</span></label>
-                  <input type="text" class="form-control" id="fullname" name="fullname" placeholder="Enter full name" value="{{ $staffedit->fullname }}">
-                  @error('fullname')
+                  <label for="staff_id" class="form-label">Staff ID <span class="text-danger">*</span></label>
+                  <input type="text" class="form-control" id="staff_id" name="staff_id" placeholder="Enter staff ID" required value="{{ $staffedit->staffsid }}" readonly>
+                  <small class="text-muted">Staff ID cannot be changed</small>
+                  @error('staff_id')
                     <small class="text-danger">{{ $message }}</small>
                   @enderror
                 </div>
+
                 <div class="col-md-6 mb-3">
-                  <label for="username" class="form-label">Username <span class="text-danger">*</span></label>
-                  <input type="text" class="form-control" id="username" name="username" placeholder="Enter username" required value="{{ $staffedit->username }}">
-                  @error('username')
+                  <label for="fullname" class="form-label">Full Name <span class="text-danger">*</span></label>
+                  <input type="text" class="form-control" id="fullname" name="fullname" placeholder="Enter full name" value="{{ $staffedit->fullname }}">
+                  @error('fullname')
                     <small class="text-danger">{{ $message }}</small>
                   @enderror
                 </div>
@@ -40,10 +75,45 @@ Edit Staff
                     <small class="text-danger">{{ $message }}</small>
                   @enderror
                 </div>
+
                 <div class="col-md-6 mb-3">
                   <label for="phone" class="form-label">Phone Number</label>
                   <input type="tel" class="form-control" id="phone" name="phone" placeholder="Enter phone number" value="{{ $staffedit->phone }}">
                   @error('phone')
+                    <small class="text-danger">{{ $message }}</small>
+                  @enderror
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label for="branch_id" class="form-label">Assign to Branch</label>
+                  <select class="form-select" id="branch_id" name="branch_id">
+                    <option value="">No Branch</option>
+                    @foreach($branches as $branch)
+                      <option value="{{ $branch->id }}"
+                        {{ $staffedit->branches->contains($branch->id) ? 'selected' : '' }}>
+                        {{ $branch->branch_name }}
+                        @if($branch->staff_members_count > 0)
+                          ({{ $branch->staff_members_count }} staff assigned)
+                        @endif
+                      </option>
+                    @endforeach
+                  </select>
+                  <small class="text-muted">Change the branch assignment for this staff member</small>
+                  @error('branch_id')
+                    <small class="text-danger">{{ $message }}</small>
+                  @enderror
+                </div>
+
+
+                  <div class="col-md-6 mb-2">
+                  <label for="role" class="form-label">Role <span class="text-danger">*</span></label>
+                  <select class="form-select" id="role" name="role" required>
+                    <option value="">Select Role</option>
+                    <option value="Staff" {{ $staffedit->role == 'Staff' ? 'selected' : '' }}>Staff</option>
+                  </select>
+                  @error('role')
                     <small class="text-danger">{{ $message }}</small>
                   @enderror
                 </div>
@@ -78,29 +148,8 @@ Edit Staff
                 <h6 class="section-title mb-3">
                   <i class="bi bi-briefcase me-2"></i>Role & Status
                 </h6>
-              <div class="row">
-                <div class="col-md-6 mb-2">
-                  <label for="role" class="form-label">Role <span class="text-danger">*</span></label>
-                  <select class="form-select" id="role" name="role" required>
-                    <option value="">Select Role</option>
-                    <option value="Manager" {{ $staffedit->role == 'Manager' ? 'selected' : '' }}>Manager</option>
-                    <option value="Sales Staff" {{ $staffedit->role == 'Sales Staff' ? 'selected' : '' }}>Sales Staff</option>
-                  </select>
-                  @error('role')
-                    <small class="text-danger">{{ $message }}</small>
-                  @enderror
-                </div>
 
-                <div class="col-md-6 mb-2">
-                  <label for="status" class="form-label">Status <span class="text-danger">*</span></label>
-                  <select class="form-select" id="status" name="status" required>
-                    <option value="Active" {{ old('status') == 'Active' ? 'selected' : '' }} selected>Active</option>
-                    <option value="Inactive" {{ old('status') == 'Inactive' ? 'selected' : '' }}>Inactive</option>
-                    <option value="On Leave" {{ old('status') == 'On Leave' ? 'selected' : '' }}>On Leave</option>
-                  </select>
-                  <div class="invalid-feedback">Please select a status.</div>
-              </div>
-              </div>
+
               </div>
               <!-- End Role & Status -->
 

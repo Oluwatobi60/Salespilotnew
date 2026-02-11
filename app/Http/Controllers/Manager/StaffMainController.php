@@ -98,24 +98,13 @@ class StaffMainController extends Controller
             // Create a new staff member
             $staff = Staffs::create($validatedData);
 
-            // If branch_id is provided, automatically create a branch record with staff assignment
+            // If branch_id is provided, assign staff to the branch using pivot table
             if ($request->filled('branch_id')) {
                 $selectedBranch = Branch::find($request->input('branch_id'));
 
                 if ($selectedBranch) {
-                    Branch::create([
-                        'user_id' => $manager->id,
-                        'staff_id' => $staff->id,
-                        'business_name' => $manager->business_name,
-                        'branch_name' => $selectedBranch->branch_name,
-                        'address' => $selectedBranch->address,
-                        'state' => $selectedBranch->state,
-                        'local_govt' => $selectedBranch->local_govt,
-                        'manager_id' => $selectedBranch->manager_id,
-                        'subscription_plan_id' => $subscription ? $subscription->subscription_plan_id : null,
-                        'user_subscription_id' => $subscription ? $subscription->id : null,
-                        'status' => 1,
-                    ]);
+                    // Attach staff to branch (many-to-many relationship)
+                    $selectedBranch->staffMembers()->attach($staff->id);
                 }
             }
 
@@ -179,15 +168,26 @@ class StaffMainController extends Controller
         $businessName = $manager->business_name;
 
         $staffdata = Staffs::where('business_name', $businessName)
+            ->with('branches')
             ->latest()
             ->paginate(4);
 
-        // Get branches for the dropdown - only branches belonging to this user with no staff assigned
+        // Get branches for the dropdown - with staff count to limit per branch
         $branches = Branch::where('user_id', $manager->id)
             ->where('status', 1)
-            ->whereNull('staff_id')
-            ->select('id', 'branch_name', 'manager_id')
-            ->get();
+            ->withCount('staffMembers')
+            ->get()
+            ->filter(function($branch) use ($manager) {
+                // For Standard plan, limit 2 staff per branch
+                $subscription = $manager->currentSubscription()->with('subscriptionPlan')->first();
+                if ($subscription && $subscription->subscriptionPlan) {
+                    $planName = strtolower($subscription->subscriptionPlan->name ?? '');
+                    if ($planName === 'standard' && $branch->staff_members_count >= 2) {
+                        return false; // Skip branches with 2+ staff on Standard plan
+                    }
+                }
+                return true; // Show branch
+            });
 
         // Get active subscription with plan details
         $activeSubscription = $manager->currentSubscription()->with('subscriptionPlan')->first();
@@ -207,8 +207,32 @@ class StaffMainController extends Controller
         $businessName = $manager->business_name;
 
         $staffedit = Staffs::where('business_name', $businessName)
+            ->with('branches')
             ->findOrFail($id);
-        return view('manager.staff.edit', compact('staffedit'));
+
+        // Get branches for dropdown - with staff count to limit per branch
+        $branches = Branch::where('user_id', $manager->id)
+            ->where('status', 1)
+            ->withCount('staffMembers')
+            ->get()
+            ->filter(function($branch) use ($manager, $staffedit) {
+                // Show current branch even if at limit
+                if ($staffedit->branches->contains($branch->id)) {
+                    return true;
+                }
+
+                // For Standard plan, limit 2 staff per branch
+                $subscription = $manager->currentSubscription()->with('subscriptionPlan')->first();
+                if ($subscription && $subscription->subscriptionPlan) {
+                    $planName = strtolower($subscription->subscriptionPlan->name ?? '');
+                    if ($planName === 'standard' && $branch->staff_members_count >= 2) {
+                        return false; // Skip branches with 2+ staff on Standard plan
+                    }
+                }
+                return true;
+            });
+
+        return view('manager.staff.edit', compact('staffedit', 'branches'));
     }
 
 
@@ -231,6 +255,7 @@ class StaffMainController extends Controller
                 'status' => 'nullable|string',
                 'address' => 'nullable|string',
                 'passport_photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+                'branch_id' => 'nullable|exists:branches,id',
             ], [
                 'email.unique' => 'This email address is already registered. Please use a different email.',
                 'phone.unique' => 'This phone number is already registered. Please use a different phone number.',
@@ -275,6 +300,17 @@ class StaffMainController extends Controller
 
             // Update the staff member
             $staff->update($validatedData);
+
+            // Handle branch assignment update
+            if ($request->has('branch_id')) {
+                // Detach from all previous branches
+                $staff->branches()->detach();
+
+                // Attach to new branch if provided
+                if ($request->filled('branch_id')) {
+                    $staff->branches()->attach($request->input('branch_id'));
+                }
+            }
 
             // Redirect back with a success message
             return redirect()->route('manager.staff')->with('success', 'Staff member updated successfully.');

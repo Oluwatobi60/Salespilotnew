@@ -4,6 +4,7 @@ namespace App\Models\Branch;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use App\Models\User;
 use App\Models\SubscriptionPlan;
 use App\Models\UserSubscription;
@@ -46,11 +47,20 @@ class Branch extends Model
     }
 
     /**
-     * Get the staff assigned to this branch
+     * Get the staff assigned to this branch (single - legacy)
      */
     public function staff(): BelongsTo
     {
         return $this->belongsTo(Staffs::class, 'staff_id');
+    }
+
+    /**
+     * Get all staff members assigned to this branch (many-to-many)
+     */
+    public function staffMembers(): BelongsToMany
+    {
+        return $this->belongsToMany(Staffs::class, 'branch_staff', 'branch_id', 'staff_id')
+            ->withTimestamps();
     }
 
     /**
