@@ -234,9 +234,9 @@ Add Staff Member
                                   @method('PATCH')
                                   <div class="form-check form-switch d-flex align-items-center m-0">
                                     <input class="form-check-input" type="checkbox" id="statusSwitch{{ $staff->id }}" name="status"
-                                      onchange="this.form.submit()" {{ ($staff->status == 'Active' || $staff->status == 'Active') ? 'checked' : '' }}>
+                                      onchange="this.form.submit()" {{ ($staff->status == '1' || $staff->status == '1') ? 'checked' : '' }}>
                                     <label class="form-check-label ms-1 mb-0" for="statusSwitch{{ $staff->id }}">
-                                      {{ ($staff->status == 'Active' || $staff->status == 'Active') ? 'Enabled' : 'Disabled' }}
+                                      {{ ($staff->status == '1' || $staff->status == '1') ? 'Enabled' : 'Disabled' }}
                                     </label>
                                   </div>
                                 </form>

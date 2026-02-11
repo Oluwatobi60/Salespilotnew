@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('phone')->nullable();
             $table->string('password');
             $table->string('role');
-            $table->string('status')->default('active');
+            $table->string('status')->default('1');
             $table->text('address')->nullable();
             $table->string('passport_photo')->nullable();
             $table->timestamps();
