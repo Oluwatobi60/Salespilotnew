@@ -174,6 +174,7 @@ Manage Branches
                             <th>Branch Name</th>
                             <th>Location</th>
                             <th>Manager</th>
+                            <th>Staff</th>
                             <th>Status</th>
                             <th>Date Added</th>
                             <th class="text-center">Actions</th>
@@ -210,8 +211,18 @@ Manage Branches
                             <td>
                               @if($branch->manager)
                                 <div>
-                                  <p class="mb-0">{{ $branch->manager->first_name }} {{ $branch->manager->surname }}</p>
+                                  <p class="mb-0"><strong>{{ $branch->manager->first_name }} {{ $branch->manager->surname }}</strong></p>
                                   <p class="text-muted mb-0 small">{{ $branch->manager->email }}</p>
+                                </div>
+                              @else
+                                <span class="badge bg-secondary">Not Assigned</span>
+                              @endif
+                            </td>
+                            <td>
+                              @if($branch->staff)
+                                <div>
+                                  <p class="mb-0"><strong>{{ $branch->staff->fullname }}</strong></p>
+                                  <p class="text-muted mb-0 small">{{ $branch->staff->email }}</p>
                                 </div>
                               @else
                                 <span class="badge bg-secondary">Not Assigned</span>
@@ -266,7 +277,7 @@ Manage Branches
                           </tr>
                           @empty
                           <tr>
-                            <td colspan="7" class="text-center py-5">
+                            <td colspan="8" class="text-center py-5">
                               <div class="d-flex flex-column align-items-center">
                                 <i class="bi bi-building" style="font-size: 4rem; color: #ccc;"></i>
                                 <h5 class="mt-3 text-muted">No Branches Found</h5>

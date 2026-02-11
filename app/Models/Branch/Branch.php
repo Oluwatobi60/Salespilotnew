@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use App\Models\User;
 use App\Models\SubscriptionPlan;
 use App\Models\UserSubscription;
+use App\Models\Staffs;
 
 class Branch extends Model
 {
@@ -42,6 +43,14 @@ class Branch extends Model
     public function manager(): BelongsTo
     {
         return $this->belongsTo(User::class, 'manager_id');
+    }
+
+    /**
+     * Get the staff assigned to this branch
+     */
+    public function staff(): BelongsTo
+    {
+        return $this->belongsTo(Staffs::class, 'staff_id');
     }
 
     /**
