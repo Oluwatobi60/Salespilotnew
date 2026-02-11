@@ -9,6 +9,14 @@ use Illuminate\Notifications\Notifiable;
 use App\Models\UserSubscription;
 use App\Models\Branch\Branch;
 
+/**
+ * @property int $id
+ * @property string $email
+ * @property string $business_name
+ * @property string|null $addby
+ * @method \Illuminate\Database\Eloquent\Relations\HasOne currentSubscription()
+ * @method bool isBusinessCreator()
+ */
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */

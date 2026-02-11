@@ -38,8 +38,8 @@ class BranchController extends Controller
             ->whereNotIn('id', $assignedManagerIds)
             ->get();
 
-        // Get active subscription
-        $activeSubscription = $user->currentSubscription()->first();
+        // Get active subscription with plan details
+        $activeSubscription = $user->currentSubscription()->with('subscriptionPlan')->first();
 
         // Check if user is business creator
         $isBusinessCreator = $user->isBusinessCreator();

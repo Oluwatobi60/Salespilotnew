@@ -72,13 +72,67 @@ Manage Branches
                         </h4>
                         <p class="card-description mb-0">
                           Total: <strong>{{ $branches->total() }}</strong> branches
-                          @if($activeSubscription && $activeSubscription->subscriptionPlan->max_branches !== null)
-                            ({{ $branches->total() }}/{{ $activeSubscription->subscriptionPlan->max_branches }} used)
+                          @if($activeSubscription && $activeSubscription->subscriptionPlan)
+                            ({{ $branches->total() }}/{{ $activeSubscription->subscriptionPlan->max_branches ?? 'Unlimited' }} used)
+                            <br><small class="text-muted">Plan: {{ $activeSubscription->subscriptionPlan->name ?? 'N/A' }}</small>
+                          @else
+                            <br><small class="text-danger">No active subscription</small>
                           @endif
                         </p>
                       </div>
                       @if($isBusinessCreator)
-                        <button type="button" class="btn btn-primary" style="min-width: 150px;" id="openAddBranchBtn"><strong>+ Add Branch</strong></button>
+                        @php
+                          $canAddBranch = false; // Default to restricted
+                          $limitMessage = '';
+                          $planName = '';
+                          $currentCount = $branches->total();
+
+                          if($activeSubscription && $activeSubscription->subscriptionPlan && $activeSubscription->subscriptionPlan->name) {
+                            $planName = strtolower(trim($activeSubscription->subscriptionPlan->name));
+
+                            if(in_array($planName, ['free', 'basic'])) {
+                              $canAddBranch = false;
+                              $limitMessage = 'Branch creation is not available on your current plan. Upgrade to Standard or Premium.';
+                            } elseif($planName === 'standard' && $currentCount >= 2) {
+                              $canAddBranch = false;
+                              $limitMessage = 'You have reached your branch limit (2 branches). Upgrade to Premium for unlimited branches.';
+                            } elseif($planName === 'standard' && $currentCount < 2) {
+                              $canAddBranch = true; // Standard can add up to 2 branches
+                            } elseif($planName === 'premium') {
+                              $canAddBranch = true; // Premium has unlimited branches
+                            } else {
+                              $canAddBranch = false;
+                              $limitMessage = 'Invalid subscription plan.';
+                            }
+                          } else {
+                            // No active subscription or plan name - prevent branch creation
+                            $canAddBranch = false;
+                            $limitMessage = 'No active subscription found. Please subscribe to a plan.';
+                          }
+                        @endphp
+
+                        {{-- DEBUG INFO - Remove after testing --}}
+                       {{--   <div class="alert alert-info small mb-2" style="padding: 0.5rem;">
+                          <strong>Debug:</strong> Plan: "{{ $planName }}" | Branches: {{ $currentCount }} | Can Add: {{ $canAddBranch ? 'Yes' : 'No' }}
+                        </div>  --}}
+
+                        @if($canAddBranch)
+                          <button type="button" class="btn btn-primary" style="min-width: 150px;" id="openAddBranchBtn"><strong>+ Add Branch</strong></button>
+                        @else
+                          <div class="d-flex flex-column align-items-end">
+                            <button type="button" class="btn btn-secondary" style="min-width: 150px;" disabled><strong>+ Add Branch</strong></button>
+                            <small class="text-muted mt-1">{{ $limitMessage }}</small>
+                            @if($activeSubscription)
+                              <a href="{{ route('plan_pricing') }}" class="btn btn-warning btn-sm mt-2">
+                                <i class="bi bi-arrow-up-circle me-1"></i> Upgrade Plan
+                              </a>
+                            @else
+                              <a href="{{ route('plan_pricing') }}" class="btn btn-primary btn-sm mt-2">
+                                <i class="bi bi-cart-plus me-1"></i> Subscribe Now
+                              </a>
+                            @endif
+                          </div>
+                        @endif
                       @else
                         <div class="alert alert-info mb-0" style="padding: 0.5rem 1rem;">
                           <i class="bi bi-info-circle me-1"></i>Only the business owner can manage branches
@@ -384,6 +438,44 @@ document.addEventListener('DOMContentLoaded', function() {
     // Open add branch panel
     if (addBranchBtn) {
         addBranchBtn.addEventListener('click', function() {
+            // Double-check branch limit on client side
+            @if($activeSubscription && $activeSubscription->subscriptionPlan)
+                const planName = '{{ strtolower($activeSubscription->subscriptionPlan->plan_name) }}';
+                const currentCount = {{ $branches->total() }};
+
+                if((planName === 'free' || planName === 'basic')) {
+                    Swal.fire({
+                        title: 'Upgrade Required',
+                        text: 'Branch creation is not available on your current plan.',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonText: 'Upgrade Now',
+                        cancelButtonText: 'Cancel'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.href = '{{ route('plan_pricing') }}';
+                        }
+                    });
+                    return;
+                }
+
+                if(planName === 'standard' && currentCount >= 2) {
+                    Swal.fire({
+                        title: 'Branch Limit Reached',
+                        text: 'You have reached your branch limit (2 branches). Upgrade to Premium for unlimited branches.',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonText: 'Upgrade to Premium',
+                        cancelButtonText: 'Cancel'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.href = '{{ route('plan_pricing') }}';
+                        }
+                    });
+                    return;
+                }
+            @endif
+
             branchForm.reset();
             branchForm.action = "{{ route('branch.create') }}";
             document.getElementById('formMethod').value = 'POST';

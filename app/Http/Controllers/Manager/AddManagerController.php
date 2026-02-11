@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Mail;
 use App\Mail\ManagerCredentials;
 use App\Models\Staffs;
 use App\Models\UserSubscription;
+use App\Models\Branch\Branch;
 
 class AddManagerController extends Controller
 {
@@ -33,7 +34,16 @@ class AddManagerController extends Controller
             ->latest()
             ->get();
 
-        return view('manager.staff.add_manager', compact('managerdata', 'delegatedManagers'));
+        // Get active subscription with plan details
+        $activeSubscription = $manager->currentSubscription()->with('subscriptionPlan')->first();
+
+        // Get branch count
+        $branchCount = Branch::where('user_id', $manager->id)->count();
+
+        // Check if user is business creator
+        $isBusinessCreator = $manager->isBusinessCreator();
+
+        return view('manager.staff.add_manager', compact('managerdata', 'delegatedManagers', 'activeSubscription', 'branchCount', 'isBusinessCreator'));
     }
 
 

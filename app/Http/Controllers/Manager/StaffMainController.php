@@ -182,13 +182,23 @@ class StaffMainController extends Controller
             ->latest()
             ->paginate(4);
 
-        // Get branches for the dropdown
-        $branches = Branch::where('business_name', $businessName)
+        // Get branches for the dropdown - only branches belonging to this user with no staff assigned
+        $branches = Branch::where('user_id', $manager->id)
             ->where('status', 1)
+            ->whereNull('staff_id')
             ->select('id', 'branch_name', 'manager_id')
             ->get();
 
-        return view('manager.staff.add_staff', compact('staffdata', 'branches'));
+        // Get active subscription with plan details
+        $activeSubscription = $manager->currentSubscription()->with('subscriptionPlan')->first();
+
+        // Get staff count
+        $staffCount = Staffs::where('business_name', $businessName)->count();
+
+        // Check if user is business creator
+        $isBusinessCreator = $manager->isBusinessCreator();
+
+        return view('manager.staff.add_staff', compact('staffdata', 'branches', 'activeSubscription', 'staffCount', 'isBusinessCreator'));
     }
 
     public function editstaff($id)

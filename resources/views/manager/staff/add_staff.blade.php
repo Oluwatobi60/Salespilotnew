@@ -65,7 +65,80 @@ Add Staff Member
                         </h4>
                         <p class="card-description mb-0">Manage your staff members and their roles</p>
                       </div>
-                      <button type="button" class="btn btn-primary" style="min-width: 150px;" id="openAddStaffBtn"><strong>+ Add Staff</strong></button>
+
+                      @if($isBusinessCreator ?? true)
+                        @php
+                          $canAddStaff = false;
+                          $limitMessage = '';
+                          $planName = '';
+                          $maxStaff = null;
+                          $currentStaffCount = $staffCount ?? 0;
+
+                          if(isset($activeSubscription) && $activeSubscription && $activeSubscription->subscriptionPlan) {
+                            $planName = strtolower(trim($activeSubscription->subscriptionPlan->name ?? ''));
+                            $maxStaff = $activeSubscription->subscriptionPlan->max_staffs;
+
+                            // Use max_staffs if available, otherwise use plan name
+                            if($maxStaff !== null) {
+                              if($maxStaff == 0) {
+                                // No staff allowed
+                                $canAddStaff = false;
+                                $limitMessage = 'Staff creation is not available on your current plan. Upgrade to Standard or Premium.';
+                              } elseif($currentStaffCount >= $maxStaff) {
+                                // Limit reached
+                                $canAddStaff = false;
+                                $limitMessage = "You have reached your staff limit ({$maxStaff} staff members). Upgrade to Premium for unlimited staff.";
+                              } else {
+                                // Can still add more staff
+                                $canAddStaff = true;
+                              }
+                            } elseif(!empty($planName)) {
+                              // Fall back to plan name logic
+                              if(in_array($planName, ['free', 'basic'])) {
+                                $canAddStaff = false;
+                                $limitMessage = 'Staff creation is not available on your current plan. Upgrade to Standard or Premium.';
+                              } elseif($planName === 'standard' && $currentStaffCount >= 4) {
+                                $canAddStaff = false;
+                                $limitMessage = 'You have reached your staff limit (4 staff members). Upgrade to Premium for unlimited staff.';
+                              } elseif($planName === 'standard' && $currentStaffCount < 4) {
+                                $canAddStaff = true;
+                              } elseif($planName === 'premium') {
+                                $canAddStaff = true;
+                              }
+                            } else {
+                              // No max_staffs and no plan name - allow as fallback
+                              $canAddStaff = true;
+                            }
+                          } else {
+                            // No active subscription
+                            $canAddStaff = false;
+                            $limitMessage = 'No active subscription found. Please subscribe to a plan.';
+                          }
+                        @endphp
+
+                        @if($canAddStaff)
+                          <button type="button" class="btn btn-primary" style="min-width: 150px;" id="openAddStaffBtn"><strong>+ Add Staff</strong></button>
+                        @else
+                          <div class="d-flex flex-column align-items-end">
+                            <button type="button" class="btn btn-secondary" style="min-width: 150px;" disabled><strong>+ Add Staff</strong></button>
+                            <small class="text-muted mt-1 text-end" style="max-width: 300px;">{{ $limitMessage }}</small>
+                            @if($activeSubscription)
+                              <a href="{{ route('plan_pricing') }}" class="btn btn-warning btn-sm mt-2">
+                                <i class="bi bi-arrow-up-circle me-1"></i> Upgrade Plan
+                              </a>
+                            @else
+                              <a href="{{ route('plan_pricing') }}" class="btn btn-primary btn-sm mt-2">
+                                <i class="bi bi-cart-plus me-1"></i> Subscribe Now
+                              </a>
+                            @endif
+                          </div>
+                        @endif
+                      @else
+                        <div class="alert alert-info mb-0" style="padding: 0.5rem 1rem;">
+                          <i class="bi bi-info-circle me-1"></i>Only the business owner can add staff
+                        </div>
+                      @endif
+
                 </div>
 
  <!-- Search and Filter Section -->

@@ -65,7 +65,80 @@ Add Staff Member
                         </h4>
                         <p class="card-description mb-0">Manage your manager members and their roles</p>
                       </div>
-                      <button type="button" class="btn btn-primary" style="min-width: 150px;" id="openAddStaffBtn"><strong>+ Add Manager</strong></button>
+
+                      @if($isBusinessCreator ?? true)
+                        @php
+                          $canAddManager = false;
+                          $limitMessage = '';
+                          $planName = '';
+                          $maxBranches = null;
+
+                          if(isset($activeSubscription) && $activeSubscription && $activeSubscription->subscriptionPlan) {
+                            $planName = strtolower(trim($activeSubscription->subscriptionPlan->name ?? ''));
+                            $maxBranches = $activeSubscription->subscriptionPlan->max_branches;
+                            $currentBranchCount = $branchCount ?? 0;
+
+                            // Use max_branches if available, otherwise use plan name
+                            if($maxBranches !== null) {
+                              // Plan has a specific branch limit
+                              if($maxBranches == 0) {
+                                // No branches allowed (Free/Basic)
+                                $canAddManager = false;
+                                $limitMessage = 'Manager creation requires branches. Upgrade to Standard or Premium to create branches and add managers.';
+                              } elseif($currentBranchCount >= $maxBranches) {
+                                // Limit reached - can't add more managers without branches
+                                $canAddManager = false;
+                                $limitMessage = "You have reached your branch limit ({$maxBranches} branches). Upgrade to Premium for unlimited branches and managers.";
+                              } else {
+                                // Can still add more managers
+                                $canAddManager = true;
+                              }
+                            } elseif(!empty($planName)) {
+                              // Fall back to plan name logic
+                              if(in_array($planName, ['free', 'basic'])) {
+                                $canAddManager = false;
+                                $limitMessage = 'Manager creation requires branches. Upgrade to Standard or Premium.';
+                              } elseif($planName === 'standard' && $currentBranchCount >= 2) {
+                                $canAddManager = false;
+                                $limitMessage = 'You have reached your branch limit (2 branches). Upgrade to Premium for unlimited branches and managers.';
+                              } elseif($planName === 'standard' && $currentBranchCount < 2) {
+                                $canAddManager = true;
+                              } elseif($planName === 'premium') {
+                                $canAddManager = true;
+                              }
+                            } else {
+                              // No max_branches and no plan name - allow as fallback
+                              $canAddManager = true;
+                            }
+                          } else {
+                            // No active subscription
+                            $canAddManager = false;
+                            $limitMessage = 'No active subscription found. Please subscribe to a plan.';
+                          }
+                        @endphp
+
+                        @if($canAddManager)
+                          <button type="button" class="btn btn-primary" style="min-width: 150px;" id="openAddStaffBtn"><strong>+ Add Manager</strong></button>
+                        @else
+                          <div class="d-flex flex-column align-items-end">
+                            <button type="button" class="btn btn-secondary" style="min-width: 150px;" disabled><strong>+ Add Manager</strong></button>
+                            <small class="text-muted mt-1 text-end" style="max-width: 300px;">{{ $limitMessage }}</small>
+                            @if($activeSubscription)
+                              <a href="{{ route('plan_pricing') }}" class="btn btn-warning btn-sm mt-2">
+                                <i class="bi bi-arrow-up-circle me-1"></i> Upgrade Plan
+                              </a>
+                            @else
+                              <a href="{{ route('plan_pricing') }}" class="btn btn-primary btn-sm mt-2">
+                                <i class="bi bi-cart-plus me-1"></i> Subscribe Now
+                              </a>
+                            @endif
+                          </div>
+                        @endif
+                      @else
+                        <div class="alert alert-info mb-0" style="padding: 0.5rem 1rem;">
+                          <i class="bi bi-info-circle me-1"></i>Only the business owner can add managers
+                        </div>
+                      @endif
 
                     </div>
 
@@ -484,6 +557,94 @@ Add Staff Member
 // SweetAlert2 for delete confirmation
 document.addEventListener('DOMContentLoaded', function() {
     const deleteBtns = document.querySelectorAll('.delete-staff-btn');
+    const openAddStaffBtn = document.getElementById('openAddStaffBtn');
+
+    // Add Manager button click handler with validation
+    if (openAddStaffBtn) {
+        openAddStaffBtn.addEventListener('click', function() {
+            // Double-check branch/manager limit on client side
+            @if(isset($activeSubscription) && $activeSubscription && $activeSubscription->subscriptionPlan)
+                const planName = '{{ strtolower($activeSubscription->subscriptionPlan->plan_name ?? '') }}';
+                const maxBranches = {{ $activeSubscription->subscriptionPlan->max_branches ?? 'null' }};
+                const currentBranchCount = {{ $branchCount ?? 0 }};
+
+                if(maxBranches !== null) {
+                    if(maxBranches === 0) {
+                        Swal.fire({
+                            title: 'Upgrade Required',
+                            text: 'Manager creation requires branches. Upgrade to Standard or Premium to create branches and add managers.',
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonText: 'Upgrade Now',
+                            cancelButtonText: 'Cancel'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                window.location.href = '{{ route('plan_pricing') }}';
+                            }
+                        });
+                        return;
+                    }
+
+                    if(currentBranchCount >= maxBranches) {
+                        Swal.fire({
+                            title: 'Branch Limit Reached',
+                            text: `You have reached your branch limit (${maxBranches} branches). Each manager requires a branch. Upgrade to Premium for unlimited branches and managers.`,
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonText: 'Upgrade to Premium',
+                            cancelButtonText: 'Cancel'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                window.location.href = '{{ route('plan_pricing') }}';
+                            }
+                        });
+                        return;
+                    }
+                } else if(planName) {
+                    if(planName === 'free' || planName === 'basic') {
+                        Swal.fire({
+                            title: 'Upgrade Required',
+                            text: 'Manager creation requires branches. Upgrade to Standard or Premium.',
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonText: 'Upgrade Now',
+                            cancelButtonText: 'Cancel'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                window.location.href = '{{ route('plan_pricing') }}';
+                            }
+                        });
+                        return;
+                    }
+
+                    if(planName === 'standard' && currentBranchCount >= 2) {
+                        Swal.fire({
+                            title: 'Branch Limit Reached',
+                            text: 'You have reached your branch limit (2 branches). Each manager requires a branch. Upgrade to Premium for unlimited branches and managers.',
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonText: 'Upgrade to Premium',
+                            cancelButtonText: 'Cancel'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                window.location.href = '{{ route('plan_pricing') }}';
+                            }
+                        });
+                        return;
+                    }
+                }
+            @endif
+
+            // If validation passes, open the panel
+            const addManagerPanel = document.getElementById('addManagerPanel');
+            const sidePanelOverlay = document.getElementById('sidePanelOverlay');
+            if (addManagerPanel && sidePanelOverlay) {
+                addManagerPanel.classList.add('active');
+                sidePanelOverlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+        });
+    }
 
     deleteBtns.forEach(btn => {
         btn.addEventListener('click', function(e) {
