@@ -30,25 +30,74 @@ class StaffsMainController extends Controller
             ->orderBy('category_name')
             ->get();
 
-        // Fetch all StandardItems with their associated relationships
+        // Get staff's branch
+        $staffBranch = $staff->branches->first();
+        $branchId = $staffBranch ? $staffBranch->id : null;
+
+        $standardBranchItemIds = [];
+        $variantBranchItemIds = [];
+
+        // Get item IDs from branch_inventory for staff's branch
+        if ($branchId) {
+            $branchInventory = BranchInventory::where('branch_id', $branchId)
+                ->where('business_name', $businessName)
+                ->where('current_quantity', '>', 0)
+                ->get();
+
+            foreach ($branchInventory as $inventory) {
+                if ($inventory->item_type === 'standard') {
+                    $standardBranchItemIds[] = $inventory->item_id;
+                } elseif ($inventory->item_type === 'variant') {
+                    $variantBranchItemIds[] = $inventory->item_id;
+                }
+            }
+        }
+
+        // Fetch StandardItems - only items in the staff's branch inventory
         $standard_items = StandardItem::with([
             'supplier',
             'pricingTiers'
         ])
         ->where('business_name', $businessName)
-        ->where('enable_sale', true)
-        ->get();
+        ->where('enable_sale', true);
 
-        // Fetch all VariantItems with their associated relationships
+        // Filter by branch inventory if staff has a branch
+        if ($branchId && !empty($standardBranchItemIds)) {
+            $standard_items->whereIn('id', $standardBranchItemIds);
+        } elseif ($branchId) {
+            // If staff has branch but no items, return empty
+            $standard_items->whereRaw('1 = 0');
+        }
+
+        $standard_items = $standard_items->get();
+
+        // Fetch VariantItems - only items in the staff's branch inventory
         $variant_items = VariantItem::with([
             'supplier',
             'unit',
-            'variants' => function($query) {
-                $query->where('sell_item', true)->with('pricingTiers');
+            'variants' => function($query) use ($variantBranchItemIds, $branchId) {
+                $query->where('sell_item', true);
+                if ($branchId && !empty($variantBranchItemIds)) {
+                    $query->whereIn('id', $variantBranchItemIds);
+                } elseif ($branchId) {
+                    $query->whereRaw('1 = 0');
+                }
+                $query->with('pricingTiers');
             }
         ])
-        ->where('business_name', $businessName)
-        ->get();
+        ->where('business_name', $businessName);
+
+        // Filter variant items by branch inventory
+        if ($branchId && !empty($variantBranchItemIds)) {
+            $variant_items->whereHas('variants', function($q) use ($variantBranchItemIds) {
+                $q->whereIn('id', $variantBranchItemIds);
+            });
+        } elseif ($branchId) {
+            // If staff has branch but no items, return empty
+            $variant_items->whereRaw('1 = 0');
+        }
+
+        $variant_items = $variant_items->get();
 
         // Merge both collections for a unified item list
         $all_items = collect([]);
@@ -70,61 +119,20 @@ class StaffsMainController extends Controller
         $staff = Auth::guard('staff')->user();
         $businessName = $staff->business_name;
 
-        // Get staff's branch (staff_id branch) to find their branch manager
-        $staffBranch = $staff->branch;
-        // Get the manager_id from the staff's branch (if exists)
-        $managerId = $staffBranch ? $staffBranch->manager_id : null;
+        // Get staff's branch
+        $staffBranch = $staff->branches->first();
+        $branchId = $staffBranch ? $staffBranch->id : null;
 
-        // Get the branch manager
-        $manager = null;
-        if ($managerId) {
-            // Try to find the manager by ID first
-            $manager = User::find($managerId);
-        }
-
-        // Get the branch with manager_id matching (for inventory) - not staff_id branch
-        $branch = null;
-        if ($managerId) {
-            // First try to find the branch where manager_id matches and staff_id is null (in case there are multiple branches for the same manager)
-            $branch = Branch::where('business_name', $businessName)
-                ->where('manager_id', $managerId)
-                ->whereNull('staff_id')
-                ->first();
-        }
-
-        // Fallback to staff's branch if no manager branch found
-        if (!$branch) {
-            $branch = $staffBranch;
-        }
-
-        $branchId = $branch ? $branch->id : null;
-
-        $managerName = null;
-        $managerEmail = null;
         $standardBranchItemIds = [];
         $variantBranchItemIds = [];
 
-        if ($manager) {
-            $managerName = trim(($manager->first_name ?? '') . ' ' . ($manager->other_name ?? '') . ' ' . ($manager->surname ?? ''));
-            $managerEmail = $manager->email;
-        }
-
-        // Debug logging
-        Log::info('Staff Sell Product - Branch Selection', [
-            'staff_id' => $staff->id,
-            'staff_branch_id' => $staffBranch ? $staffBranch->id : null,
-            'manager_id' => $managerId,
-            'manager_email' => $managerEmail,
-            'selected_branch_id' => $branchId,
-            'branch_name' => $branch ? $branch->branch_name : null
-        ]);
-
-        // Get item IDs from branch_inventory
+        // Get item IDs from branch_inventory for staff's branch
         if ($branchId) {
             $branchInventory = BranchInventory::where('branch_id', $branchId)
                 ->where('business_name', $businessName)
                 ->where('current_quantity', '>', 0)
                 ->get();
+
 
             foreach ($branchInventory as $inventory) {
                 if ($inventory->item_type === 'standard') {
@@ -135,117 +143,51 @@ class StaffsMainController extends Controller
             }
         }
 
-        // Debug logging
-        Log::info('Staff Sell Product - Inventory Check', [
-            'branch_id' => $branchId,
-            'standard_item_ids' => $standardBranchItemIds,
-            'variant_item_ids' => $variantBranchItemIds,
-            'manager_name' => $managerName,
-            'manager_email' => $managerEmail
-        ]);
-
-        // Fetch StandardItems
-        $standardQuery = StandardItem::with([
+        // Fetch StandardItems - only items in the staff's branch inventory
+        $standard_items = StandardItem::with([
             'supplier',
             'pricingTiers'
         ])
         ->where('business_name', $businessName)
         ->where('enable_sale', true);
 
-
-
-        // Apply filtering if staff has branch
-        if ($branchId && ($managerName || $managerEmail || !empty($standardBranchItemIds))) {
-            $standardQuery->where(function($query) use ($managerName, $managerEmail, $standardBranchItemIds) {
-                // Build the query with OR conditions based on available filters
-                $started = false;
-                if ($managerName) {
-                    $query->where('manager_name', $managerName);
-                    $started = true;
-                }
-                if ($managerEmail) {
-                    if ($started) {
-                        $query->orWhere('manager_email', $managerEmail);
-                    } else {
-                        $query->where('manager_email', $managerEmail);
-                        $started = true;
-                    }
-                }
-                if (!empty($standardBranchItemIds)) {
-                    if ($started) {
-                        $query->orWhereIn('id', $standardBranchItemIds);
-                    } else {
-                        $query->whereIn('id', $standardBranchItemIds);
-                    }
-                }
-            });
+        // Filter by branch inventory if staff has a branch
+        if ($branchId && !empty($standardBranchItemIds)) {
+            $standard_items->whereIn('id', $standardBranchItemIds);
+        } elseif ($branchId) {
+            // If staff has branch but no items, return empty
+            $standard_items->whereRaw('1 = 0');
         }
 
+        $standard_items = $standard_items->get();
 
-
-        $standard_items = $standardQuery->get();
-
-        // Get variant item IDs for items added by the branch manager
-        $managerVariantItemIds = [];
-        if ($managerEmail) {
-            $managerVariantItemIds = VariantItem::where('business_name', $businessName)
-                ->where('manager_email', $managerEmail)
-                ->pluck('id')
-                ->toArray();
-        }
-
-        // Fetch VariantItems
-        $variantQuery = VariantItem::with([
+        // Fetch VariantItems - only items in the staff's branch inventory
+        $variant_items = VariantItem::with([
             'supplier',
             'unit',
-            'variants' => function($query) use ($variantBranchItemIds, $managerVariantItemIds) {
-                $query->where('sell_item', true)
-                    ->where(function($q) use ($variantBranchItemIds, $managerVariantItemIds) {
-                        // Include variants that are in branch inventory OR whose parent was added by manager
-                        if (!empty($variantBranchItemIds)) {
-                            $q->whereIn('id', $variantBranchItemIds);
-                        }
-                        if (!empty($managerVariantItemIds)) {
-                            $q->orWhereIn('variant_item_id', $managerVariantItemIds);
-                        }
-                    })
-                    ->with('pricingTiers');
+            'variants' => function($query) use ($variantBranchItemIds, $branchId) {
+                $query->where('sell_item', true);
+                if ($branchId && !empty($variantBranchItemIds)) {
+                    $query->whereIn('id', $variantBranchItemIds);
+                } elseif ($branchId) {
+                    $query->whereRaw('1 = 0');
+                }
+                $query->with('pricingTiers');
             }
         ])
         ->where('business_name', $businessName);
 
-        // Apply filtering if staff has branch
-        if ($branchId && ($managerName || $managerEmail || !empty($variantBranchItemIds))) {
-            $variantQuery->where(function($query) use ($managerName, $managerEmail, $variantBranchItemIds) {
-                $started = false;
-                if ($managerName) {
-                    $query->where('manager_name', $managerName);
-                    $started = true;
-                }
-                if ($managerEmail) {
-                    if ($started) {
-                        $query->orWhere('manager_email', $managerEmail);
-                    } else {
-                        $query->where('manager_email', $managerEmail);
-                        $started = true;
-                    }
-                }
-                if (!empty($variantBranchItemIds)) {
-                    // Check if any of the item's variants are in branch inventory
-                    if ($started) {
-                        $query->orWhereHas('variants', function($q) use ($variantBranchItemIds) {
-                            $q->whereIn('id', $variantBranchItemIds);
-                        });
-                    } else {
-                        $query->whereHas('variants', function($q) use ($variantBranchItemIds) {
-                            $q->whereIn('id', $variantBranchItemIds);
-                        });
-                    }
-                }
+        // Filter variant items by branch inventory
+        if ($branchId && !empty($variantBranchItemIds)) {
+            $variant_items->whereHas('variants', function($q) use ($variantBranchItemIds) {
+                $q->whereIn('id', $variantBranchItemIds);
             });
+        } elseif ($branchId) {
+            // If staff has branch but no items, return empty
+            $variant_items->whereRaw('1 = 0');
         }
 
-        $variant_items = $variantQuery->get();
+        $variant_items = $variant_items->get();
 
         // Replace stock quantities with branch inventory quantities
         if ($branchId) {

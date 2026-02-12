@@ -1163,6 +1163,7 @@ Add Item Variant
           </button>
         </div>
       </div>
+    </div>
 
     <!-- Category Panel Component -->
     <x-category-panel />

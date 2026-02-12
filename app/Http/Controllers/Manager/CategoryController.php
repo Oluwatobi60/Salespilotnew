@@ -32,13 +32,27 @@ class CategoryController extends Controller
 
     public function create_category(Request $request)
     {
-        // Validate the request data
-       $validatedata = $request->validate([
-             'category_name' => 'unique:categories|max:100|min:5|required',
-        ]);
-
         // Get manager information
         $manager = Auth::user();
+
+        // Validate the request data - category must be unique per business
+       $validatedata = $request->validate([
+             'category_name' => [
+                'required',
+                'min:5',
+                'max:100',
+                function ($attribute, $value, $fail) use ($manager) {
+                    $exists = Category::where('business_name', $manager->business_name)
+                        ->where('category_name', $value)
+                        ->exists();
+
+                    if ($exists) {
+                        $fail('This category name already exists for your business.');
+                    }
+                }
+            ],
+        ]);
+
         $managerName = trim(($manager->firstname ?? '') . ' ' . ($manager->othername ?? '') . ' ' . ($manager->surname ?? ''));
 
         // Add manager info to validated data

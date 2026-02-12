@@ -472,11 +472,11 @@ function generateVariantCombinations(optionsArray1, optionsArray2, optionsArray3
                     <div class="d-flex justify-content-between align-items-center">
                       <div class="text-start">
                         <i class="mdi mdi-currency-usd"></i>
-                        <span class="cost-price-display" id="costDisplay${variantCounter}">â‚¦0.00</span>
+                        <span class="cost-price-display" id="costDisplay${variantCounter}">₦0.00</span>
                       </div>
                       <div class="text-end">
                         <i class="mdi mdi-tag"></i>
-                        <span class="sell-price-display" id="sellDisplay${variantCounter}">â‚¦0.00</span>
+                        <span class="sell-price-display" id="sellDisplay${variantCounter}">₦0.00</span>
                       </div>
                     </div>
                   </button>
@@ -1375,15 +1375,15 @@ window.savePricing = function () {
   document.getElementById(`pricingMethod${variantIndex}`).value = pricingMethod;
 
   // Update button displays
-  document.getElementById(`costDisplay${variantIndex}`).textContent = `â‚¦${costPrice.toFixed(2)}`;
+  document.getElementById(`costDisplay${variantIndex}`).textContent = `${costPrice.toFixed(2)}`;
 
   if (pricingMethod === 'manual') {
     document.getElementById(`sellDisplay${variantIndex}`).textContent = 'Manual';
   } else if (pricingMethod === 'range') {
     const maxPrice = parseFloat(document.getElementById('modalMaxPrice').value) || 0;
-    document.getElementById(`sellDisplay${variantIndex}`).textContent = `â‚¦${sellingPrice.toFixed(2)} - â‚¦${maxPrice.toFixed(2)}`;
+    document.getElementById(`sellDisplay${variantIndex}`).textContent = `${sellingPrice.toFixed(2)} - ${maxPrice.toFixed(2)}`;
   } else {
-    document.getElementById(`sellDisplay${variantIndex}`).textContent = `â‚¦${sellingPrice.toFixed(2)}`;
+    document.getElementById(`sellDisplay${variantIndex}`).textContent = `${sellingPrice.toFixed(2)}`;
   }
 
   // Close modal
