@@ -405,7 +405,7 @@ Add Staff Member
 
               <div class="row mb-3">
                 <div class="col-md-12 mb-2">
-                  <label for="address" class="form-label">Address</label>
+                  <label for="address" class="form-label">Staff Address</label>
                   <textarea class="form-control" id="address" name="address" rows="5" cols="5" placeholder="Enter address (optional)"></textarea>
                 </div>
               </div>

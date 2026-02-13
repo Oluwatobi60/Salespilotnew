@@ -23,42 +23,61 @@ class SalesReportController extends Controller
     public function completed_sales()
     {
         $manager = Auth::user();
-        $branchName = $manager->branch_name;
-
-        // If user was added by another manager, get the creator's business_name
-        if ($manager->addby) {
-            $creator = User::where('email', $manager->addby)->first();
-            $businessName = $creator ? $creator->business_name : $manager->business_name;
-        } else {
-            $businessName = $manager->business_name;
-        }
+        $businessName = $manager->business_name;
 
         $query = CartItem::where('cart_items.status', 'completed')
             ->where('cart_items.business_name', $businessName);
 
-        // If the user was added by another manager, filter by user_id, staff_id, or branch_name
+        // Check if user is a business creator or branch manager
         if ($manager->addby) {
-            // For added managers, show sales for their own transactions, transactions by staff they manage, or transactions from their branch
-            $query->where(function($q) use ($manager, $branchName) {
-                // Check if user_id matches the manager's own ID
-                $q->where('cart_items.user_id', $manager->id)
-                // Check if staff_id is in the list of staff managed by this manager
-                  ->orWhereIn('cart_items.staff_id', function($subQuery) use ($manager) {
-                    // Get staff IDs managed by this manager
-                      $subQuery->select('id')
-                          ->from('staffs')
-                          ->where('manager_email', $manager->email);
-                  })
-                  ->orWhere('cart_items.branch_name', $branchName);
+            // This is a branch manager (added by another manager)
+            // Show only sales from staff assigned to their branch
+            $managerBranchName = $manager->branch_name;
+            $managerStaffIds = [];
+
+            // Find staff assigned to the manager's branch via branch_staff pivot
+            if (!empty($managerBranchName)) {
+                $managerStaffIds = Staffs::join('branch_staff', 'staffs.id', '=', 'branch_staff.staff_id')
+                    ->join('branches', 'branch_staff.branch_id', '=', 'branches.id')
+                    ->where('branches.branch_name', $managerBranchName)
+                    ->where('staffs.business_name', $businessName)
+                    ->pluck('staffs.id')
+                    ->toArray();
+            }
+
+            // Debug: Log the staff IDs
+            Log::info('Branch Manager Sales Filter', [
+                'manager_id' => $manager->id,
+                'manager_email' => $manager->email,
+                'branch_name' => $managerBranchName,
+                'business_name' => $businessName,
+                'staff_ids_found' => $managerStaffIds,
+                'staff_count' => count($managerStaffIds)
+            ]);
+
+            $query->where(function($q) use ($manager, $managerStaffIds, $managerBranchName) {
+                // Sales made by this manager themselves
+                $q->where('cart_items.user_id', $manager->id);
+
+                // Sales made by staff assigned to this manager's branch
+                if (!empty($managerStaffIds)) {
+                    $q->orWhereIn('cart_items.staff_id', $managerStaffIds);
+                }
+
+                // Also include sales where branch_name matches (fallback for direct branch sales)
+                if (!empty($managerBranchName)) {
+                    $q->orWhere('cart_items.branch_name', $managerBranchName);
+                }
             });
         }
+        // If no addby, this is the business creator - show all sales for the business (no additional filtering needed)
 
         $completedSales = $query->leftJoin('staffs', 'cart_items.staff_id', '=', 'staffs.id')
-            ->select('cart_items.receipt_number', 'cart_items.customer_name', 'cart_items.customer_id', 'cart_items.created_at', 'cart_items.user_id', 'cart_items.staff_id', 'cart_items.manager_name', 'staffs.fullname as staff_name')
+            ->select('cart_items.receipt_number', 'cart_items.customer_name', 'cart_items.customer_id', 'cart_items.created_at', 'cart_items.user_id', 'cart_items.staff_id', 'cart_items.manager_name', 'cart_items.branch_name', 'staffs.fullname as staff_name')
             ->selectRaw('SUM(cart_items.total) as total')
             ->selectRaw('SUM(cart_items.discount) as discount')
             ->selectRaw('COUNT(*) as items_count')
-            ->groupBy('cart_items.receipt_number', 'cart_items.customer_name', 'cart_items.customer_id', 'cart_items.created_at', 'cart_items.user_id', 'cart_items.staff_id', 'cart_items.manager_name', 'staffs.fullname')
+            ->groupBy('cart_items.receipt_number', 'cart_items.customer_name', 'cart_items.customer_id', 'cart_items.created_at', 'cart_items.user_id', 'cart_items.staff_id', 'cart_items.manager_name', 'cart_items.branch_name', 'staffs.fullname')
             ->orderBy('cart_items.created_at', 'desc')
             ->paginate(15);
 
@@ -569,10 +588,10 @@ class SalesReportController extends Controller
         $users = collect();
         if ($userIds->isNotEmpty()) {
             $users = User::whereIn('id', $userIds)
-                ->select('id', 'firstname', 'othername', 'surname')
+                ->select('id', 'first_name', 'other_name', 'surname')
                 ->get()
                 ->map(function ($user) {
-                    $userName = trim(($user->firstname ?? '') . ' ' . ($user->othername ?? '') . ' ' . ($user->surname ?? '')) ?: 'Unknown User';
+                    $userName = trim(($user->first_name ?? '') . ' ' . ($user->other_name ?? '') . ' ' . ($user->surname ?? '')) ?: 'Unknown User';
                     return [
                         'id' => 'user_' . $user->id,
                         'name' => $userName,

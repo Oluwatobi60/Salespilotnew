@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Models\Welcome\SignupRequest;
 use App\Models\UserSubscription;
+use App\Models\Branch\Branch;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -69,6 +70,21 @@ class AuthenticatedSessionController extends Controller
             return redirect()->route('login')->withErrors([
                 'email' => 'Your account has been disabled. Contact your administrator.'
             ]);
+        }
+
+        // Check if manager is assigned to an inactive branch
+        if ($user->role === 'manager' && $user->addby && !empty($user->branch_name)) {
+            $activeBranch = Branch::where('branch_name', $user->branch_name)
+                ->where('business_name', $user->business_name)
+                ->where('status', 1)
+                ->first();
+            
+            if (!$activeBranch) {
+                Auth::logout();
+                return redirect()->route('login')->withErrors([
+                    'email' => 'Your assigned branch is currently inactive. Contact your administrator.'
+                ]);
+            }
         }
 
         // If user is a manager created by another user, check addby and creator's subscription

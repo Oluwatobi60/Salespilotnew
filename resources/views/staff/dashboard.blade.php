@@ -5,6 +5,41 @@ Staff Dashboard
 
 @section('staff_layout_content')
 
+<!-- SweetAlert2 CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+
+<!-- SweetAlert2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+// Replace alert() with SweetAlert2
+function showSuccess(message) {
+    Swal.fire({
+        icon: 'success',
+        title: 'Success',
+        text: message,
+        confirmButtonColor: '#3085d6',
+    });
+}
+function showError(message) {
+    Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: message,
+        confirmButtonColor: '#d33',
+    });
+}
+function showInfo(message) {
+    Swal.fire({
+        icon: 'info',
+        title: 'Info',
+        text: message,
+        confirmButtonColor: '#3085d6',
+    });
+}
+// Example: Replace alert('Cart saved!') with showSuccess('Cart saved!')
+// You can now use showSuccess(), showError(), showInfo() in your JS code
+</script>
+
 <div class="container-scroller">
 
 
@@ -187,10 +222,35 @@ Staff Dashboard
         </div>
 
         <div class="cart-summary">
-            <!-- Add Discount Button (disabled for staff) -->
-            {{-- <button class="cart-action-btn" id="addDiscountBtn">
-            <i class="bi bi-percent"></i> Add Discount
-            </button> --}}
+            <!-- Add Discount Button -->
+
+            <button class="cart-action-btn" id="addDiscountBtn">
+                <i class="bi bi-percent"></i> Add Discount
+            </button>
+
+
+            <!-- Discount Selection Side Panel -->
+            <div class="side-panel-overlay" id="discountPanelOverlay" style="display:none;"></div>
+            <div class="side-panel" id="discountSidePanel">
+              <div class="side-panel-content">
+                <div class="side-panel-header d-flex justify-content-between align-items-center">
+                  <h5 class="side-panel-title mb-0"><i class="bi bi-percent me-2"></i>Select Discount</h5>
+                  <button type="button" class="btn-close" id="closeDiscountPanel" aria-label="Close"></button>
+                </div>
+                <div class="side-panel-body">
+                  <div class="mb-3">
+                    <label for="discountSelect" class="form-label">Choose Discount</label>
+                    <select id="discountSelect" class="form-select">
+                      <option value="" selected disabled>Loading discounts...</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="side-panel-footer d-flex justify-content-end gap-2">
+                  <button type="button" class="btn btn-secondary" id="cancelDiscountBtn">Cancel</button>
+                  <button type="button" class="btn btn-primary" id="applyDiscountBtn" disabled>Apply Discount</button>
+                </div>
+              </div>
+            </div>
 
             <div class="cart-total">
             <span>Total:</span>
@@ -324,7 +384,7 @@ Staff Dashboard
           </div>
 
           <!-- New Customer Form -->
-          <form action="{{ route('staff.add_customer') }}" method="POST">
+          <form action="{{ route('manager.add_customer') }}" method="POST">
             @csrf
           <div class="new-customer-form" id="newCustomerForm">
             <h4>Add New Customer</h4>
@@ -429,6 +489,10 @@ Staff Dashboard
               <span>Tax (0%):</span>
               <span>₦0.00</span>
             </div>
+            <div class="receipt-total-row" id="receiptDiscountRow" style="display:none;">
+              <span>Discount:</span>
+              <span id="receiptDiscount"></span>
+            </div>
             <div class="receipt-total-row grand-total">
               <span>Total:</span>
               <span id="receiptTotal">₦0.00</span>
@@ -447,6 +511,10 @@ Staff Dashboard
           </div>
           <div class="receipt-thank-you">
             <i class="bi bi-heart-fill"></i> Thank you for your purchase!
+          </div>
+
+
+
           </div>
 
 

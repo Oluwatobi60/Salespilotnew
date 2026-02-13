@@ -81,6 +81,7 @@ Inventory Valuation
                               <th>S/N</th>
                               <th>Item Name</th>
                               <th>Category</th>
+                              <th>Branch</th>
                               <th>Qty In Stock</th>
                               <th>Cost</th>
                               <th>Inventory Value</th>
@@ -95,6 +96,13 @@ Inventory Valuation
                               <td>{{ ($paginatedItems->firstItem() ?? 0) + $i }}</td>
                               <td>{{ $item['item_name'] }}</td>
                               <td>{{ $item['category_name'] }}</td>
+                              <td>
+                                @if(isset($item['branch_name']) && $item['branch_name'])
+                                <span class="badge badge-primary">{{ $item['branch_name'] }}</span>
+                                @else
+                                <span class="text-muted">-</span>
+                                @endif
+                              </td>
                               <td>{{ $item['quantity'] }}</td>
                               <td>₦{{ number_format($item['cost_price'], 2) }}</td>
                               <td>₦{{ number_format($item['inventory_value'], 2) }}</td>
@@ -104,7 +112,7 @@ Inventory Valuation
                             </tr>
                             @empty
                             <tr>
-                              <td colspan="9" class="text-center py-5">
+                              <td colspan="10" class="text-center py-5">
                                 <i class="bi bi-inbox" style="font-size: 3rem; color: #ccc;"></i>
                                 <p class="text-muted mt-3 mb-0">
                                   @if(request('category'))

@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\Welcome\SignupRequest;
 use App\Models\UserSubscription;
 use App\Models\User;
+use App\Models\Branch\Branch;
 use Carbon\Carbon;
 
 class StaffAuthController extends Controller
@@ -50,6 +51,17 @@ class StaffAuthController extends Controller
                 $request->session()->regenerateToken();
                 return back()->withErrors([
                     'login' => 'Your account is disabled. Please contact your manager.',
+                ])->withInput($request->only('login'));
+            }
+
+            // Check if staff is assigned to any active branch
+            $activeBranches = $staff->branches()->where('status', 1)->count();
+            if ($activeBranches === 0) {
+                Auth::guard('staff')->logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+                return back()->withErrors([
+                    'login' => 'Your assigned branch is currently inactive. Please contact your manager.',
                 ])->withInput($request->only('login'));
             }
 

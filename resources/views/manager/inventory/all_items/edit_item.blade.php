@@ -29,6 +29,8 @@ Edit Item
                                     <span class="badge bg-primary fs-6">Standard Item</span>
                                 @elseif($itemType == 'variant')
                                     <span class="badge bg-info fs-6">Variant Item</span>
+                                @elseif($itemType == 'product_variant')
+                                    <span class="badge bg-warning fs-6">Product Variant</span>
                                 @elseif($itemType == 'bundle')
                                     <span class="badge bg-success fs-6">Bundle Item</span>
                                 @endif
@@ -47,6 +49,11 @@ Edit Item
                                 <!-- Variant Item Fields -->
                                 @if($itemType == 'variant')
                                     @include('manager.inventory.all_items.partials.edit_variant', ['item' => $item])
+                                @endif
+
+                                <!-- Product Variant Fields -->
+                                @if($itemType == 'product_variant')
+                                    @include('manager.inventory.all_items.partials.edit_product_variant', ['item' => $item])
                                 @endif
 
                                 <!-- Bundle Item Fields -->

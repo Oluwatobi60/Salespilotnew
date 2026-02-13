@@ -93,6 +93,7 @@ Completed Sales
                             <th>Date</th>
                             <th>Customer</th>
                             <th>Sold by</th>
+                            <th>Branch</th>
                             <th>Items</th>
                             <th>Total</th>
                             <th>Status</th>
@@ -119,13 +120,20 @@ Completed Sales
                                 Unknown
                                 @endif
                             </td>
+                            <td>
+                                @if($sale->branch_name)
+                                <span class="badge badge-primary">{{ $sale->branch_name }}</span>
+                                @else
+                                <span class="text-muted">-</span>
+                                @endif
+                            </td>
                             <td><span class="badge badge-info">{{ $sale->items_count }} items</span></td>
                             <td><strong class="text-success">₦{{ number_format($sale->total, 2) }}</strong></td>
                             <td><span class="badge badge-opacity-success">Completed</span></td>
                           </tr>
                           @empty
                           <tr>
-                            <td colspan="8" class="text-center py-5">
+                            <td colspan="9" class="text-center py-5">
                               <div class="empty-state">
                                 <i class="bi bi-inbox"></i>
                                 <h5>No Completed Sales</h5>

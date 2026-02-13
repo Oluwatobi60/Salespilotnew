@@ -335,6 +335,15 @@ class AllItemsController extends Controller
                         ->findOrFail($id);
                     break;
 
+                case 'product_variant':
+                    $item = ProductVariant::with(['variantItem.supplier', 'variantItem.unit', 'pricingTiers'])
+                        ->findOrFail($id);
+                    // Check business_name through parent
+                    if ($item->variantItem->business_name !== $businessName) {
+                        return redirect()->route('all_items')->with('error', 'Unauthorized access.');
+                    }
+                    break;
+
                 default:
                     return redirect()->route('all_items')->with('error', 'Invalid item type specified.');
             }
@@ -413,6 +422,35 @@ class AllItemsController extends Controller
                     }
 
                     $item->update($validatedData);
+                    break;
+
+                case 'product_variant':
+                    $item = ProductVariant::with('variantItem')->findOrFail($id);
+
+                    // Check business_name through parent
+                    if ($item->variantItem->business_name !== $businessName) {
+                        return redirect()->route('all_items')->with('error', 'Unauthorized access.');
+                    }
+
+                    $validatedData = $request->validate([
+                        'variant_name' => 'required|string|max:255',
+                        'sku' => 'nullable|string|max:255',
+                        'barcode' => 'nullable|string|max:255',
+                        'cost_price' => 'nullable|numeric|min:0',
+                        'selling_price' => 'nullable|numeric|min:0',
+                        'stock_quantity' => 'nullable|integer|min:0',
+                        'low_stock_threshold' => 'nullable|integer|min:0',
+                        'variant_options' => 'nullable|string',
+                    ]);
+
+                    // Calculate profit margin if cost and selling prices are provided
+                    if (isset($validatedData['cost_price']) && isset($validatedData['selling_price']) && $validatedData['cost_price'] > 0) {
+                        $validatedData['profit_margin'] = (($validatedData['selling_price'] - $validatedData['cost_price']) / $validatedData['cost_price']) * 100;
+                    }
+
+                    $item->update($validatedData);
+                    $itemName = $item->variantItem->item_name . ' - ' . $item->variant_name;
+                    \App\Helpers\ActivityLogger::log('Update item', json_encode(['type' => $type, 'id' => $id, 'name' => $itemName]));
                     break;
 
                 default:

@@ -23,12 +23,8 @@ class StaffsMainController extends Controller
 {
     public function index()
     {
-        $staff = Auth::guard('staff')->user();
+       $staff = Auth::guard('staff')->user();
         $businessName = $staff->business_name;
-
-        $categories = Category::where('business_name', $businessName)
-            ->orderBy('category_name')
-            ->get();
 
         // Get staff's branch
         $staffBranch = $staff->branches->first();
@@ -43,6 +39,7 @@ class StaffsMainController extends Controller
                 ->where('business_name', $businessName)
                 ->where('current_quantity', '>', 0)
                 ->get();
+
 
             foreach ($branchInventory as $inventory) {
                 if ($inventory->item_type === 'standard') {
@@ -99,16 +96,57 @@ class StaffsMainController extends Controller
 
         $variant_items = $variant_items->get();
 
+        // Replace stock quantities with branch inventory quantities
+        if ($branchId) {
+            $branchInventory = BranchInventory::where('branch_id', $branchId)
+                ->where('business_name', $businessName)
+                ->get();
+
+            // Replace standard item stock with branch inventory stock
+            foreach ($standard_items as $item) {
+                $branchStock = $branchInventory->where('item_type', 'standard')
+                    ->where('item_id', $item->id)
+                    ->first();
+                if ($branchStock) {
+                    $item->current_stock = $branchStock->current_quantity;
+                    $item->branch_inventory_id = $branchStock->id;
+                }
+            }
+
+            // Replace variant stock with branch inventory stock
+            foreach ($variant_items as $variantItem) {
+                foreach ($variantItem->variants as $variant) {
+                    $branchStock = $branchInventory->where('item_type', 'variant')
+                        ->where('item_id', $variant->id)
+                        ->first();
+                    if ($branchStock) {
+                        $variant->stock_quantity = $branchStock->current_quantity;
+                        $variant->branch_inventory_id = $branchStock->id;
+                    }
+                }
+            }
+        }
+
+        // Get all unique categories
+        $categories = Category::where('business_name', $businessName)
+            ->orderBy('category_name')
+            ->get();
+
         // Merge both collections for a unified item list
         $all_items = collect([]);
+
+        // Add standard items with type identifier
         foreach ($standard_items as $item) {
             $item->item_type = 'standard';
             $all_items->push($item);
         }
+
+        // Add variant items with type identifier
         foreach ($variant_items as $item) {
             $item->item_type = 'variant';
             $all_items->push($item);
         }
+
 
         return view('staff.dashboard', compact('categories', 'all_items', 'standard_items', 'variant_items'));
     }
@@ -348,27 +386,11 @@ class StaffsMainController extends Controller
             $staff = Auth::guard('staff')->user();
             $managerName = trim(($staff->firstname ?? '') . ' ' . ($staff->othername ?? '') . ' ' . ($staff->surname ?? ''));
 
-            // Get staff's branch information - use the same logic as sell_product
-            $staffBranch = $staff->branch;
-            $managerId = $staffBranch ? $staffBranch->manager_id : null;
-
-            // Get the branch with manager_id matching (for inventory) - not staff_id branch
-            $branch = null;
-            if ($managerId) {
-                // Find the branch where manager_id matches and staff_id is null (the manager's main branch with inventory)
-                $branch = Branch::where('business_name', $staff->business_name)
-                    ->where('manager_id', $managerId)
-                    ->whereNull('staff_id')
-                    ->first();
-            }
-
-            // Fallback to staff's branch if no manager branch found
-            if (!$branch) {
-                $branch = $staffBranch;
-            }
-
-            $branchId = $branch ? $branch->id : null;
-            $branchName = $branch ? $branch->branch_name : null;
+            // Get staff's assigned branch (use the same logic as sell_product)
+            $staffBranch = $staff->branches->first();
+            $branchId = $staffBranch ? $staffBranch->id : null;
+            $branchName = $staffBranch ? $staffBranch->branch_name : null;
+            $managerId = $staffBranch ? $staffBranch->user_id : null;
 
             // Log checkout activity for staff
             $details = [
