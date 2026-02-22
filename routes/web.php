@@ -26,6 +26,7 @@ use App\Http\Controllers\Welcome\SignupController;
 use App\Http\Controllers\Manager\AddManagerController;
 use App\Http\Controllers\Branch\BranchController;
 use App\Http\Controllers\Manager\BranchInventoryController;
+use App\Http\Controllers\Manager\SystemPreferencesController;
 
 
 /* Route::get('/dashboard', function () {
@@ -230,6 +231,12 @@ Route::middleware(['auth', 'verified', 'rolemanager:manager', 'check.subscriptio
         Route::get('/inventory/branch-allocation', 'index')->name('manager.inventory.allocation');
         Route::post('/inventory/allocate', 'allocate')->name('manager.inventory.allocate');
         Route::get('/inventory/branch/{branchId}', 'branchInventory')->name('manager.inventory.branch');
+    });
+
+
+    Route::controller(SystemPreferencesController::class)->group(function () {
+        Route::get('/system/preferences', 'index')->name('manager.system.preferences');
+        Route::post('/system/preferences/update', 'update')->name('manager.system.preferences.update');
     });
 
   });

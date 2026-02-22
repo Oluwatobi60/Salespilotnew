@@ -205,7 +205,9 @@
           <p class="fw-light text-muted mb-0">{{ $manager && $manager->email ? $manager->email : 'email@example.com' }}</p>
         </div>
         <a class="dropdown-item" href="{{ route('manager.profile.show') }}" style="padding: 10px 20px;"><i class="dropdown-item-icon mdi mdi-account-outline text-primary me-2"></i> My Profile <span class="badge badge-pill badge-danger">1</span></a>
-        <a class="dropdown-item" href="views/settings.php" style="padding: 10px 20px;"><i class="dropdown-item-icon bi bi-gear-wide text-primary me-2"></i> System Preference</a>
+        @if(empty($manager->addby))
+          <a class="dropdown-item" href="{{ route('manager.system.preferences') }}"><i class="dropdown-item-icon bi bi-gear-wide text-primary me-2"></i> System Preference</a>
+        @endif
         <a class="dropdown-item" href="#" style="padding: 10px 20px;"><i class="dropdown-item-icon mdi mdi-message-text-outline text-primary me-2"></i> Messages</a>
         <a class="dropdown-item" href="views/activity_logs.php" style="padding: 10px 20px;"><i class="dropdown-item-icon mdi mdi-calendar-check-outline text-primary me-2"></i> Activity</a>
         <a class="dropdown-item" href="#" style="padding: 10px 20px;"><i class="dropdown-item-icon mdi mdi-help-circle-outline text-primary me-2"></i> FAQ</a>

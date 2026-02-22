@@ -1,0 +1,344 @@
+
+      /* Modal z-index and backdrop fixes */
+      .modal-backdrop {
+        z-index: 1060 !important;
+        background-color: rgba(0, 0, 0, 0.7) !important;
+      }
+
+      #addBranchModal {
+        z-index: 1065 !important;
+      }
+
+      #addBranchModal .modal-dialog {
+        z-index: 1065 !important;
+      }
+
+      #addBranchModal .modal-content {
+        background: white !important;
+        z-index: 1065 !important;
+      }
+
+      #addBranchModal .modal-body {
+        padding: 1.5rem;
+      }
+
+      /* Edit Branch Modal z-index and visibility */
+      #editBranchModal {
+        z-index: 1070 !important;
+      }
+
+      #editBranchModal .modal-dialog {
+        z-index: 1070 !important;
+      }
+
+      #editBranchModal .modal-content {
+        background: white !important;
+        z-index: 1070 !important;
+      }
+
+      #editBranchModal .modal-body {
+        padding: 1.5rem;
+      }
+
+      /* Switch Branch Modal z-index and visibility */
+      #switchBranchModal {
+        z-index: 1070 !important;
+      }
+
+      #switchBranchModal .modal-dialog {
+        z-index: 1070 !important;
+      }
+
+      #switchBranchModal .modal-content {
+        background: white !important;
+        z-index: 1070 !important;
+      }
+
+      #switchBranchModal .modal-body {
+        padding: 1.5rem;
+      }
+
+      #switchBranchModal .list-group-item {
+        border-left: 3px solid transparent;
+        transition: all 0.2s ease;
+      }
+
+      #switchBranchModal .list-group-item:hover:not(.disabled) {
+        border-left-color: #007bff;
+        background-color: #f8f9fa;
+      }
+
+      #switchBranchModal .list-group-item.disabled {
+        cursor: not-allowed;
+      }
+
+      /* Edit Staff Modal z-index and visibility */
+      #editStaffModal {
+        z-index: 1070 !important;
+      }
+
+      #editStaffModal .modal-dialog {
+        z-index: 1070 !important;
+      }
+
+      #editStaffModal .modal-content {
+        background: white !important;
+        z-index: 1070 !important;
+      }
+
+      #editStaffModal .modal-body {
+        padding: 2rem;
+      }
+
+      /* Add Unit Modal z-index and visibility */
+      #addUnitModal {
+        z-index: 1075 !important;
+      }
+
+      #addUnitModal .modal-dialog {
+        z-index: 1075 !important;
+      }
+
+      #addUnitModal .modal-content {
+        background: white !important;
+        z-index: 1075 !important;
+      }
+
+      #addUnitModal .modal-body {
+        padding: 1.5rem;
+      }
+
+      /* Edit Unit Modal z-index and visibility */
+      #editUnitModal {
+        z-index: 1075 !important;
+      }
+
+      #editUnitModal .modal-dialog {
+        z-index: 1075 !important;
+      }
+
+      #editUnitModal .modal-content {
+        background: white !important;
+        z-index: 1075 !important;
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+      }
+
+      #editUnitModal .modal-body {
+        padding: 1.5rem;
+      }
+
+      #editUnitModal .modal-backdrop {
+        z-index: 1070 !important;
+      }
+
+      /* Responsive modal sizing */
+      @media (max-width: 576px) {
+        #addBranchModal .modal-dialog,
+        #editBranchModal .modal-dialog,
+        #addUnitModal .modal-dialog,
+        #editUnitModal .modal-dialog {
+          margin: 0.5rem;
+          max-width: calc(100% - 1rem) !important;
+        }
+
+        #addBranchModal .modal-body,
+        #editBranchModal .modal-body,
+        #addUnitModal .modal-body,
+        #editUnitModal .modal-body {
+          padding: 1rem;
+        }
+
+        #editStaffModal .modal-dialog {
+          margin: 0.5rem;
+          max-width: calc(100% - 1rem) !important;
+        }
+
+        #editStaffModal .modal-body {
+          padding: 1rem;
+        }
+      }
+
+      @media (max-width: 992px) {
+        #editStaffModal .modal-lg {
+          max-width: 90%;
+        }
+      }
+
+      .tab-section-fixed {
+        position: sticky;
+        top: 8px; /* reduced offset so the tab column starts higher */
+        z-index: 0;
+        background: #fff;
+        padding-right: 18px;
+        border-right: 2px solid #e9ecef;
+        flex: 0 0 220px;
+        max-width: 220px;
+      }
+      .settings-row {
+        display: flex;
+        flex-wrap: nowrap;
+        align-items: flex-start;
+      }
+
+      .business-info-section {
+        flex: 1 1 auto;
+        min-width: 0;
+      }
+      .nav-tabs-line {
+        border-bottom: 2px solid #e9ecef;
+        background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+        padding: 8px;
+        border-radius: 10px 10px 0 0;
+        margin-bottom: 0;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        min-width: 180px;
+      }
+      /* removed separate .tab-section-separator element - using border on .tab-section-fixed */
+			.nav-tabs-line .nav-link {
+				border: none;
+				border-bottom: 3px solid transparent;
+				color: #6c757d;
+				font-weight: 500;
+				padding: 14px 24px;
+				margin: 0 4px;
+				border-radius: 8px 8px 0 0;
+				transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+				background: transparent;
+			}
+			.nav-tabs-line .nav-link.active {
+				color: #007bff;
+				border-bottom: 3px solid #007bff;
+				background: #f8f9fa;
+			}
+      .tab-pane {
+        padding: 32px 24px;
+        background: #fff;
+        border-radius: 0 10px 10px 0;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+        min-height: 300px;
+      }
+      /* Ensure tab panes render inside the main content container and are not overlapped */
+      /* Make the outer tab-content neutral and let inner .card elements render the white panels */
+      #settingsTabsContent {
+        display: block;
+        overflow: visible;
+        position: relative;
+        background: transparent;
+        padding-top: 8px; /* match the tab column top offset */
+      }
+      #settingsTabsContent > .tab-pane { display: none; }
+      #settingsTabsContent > .tab-pane.show,
+      #settingsTabsContent > .tab-pane.active { display: block; }
+      #settingsTabsContent .tab-pane { position: relative; z-index: 3; background: transparent; padding: 0; box-shadow: none; border-radius: 0; min-height: auto; }
+      .settings-heading {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 24px;
+        color: #343a40;
+      }
+      .tab-pane h4 {
+        margin-top: 24px;
+      }
+      @media (max-width: 992px) {
+        .settings-row {
+          flex-wrap: wrap;
+        }
+        .tab-section-fixed {
+          position: relative;
+          top: auto;
+          border-right: none;
+          padding-right: 0;
+          flex: 0 0 100%;
+          max-width: 100%;
+          margin-bottom: 12px;
+        }
+        .business-info-section {
+          padding-left: 0 !important;
+          flex: 0 0 100%;
+          max-width: 100%;
+        }
+      }
+
+      /* Alignment tweaks: ensure tab panes align with the left tab column */
+      .tab-section-fixed { padding-top: 0; }
+      #settingsTabs { margin-top: 0; }
+      #settingsTabsContent { margin-top: 0; padding-top: 0; }
+      #settingsTabsContent > .tab-pane { margin-top: 0; padding-top: 0; }
+      /* Let inner cards supply the white panel look and sit at the same vertical start */
+      #settingsTabsContent .card { margin-top: 0; }
+      /* Subscription Section Styling */
+      .subscription-table tbody tr.plan-row {
+        border-bottom: 1px solid #e9ecef;
+        transition: all 0.3s ease;
+      }
+
+      .subscription-table tbody tr.plan-row:hover {
+        background-color: #f8f9fa;
+        transform: translateX(2px);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      }
+
+      .subscription-table .plan-toggle {
+        color: #333;
+        text-decoration: none;
+        width: 100%;
+        transition: all 0.2s ease;
+      }
+
+      .subscription-table .plan-toggle:hover {
+        color: #007bff;
+      }
+
+      .subscription-table .plan-toggle:hover .plan-icon i {
+        transform: scale(1.1);
+      }
+
+      .subscription-table .plan-icon i {
+        transition: transform 0.2s ease;
+      }
+
+      .subscription-table .price-cell {
+        padding: 0.5rem 0;
+      }
+
+      .subscription-table td {
+        vertical-align: middle;
+        padding: 1.25rem 1rem;
+      }
+
+      .subscription-table thead th {
+        background-color: #f8f9fa;
+        border-bottom: 2px solid #dee2e6;
+        padding: 1rem;
+        font-weight: 600;
+        color: #495057;
+      }
+
+      /* Plan details row styling */
+      .subscription-table .plan-details td {
+        padding: 0 !important;
+        background-color: #f8f9fa;
+        border-top: none !important;
+      }
+
+      .subscription-table .plan-details .subscribe-btn {
+        transition: all 0.3s ease;
+        border-width: 2px;
+      }
+
+      .subscription-table .plan-details .subscribe-btn:hover {
+        background-color: #007bff;
+        color: white;
+        transform: translateX(5px);
+        border-color: #007bff;
+      }
+
+      /* Current plan card animation */
+      .card.shadow-sm {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+      }
+
+      .card.shadow-sm:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+      }

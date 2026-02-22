@@ -3,6 +3,7 @@
 Welcome to SalesPilot
 @endsection
 @section('welcome_page_content')
+<link rel="stylesheet" href="{{ asset('welcome_asset/pricing-responsive.css') }}">
 
 <!-- Hero Section -->
 		<section class="hero" id="home">
@@ -83,53 +84,161 @@ Welcome to SalesPilot
 
 <!-- Pricing Section -->
 
-    <section class="pricing" id="pricing">
-			<div class="container">
-				<div class="section-header">
-					<h2>Simple, Transparent Pricing</h2>
-					<p>Choose the plan that's right for your business. No hidden fees.</p>
-				</div>
-				<div class="pricing-cards">
-					<div class="pricing-card">
-						<h3>Basic</h3>
-						<div class="price">₦5,000<span>/month</span></div>
-						<ul class="features-list">
-							<li>Up to 500 products</li>
-							<li>2 Users account</li>
-							<li>Basic reports</li>
-							<li>Email support</li>
-							<li>Single Manager Support</li>
-						</ul>
-						<a href="sign_up.php" class="btn btn-outline" style="width: 100%; text-align: center;">Choose Plan</a>
+	<section class="pricing py-5" id="pricing">
+	 <div class="container pricing-container">
+		<div class="section-header text-center mb-5">
+			<h2 class="pricing-title">Choose Your Perfect Plan</h2>
+			<p class="pricing-subtitle">Select a plan that fits your business needs</p>
+        </div>
+
+        <!-- Duration Selector -->
+		<div class="text-center mb-4">
+			<div class="duration-selector d-inline-flex bg-light p-2 rounded-pill gap-2">
+				<button type="button" class="duration-btn active" data-months="1">
+                    1 Month
+                </button>
+				<button type="button" class="duration-btn" data-months="3">
+                    3 Months
+                    <span style="display: block; font-size: 12px; font-weight: 400;">Save 5%</span>
+                </button>
+				<button type="button" class="duration-btn" data-months="6">
+                    6 Months
+                    <span style="display: block; font-size: 12px; font-weight: 400;">Save 10%</span>
+                </button>
+				<button type="button" class="duration-btn" data-months="12">
+                    1 Year
+                    <span style="display: block; font-size: 12px; font-weight: 400;">Save 15%</span>
+                </button>
+            </div>
+        </div>
+
+		<div class="pricing-grid mb-4">
+            <!-- Free Plan -->
+			<div class="pricing-card">
+                <h3 style="font-size: 24px; color: #333; margin-bottom: 10px;">Free</h3>
+                <div class="price" style="margin: 20px 0;">
+                    <span style="font-size: 48px; font-weight: bold; color: #4CAF50;">₦0</span>
+                    <span style="font-size: 18px; color: #666;">/7-Days</span>
+                    <span style="font-size: 18px; color: #666;">Test all features risk-free</span>
+                </div>
+                <ul style="list-style: none; padding: 0; margin: 30px 0; text-align: left;">
+                    <li style="padding: 10px 0; color: #666; border-bottom: 1px solid #f0f0f0;">✓ 1 Manager/Administrator Account</li>
+                    <li style="padding: 10px 0; color: #666; border-bottom: 1px solid #f0f0f0;">✓ 1 Staff Account</li>
+                    <li style="padding: 10px 0; color: #666; border-bottom: 1px solid #f0f0f0;">✓ Basic Inventory Management</li>
+                    <li style="padding: 10px 0; color: #666; border-bottom: 1px solid #f0f0f0;">✓ Sales Tracking</li>
+                    <li style="padding: 10px 0; color: #666; border-bottom: 1px solid #f0f0f0;">✓ Email Support</li>
+                </ul>
+                {{--  <form action="{{ route('select.plan') }}" method="POST">
+                    @csrf
+                    <input type="hidden" name="plan" value="free">
+                    <input type="hidden" name="duration" value="1">
+                    <button type="submit" style="width: 100%; padding: 15px; background: #4CAF50; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: background 0.3s ease;">
+                        Get Started
+                    </button>
+                </form>  --}}
+            </div>
+
+
+
+              <!-- Basic Plan -->
+			<div class="pricing-card popular">
+				<div class="popular-badge">
+                    Most Popular
+                </div>
+				<h3 class="pricing-plan-title">Basic</h3>
+				<div class="price" data-monthly-price="5000">
+					<div class="mb-2">
+						<span class="calculated-price">₦14,250</span>
 					</div>
-					<div class="pricing-card featured">
-						<h3>Standard</h3>
-						<div class="price">₦10,000<span>/month</span></div>
-						<ul class="features-list">
-							<li>Unlimited products</li>
-							<li>4 User accounts</li>
-							<li>Priority support</li>
-							<li>Multi-location(2-branches)</li>
-							<li>Custom receipts</li>
-						</ul>
-						<a href="sign_up.php" class="btn btn-primary" style="width: 100%; text-align: center;">Choose Plan</a>
+					<div class="original-price">₦15,000</div>
+					<div class="duration-text">for 3 months</div>
+                </div>
+				<ul class="pricing-features">
+                    <li style="padding: 10px 0; color: #666; border-bottom: 1px solid #f0f0f0;">✓ 1 Manager/Administrator Account</li>
+                     <li style="padding: 10px 0; color: #666; border-bottom: 1px solid #f0f0f0;">✓ 2 Staff Accounts</li>
+                    <li style="padding: 10px 0; color: #666; border-bottom: 1px solid #f0f0f0;">✓ Advanced Inventory Management</li>
+                    <li style="padding: 10px 0; color: #666; border-bottom: 1px solid #f0f0f0;">✓ Sales & Purchase Tracking</li>
+                    <li style="padding: 10px 0; color: #666; border-bottom: 1px solid #f0f0f0;">✓ Basic Reports & Analytics</li>
+                    <li style="padding: 10px 0; color: #666; border-bottom: 1px solid #f0f0f0;">✓ Priority Email Support</li>
+                </ul>
+               {{--   <form action="{{ route('select.plan') }}" method="POST">
+                    @csrf
+                    <input type="hidden" name="plan" value="basic">
+                    <input type="hidden" name="duration" class="duration-input" value="1">
+                    <button type="submit" style="width: 100%; padding: 15px; background: #4CAF50; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: background 0.3s ease;">
+                        Choose Plan
+                    </button>
+                </form>  --}}
+            </div>
+
+
+            <!-- Standard Plan -->
+			<div class="pricing-card popular">
+				<div class="popular-badge">
+                    Most Popular
+                </div>
+				<h3 class="pricing-plan-title">Standard</h3>
+				<div class="price" data-monthly-price="10000">
+					<div class="mb-2">
+						<span class="calculated-price">₦28,500</span>
 					</div>
-					<div class="pricing-card">
-						<h3>Premium</h3>
-						<div class="price">₦20,000<span>/month</span></div>
-						<ul class="features-list">
-							<li>Everything in Standard</li>
-							<li>Up to 10 users</li>
-							<li>Multi-location(3-branches)</li>
-							<li>Dedicated support</li>
-							<li>Supports up to 3 manager accounts</li>
-							<li>Advanced analytics & Reporting</li>
-						</ul>
-						<a href="sign_up.php" class="btn btn-outline" style="width: 100%; text-align: center;">Choose Plan</a>
-					</div>
-				</div>
-			</div>
-	</section>
+					<div class="original-price">₦30,000</div>
+					<div class="duration-text">for 3 months</div>
+                </div>
+				<ul class="pricing-features">
+                     <li style="padding: 10px 0; color: #666; border-bottom: 1px solid #f0f0f0;">✓ 2 Manager/Administrator Accounts</li>
+                    <li style="padding: 10px 0; color: #666; border-bottom: 1px solid #f0f0f0;">✓ Up to 4 Staff Accounts</li>
+                     <li style="padding: 10px 0; color: #666; border-bottom: 1px solid #f0f0f0;">✓ Allows 2 branches</li>
+                    <li style="padding: 10px 0; color: #666; border-bottom: 1px solid #f0f0f0;">✓ Advanced Inventory Management</li>
+                    <li style="padding: 10px 0; color: #666; border-bottom: 1px solid #f0f0f0;">✓ Sales & Purchase Tracking</li>
+                    <li style="padding: 10px 0; color: #666; border-bottom: 1px solid #f0f0f0;">✓ Basic Reports & Analytics</li>
+                    <li style="padding: 10px 0; color: #666; border-bottom: 1px solid #f0f0f0;">✓ Priority Email Support</li>
+                </ul>
+               {{--   <form action="{{ route('select.plan') }}" method="POST">
+                    @csrf
+                    <input type="hidden" name="plan" value="standard">
+                    <input type="hidden" name="duration" class="duration-input" value="1">
+                    <button type="submit" style="width: 100%; padding: 15px; background: #4CAF50; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: background 0.3s ease;">
+                        Choose Plan
+                    </button>
+                </form>  --}}
+            </div>
+
+            <!-- Premium Plan -->
+			<div class="pricing-card">
+                <h3 style="font-size: 24px; color: #333; margin-bottom: 10px;">Premium</h3>
+                <div class="price" style="margin: 20px 0;" data-monthly-price="20000">
+                    <div style="margin-bottom: 10px;">
+                        <span class="calculated-price" style="font-size: 48px; font-weight: bold; color: #4CAF50;">₦57,000</span>
+                    </div>
+                    <div style="font-size: 14px; color: #999; text-decoration: line-through;" class="original-price">₦60,000</div>
+                    <div style="font-size: 16px; color: #4CAF50; font-weight: 600; margin-top: 5px;" class="duration-text">for 3 months</div>
+                </div>
+                <ul style="list-style: none; padding: 0; margin: 30px 0; text-align: left;">
+                    <li style="padding: 10px 0; color: #666; border-bottom: 1px solid #f0f0f0;">✓ 3 Manager/Administrator Accounts</li>
+                    <li style="padding: 10px 0; color: #666; border-bottom: 1px solid #f0f0f0;">✓ Unlimited Staff Accounts</li>
+                    <li style="padding: 10px 0; color: #666; border-bottom: 1px solid #f0f0f0;">✓ Full Inventory Management</li>
+                    <li style="padding: 10px 0; color: #666; border-bottom: 1px solid #f0f0f0;">✓ Advanced Reports & Analytics</li>
+                    <li style="padding: 10px 0; color: #666; border-bottom: 1px solid #f0f0f0;">✓ Multi-branch Support</li>
+                    <li style="padding: 10px 0; color: #666; border-bottom: 1px solid #f0f0f0;">✓ 24/7 Priority Support</li>
+                    <li style="padding: 10px 0; color: #666; border-bottom: 1px solid #f0f0f0;">✓ Custom Integrations</li>
+                </ul>
+                {{--  <form action="{{ route('select.plan') }}" method="POST">
+                    @csrf
+                    <input type="hidden" name="plan" value="premium">
+                    <input type="hidden" name="duration" class="duration-input" value="1">
+                    <button type="submit" style="width: 100%; padding: 15px; background: #4CAF50; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: background 0.3s ease;">
+                        Choose Plan
+                    </button>
+                </form>  --}}
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 40px;">
+            <p style="color: #666; margin-bottom: 15px;">Need help choosing? <a href="#" style="color: #4CAF50; text-decoration: none; font-weight: 600;">Contact our sales team</a></p>
+        </div>
+    </div>
+</section>
 
 
     	<!-- About Section -->
@@ -265,4 +374,5 @@ Welcome to SalesPilot
 			</div>
 		</footer>
 
+        <script src="{{ asset('manager_asset/js/pricing_plan.js') }}"></script>
 @endsection
