@@ -241,6 +241,29 @@ class SellProductController extends Controller
                 'discount_id' => 'nullable|integer|exists:add_discounts,id'
             ]);
 
+            // Validate selling price is not below or equal to cost price for manual entry
+            foreach ($validated['items'] as $item) {
+                if (isset($item['price']) && isset($item['type'])) {
+                    if ($item['type'] === 'standard') {
+                        $standardItem = StandardItem::find($item['id']);
+                        if ($standardItem && $item['price'] <= $standardItem->cost_price) {
+                            return response()->json([
+                                'success' => false,
+                                'message' => "Selling price for '{$item['name']}' must be greater than cost price (" . number_format((float)$standardItem->cost_price, 2) . ")"
+                            ], 400);
+                        }
+                    } elseif ($item['type'] === 'variant') {
+                        $productVariant = ProductVariant::find($item['id']);
+                        if ($productVariant && $item['price'] <= $productVariant->cost_price) {
+                            return response()->json([
+                                'success' => false,
+                                'message' => "Selling price for variant '{$item['name']}' must be greater than cost price (" . number_format((float)$productVariant->cost_price, 2) . ")"
+                            ], 400);
+                        }
+                    }
+                }
+            }
+
             // Log checkout activity for manager
             $details = [
                 'customer_id' => $request->input('customer_id'),
@@ -250,7 +273,6 @@ class SellProductController extends Controller
                 'items_count' => is_array($request->input('items')) ? count($request->input('items')) : 0,
             ];
             \App\Helpers\ActivityLogger::log('Checkout completed', json_encode($details));
-
 
             $sessionId = Str::uuid();
             $receiptNumber = 'RCPT-' . strtoupper(substr($sessionId, 0, 8));

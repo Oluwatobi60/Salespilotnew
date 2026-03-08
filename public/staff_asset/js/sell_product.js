@@ -938,12 +938,17 @@
         .then(data => {
           checkoutBtn.disabled = false;
           if (data.success) {
-            // Show success message
-            showSuccess('Order has been sold successfully! Receipt #' + (data.receipt_number || 'N/A'));
 
-            // Generate and show receipt
-            generateReceipt();
-            receiptModal.classList.add('active');
+
+            // Show success message and reload after OK
+            Swal.fire({
+              icon: 'success',
+              title: 'Success',
+              text: 'Order has been sold successfully! Receipt #' + (data.receipt_number || 'N/A'),
+              confirmButtonColor: '#3085d6',
+            }).then(() => {
+              window.location.reload();
+            });
           } else {
             showError('Checkout failed: ' + (data.message || 'Unknown error'));
           }
@@ -1144,6 +1149,7 @@
         if (sellingPriceGroup.style.display !== 'none') {
           price = parseFloat(modalSellingPrice.value);
           if (!price || price <= 0) {
+            modal.classList.remove('active');
             showInfo('Please enter a valid selling price');
             modalSellingPrice.focus();
             return;
@@ -1381,14 +1387,33 @@
           });
         });
 
+        //sweet alert for remove item confirmation
         // Add event listeners for remove buttons
         document.querySelectorAll('.cart-item-remove').forEach(function(btn) {
           btn.addEventListener('click', function() {
             const index = parseInt(this.dataset.index);
-            if (confirm('Remove ' + cartItems[index].name + ' from cart?')) {
-              cartItems.splice(index, 1);
-              updateCartUI();
-            }
+            Swal.fire({
+              title: 'Remove from Cart?',
+              text: 'Are you sure you want to remove ' + cartItems[index].name + ' from the cart?',
+              icon: 'warning',
+              showCancelButton: true,
+              confirmButtonColor: '#d33',
+              cancelButtonColor: '#3085d6',
+              confirmButtonText: 'Yes, remove it',
+              cancelButtonText: 'Cancel'
+            }).then((result) => {
+              if (result.isConfirmed) {
+                cartItems.splice(index, 1);
+                updateCartUI();
+                Swal.fire({
+                  icon: 'success',
+                  title: 'Removed!',
+                  text: cartItems[index]?.name + ' has been removed from the cart.',
+                  timer: 1200,
+                  showConfirmButton: false
+                });
+              }
+            });
           });
         });
       }

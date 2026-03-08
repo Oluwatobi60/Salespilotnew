@@ -11,6 +11,7 @@ use App\Models\ProductVariant;
 use App\Models\Supplier;
 use App\Models\Unit;
 use Illuminate\Pagination\LengthAwarePaginator;
+use App\Models\BranchInventory;
 
 class AllItemsController extends Controller
 {
@@ -72,11 +73,26 @@ class AllItemsController extends Controller
         $suppliers = $suppliersQuery->orderBy('name')->get();
 
 
+        // Get all branches for this business
+        $branches = \App\Models\Branch\Branch::where('business_name', $businessName)->get();
+
         // Combine all items into a single collection
         $allItems = collect();
 
         // Add standard items with type identifier
         foreach ($standardItems as $item) {
+            // Get branch inventory for this item
+            $branchInventories = BranchInventory::where('item_id', $item->id)
+                ->where('item_type', 'standard')
+                ->where('business_name', $businessName)
+                ->with('branch')
+                ->get();
+            $branch_inventory_list = $branchInventories->map(function($inv) {
+                if ($inv->branch && $inv->branch->branch_name) {
+                    return $inv->branch->branch_name . ': Allocated ' . $inv->allocated_quantity . ', Current ' . $inv->current_quantity;
+                }
+                return null;
+            })->filter()->values();
             $allItems->push([
                 'id' => $item->id,
                 'type' => 'standard',
@@ -94,7 +110,8 @@ class AllItemsController extends Controller
                 'low_stock_threshold' => $item->low_stock_threshold,
                 'pricing_tiers' => $item->pricingTiers,
                 'created_at' => $item->created_at,
-                'data' => $item
+                'data' => $item,
+                'branch_inventory_list' => $branch_inventory_list,
             ]);
         }
 
@@ -103,6 +120,18 @@ class AllItemsController extends Controller
             if ($item->variants && $item->variants->count() > 0) {
                 // Add each variant as a separate row
                 foreach ($item->variants as $variant) {
+                    // Get branch inventory for this variant
+                    $branchInventories = BranchInventory::where('item_id', $variant->id)
+                        ->where('item_type', 'variant')
+                        ->where('business_name', $businessName)
+                        ->with('branch')
+                        ->get();
+                    $branch_inventory_list = $branchInventories->map(function($inv) {
+                        if ($inv->branch && $inv->branch->branch_name) {
+                            return $inv->branch->branch_name . ': Allocated ' . $inv->allocated_quantity . ', Current ' . $inv->current_quantity;
+                        }
+                        return null;
+                    })->filter()->values();
                     $allItems->push([
                         'id' => $variant->id,
                         'type' => 'product_variant',
@@ -124,7 +153,8 @@ class AllItemsController extends Controller
                         'pricing_tiers' => $variant->pricingTiers,
                         'created_at' => $variant->created_at ?? $item->created_at,
                         'data' => $variant,
-                        'parent_data' => $item
+                        'parent_data' => $item,
+                        'branch_inventory_list' => $branch_inventory_list,
                     ]);
                 }
             } else {
@@ -143,7 +173,8 @@ class AllItemsController extends Controller
                     'variants' => $item->variants,
                     'current_stock' => 0,
                     'created_at' => $item->created_at,
-                    'data' => $item
+                    'data' => $item,
+                    'branch_inventory_list' => collect(),
                 ]);
             }
         }

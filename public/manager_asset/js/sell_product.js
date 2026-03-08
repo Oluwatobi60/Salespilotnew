@@ -1248,11 +1248,26 @@ document.addEventListener('DOMContentLoaded', function() {
         // If manual price is needed, get from input
         if (sellingPriceGroup.style.display !== 'none') {
           price = parseFloat(modalSellingPrice.value);
+          const costPrice = parseFloat(currentItem.costPrice || 0);
           if (!price || price <= 0) {
+            modal.classList.remove('active');
             Swal.fire({
               icon: 'warning',
               title: 'Invalid Price',
               text: 'Please enter a valid selling price',
+              confirmButtonColor: '#3085d6'
+            });
+            this.disabled = false;
+            this.innerHTML = originalButtonText;
+            modalSellingPrice.focus();
+            return;
+          }
+          if (price <= costPrice) {
+            modal.classList.remove('active');
+            Swal.fire({
+              icon: 'error',
+              title: 'Invalid Selling Price',
+              text: `Selling price must be greater than cost price (₦${costPrice.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})})`,
               confirmButtonColor: '#3085d6'
             });
             this.disabled = false;

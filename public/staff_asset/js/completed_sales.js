@@ -301,14 +301,22 @@ document.addEventListener('DOMContentLoaded', function() {
         // Show panel
         detailsPanel.classList.add('active');
         detailsBackdrop.classList.add('active');
+        detailsPanel.style.display = '';
+        detailsBackdrop.style.display = '';
         document.body.style.overflow = 'hidden';
     }
 
     function hideSaleDetails() {
-        detailsPanel.classList.remove('active');
-        detailsBackdrop.classList.remove('active');
-        document.body.style.overflow = '';
-        currentSaleId = null;
+                detailsPanel.classList.remove('active');
+                detailsBackdrop.classList.remove('active');
+                detailsPanel.style.display = 'none';
+                detailsBackdrop.style.display = 'none';
+                document.body.style.overflow = '';
+                setTimeout(function() {
+                    detailsPanel.style.display = 'none';
+                    detailsBackdrop.style.display = 'none';
+                }, 400);
+                currentSaleId = null;
     }
 
     // Load sale items from server

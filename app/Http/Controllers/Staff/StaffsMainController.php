@@ -377,7 +377,28 @@ class StaffsMainController extends Controller
                 'discount' => 'nullable|numeric'
             ]);
 
-
+// Validate selling price is not below or equal to cost price for manual entry
+            foreach ($validated['items'] as $item) {
+                if (isset($item['price']) && isset($item['type'])) {
+                    if ($item['type'] === 'standard') {
+                        $standardItem = StandardItem::find($item['id']);
+                        if ($standardItem && $item['price'] <= $standardItem->cost_price) {
+                            return response()->json([
+                                'success' => false,
+                                'message' => "Selling price for '{$item['name']}' must be greater than cost price (" . number_format((float)$standardItem->cost_price, 2) . ")"
+                            ], 400);
+                        }
+                    } elseif ($item['type'] === 'variant') {
+                        $productVariant = ProductVariant::find($item['id']);
+                        if ($productVariant && $item['price'] <= $productVariant->cost_price) {
+                            return response()->json([
+                                'success' => false,
+                                'message' => "Selling price for variant '{$item['name']}' must be greater than cost price (" . number_format((float)$productVariant->cost_price, 2) . ")"
+                            ], 400);
+                        }
+                    }
+                }
+            }
 
             $sessionId = Str::uuid();
             $receiptNumber = 'RCPT-' . strtoupper(substr($sessionId, 0, 8));

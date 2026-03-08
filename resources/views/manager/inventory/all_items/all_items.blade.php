@@ -153,6 +153,7 @@ All Items
         <th>Category</th>
         <th>Unit</th>
         <th>Stock</th>
+        <th>Branch Inventory</th>
         <th>Selling Price</th>
         <th>Cost Price</th>
         <th>Supplier</th>
@@ -217,6 +218,35 @@ All Items
                         @endif
                     @else
                         <span class="badge bg-secondary">N/A</span>
+                    @endif
+                </td>
+                <td>
+                    @if(isset($item['branch_inventory_list']) && count($item['branch_inventory_list']) > 0)
+                        <div class="d-flex flex-wrap gap-2">
+                            @foreach($item['branch_inventory_list'] as $branchInv)
+                                <div class="card p-2 border-0 shadow-sm bg-light" style="min-width: 170px; max-width: 220px;">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-shop-window text-primary me-2" style="font-size: 1.2em;"></i>
+                                        <span class="fw-bold text-dark">{{ explode(':', $branchInv)[0] }}</span>
+                                    </div>
+                                    <div class="mt-1 ms-4">
+                                        @php $parts = explode(':', $branchInv, 2); $details = $parts[1] ?? ''; @endphp
+                                        @foreach(explode(',', $details) as $detail)
+                                            @php $label = trim($detail); @endphp
+                                            @if(Str::contains($label, 'Allocated'))
+                                                <span class="badge bg-info text-dark me-1">{{ $label }}</span>
+                                            @elseif(Str::contains($label, 'Current'))
+                                                <span class="badge bg-success">{{ $label }}</span>
+                                            @else
+                                                <span class="badge bg-secondary">{{ $label }}</span>
+                                            @endif
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <span class="text-muted">N/A</span>
                     @endif
                 </td>
                 <td>
