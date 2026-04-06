@@ -78,7 +78,7 @@ class AuthenticatedSessionController extends Controller
                 ->where('business_name', $user->business_name)
                 ->where('status', 1)
                 ->first();
-            
+
             if (!$activeBranch) {
                 Auth::logout();
                 return redirect()->route('login')->withErrors([
@@ -125,13 +125,13 @@ class AuthenticatedSessionController extends Controller
             if ($creatorActiveSub) {
                 // Allow login, skip this check
             } else {
-                Auth::logout();
+                // Keep user logged in to allow plan selection and payment
                 return redirect()->route('plan_pricing')->withErrors([
                     'email' => 'You do not have an active subscription. Please subscribe to a plan to continue.',
                 ])->with('redirect_to_plans', true);
             }
         } elseif (!$activeSubscription) {
-            Auth::logout();
+            // Keep user logged in to allow plan selection and payment
             return redirect()->route('plan_pricing')->withErrors([
                 'email' => 'You do not have an active subscription. Please subscribe to a plan to continue.',
             ])->with('redirect_to_plans', true);
@@ -170,13 +170,13 @@ class AuthenticatedSessionController extends Controller
                 ->where('status', 'active')
                 ->where('end_date', '>=', now())
                 ->first();
-            
+
             // If no active subscription, check if email is in signup_requests
             if (!$activeSubscription) {
                 $signupRequest = SignupRequest::where('email', $user->email)
                     ->where('is_used', true)
                     ->first();
-                
+
                 // Only redirect to pricing if email exists in signup_requests
                 $shouldRedirectToPricing = (bool) $signupRequest;
             }

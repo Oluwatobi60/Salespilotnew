@@ -51,7 +51,7 @@ Route::prefix('signup')->controller(SignupController::class)->group(function () 
     Route::post('/check_verification', 'checkVerification')->name('get_started.check_verification');
     Route::get('/verify/{token}', 'verifyToken')->name('signup.verify');
     Route::get('/plan_pricing', 'plan_pricing')->name('plan_pricing');
-    Route::post('/plan_pricing', 'selectPlan')->name('select.plan');
+    Route::post('/plan_pricing', 'selectPlan')->name('select.plan')->middleware('auth');
     Route::get('/payment', 'showPayment')->name('payment.show')->middleware('auth');
     Route::post('/payment', 'processPayment')->name('payment.process')->middleware('auth');
 });
