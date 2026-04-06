@@ -4,9 +4,19 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\BranchInventory;
 
 class VariantItem extends Model
 {
+    use SoftDeletes;
+
+    /**
+     * Get all branch inventory allocations for this variant item (all variants)
+     */
+    public function branchInventory()
+    {
+        return $this->hasMany(BranchInventory::class, 'item_id')->where('item_type', 'variant');
+    }
     use SoftDeletes;
 
     protected $fillable = [

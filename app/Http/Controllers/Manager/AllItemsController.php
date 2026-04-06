@@ -12,6 +12,7 @@ use App\Models\Supplier;
 use App\Models\Unit;
 use Illuminate\Pagination\LengthAwarePaginator;
 use App\Models\BranchInventory;
+use App\Models\Branch\Branch;
 
 class AllItemsController extends Controller
 {
@@ -36,8 +37,17 @@ class AllItemsController extends Controller
 
         // If user is an added manager (has addby), filter by their own email
         if ($manager->addby) {
-            $standardQuery->where('manager_email', $manager->email);
-            $variantQuery->where('manager_email', $manager->email);
+            // Get branches where this manager is the branch manager
+            $managedBranchIds = Branch::where('manager_id', $manager->id)->pluck('id');
+            // Only show items that have allocations to these branches by this manager
+            $standardQuery->whereHas('branchInventory', function($q) use ($manager, $managedBranchIds) {
+                $q->whereIn('branch_id', $managedBranchIds)
+                  ->where('allocated_by', $manager->id);
+            });
+            $variantQuery->whereHas('branchInventory', function($q) use ($manager, $managedBranchIds) {
+                $q->whereIn('branch_id', $managedBranchIds)
+                  ->where('allocated_by', $manager->id);
+            });
         }
 
         // Fetch Standard Items with related data
@@ -81,87 +91,25 @@ class AllItemsController extends Controller
 
         // Add standard items with type identifier
         foreach ($standardItems as $item) {
-            // Get branch inventory for this item
-            $branchInventories = BranchInventory::where('item_id', $item->id)
+            $branchInventoriesQuery = BranchInventory::where('item_id', $item->id)
                 ->where('item_type', 'standard')
                 ->where('business_name', $businessName)
-                ->with('branch')
-                ->get();
+                ->with('branch');
+            if ($manager->addby) {
+                $branchInventoriesQuery->where('allocated_by', $manager->id);
+            }
+            $branchInventories = $branchInventoriesQuery->get();
             $branch_inventory_list = $branchInventories->map(function($inv) {
                 if ($inv->branch && $inv->branch->branch_name) {
                     return $inv->branch->branch_name . ': Allocated ' . $inv->allocated_quantity . ', Current ' . $inv->current_quantity;
                 }
                 return null;
             })->filter()->values();
-            $allItems->push([
-                'id' => $item->id,
-                'type' => 'standard',
-                'name' => $item->item_name,
-                'code' => $item->item_code,
-                'barcode' => $item->barcode,
-                'category' => $item->category_name,
-                'supplier' => $item->supplier,
-                'unit' => $item->unit,
-                'image' => $item->item_image,
-                'cost_price' => $item->cost_price,
-                'selling_price' => $item->selling_price,
-                'profit_margin' => $item->profit_margin,
-                'current_stock' => $item->current_stock,
-                'low_stock_threshold' => $item->low_stock_threshold,
-                'pricing_tiers' => $item->pricingTiers,
-                'created_at' => $item->created_at,
-                'data' => $item,
-                'branch_inventory_list' => $branch_inventory_list,
-            ]);
-        }
-
-        // Add variant items - each product variant as a separate row
-        foreach ($variantItems as $item) {
-            if ($item->variants && $item->variants->count() > 0) {
-                // Add each variant as a separate row
-                foreach ($item->variants as $variant) {
-                    // Get branch inventory for this variant
-                    $branchInventories = BranchInventory::where('item_id', $variant->id)
-                        ->where('item_type', 'variant')
-                        ->where('business_name', $businessName)
-                        ->with('branch')
-                        ->get();
-                    $branch_inventory_list = $branchInventories->map(function($inv) {
-                        if ($inv->branch && $inv->branch->branch_name) {
-                            return $inv->branch->branch_name . ': Allocated ' . $inv->allocated_quantity . ', Current ' . $inv->current_quantity;
-                        }
-                        return null;
-                    })->filter()->values();
-                    $allItems->push([
-                        'id' => $variant->id,
-                        'type' => 'product_variant',
-                        'parent_id' => $item->id,
-                        'name' => $item->item_name . ' - ' . $variant->variant_name,
-                        'code' => $variant->sku ?? $item->item_code,
-                        'barcode' => $variant->barcode ?? $item->barcode,
-                        'category' => $item->category_name,
-                        'supplier' => $item->supplier,
-                        'unit' => $item->unit,
-                        'image' => $item->item_image,
-                        'cost_price' => $variant->cost_price ?? $variant->manual_cost_price ?? $variant->margin_cost_price ?? $variant->range_cost_price,
-                        'selling_price' => $variant->selling_price ?? $variant->calculated_price ?? $variant->final_price,
-                        'profit_margin' => $variant->profit_margin ?? $variant->target_margin,
-                        'current_stock' => $variant->stock_quantity,
-                        'low_stock_threshold' => $variant->low_stock_threshold,
-                        'variant_name' => $variant->variant_name,
-                        'variant_options' => $variant->variant_options,
-                        'pricing_tiers' => $variant->pricingTiers,
-                        'created_at' => $variant->created_at ?? $item->created_at,
-                        'data' => $variant,
-                        'parent_data' => $item,
-                        'branch_inventory_list' => $branch_inventory_list,
-                    ]);
-                }
-            } else {
-                // No variants - add parent item
+            // For 'addby' managers, only show items with at least one allocation
+            if (!$manager->addby || $branch_inventory_list->count() > 0) {
                 $allItems->push([
                     'id' => $item->id,
-                    'type' => 'variant',
+                    'type' => 'standard',
                     'name' => $item->item_name,
                     'code' => $item->item_code,
                     'barcode' => $item->barcode,
@@ -169,13 +117,84 @@ class AllItemsController extends Controller
                     'supplier' => $item->supplier,
                     'unit' => $item->unit,
                     'image' => $item->item_image,
-                    'variant_sets' => $item->variant_sets,
-                    'variants' => $item->variants,
-                    'current_stock' => 0,
+                    'cost_price' => $item->cost_price,
+                    'selling_price' => $item->selling_price,
+                    'profit_margin' => $item->profit_margin,
+                    'current_stock' => $item->current_stock,
+                    'low_stock_threshold' => $item->low_stock_threshold,
+                    'pricing_tiers' => $item->pricingTiers,
                     'created_at' => $item->created_at,
                     'data' => $item,
-                    'branch_inventory_list' => collect(),
+                    'branch_inventory_list' => $branch_inventory_list,
                 ]);
+            }
+        }
+
+        // Add variant items - each product variant as a separate row
+        foreach ($variantItems as $item) {
+            if ($item->variants && $item->variants->count() > 0) {
+                foreach ($item->variants as $variant) {
+                    $branchInventoriesQuery = BranchInventory::where('item_id', $variant->id)
+                        ->where('item_type', 'variant')
+                        ->where('business_name', $businessName)
+                        ->with('branch');
+                    if ($manager->addby) {
+                        $branchInventoriesQuery->where('allocated_by', $manager->id);
+                    }
+                    $branchInventories = $branchInventoriesQuery->get();
+                    $branch_inventory_list = $branchInventories->map(function($inv) {
+                        if ($inv->branch && $inv->branch->branch_name) {
+                            return $inv->branch->branch_name . ': Allocated ' . $inv->allocated_quantity . ', Current ' . $inv->current_quantity;
+                        }
+                        return null;
+                    })->filter()->values();
+                    if (!$manager->addby || $branch_inventory_list->count() > 0) {
+                        $allItems->push([
+                            'id' => $variant->id,
+                            'type' => 'product_variant',
+                            'parent_id' => $item->id,
+                            'name' => $item->item_name . ' - ' . $variant->variant_name,
+                            'code' => $variant->sku ?? $item->item_code,
+                            'barcode' => $variant->barcode ?? $item->barcode,
+                            'category' => $item->category_name,
+                            'supplier' => $item->supplier,
+                            'unit' => $item->unit,
+                            'image' => $item->item_image,
+                            'cost_price' => $variant->cost_price ?? $variant->manual_cost_price ?? $variant->margin_cost_price ?? $variant->range_cost_price,
+                            'selling_price' => $variant->selling_price ?? $variant->calculated_price ?? $variant->final_price,
+                            'profit_margin' => $variant->profit_margin ?? $variant->target_margin,
+                            'current_stock' => $variant->stock_quantity,
+                            'low_stock_threshold' => $variant->low_stock_threshold,
+                            'variant_name' => $variant->variant_name,
+                            'variant_options' => $variant->variant_options,
+                            'pricing_tiers' => $variant->pricingTiers,
+                            'created_at' => $variant->created_at ?? $item->created_at,
+                            'data' => $variant,
+                            'parent_data' => $item,
+                            'branch_inventory_list' => $branch_inventory_list,
+                        ]);
+                    }
+                }
+            } else {
+                if (!$manager->addby) {
+                    $allItems->push([
+                        'id' => $item->id,
+                        'type' => 'variant',
+                        'name' => $item->item_name,
+                        'code' => $item->item_code,
+                        'barcode' => $item->barcode,
+                        'category' => $item->category_name,
+                        'supplier' => $item->supplier,
+                        'unit' => $item->unit,
+                        'image' => $item->item_image,
+                        'variant_sets' => $item->variant_sets,
+                        'variants' => $item->variants,
+                        'current_stock' => 0,
+                        'created_at' => $item->created_at,
+                        'data' => $item,
+                        'branch_inventory_list' => collect(),
+                    ]);
+                }
             }
         }
 

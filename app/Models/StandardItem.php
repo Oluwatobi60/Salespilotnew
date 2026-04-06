@@ -4,10 +4,19 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\BranchInventory;
 
 class StandardItem extends Model
 {
     use SoftDeletes;
+
+    /**
+     * Get all branch inventory allocations for this item
+     */
+    public function branchInventory()
+    {
+        return $this->hasMany(BranchInventory::class, 'item_id')->where('item_type', 'standard');
+    }
 
     protected $fillable = [
         'business_name',
