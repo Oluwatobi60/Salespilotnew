@@ -226,7 +226,18 @@ class SignupController extends Controller
     public function plan_pricing()
     {
         $plans = SubscriptionPlan::active()->get();
-        return view('plan_pricing', compact('plans'));
+
+        // Check if user has an active subscription
+        $activeSubscription = null;
+        if (Auth::check()) {
+            $activeSubscription = UserSubscription::where('user_id', Auth::id())
+                ->where('status', 'active')
+                ->where('end_date', '>=', now())
+                ->with('subscriptionPlan')
+                ->first();
+        }
+
+        return view('plan_pricing', compact('plans', 'activeSubscription'));
     }
 
     /**
@@ -238,6 +249,21 @@ class SignupController extends Controller
             'plan' => 'required|string|in:free,basic,standard,premium',
             'duration' => 'required|integer|in:1,3,6,12',
         ]);
+
+        // Check if user has an active subscription
+        if (Auth::check()) {
+            $activeSubscription = UserSubscription::where('user_id', Auth::id())
+                ->where('status', 'active')
+                ->where('end_date', '>=', now())
+                ->first();
+
+            if ($activeSubscription) {
+                $redirectUrl = $this->getUserDashboardRoute();
+                return redirect()->back()
+                    ->with('error', 'You already have an active subscription. Please wait until your current subscription expires before upgrading to a different plan.')
+                    ->with('redirect_url', $redirectUrl);
+            }
+        }
 
         // Get the selected plan
         $plan = SubscriptionPlan::where('name', $validated['plan'])->first();
@@ -274,6 +300,19 @@ class SignupController extends Controller
             return redirect()->route('plan_pricing')->with('error', 'Please select a plan first.');
         }
 
+        // Check if user has an active subscription
+        $activeSubscription = UserSubscription::where('user_id', Auth::id())
+            ->where('status', 'active')
+            ->where('end_date', '>=', now())
+            ->first();
+
+        if ($activeSubscription) {
+            $redirectUrl = $this->getUserDashboardRoute();
+            return redirect()->back()
+                ->with('error', 'You already have an active subscription. Please wait until your current subscription expires before upgrading to a different plan.')
+                ->with('redirect_url', $redirectUrl);
+        }
+
         $plan = SubscriptionPlan::find(session('selected_plan'));
         $duration = session('selected_duration');
         $pricing = session('pricing');
@@ -293,6 +332,19 @@ class SignupController extends Controller
 
         if (!session('selected_plan')) {
             return redirect()->route('plan_pricing')->with('error', 'Session expired. Please select a plan again.');
+        }
+
+        // Check if user has an active subscription
+        $activeSubscription = UserSubscription::where('user_id', Auth::id())
+            ->where('status', 'active')
+            ->where('end_date', '>=', now())
+            ->first();
+
+        if ($activeSubscription) {
+            $redirectUrl = $this->getUserDashboardRoute();
+            return redirect()->back()
+                ->with('error', 'You already have an active subscription. Please wait until your current subscription expires before upgrading to a different plan.')
+                ->with('redirect_url', $redirectUrl);
         }
 
         $plan = SubscriptionPlan::find(session('selected_plan'));
@@ -326,6 +378,19 @@ class SignupController extends Controller
      */
     protected function activateFreePlan($plan, $duration)
     {
+        // Check if user has an active subscription
+        $activeSubscription = UserSubscription::where('user_id', Auth::id())
+            ->where('status', 'active')
+            ->where('end_date', '>=', now())
+            ->first();
+
+        if ($activeSubscription) {
+            $redirectUrl = $this->getUserDashboardRoute();
+            return redirect()->back()
+                ->with('error', 'You already have an active subscription. Please wait until your current subscription expires before upgrading to a different plan.')
+                ->with('redirect_url', $redirectUrl);
+        }
+
         $duration = (int) $duration;
 
         $subscription = UserSubscription::create([
@@ -347,5 +412,26 @@ class SignupController extends Controller
         session()->forget(['selected_plan', 'selected_duration', 'pricing']);
 
         return redirect()->route('manager')->with('success', 'Free trial activated! Welcome to SalesPilot.');
+    }
+
+    /**
+     * Get user dashboard route based on role
+     */
+    protected function getUserDashboardRoute()
+    {
+        $user = Auth::user();
+        
+        switch ($user->role) {
+            case 'superadmin':
+                return route('superadmin');
+            case 'manager':
+                return route('manager');
+            case 'businessowner':
+                return route('businessdashboard');
+            case 'staff':
+                return route('dashboard');
+            default:
+                return route('manager');
+        }
     }
 }

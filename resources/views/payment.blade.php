@@ -170,6 +170,12 @@ document.getElementById('paymentForm').addEventListener('submit', function(e) {
         title: 'Error!',
         text: '{{ session('error') }}',
         confirmButtonColor: '#f44336'
+    }).then((result) => {
+        @if(session('redirect_url'))
+        if (result.isConfirmed || result.isDismissed) {
+            window.location.href = '{{ session('redirect_url') }}';
+        }
+        @endif
     });
 </script>
 @endif
