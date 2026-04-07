@@ -29,6 +29,7 @@ use App\Http\Controllers\Manager\BranchInventoryController;
 use App\Http\Controllers\Manager\SystemPreferencesController;
 use App\Http\Controllers\Superadmin\SuperAdminController;
 use App\Http\Controllers\Superadmin\PlansController;
+use App\Http\Controllers\Superadmin\RevenueController;
 
 
 /* Route::get('/dashboard', function () {
@@ -73,6 +74,11 @@ Route::middleware(['auth:superadmin'])->prefix('superadmin/plans')->controller(P
     Route::get('/{plan}/edit', 'edit')->name('superadmin.plans.edit');
     Route::put('/{plan}', 'update')->name('superadmin.plans.update');
     Route::post('/{plan}/toggle-status', 'toggleStatus')->name('superadmin.plans.toggle');
+});
+
+// Superadmin Revenue routes
+Route::middleware(['auth:superadmin'])->prefix('superadmin/revenue')->controller(RevenueController::class)->group(function () {
+    Route::get('/', 'index')->name('superadmin.revenue');
 });
 
 

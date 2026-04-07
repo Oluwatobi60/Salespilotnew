@@ -216,6 +216,9 @@
         <a href="{{ route('superadmin.plans') }}" class="{{ request()->routeIs('superadmin.plans*') ? 'active' : '' }}">
             <i class="bi bi-card-list"></i> Plans
         </a>
+        <a href="{{ route('superadmin.revenue') }}" class="{{ request()->routeIs('superadmin.revenue*') ? 'active' : '' }}">
+            <i class="bi bi-graph-up-arrow"></i> Revenue
+        </a>
     </nav>
     <div class="sidebar-footer">
         <div class="text-white-50 small mb-2 text-truncate">{{ $superadmin->name }}</div>
