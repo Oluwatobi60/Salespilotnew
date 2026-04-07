@@ -27,6 +27,6 @@ class ActivityLog extends Model
 
         public function staff()
         {
-            return $this->belongsTo(Staffs::class, 'staff_id', 'staff_id');
+            return $this->belongsTo(Staffs::class, 'staff_id');
         }
 }

@@ -14,7 +14,7 @@ class ActivityLogger
         $ip = request()->ip();
         ActivityLog::create([
             'user_id' => $user ? $user->id : null,
-            'staff_id' => $staff ? $staff->staff_id : null,
+            'staff_id' => $staff ? $staff->id : null,
             'action' => $action,
             'device' => $device,
             'ip_address' => $ip,

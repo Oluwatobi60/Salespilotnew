@@ -420,7 +420,7 @@ class SignupController extends Controller
     protected function getUserDashboardRoute()
     {
         $user = Auth::user();
-        
+
         switch ($user->role) {
             case 'superadmin':
                 return route('superadmin');

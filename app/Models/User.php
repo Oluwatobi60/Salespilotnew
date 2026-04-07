@@ -44,6 +44,7 @@ class User extends Authenticatable
         'password',
         'role',
         'status',
+        'brm_id',
     ];
 
     /**
@@ -97,5 +98,10 @@ class User extends Authenticatable
     public function isBusinessCreator(): bool
     {
         return is_null($this->addby) || $this->addby === $this->email || $this->addby === $this->id;
+    }
+
+    public function brm()
+    {
+        return $this->belongsTo(Brm::class, 'brm_id');
     }
 }

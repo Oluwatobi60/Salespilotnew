@@ -113,7 +113,7 @@ Activity Logs
                                                 @if($log->staff)
                                                     {{ $log->staff->fullname ?? $log->staff->email ?? 'Staff' }}
                                                 @elseif($log->user)
-                                                    {{ $log->user->name ?? $log->user->email ?? 'User' }}
+                                                    {{ trim(($log->user->first_name ?? '') . ' ' . ($log->user->surname ?? '')) ?: ($log->user->email ?? 'User') }}
                                                 @else
                                                     System
                                                 @endif

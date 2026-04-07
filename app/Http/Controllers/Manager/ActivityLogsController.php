@@ -3,30 +3,45 @@
 namespace App\Http\Controllers\Manager;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\ActivityLog;
+use App\Models\User;
+use App\Models\Staffs;
+use Illuminate\Support\Facades\Auth;
 
 class ActivityLogsController extends Controller
 {
     public function activity_logs()
     {
-        // Get all non-login activities
+        $currentUser = Auth::user();
+        $businessName = $currentUser->business_name;
+
+        // Get all user IDs for this business (creator + all addby managers)
+        $userIds = User::where('business_name', $businessName)->pluck('id');
+
+        // Get all staff IDs for this business
+        $staffIds = Staffs::where('business_name', $businessName)->pluck('id');
+
+        // Get all non-login activities for this business
         $nonLoginLogs = ActivityLog::with(['user', 'staff'])
             ->where('action', '!=', 'login')
+            ->where(function ($q) use ($userIds, $staffIds) {
+                $q->whereIn('user_id', $userIds)
+                  ->orWhereIn('staff_id', $staffIds);
+            })
             ->orderByDesc('created_at');
 
-        // Get latest login per user
+        // Get latest login per user for this business
         $latestUserLogins = ActivityLog::with(['user'])
             ->where('action', 'login')
-            ->whereNotNull('user_id')
+            ->whereIn('user_id', $userIds)
             ->orderByDesc('created_at')
             ->get()
             ->unique('user_id');
 
-        // Get latest login per staff
+        // Get latest login per staff for this business
         $latestStaffLogins = ActivityLog::with(['staff'])
             ->where('action', 'login')
-            ->whereNotNull('staff_id')
+            ->whereIn('staff_id', $staffIds)
             ->orderByDesc('created_at')
             ->get()
             ->unique('staff_id');

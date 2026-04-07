@@ -27,6 +27,8 @@ use App\Http\Controllers\Manager\AddManagerController;
 use App\Http\Controllers\Branch\BranchController;
 use App\Http\Controllers\Manager\BranchInventoryController;
 use App\Http\Controllers\Manager\SystemPreferencesController;
+use App\Http\Controllers\Superadmin\SuperAdminController;
+use App\Http\Controllers\Superadmin\PlansController;
 
 
 /* Route::get('/dashboard', function () {
@@ -34,10 +36,45 @@ use App\Http\Controllers\Manager\SystemPreferencesController;
 })->middleware(['auth', 'verified', 'rolemanager:staff'])->name('dashboard'); */
 
 
-/* Route::get('/superadmin/dashboard', function () {
-    return view('superadmin');
-})->middleware(['auth', 'verified', 'rolemanager:superadmin'])->name('superadmin');
- */
+// Superadmin auth routes (unauthenticated)
+Route::prefix('superadmin')->controller(SuperAdminController::class)->group(function () {
+    Route::get('/signup', 'showSignup')->name('superadmin.signup');
+    Route::post('/signup', 'register')->name('superadmin.register');
+    Route::get('/login', 'showLogin')->name('superadmin.login');
+    Route::post('/login', 'login')->name('superadmin.login.submit');
+    Route::post('/logout', 'logout')->name('superadmin.logout');
+});
+
+// Superadmin protected routes
+Route::middleware(['auth:superadmin'])->prefix('superadmin')->controller(SuperAdminController::class)->group(function () {
+    Route::get('/dashboard', 'dashboard')->name('superadmin');
+    Route::get('/customers', 'customers')->name('superadmin.customers');
+    Route::post('/customers/{user}/toggle-status', 'toggleCustomerStatus')->name('superadmin.customers.toggle');
+    Route::post('/customers/{user}/send-reminder', 'sendSubscriptionReminder')->name('superadmin.customers.reminder');
+    Route::post('/customers/{user}/assign-brm', 'assignBrm')->name('superadmin.customers.assign-brm');
+
+    // User detail
+    Route::get('/users/{user}', 'showUser')->name('superadmin.users.show');
+
+    // BRM
+    Route::get('/brms', 'brms')->name('superadmin.brms');
+    Route::get('/brms/create', 'createBrm')->name('superadmin.brms.create');
+    Route::post('/brms', 'storeBrm')->name('superadmin.brms.store');
+    Route::get('/brms/{brm}/edit', 'editBrm')->name('superadmin.brms.edit');
+    Route::put('/brms/{brm}', 'updateBrm')->name('superadmin.brms.update');
+    Route::post('/brms/{brm}/toggle-status', 'toggleBrmStatus')->name('superadmin.brms.toggle');
+});
+
+// Superadmin Plans routes
+Route::middleware(['auth:superadmin'])->prefix('superadmin/plans')->controller(PlansController::class)->group(function () {
+    Route::get('/', 'index')->name('superadmin.plans');
+    Route::get('/create', 'create')->name('superadmin.plans.create');
+    Route::post('/', 'store')->name('superadmin.plans.store');
+    Route::get('/{plan}/edit', 'edit')->name('superadmin.plans.edit');
+    Route::put('/{plan}', 'update')->name('superadmin.plans.update');
+    Route::post('/{plan}/toggle-status', 'toggleStatus')->name('superadmin.plans.toggle');
+});
+
 
 Route::get('/', function () {
     return view('welcome');

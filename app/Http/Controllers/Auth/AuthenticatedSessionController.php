@@ -64,6 +64,14 @@ class AuthenticatedSessionController extends Controller
             ]);
         }
 
+        // Check if user account has been deactivated by superadmin
+        if ((int)$user->status === 0) {
+            Auth::logout();
+            return redirect()->route('login')->withErrors([
+                'email' => 'Your account has been deactivated. Please contact support.',
+            ]);
+        }
+
         // Check if user status is 0 (disabled) - only for managers created by another user
         if ($user->role === 'manager' && $user->addby && $user->status == 0) {
             Auth::logout();
