@@ -10,24 +10,25 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="shortcut icon" href="{{ asset('manager_asset/images/favicon.png') }}" />
     <style>
-        * { font-family: 'Inter', sans-serif; }
+        *, *::before, *::after { font-family: 'Inter', sans-serif; box-sizing: border-box; }
         body { background: #f0f2f5; margin: 0; }
 
-        /* Sidebar */
+        /* ── Sidebar ─────────────────────────────── */
         .sa-sidebar {
+            width: 240px;
             min-height: 100vh;
             background: linear-gradient(180deg, #5b21b6 0%, #7c3aed 100%);
-            width: 240px;
             position: fixed;
             top: 0; left: 0;
             display: flex;
             flex-direction: column;
-            z-index: 100;
+            z-index: 1050;
             box-shadow: 4px 0 12px rgba(0,0,0,0.1);
+            transition: transform 0.28s cubic-bezier(.4,0,.2,1);
         }
         .sa-sidebar .brand {
             font-family: 'Montserrat', sans-serif;
-            font-size: 1.05rem;
+            font-size: 1rem;
             font-weight: 700;
             padding: 18px 20px;
             border-bottom: 1px solid rgba(255,255,255,0.15);
@@ -35,9 +36,10 @@
             display: flex;
             align-items: center;
             gap: 10px;
+            flex-shrink: 0;
         }
-        .sa-sidebar .brand img { height: 32px; }
-        .sa-sidebar nav { flex: 1; padding: 12px 0; }
+        .sa-sidebar .brand img { height: 30px; }
+        .sa-sidebar nav { flex: 1; padding: 10px 0; overflow-y: auto; }
         .sa-sidebar nav a {
             color: rgba(255,255,255,0.8);
             text-decoration: none;
@@ -45,11 +47,11 @@
             align-items: center;
             gap: 10px;
             padding: 10px 20px;
-            font-size: 0.9rem;
+            font-size: 0.88rem;
             font-weight: 500;
-            transition: background 0.2s, color 0.2s;
-            border-radius: 0;
+            transition: background 0.18s, color 0.18s;
         }
+        .sa-sidebar nav a i { font-size: 1rem; flex-shrink: 0; }
         .sa-sidebar nav a:hover,
         .sa-sidebar nav a.active {
             background: rgba(255,255,255,0.15);
@@ -57,24 +59,57 @@
         }
         .sa-sidebar nav .nav-group-label {
             color: rgba(255,255,255,0.45);
-            font-size: 0.72rem;
+            font-size: 0.7rem;
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.08em;
-            padding: 14px 20px 4px;
+            padding: 12px 20px 3px;
+            display: block;
         }
         .sa-sidebar .sidebar-footer {
-            padding: 16px 20px;
+            padding: 14px 20px;
             border-top: 1px solid rgba(255,255,255,0.15);
+            flex-shrink: 0;
         }
 
-        /* Main */
-        .sa-main { margin-left: 240px; min-height: 100vh; }
+        /* ── Mobile overlay ──────────────────────── */
+        .sa-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.45);
+            z-index: 1049;
+            backdrop-filter: blur(2px);
+        }
+        .sa-overlay.show { display: block; }
 
-        /* Topbar */
+        /* ── Hamburger button ────────────────────── */
+        .sa-burger {
+            display: none;
+            background: none;
+            border: none;
+            padding: 5px 7px;
+            color: #374151;
+            font-size: 1.35rem;
+            cursor: pointer;
+            line-height: 1;
+            border-radius: 6px;
+            flex-shrink: 0;
+        }
+        .sa-burger:hover { background: #f3f4f6; }
+
+        /* ── Main area ───────────────────────────── */
+        .sa-main {
+            margin-left: 240px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ── Topbar ──────────────────────────────── */
         .sa-topbar {
             background: #fff;
-            padding: 14px 28px;
+            padding: 12px 24px;
             border-bottom: 1px solid #e5e7eb;
             display: flex;
             justify-content: space-between;
@@ -82,33 +117,69 @@
             position: sticky;
             top: 0;
             z-index: 50;
+            gap: 10px;
+            min-height: 56px;
         }
-        .sa-topbar .page-title { font-weight: 700; font-size: 1.1rem; color: #1f1f1f; margin: 0; }
+        .sa-topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+        }
+        .sa-topbar .page-title {
+            font-weight: 700;
+            font-size: 1.05rem;
+            color: #1f1f1f;
+            margin: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
         .sa-topbar .admin-badge {
             background: #ede9fe;
             color: #6d28d9;
-            font-size: 0.8rem;
+            font-size: 0.78rem;
             font-weight: 600;
-            padding: 4px 12px;
+            padding: 4px 10px;
             border-radius: 20px;
+            white-space: nowrap;
         }
 
-        /* Content */
-        .sa-content { padding: 28px; }
+        /* ── Page content ────────────────────────── */
+        .sa-content { padding: 24px; flex: 1; }
 
-        /* Cards */
+        /* ── Cards ───────────────────────────────── */
         .sa-card {
             background: #fff;
             border-radius: 12px;
-            padding: 24px;
+            padding: 20px;
             box-shadow: 0 1px 8px rgba(0,0,0,0.07);
         }
         .stat-icon {
-            width: 50px; height: 50px;
+            width: 46px; height: 46px;
             border-radius: 12px;
             display: flex; align-items: center; justify-content: center;
-            font-size: 1.4rem;
+            font-size: 1.3rem;
             flex-shrink: 0;
+        }
+
+        /* ── Responsive breakpoints ──────────────── */
+        /* Tablet / small laptop  ≤ 991px */
+        @media (max-width: 991.98px) {
+            .sa-sidebar { transform: translateX(-100%); }
+            .sa-sidebar.open { transform: translateX(0); }
+            .sa-main { margin-left: 0; }
+            .sa-burger { display: block; }
+            .sa-topbar .admin-badge { display: none; }
+        }
+
+        /* Mobile ≤ 575px */
+        @media (max-width: 575.98px) {
+            .sa-content { padding: 12px; }
+            .sa-topbar { padding: 10px 12px; }
+            .sa-card { padding: 14px; }
+            .sa-topbar .page-title { font-size: 0.9rem; }
+            .stat-icon { width: 38px; height: 38px; font-size: 1rem; }
         }
 
         @yield('superadmin_page_styles')
@@ -117,8 +188,11 @@
 <body>
 @php $superadmin = Auth::guard('superadmin')->user(); @endphp
 
+<!-- Mobile overlay -->
+<div class="sa-overlay" id="saOverlay"></div>
+
 <!-- Sidebar -->
-<div class="sa-sidebar">
+<div class="sa-sidebar" id="saSidebar">
     <div class="brand">
         <img src="{{ asset('manager_asset/images/salespilot logo1.png') }}" alt="SalesPilot">
         <span>Admin Panel</span>
@@ -144,7 +218,7 @@
         </a>
     </nav>
     <div class="sidebar-footer">
-        <div class="text-white-50 small mb-2">{{ $superadmin->name }}</div>
+        <div class="text-white-50 small mb-2 text-truncate">{{ $superadmin->name }}</div>
         <form method="POST" action="{{ route('superadmin.logout') }}">
             @csrf
             <button type="submit" class="btn btn-outline-light btn-sm w-100">
@@ -154,21 +228,25 @@
     </div>
 </div>
 
-<!-- Main -->
+<!-- Main wrapper -->
 <div class="sa-main">
+
     <!-- Topbar -->
     <div class="sa-topbar">
-        <h1 class="page-title">@yield('superadmin_page_title')</h1>
-        <div class="d-flex align-items-center gap-3">
+        <div class="sa-topbar-left">
+            <button class="sa-burger" id="saBurger" aria-label="Toggle menu">
+                <i class="bi bi-list"></i>
+            </button>
+            <h1 class="page-title">@yield('superadmin_page_title')</h1>
+        </div>
+        <div class="d-flex align-items-center gap-2 flex-shrink-0">
             <span class="admin-badge"><i class="bi bi-shield-lock-fill me-1"></i>Superadmin</span>
-            <div class="d-flex align-items-center gap-2">
-                <i class="bi bi-person-circle fs-5 text-secondary"></i>
-                <span class="fw-semibold text-dark" style="font-size:0.9rem;">{{ $superadmin->name }}</span>
-            </div>
+            <i class="bi bi-person-circle fs-5 text-secondary"></i>
+            <span class="fw-semibold text-dark d-none d-md-inline" style="font-size:0.88rem;">{{ $superadmin->name }}</span>
         </div>
     </div>
 
-    <!-- Page Content -->
+    <!-- Page content -->
     <div class="sa-content">
         @if(session('success'))
             <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -188,6 +266,36 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+(function () {
+    var sidebar = document.getElementById('saSidebar');
+    var overlay = document.getElementById('saOverlay');
+    var burger  = document.getElementById('saBurger');
+
+    function openSidebar() {
+        sidebar.classList.add('open');
+        overlay.classList.add('show');
+        document.body.style.overflow = 'hidden';
+    }
+    function closeSidebar() {
+        sidebar.classList.remove('open');
+        overlay.classList.remove('show');
+        document.body.style.overflow = '';
+    }
+
+    burger.addEventListener('click', function () {
+        sidebar.classList.contains('open') ? closeSidebar() : openSidebar();
+    });
+    overlay.addEventListener('click', closeSidebar);
+
+    // Auto-close when a nav link is tapped on mobile
+    sidebar.querySelectorAll('nav a').forEach(function (a) {
+        a.addEventListener('click', function () {
+            if (window.innerWidth < 992) closeSidebar();
+        });
+    });
+}());
+</script>
 @yield('superadmin_page_scripts')
 </body>
 </html>

@@ -4,9 +4,9 @@
 @section('superadmin_layout_content')
 
 <!-- Stats Row -->
-<div class="row g-4 mb-4">
-    <div class="col-md-4 col-xl">
-        <div class="sa-card">
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-4 col-xl">
+        <div class="sa-card h-100">
             <div class="d-flex align-items-center gap-3">
                 <div class="stat-icon" style="background:#ede9fe;">
                     <i class="bi bi-building" style="color:#6f42c1;"></i>
@@ -19,8 +19,8 @@
             </div>
         </div>
     </div>
-    <div class="col-md-4 col-xl">
-        <div class="sa-card">
+    <div class="col-6 col-md-4 col-xl">
+        <div class="sa-card h-100">
             <div class="d-flex align-items-center gap-3">
                 <div class="stat-icon" style="background:#dcfce7;">
                     <i class="bi bi-patch-check-fill" style="color:#16a34a;"></i>
@@ -32,8 +32,8 @@
             </div>
         </div>
     </div>
-    <div class="col-md-4 col-xl">
-        <div class="sa-card">
+    <div class="col-6 col-md-4 col-xl">
+        <div class="sa-card h-100">
             <div class="d-flex align-items-center gap-3">
                 <div class="stat-icon" style="background:#fee2e2;">
                     <i class="bi bi-x-circle-fill" style="color:#dc2626;"></i>
@@ -41,11 +41,9 @@
                 <div>
                     <div class="text-muted small">Expired Subscriptions</div>
                     @php
-                    // Count users with expired subscriptions that are not currently active
                         $activeUserIds = \App\Models\UserSubscription::where('status','active')
                             ->where('end_date','>=',now())
                             ->pluck('user_id');
-                            // Count distinct users with expired subscriptions that are not in the active list
                         $expiredCount = \App\Models\UserSubscription::where('status','expired')
                             ->whereNotIn('user_id', $activeUserIds)
                             ->distinct('user_id')->count('user_id');
@@ -55,22 +53,22 @@
             </div>
         </div>
     </div>
-    <div class="col-md-4 col-xl">
-        <div class="sa-card">
+    <div class="col-6 col-md-4 col-xl">
+        <div class="sa-card h-100">
             <div class="d-flex align-items-center gap-3">
                 <div class="stat-icon" style="background:#fef9c3;">
                     <i class="bi bi-cash-coin" style="color:#ca8a04;"></i>
                 </div>
                 <div>
                     <div class="text-muted small">Total Revenue</div>
-                    <div class="fw-bold fs-4">&#8358;{{ number_format(\App\Models\UserSubscription::sum('amount_paid'), 2) }}</div>
+                    <div class="fw-bold fs-4" style="font-size:clamp(1rem,2.5vw,1.5rem)!important;">&#8358;{{ number_format(\App\Models\UserSubscription::sum('amount_paid'), 2) }}</div>
                     <div class="text-muted" style="font-size:0.72rem;">All subscriptions</div>
                 </div>
             </div>
         </div>
     </div>
-    <div class="col-md-4 col-xl">
-        <div class="sa-card">
+    <div class="col-6 col-md-4 col-xl">
+        <div class="sa-card h-100">
             <div class="d-flex align-items-center gap-3">
                 <div class="stat-icon" style="background:#f0f9ff;">
                     <i class="bi bi-person-gear" style="color:#0284c7;"></i>
@@ -92,10 +90,10 @@
 </div>
 
 <!-- Recent Activity -->
-<div class="row g-4">
+<div class="row g-3">
 
     <!-- New Registrations -->
-    <div class="col-lg-4">
+    <div class="col-md-6 col-lg-4">
         <div class="sa-card h-100">
             <div class="d-flex align-items-center justify-content-between mb-3">
                 <h6 class="fw-bold mb-0">New Registrations</h6>
@@ -121,7 +119,7 @@
     </div>
 
     <!-- Recent Subscriptions -->
-    <div class="col-lg-4">
+    <div class="col-md-6 col-lg-4">
         <div class="sa-card h-100">
             <div class="d-flex align-items-center justify-content-between mb-3">
                 <h6 class="fw-bold mb-0">Recent Subscriptions</h6>
@@ -153,7 +151,7 @@
     </div>
 
     <!-- Recent Activity Log -->
-    <div class="col-lg-4">
+    <div class="col-md-12 col-lg-4">
         <div class="sa-card h-100">
             <div class="d-flex align-items-center justify-content-between mb-3">
                 <h6 class="fw-bold mb-0">Recent Activity</h6>

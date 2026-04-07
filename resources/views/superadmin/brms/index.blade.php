@@ -1,17 +1,23 @@
 @extends('superadmin.layouts.layout')
 @section('superadmin_page_title', 'BRM Management')
 
+@section('superadmin_page_styles')
+@media (max-width: 767.98px) {
+    .col-hide-sm { display: none !important; }
+}
+@endSection
+
 @section('superadmin_layout_content')
 
-<div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
+<div class="d-flex align-items-start justify-content-between mb-4 flex-wrap gap-3">
     <div>
         <h5 class="fw-bold mb-1">Business Relation Managers</h5>
         <p class="text-muted small mb-0">Manage and assign BRMs to customer accounts</p>
     </div>
     <div class="d-flex gap-2 flex-wrap">
-        <form method="GET" action="{{ route('superadmin.brms') }}" class="d-flex gap-2">
+        <form method="GET" action="{{ route('superadmin.brms') }}" class="d-flex gap-2 flex-wrap">
             <input type="text" name="search" value="{{ $search }}"
-                   class="form-control form-control-sm" style="width:220px;"
+                   class="form-control form-control-sm" style="min-width:160px;max-width:240px;flex:1 1 160px;"
                    placeholder="Search name, email, region…">
             <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-search"></i></button>
             @if($search)
@@ -19,7 +25,7 @@
             @endif
         </form>
         <a href="{{ route('superadmin.brms.create') }}" class="btn btn-sm btn-primary">
-            <i class="bi bi-plus-circle me-1"></i> Register BRM
+            <i class="bi bi-plus-circle me-1"></i><span class="d-none d-sm-inline">Register BRM</span><span class="d-sm-none">New</span>
         </a>
     </div>
 </div>
@@ -29,12 +35,12 @@
         <table class="table table-hover align-middle mb-0" style="font-size:0.875rem;">
             <thead style="background:#f8f7ff;">
                 <tr>
-                    <th class="px-4 py-3 fw-semibold text-secondary">#</th>
+                    <th class="px-4 py-3 fw-semibold text-secondary col-hide-sm">#</th>
                     <th class="px-3 py-3 fw-semibold text-secondary">Name</th>
-                    <th class="px-3 py-3 fw-semibold text-secondary">Email</th>
-                    <th class="px-3 py-3 fw-semibold text-secondary">Phone</th>
-                    <th class="px-3 py-3 fw-semibold text-secondary">Region</th>
-                    <th class="px-3 py-3 fw-semibold text-secondary text-center">Customers</th>
+                    <th class="px-3 py-3 fw-semibold text-secondary col-hide-sm">Email</th>
+                    <th class="px-3 py-3 fw-semibold text-secondary col-hide-sm">Phone</th>
+                    <th class="px-3 py-3 fw-semibold text-secondary col-hide-sm">Region</th>
+                    <th class="px-3 py-3 fw-semibold text-secondary text-center col-hide-sm">Customers</th>
                     <th class="px-3 py-3 fw-semibold text-secondary">Status</th>
                     <th class="px-3 py-3 fw-semibold text-secondary text-center">Actions</th>
                 </tr>
@@ -42,7 +48,7 @@
             <tbody>
                 @forelse($brms as $brm)
                     <tr>
-                        <td class="px-4 text-muted">{{ $loop->iteration + ($brms->currentPage() - 1) * $brms->perPage() }}</td>
+                        <td class="px-4 text-muted col-hide-sm">{{ $loop->iteration + ($brms->currentPage() - 1) * $brms->perPage() }}</td>
 
                         <td class="px-3">
                             <div class="fw-semibold">{{ $brm->name }}</div>
@@ -51,11 +57,11 @@
                             @endif
                         </td>
 
-                        <td class="px-3">{{ $brm->email }}</td>
-                        <td class="px-3">{{ $brm->phone ?? '—' }}</td>
-                        <td class="px-3">{{ $brm->region ?? '—' }}</td>
+                        <td class="px-3 col-hide-sm">{{ $brm->email }}</td>
+                        <td class="px-3 col-hide-sm">{{ $brm->phone ?? '—' }}</td>
+                        <td class="px-3 col-hide-sm">{{ $brm->region ?? '—' }}</td>
 
-                        <td class="px-3 text-center">
+                        <td class="px-3 text-center col-hide-sm">
                             <span class="badge rounded-pill" style="background:#ede9fe;color:#6f42c1;font-size:0.8rem;">
                                 {{ $brm->customers_count }}
                             </span>

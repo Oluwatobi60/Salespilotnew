@@ -3,7 +3,7 @@
 
 @section('superadmin_layout_content')
 
-<div class="d-flex align-items-center justify-content-between mb-4">
+<div class="d-flex align-items-start justify-content-between mb-4 flex-wrap gap-3">
     <div>
         <h5 class="fw-bold mb-1">Subscription Plans</h5>
         <p class="text-muted small mb-0">Manage pricing plans available to users</p>
@@ -15,7 +15,7 @@
 
 <div class="row g-4">
     @forelse($plans as $plan)
-        <div class="col-md-6 col-xl-4">
+        <div class="col-12 col-md-6 col-xl-4">
             <div class="sa-card h-100 d-flex flex-column" style="border-top: 4px solid {{ $plan->is_active ? '#7c3aed' : '#d1d5db' }};">
                 <!-- Header -->
                 <div class="d-flex align-items-start justify-content-between mb-3">

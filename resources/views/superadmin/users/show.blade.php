@@ -1,6 +1,12 @@
 @extends('superadmin.layouts.layout')
 @section('superadmin_page_title', 'User Details')
 
+@section('superadmin_page_styles')
+@media (max-width: 575.98px) {
+    .col-hide-xs { display: none !important; }
+}
+@endSection
+
 @section('superadmin_layout_content')
 
 <div class="mb-4">
@@ -21,7 +27,7 @@
 
     {{-- Profile Card --}}
     <div class="col-lg-4">
-        <div class="sa-card h-100">
+        <div class="sa-card">
             <div class="text-center mb-4">
                 <div class="mx-auto mb-3 d-flex align-items-center justify-content-center rounded-circle"
                      style="width:72px;height:72px;background:#ede9fe;font-size:1.8rem;color:#6f42c1;font-weight:700;">
@@ -126,8 +132,8 @@
                 <h6 class="fw-bold mb-3">Assign BRM</h6>
                 <form method="POST" action="{{ route('superadmin.customers.assign-brm', $user->id) }}">
                     @csrf
-                    <div class="row g-3 align-items-end">
-                        <div class="col">
+                    <div class="row g-2 align-items-end">
+                        <div class="col-12 col-sm">
                             <label class="form-label text-muted small mb-1">Business Relation Manager</label>
                             <select name="brm_id" class="form-select">
                                 <option value="">— No BRM assigned —</option>
@@ -138,8 +144,8 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-auto">
-                            <button type="submit" class="btn btn-primary">
+                        <div class="col-12 col-sm-auto">
+                            <button type="submit" class="btn btn-primary w-100">
                                 <i class="bi bi-person-check me-1"></i> Save Assignment
                             </button>
                         </div>
@@ -164,8 +170,8 @@
                             <tr>
                                 <th class="px-4 py-2 fw-semibold text-secondary">Plan</th>
                                 <th class="px-3 py-2 fw-semibold text-secondary">Amount</th>
-                                <th class="px-3 py-2 fw-semibold text-secondary">Start</th>
-                                <th class="px-3 py-2 fw-semibold text-secondary">End</th>
+                                <th class="px-3 py-2 fw-semibold text-secondary col-hide-xs">Start</th>
+                                <th class="px-3 py-2 fw-semibold text-secondary col-hide-xs">End</th>
                                 <th class="px-3 py-2 fw-semibold text-secondary">Status</th>
                             </tr>
                         </thead>
@@ -174,8 +180,8 @@
                                 <tr>
                                     <td class="px-4">{{ $s->subscriptionPlan?->name ?? '—' }}</td>
                                     <td class="px-3">&#8358;{{ number_format($s->amount_paid, 2) }}</td>
-                                    <td class="px-3">{{ $s->start_date?->format('M d, Y') ?? '—' }}</td>
-                                    <td class="px-3">{{ $s->end_date?->format('M d, Y') ?? '—' }}</td>
+                                    <td class="px-3 col-hide-xs">{{ $s->start_date?->format('M d, Y') ?? '—' }}</td>
+                                    <td class="px-3 col-hide-xs">{{ $s->end_date?->format('M d, Y') ?? '—' }}</td>
                                     <td class="px-3">
                                         @if($s->status === 'active')
                                             <span class="badge text-bg-success">Active</span>

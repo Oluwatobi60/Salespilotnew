@@ -1,17 +1,23 @@
 @extends('superadmin.layouts.layout')
 @section('superadmin_page_title', 'Customers')
 
+@section('superadmin_page_styles')
+@media (max-width: 767.98px) {
+    .col-hide-sm { display: none !important; }
+}
+@endSection
+
 @section('superadmin_layout_content')
 
 <!-- Search & Header -->
-<div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
+<div class="d-flex align-items-start justify-content-between mb-4 flex-wrap gap-3">
     <div>
         <h5 class="fw-bold mb-1">All Customers</h5>
         <p class="text-muted small mb-0">Business creators registered on the platform</p>
     </div>
-    <form method="GET" action="{{ route('superadmin.customers') }}" class="d-flex gap-2">
+    <form method="GET" action="{{ route('superadmin.customers') }}" class="d-flex gap-2 flex-wrap">
         <input type="text" name="search" value="{{ $search }}"
-               class="form-control form-control-sm" style="width:240px;"
+               class="form-control form-control-sm" style="min-width:180px;max-width:260px;flex:1 1 180px;"
                placeholder="Search name, business, email…">
         <button type="submit" class="btn btn-sm btn-primary">
             <i class="bi bi-search"></i>
@@ -29,13 +35,13 @@
         <table class="table table-hover align-middle mb-0" style="font-size:0.875rem;">
             <thead style="background:#f8f7ff;">
                 <tr>
-                    <th class="px-4 py-3 fw-semibold text-secondary">#</th>
+                    <th class="px-4 py-3 fw-semibold text-secondary col-hide-sm">#</th>
                     <th class="px-3 py-3 fw-semibold text-secondary">Name</th>
-                    <th class="px-3 py-3 fw-semibold text-secondary">Business Name</th>
-                    <th class="px-3 py-3 fw-semibold text-secondary">Phone</th>
-                    <th class="px-3 py-3 fw-semibold text-secondary">BRM</th>
+                    <th class="px-3 py-3 fw-semibold text-secondary col-hide-sm">Business Name</th>
+                    <th class="px-3 py-3 fw-semibold text-secondary col-hide-sm">Phone</th>
+                    <th class="px-3 py-3 fw-semibold text-secondary col-hide-sm">BRM</th>
                     <th class="px-3 py-3 fw-semibold text-secondary">Status</th>
-                    <th class="px-3 py-3 fw-semibold text-secondary">Current Plan</th>
+                    <th class="px-3 py-3 fw-semibold text-secondary col-hide-sm">Current Plan</th>
                     <th class="px-3 py-3 fw-semibold text-secondary text-center">Actions</th>
                 </tr>
             </thead>
@@ -66,7 +72,7 @@
                         }
                     @endphp
                     <tr>
-                        <td class="px-4 text-muted">{{ $loop->iteration + ($customers->currentPage() - 1) * $customers->perPage() }}</td>
+                        <td class="px-4 text-muted col-hide-sm">{{ $loop->iteration + ($customers->currentPage() - 1) * $customers->perPage() }}</td>
 
                         <!-- Name + Email -->
                         <td class="px-3">
@@ -75,13 +81,13 @@
                         </td>
 
                         <!-- Business Name -->
-                        <td class="px-3">{{ $customer->business_name ?? '—' }}</td>
+                        <td class="px-3 col-hide-sm">{{ $customer->business_name ?? '—' }}</td>
 
                         <!-- Phone -->
-                        <td class="px-3">{{ $customer->phone_number ?? '—' }}</td>
+                        <td class="px-3 col-hide-sm">{{ $customer->phone_number ?? '—' }}</td>
 
                         <!-- BRM -->
-                        <td class="px-3">
+                        <td class="px-3 col-hide-sm">
                             @if($customer->brm)
                                 <span class="fw-semibold" style="font-size:0.85rem;">{{ $customer->brm->name }}</span>
                                 <div class="text-muted" style="font-size:0.72rem;">{{ $customer->brm->region ?? '' }}</div>
@@ -106,7 +112,7 @@
                         </td>
 
                         <!-- Current Plan -->
-                        <td class="px-3">
+                        <td class="px-3 col-hide-sm">
                             @if($plan)
                                 <span class="badge rounded-pill" style="background:#ede9fe;color:#6f42c1;">{{ $planName }}</span>
                             @else
@@ -118,7 +124,7 @@
                         <td class="px-3 text-center">
                             <a href="{{ route('superadmin.users.show', $customer->id) }}"
                                class="btn btn-sm btn-outline-primary">
-                                <i class="bi bi-eye me-1"></i> View
+                                <i class="bi bi-eye me-1 d-none d-md-inline"></i><span class="d-none d-md-inline">View</span><i class="bi bi-eye d-md-none"></i>
                             </a>
                         </td>
                     </tr>
