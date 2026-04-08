@@ -2,6 +2,10 @@
 @section('welcome_page_title')
 Account Created — Check Your Email | SalesPilot
 @endsection
+@if(session('setup_email'))
+    @section('hide_nav_links') 1 @endsection
+    @section('brand_bar_step')<span class="sp-brand-step">Step 3 of 3 &mdash; Check Your Email</span>@endsection
+@endif
 @section('welcome_page_content')
 <link rel="stylesheet" href="{{ asset('manager_asset/css/account-created.css') }}">
 

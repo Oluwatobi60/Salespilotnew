@@ -2,6 +2,10 @@
 @section('welcome_page_title')
 Choose Your Plan - SalesPilot
 @endsection
+@if(auth()->check() && !auth()->user()->password_set)
+    @section('hide_nav_links') 1 @endsection
+    @section('brand_bar_step')<span class="sp-brand-step">Step 2 of 3 &mdash; Choose a Plan</span>@endsection
+@endif
 @section('welcome_page_content')
 <link rel="stylesheet" href="{{ asset('welcome_asset/style.css') }}">
 <link rel="stylesheet" href="{{ asset('welcome_asset/plans.css') }}">

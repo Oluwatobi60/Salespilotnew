@@ -2,6 +2,8 @@
 @section('welcome_page_title')
 Set Your Password | SalesPilot
 @endsection
+@section('hide_nav_links') 1 @endsection
+@section('brand_bar_step')<span class="sp-brand-step">Final Step &mdash; Set Your Password</span>@endsection
 @section('welcome_page_content')
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <link rel="stylesheet" href="{{ asset('manager_asset/css/set-password.css') }}">

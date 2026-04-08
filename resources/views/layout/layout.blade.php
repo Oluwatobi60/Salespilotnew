@@ -28,6 +28,91 @@
   <body>
 
    <!-- Navigation -->
+@if(View::hasSection('hide_nav_links'))
+<style>
+    .sp-brand-bar {
+        background: linear-gradient(135deg, #4c1d95 0%, #6d28d9 50%, #7c3aed 100%);
+        padding: 0;
+        box-shadow: 0 2px 20px rgba(109,40,217,.25);
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+    }
+    .sp-brand-inner {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 14px 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
+    .sp-brand-logo {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        text-decoration: none;
+    }
+    .sp-brand-icon {
+        width: 42px;
+        height: 42px;
+        background: rgba(255,255,255,.18);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.35rem;
+        backdrop-filter: blur(4px);
+        border: 1px solid rgba(255,255,255,.25);
+    }
+    .sp-brand-text {
+        display: flex;
+        flex-direction: column;
+        line-height: 1;
+    }
+    .sp-brand-name {
+        font-size: 1.45rem;
+        font-weight: 800;
+        color: #fff;
+        letter-spacing: -0.4px;
+    }
+    .sp-brand-name span {
+        color: #c4b5fd;
+    }
+    .sp-brand-tagline {
+        font-size: .7rem;
+        color: rgba(255,255,255,.65);
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        margin-top: 2px;
+    }
+    .sp-brand-step {
+        position: absolute;
+        right: 24px;
+        background: rgba(255,255,255,.12);
+        border: 1px solid rgba(255,255,255,.2);
+        border-radius: 20px;
+        padding: 4px 14px;
+        font-size: .75rem;
+        color: rgba(255,255,255,.85);
+        font-weight: 500;
+        backdrop-filter: blur(4px);
+    }
+    @media(max-width:480px) { .sp-brand-step { display: none; } }
+</style>
+<div class="sp-brand-bar">
+    <div class="sp-brand-inner">
+        <a href="{{ route('get_started') }}" class="sp-brand-logo">
+            <div class="sp-brand-icon">📊</div>
+            <div class="sp-brand-text">
+                <div class="sp-brand-name">Sales<span>Pilot</span></div>
+                <div class="sp-brand-tagline">Business Management Suite</div>
+            </div>
+        </a>
+        @yield('brand_bar_step')
+    </div>
+</div>
+@else
 <nav class="navbar" id="navbar">
     <div class="nav-container">
         <div class="logo">SalesPilot</div>
@@ -52,6 +137,7 @@
         </ul>
     </div>
 </nav>
+@endif
 
     @yield('welcome_page_content')
 

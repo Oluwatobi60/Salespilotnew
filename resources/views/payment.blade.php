@@ -2,6 +2,8 @@
 @section('welcome_page_title')
 Payment - SalesPilot
 @endsection
+@section('hide_nav_links') 1 @endsection
+@section('brand_bar_step')<span class="sp-brand-step">Step 2 of 3 &mdash; Payment</span>@endsection
 @section('welcome_page_content')
 <link rel="stylesheet" href="{{ asset('welcome_asset/style.css') }}">
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>

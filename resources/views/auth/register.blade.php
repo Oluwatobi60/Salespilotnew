@@ -2,6 +2,8 @@
 @section('welcome_page_title')
 Create Your SalesPilot Account
 @endsection
+@section('hide_nav_links') 1 @endsection
+@section('brand_bar_step')<span class="sp-brand-step">Step 1 of 3 &mdash; Create Account</span>@endsection
 @section('welcome_page_content')
 <link rel="stylesheet" href="{{ asset('welcome_asset/register.css') }}">
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
