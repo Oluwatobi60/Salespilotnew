@@ -111,19 +111,7 @@ Create Your SalesPilot Account
       <!-- Hidden role field -->
       <input type="hidden" name="role" value="manager" />
 
-      <div class="password-group">
-        <div class="input_box">
-          <input type="password" name="password" placeholder="Create password" required />
-          <i class="uil uil-lock password"></i>
-          <i class="uil uil-eye-slash pw_hide"></i>
-        </div>
-        <div class="input_box">
-          <input type="password" name="password_confirmation" placeholder="Confirm password" required />
-          <i class="uil uil-lock password"></i>
-          <i class="uil uil-eye-slash pw_hide"></i>
-        </div>
-      </div>
-      <button class="button" type="submit" id="signupSubmitBtn" name="sub">Signup Now</button>
+      <button class="button" type="submit" id="signupSubmitBtn" name="sub">Create Account</button>
     </form>
   </div>
     </section>

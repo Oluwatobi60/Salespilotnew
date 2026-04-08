@@ -30,6 +30,7 @@ use App\Http\Controllers\Manager\SystemPreferencesController;
 use App\Http\Controllers\Superadmin\SuperAdminController;
 use App\Http\Controllers\Superadmin\PlansController;
 use App\Http\Controllers\Superadmin\RevenueController;
+use App\Http\Controllers\Superadmin\SubscriptionRenewalController;
 
 
 /* Route::get('/dashboard', function () {
@@ -81,6 +82,15 @@ Route::middleware(['auth:superadmin'])->prefix('superadmin/revenue')->controller
     Route::get('/', 'index')->name('superadmin.revenue');
 });
 
+// Superadmin Subscription Renewal routes
+Route::middleware(['auth:superadmin'])->prefix('superadmin/subscriptions')->controller(SubscriptionRenewalController::class)->group(function () {
+    Route::get('/', 'index')->name('superadmin.subscriptions');
+    Route::post('/{subscription}/toggle-renewal', 'toggle')->name('superadmin.subscriptions.toggle');
+    Route::post('/bulk-toggle', 'bulkToggle')->name('superadmin.subscriptions.bulk-toggle');
+    Route::post('/send-reminders', 'sendReminders')->name('superadmin.subscriptions.send-reminders');
+    Route::post('/process-renewals', 'processRenewals')->name('superadmin.subscriptions.process-renewals');
+});
+
 
 Route::get('/', function () {
     return view('welcome');
@@ -97,6 +107,7 @@ Route::prefix('signup')->controller(SignupController::class)->group(function () 
     Route::post('/plan_pricing', 'selectPlan')->name('select.plan')->middleware('auth');
     Route::get('/payment', 'showPayment')->name('payment.show')->middleware('auth');
     Route::post('/payment', 'processPayment')->name('payment.process')->middleware('auth');
+    Route::get('/account-created', 'accountCreated')->name('signup.account.created');
 });
 
 
@@ -273,6 +284,7 @@ Route::middleware(['auth', 'verified', 'rolemanager:manager', 'check.subscriptio
     Route::controller(BranchInventoryController::class)->group(function () {
         Route::get('/inventory/branch-allocation', 'index')->name('manager.inventory.allocation');
         Route::post('/inventory/allocate', 'allocate')->name('manager.inventory.allocate');
+        Route::post('/inventory/transfer', 'transfer')->name('manager.inventory.transfer');
         Route::get('/inventory/branch/{branchId}', 'branchInventory')->name('manager.inventory.branch');
     });
 

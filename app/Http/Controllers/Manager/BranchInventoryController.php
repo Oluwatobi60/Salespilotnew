@@ -81,6 +81,7 @@ class BranchInventoryController extends Controller
 
                 return [
                     'id' => $item->id,
+                    'item_id' => $item->item_id,
                     'item_name' => $itemDetails->item_name ?? $itemDetails->variant_name ?? 'Unknown',
                     'item_type' => $item->item_type,
                     'allocated_quantity' => $item->allocated_quantity,
@@ -227,6 +228,130 @@ class BranchInventoryController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to allocate inventory: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Transfer inventory from one branch to another
+     */
+    public function transfer(Request $request)
+    {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+
+        if (!$user->isBusinessCreator()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Only business creator can transfer inventory'
+            ], 403);
+        }
+
+        $validated = $request->validate([
+            'from_branch_id'   => 'required|exists:branches,id|different:to_branch_id',
+            'to_branch_id'     => 'required|exists:branches,id',
+            'item_id'          => 'required|integer',
+            'item_type'        => 'required|in:standard,variant',
+            'quantity'         => 'required|numeric|min:0.01',
+            'notes'            => 'nullable|string|max:500',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $businessName = $user->business_name;
+
+            // Verify both branches belong to this business
+            $fromBranch = Branch::where('id', $validated['from_branch_id'])
+                ->where('business_name', $businessName)
+                ->firstOrFail();
+
+            $toBranch = Branch::where('id', $validated['to_branch_id'])
+                ->where('business_name', $businessName)
+                ->firstOrFail();
+
+            // Find source branch inventory record
+            $sourceInv = BranchInventory::where('branch_id', $validated['from_branch_id'])
+                ->where('item_id', $validated['item_id'])
+                ->where('item_type', $validated['item_type'])
+                ->where('business_name', $businessName)
+                ->first();
+
+            if (!$sourceInv) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "This item has no inventory in {$fromBranch->branch_name}."
+                ], 400);
+            }
+
+            if ($sourceInv->current_quantity < $validated['quantity']) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Insufficient stock in {$fromBranch->branch_name}. Available: {$sourceInv->current_quantity}"
+                ], 400);
+            }
+
+            // Deduct from source branch
+            $sourceInv->current_quantity  -= $validated['quantity'];
+            $sourceInv->allocated_quantity -= $validated['quantity'];
+            if ($sourceInv->allocated_quantity < 0) {
+                $sourceInv->allocated_quantity = 0;
+            }
+            $sourceInv->save();
+
+            // Add to destination branch
+            $destInv = BranchInventory::where('branch_id', $validated['to_branch_id'])
+                ->where('item_id', $validated['item_id'])
+                ->where('item_type', $validated['item_type'])
+                ->where('business_name', $businessName)
+                ->first();
+
+            if ($destInv) {
+                $destInv->current_quantity  += $validated['quantity'];
+                $destInv->allocated_quantity += $validated['quantity'];
+                if (isset($validated['notes'])) {
+                    $destInv->notes = $validated['notes'];
+                }
+                $destInv->save();
+            } else {
+                BranchInventory::create([
+                    'branch_id'          => $validated['to_branch_id'],
+                    'business_name'      => $businessName,
+                    'item_id'            => $validated['item_id'],
+                    'item_type'          => $validated['item_type'],
+                    'allocated_quantity' => $validated['quantity'],
+                    'current_quantity'   => $validated['quantity'],
+                    'sold_quantity'      => 0,
+                    'allocated_by'       => $user->id,
+                    'allocated_at'       => now(),
+                    'notes'              => $validated['notes'] ?? null,
+                ]);
+            }
+
+            DB::commit();
+
+            \App\Helpers\ActivityLogger::log(
+                'Inventory transferred between branches',
+                json_encode([
+                    'from_branch' => $fromBranch->branch_name,
+                    'to_branch'   => $toBranch->branch_name,
+                    'item_type'   => $validated['item_type'],
+                    'item_id'     => $validated['item_id'],
+                    'quantity'    => $validated['quantity'],
+                ])
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => "Successfully transferred {$validated['quantity']} unit(s) from {$fromBranch->branch_name} to {$toBranch->branch_name}."
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Transfer failed: ' . $e->getMessage()
             ], 500);
         }
     }

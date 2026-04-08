@@ -8,6 +8,7 @@ use App\Models\Welcome\SignupRequest;
 use App\Models\SubscriptionPlan;
 use App\Models\UserSubscription;
 use App\Mail\SubscriptionActivated;
+use App\Mail\SetupPassword;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Auth;
@@ -367,10 +368,15 @@ class SignupController extends Controller
         // Send activation email
         Mail::to(Auth::user()->email)->send(new SubscriptionActivated(Auth::user(), $subscription));
 
-        // Clear session
+        // Send set-password email
+        $this->sendPasswordSetupEmail(Auth::user());
+
+        // Log the user out — they must set password before logging in
+        $userEmail = Auth::user()->email;
+        Auth::logout();
         session()->forget(['selected_plan', 'selected_duration', 'pricing']);
 
-        return redirect()->route('manager')->with('success', 'Subscription activated successfully! Welcome to SalesPilot.');
+        return redirect()->route('signup.account.created')->with('setup_email', $userEmail);
     }
 
     /**
@@ -408,10 +414,24 @@ class SignupController extends Controller
         // Send activation email
         Mail::to(Auth::user()->email)->send(new SubscriptionActivated(Auth::user(), $subscription));
 
-        // Clear session
+        // Send set-password email
+        $this->sendPasswordSetupEmail(Auth::user());
+
+        // Log the user out — they must set password before logging in
+        $userEmail = Auth::user()->email;
+        Auth::logout();
         session()->forget(['selected_plan', 'selected_duration', 'pricing']);
 
-        return redirect()->route('manager')->with('success', 'Free trial activated! Welcome to SalesPilot.');
+        return redirect()->route('signup.account.created')->with('setup_email', $userEmail);
+    }
+
+    /**
+     * Show the "account created" confirmation page after payment.
+     */
+    public function accountCreated()
+    {
+        $email = session('setup_email');
+        return view('auth.account-created', compact('email'));
     }
 
     /**
@@ -433,5 +453,21 @@ class SignupController extends Controller
             default:
                 return route('manager');
         }
+    }
+
+    /**
+     * Generate a password-setup token for the user and send the email
+     */
+    protected function sendPasswordSetupEmail(User $user): void
+    {
+        $token = Str::random(64);
+
+        $user->forceFill([
+            'password_setup_token'      => $token,
+            'password_setup_expires_at' => Carbon::now()->addHours(48),
+            'password_set'              => false,
+        ])->save();
+
+        Mail::to($user->email)->send(new SetupPassword($user, $token));
     }
 }

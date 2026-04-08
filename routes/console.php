@@ -10,3 +10,6 @@ Artisan::command('inspire', function () {
 
 // Schedule the subscription expiry check to run daily
 Schedule::command('subscriptions:check-expired')->daily();
+
+// Process auto-renewals and send expiry reminder emails (runs daily at 8 AM)
+Schedule::command('subscriptions:process-renewals')->dailyAt('08:00');

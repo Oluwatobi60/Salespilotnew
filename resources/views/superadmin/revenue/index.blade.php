@@ -2,67 +2,7 @@
 @section('superadmin_page_title', 'Revenue Tracking')
 
 @section('superadmin_page_styles')
-<style>
-    .rev-stat-card {
-        border-radius: 12px;
-        padding: 1.25rem 1.5rem;
-        color: #fff;
-        position: relative;
-        overflow: hidden;
-    }
-    .rev-stat-card .icon-bg {
-        position: absolute;
-        right: -10px;
-        top: -10px;
-        font-size: 5rem;
-        opacity: .12;
-        line-height: 1;
-    }
-    .rev-stat-card .label  { font-size: .78rem; text-transform: uppercase; letter-spacing: .05em; opacity: .85; color:#fff; }
-    .rev-stat-card .value  { font-size: 1.75rem; font-weight: 700; line-height: 1.2; color:#fff; }
-    .rev-stat-card .badge-change { font-size: .72rem; padding: .3em .6em; }
-    .card-rev-blue   { background: linear-gradient(135deg, #2563eb, #3b82f6); }
-    .card-rev-green  { background: linear-gradient(135deg, #059669, #10b981); }
-    .card-rev-purple { background: linear-gradient(135deg, #7c3aed, #a78bfa); }
-
-    .filter-bar { background: #fff; border-radius: 12px; padding: 1rem 1.25rem; box-shadow: 0 1px 4px rgba(0,0,0,.07); }
-    .filter-bar label { font-size: .8rem; color: #6b7280; margin-bottom: .2rem; display: block; }
-
-    .chart-card { background: #fff; border-radius: 12px; padding: 1.25rem; box-shadow: 0 1px 4px rgba(0,0,0,.07); }
-
-    .plan-badge {
-        display: inline-block;
-        padding: .25em .65em;
-        border-radius: 6px;
-        font-size: .75rem;
-        font-weight: 600;
-        background: #e0e7ff;
-        color: #3730a3;
-    }
-    .status-badge {
-        font-size: .72rem;
-        padding: .3em .6em;
-        border-radius: 6px;
-        font-weight: 600;
-    }
-    .status-active    { background: #d1fae5; color: #065f46; }
-    .status-expired   { background: #fee2e2; color: #991b1b; }
-    .status-cancelled { background: #fef3c7; color: #92400e; }
-    .status-pending   { background: #f3f4f6; color: #374151; }
-
-    .rev-table thead th { font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; color: #6b7280; background: #f9fafb; border-bottom: 2px solid #e5e7eb; }
-    .rev-table tbody td { font-size: .875rem; vertical-align: middle; }
-
-    .period-note { font-size: .8rem; color: #9ca3af; }
-
-    @media (max-width: 575.98px) {
-        .rev-stat-card .value { font-size: 1.35rem; }
-        .col-hide-xs { display: none !important; }
-    }
-    @media (max-width: 767.98px) {
-        .col-hide-sm { display: none !important; }
-    }
-</style>
+<link rel="stylesheet" href="{{ asset('superadmin_asset/css/index_revenue.css') }}">
 @endsection
 
 @section('superadmin_layout_content')

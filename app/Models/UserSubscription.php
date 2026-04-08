@@ -18,6 +18,9 @@ class UserSubscription extends Model
         'end_date',
         'status',
         'payment_reference',
+        'auto_renew',
+        'last_renewed_at',
+        'renewal_notified_at',
     ];
 
     protected $casts = [
@@ -25,6 +28,9 @@ class UserSubscription extends Model
         'discount_percentage' => 'decimal:2',
         'start_date' => 'date',
         'end_date' => 'date',
+        'auto_renew' => 'boolean',
+        'last_renewed_at' => 'datetime',
+        'renewal_notified_at' => 'datetime',
     ];
 
     /**

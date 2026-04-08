@@ -45,6 +45,9 @@ class User extends Authenticatable
         'role',
         'status',
         'brm_id',
+        'password_setup_token',
+        'password_setup_expires_at',
+        'password_set',
     ];
 
     /**
@@ -67,6 +70,8 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'password_setup_expires_at' => 'datetime',
+            'password_set' => 'boolean',
         ];
     }
 

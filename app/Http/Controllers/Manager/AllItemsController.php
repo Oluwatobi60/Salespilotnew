@@ -105,6 +105,9 @@ class AllItemsController extends Controller
                 }
                 return null;
             })->filter()->values();
+            $totalAllocated = $branchInventories->sum('allocated_quantity');
+            $generalStock = ($item->current_stock ?? 0) + $totalAllocated; // constant: total ever stocked
+            $generalLeft  = $item->current_stock ?? 0;                     // warehouse remaining after allocations
             // For 'addby' managers, only show items with at least one allocation
             if (!$manager->addby || $branch_inventory_list->count() > 0) {
                 $allItems->push([
@@ -120,7 +123,8 @@ class AllItemsController extends Controller
                     'cost_price' => $item->cost_price,
                     'selling_price' => $item->selling_price,
                     'profit_margin' => $item->profit_margin,
-                    'current_stock' => $item->current_stock,
+                    'current_stock' => $generalStock,
+                    'general_left' => $generalLeft,
                     'low_stock_threshold' => $item->low_stock_threshold,
                     'pricing_tiers' => $item->pricingTiers,
                     'created_at' => $item->created_at,
@@ -148,6 +152,9 @@ class AllItemsController extends Controller
                         }
                         return null;
                     })->filter()->values();
+                    $totalAllocated = $branchInventories->sum('allocated_quantity');
+                    $generalStock   = ($variant->stock_quantity ?? 0) + $totalAllocated; // constant: total ever stocked
+                    $generalLeft    = $variant->stock_quantity ?? 0;                     // warehouse remaining after allocations
                     if (!$manager->addby || $branch_inventory_list->count() > 0) {
                         $allItems->push([
                             'id' => $variant->id,
@@ -163,7 +170,8 @@ class AllItemsController extends Controller
                             'cost_price' => $variant->cost_price ?? $variant->manual_cost_price ?? $variant->margin_cost_price ?? $variant->range_cost_price,
                             'selling_price' => $variant->selling_price ?? $variant->calculated_price ?? $variant->final_price,
                             'profit_margin' => $variant->profit_margin ?? $variant->target_margin,
-                            'current_stock' => $variant->stock_quantity,
+                            'current_stock' => $generalStock,
+                            'general_left' => $generalLeft,
                             'low_stock_threshold' => $variant->low_stock_threshold,
                             'variant_name' => $variant->variant_name,
                             'variant_options' => $variant->variant_options,
@@ -190,6 +198,7 @@ class AllItemsController extends Controller
                         'variant_sets' => $item->variant_sets,
                         'variants' => $item->variants,
                         'current_stock' => 0,
+                        'general_left' => 0,
                         'created_at' => $item->created_at,
                         'data' => $item,
                         'branch_inventory_list' => collect(),
