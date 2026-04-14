@@ -12,7 +12,18 @@ System Preferences
           <div class="nav flex-column nav-pills nav-tabs-line" id="settingsTabs" role="tablist" aria-orientation="vertical">
             <button class="nav-link active" id="business-tab" data-bs-toggle="pill" data-bs-target="#business" type="button" role="tab" aria-controls="business" aria-selected="true">Business Information</button>
             <button class="nav-link" id="subscriptions-tab" data-bs-toggle="pill" data-bs-target="#subscriptions" type="button" role="tab" aria-controls="subscriptions" aria-selected="false">Subscriptions</button>
-            <button class="nav-link" id="branches-tab" data-bs-toggle="pill" data-bs-target="#branches" type="button" role="tab" aria-controls="branches" aria-selected="false">Branches</button>
+            @php
+              $canViewBranches = true;
+              if($currentSubscription && $currentSubscription->subscriptionPlan) {
+                $planName = strtolower(trim($currentSubscription->subscriptionPlan->name));
+                if($planName === 'basic') {
+                  $canViewBranches = false;
+                }
+              }
+            @endphp
+            @if($canViewBranches)
+              <button class="nav-link" id="branches-tab" data-bs-toggle="pill" data-bs-target="#branches" type="button" role="tab" aria-controls="branches" aria-selected="false">Branches</button>
+            @endif
             <button class="nav-link" id="staffs-tab" data-bs-toggle="pill" data-bs-target="#staffs" type="button" role="tab" aria-controls="staffs" aria-selected="false">Staffs</button>
             <button class="nav-link" id="receipt-tab" data-bs-toggle="pill" data-bs-target="#receipt" type="button" role="tab" aria-controls="receipt" aria-selected="false">Receipt Settings</button>
            {{--   <button class="nav-link" id="measurement-tab" data-bs-toggle="pill" data-bs-target="#measurement" type="button" role="tab" aria-controls="measurement" aria-selected="false">Measurement Units</button>  --}}
@@ -339,6 +350,7 @@ System Preferences
             </div>
 
   <!-- Branches -->
+  @if($canViewBranches)
   <div class="tab-pane fade" id="branches" role="tabpanel" aria-labelledby="branches-tab">
     <div class="card mb-4 p-3">
       <h4 class="mb-3" style="color:#007bff;font-weight:600;">
@@ -492,6 +504,7 @@ System Preferences
       </div>
     </div>
   </div>
+  @endif
 
       <!-- Edit Unit Modal -->
       <div class="modal fade" id="editUnitModal" tabindex="-1" aria-labelledby="editUnitModalLabel" aria-hidden="true">

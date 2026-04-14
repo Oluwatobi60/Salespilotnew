@@ -5,6 +5,7 @@ Add Staff Member
 @section('manager_layout_content')
 <link rel="stylesheet" href="{{ asset('manager_asset/css/staff_style.css') }}">
 <link rel="stylesheet" href="{{ asset('manager_asset/css/staffs_style.css') }}">
+<link rel="stylesheet" href="{{ asset('manager_asset/css/password-validation.css') }}">
 
     <div class="content-wrapper d-flex" id="staffContentWrapper">
              <!-- Staff Management Content -->
@@ -76,7 +77,7 @@ Add Staff Member
 
                           if(isset($activeSubscription) && $activeSubscription && $activeSubscription->subscriptionPlan) {
                             $planName = strtolower(trim($activeSubscription->subscriptionPlan->name ?? ''));
-                            $maxStaff = $activeSubscription->subscriptionPlan->max_staffs;
+                            $maxStaff = $activeSubscription->subscriptionPlan->max_staff;
 
                             // Use max_staffs if available, otherwise use plan name
                             if($maxStaff !== null) {
@@ -94,9 +95,14 @@ Add Staff Member
                               }
                             } elseif(!empty($planName)) {
                               // Fall back to plan name logic
-                              if(in_array($planName, ['free', 'basic'])) {
+                              if($planName === 'free') {
                                 $canAddStaff = false;
-                                $limitMessage = 'Staff creation is not available on your current plan. Upgrade to Standard or Premium.';
+                                $limitMessage = 'Staff creation is not available on your current plan. Upgrade to Basic or Premium.';
+                              } elseif($planName === 'basic' && $currentStaffCount >= 2) {
+                                $canAddStaff = false;
+                                $limitMessage = 'You have reached your staff limit (2 staff members). Upgrade to Standard or Premium for more staff.';
+                              } elseif($planName === 'basic' && $currentStaffCount < 2) {
+                                $canAddStaff = true;
                               } elseif($planName === 'standard' && $currentStaffCount >= 4) {
                                 $canAddStaff = false;
                                 $limitMessage = 'You have reached your staff limit (4 staff members). Upgrade to Premium for unlimited staff.';
@@ -175,7 +181,18 @@ Add Staff Member
                             <th>Staff Member</th>
                             <th>Role</th>
                             <th>Contact</th>
+                            @php
+                              $showBranchColumn = true;
+                              if(isset($activeSubscription) && $activeSubscription && $activeSubscription->subscriptionPlan) {
+                                $planName = strtolower(trim($activeSubscription->subscriptionPlan->name ?? ''));
+                                if($planName === 'basic') {
+                                  $showBranchColumn = false;
+                                }
+                              }
+                            @endphp
+                            @if($showBranchColumn)
                             <th>Branch</th>
+                            @endif
                             <th>Status</th>
                             <th>Date Added</th>
                             <th class="text-center">Actions</th>
@@ -211,9 +228,11 @@ Add Staff Member
                                 <p class="text-muted mb-0">{{ $staff->phone }}</p>
                               </div>
                             </td>
+                            @if($showBranchColumn)
                             <td>
                               <span class="">{{ $staff->branches->first() ? $staff->branches->first()->branch_name : 'N/A' }}</span>
                             </td>
+                            @endif
                              <td>
                               <span class="badge bg-success">{{ $staff->status  ? 'Active' : 'Inactive'}}</span>
                             </td>
@@ -344,7 +363,9 @@ Add Staff Member
               <div class="row">
                 <div class="col-md-6 mb-3">
                   <label for="password" class="form-label">Password <span class="text-danger">*</span></label>
-                  <input type="password" class="form-control" id="password" name="password" placeholder="Enter password" required>
+                  <div class="position-relative">
+                    <input type="password" class="form-control" id="password" name="password" placeholder="Enter password" required>
+                  </div>
                   <small class="text-muted">Min 8 characters, mix of letters & numbers</small>
                   @error('password')
                     <small class="text-danger">{{ $message }}</small>
@@ -352,7 +373,9 @@ Add Staff Member
                 </div>
                 <div class="col-md-6 mb-3">
                   <label for="password_confirmation" class="form-label">Confirm Password <span class="text-danger">*</span></label>
-                  <input type="password" class="form-control" id="password_confirmation" name="password_confirmation" placeholder="Confirm password" required>
+                  <div class="position-relative">
+                    <input type="password" class="form-control" id="password_confirmation" name="password_confirmation" placeholder="Confirm password" required>
+                  </div>
                 </div>
               </div>
               </div>
@@ -387,8 +410,17 @@ Add Staff Member
               </div>
               <!-- End Role & Status -->
 
+              @php
+                $showBranchField = true;
+                if(isset($activeSubscription) && $activeSubscription && $activeSubscription->subscriptionPlan) {
+                  $planName = strtolower(trim($activeSubscription->subscriptionPlan->name ?? ''));
+                  if($planName === 'basic') {
+                    $showBranchField = false;
+                  }
+                }
+              @endphp
 
-
+              @if($showBranchField)
               <div class="row mb-3">
                   <div class="col-md-12 mb-3">
                     <label for="branch_id" class="form-label">Assign Branch</label>
@@ -402,6 +434,7 @@ Add Staff Member
                     </select>
                 </div>
               </div>
+              @endif
 
               <div class="row mb-3">
                 <div class="col-md-12 mb-2">
@@ -453,6 +486,7 @@ Add Staff Member
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="{{ asset('manager_asset/js/staff.js') }}"></script>
+<script src="{{ asset('manager_asset/js/password-validation.js') }}"></script>
 
 <script>
 // SweetAlert2 for delete confirmation

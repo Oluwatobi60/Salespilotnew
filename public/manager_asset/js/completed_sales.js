@@ -47,11 +47,27 @@ document.addEventListener('DOMContentLoaded', function() {
     function initializeSales() {
         populateSellerFilter();
         const rows = completedSalesTable.querySelectorAll('tbody tr.sale-row');
+        const hideBranch = completedSalesTable.getAttribute('data-hide-branch') === 'true';
         allSales = [];
 
         rows.forEach(row => {
             const cells = row.cells;
             if (cells.length > 1 && !row.querySelector('.empty-state')) {
+                // Adjust column indices based on whether branch column is hidden
+                let itemsIndex, totalIndex, statusIndex;
+
+                if (hideBranch) {
+                    // Without branch column: S/N(0), Receipt(1), Date(2), Customer(3), Seller(4), Items(5), Total(6), Status(7)
+                    itemsIndex = 5;
+                    totalIndex = 6;
+                    statusIndex = 7;
+                } else {
+                    // With branch column: S/N(0), Receipt(1), Date(2), Customer(3), Seller(4), Branch(5), Items(6), Total(7), Status(8)
+                    itemsIndex = 6;
+                    totalIndex = 7;
+                    statusIndex = 8;
+                }
+
                 const sale = {
                     sn: cells[0]?.textContent.trim() || '',
                     receipt: cells[1]?.textContent.trim() || '',
@@ -59,9 +75,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     customer: cells[3]?.textContent.trim() || '',
                     seller: cells[4]?.textContent.trim() || '',
                     sellerId: row.dataset.sellerId || '',
-                    items: cells[5]?.textContent.trim() || '',
-                    total: cells[6]?.textContent.trim() || '',
-                    status: cells[7]?.querySelector('.badge')?.textContent.trim() || '',
+                    items: cells[itemsIndex]?.textContent.trim() || '',
+                    total: cells[totalIndex]?.textContent.trim() || '',
+                    status: cells[statusIndex]?.querySelector('.badge')?.textContent.trim() || '',
                     receiptNumber: row.dataset.receiptNumber || '',
                     discount: row.dataset.discount !== undefined ? row.dataset.discount : '-',
                     rowElement: row
@@ -175,6 +191,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Show empty state
     function showEmptyState() {
         const tbody = completedSalesTable.querySelector('tbody');
+        const hideBranch = completedSalesTable.getAttribute('data-hide-branch') === 'true';
+        const colspan = hideBranch ? 8 : 9;
 
         // Check if empty state already exists
         let emptyRow = tbody.querySelector('.empty-state-row');
@@ -182,7 +200,7 @@ document.addEventListener('DOMContentLoaded', function() {
             emptyRow = document.createElement('tr');
             emptyRow.className = 'empty-state-row';
             emptyRow.innerHTML = `
-                <td colspan="8" class="text-center py-5">
+                <td colspan="${colspan}" class="text-center py-5">
                     <div class="empty-state">
                         <i class="bi bi-inbox"></i>
                         <h5>No Sales Found</h5>

@@ -21,6 +21,16 @@ class ValuationReportController extends Controller
         $manager = Auth::user();
         $businessName = $manager->business_name;
 
+        // Check subscription plan - inventory valuation is not available for basic plan
+        $currentSubscription = $manager->currentSubscription()->with('subscriptionPlan')->first();
+        $isBasicPlan = false;
+        if ($currentSubscription && $currentSubscription->subscriptionPlan) {
+            $planName = strtolower(trim($currentSubscription->subscriptionPlan->name));
+            if ($planName === 'basic') {
+                $isBasicPlan = true;
+            }
+        }
+
         // Check if user is a business creator or branch manager
         $isBranchManager = !empty($manager->addby);
         $managerBranchName = $manager->branch_name;
@@ -228,6 +238,6 @@ class ValuationReportController extends Controller
         // Get all unique categories from items filtered by business_name
         $allCategories = Category::where('business_name', $businessName)->orderBy('category_name')->get();
 
-        return view('manager.reports.inventory_valuation', compact('paginatedItems', 'totalInventoryValue', 'totalSellingValue', 'totalPotentialProfit', 'overallMargin', 'allCategories'));
+        return view('manager.reports.inventory_valuation', compact('paginatedItems', 'totalInventoryValue', 'totalSellingValue', 'totalPotentialProfit', 'overallMargin', 'allCategories', 'isBasicPlan'));
     }
 }

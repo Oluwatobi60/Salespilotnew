@@ -221,13 +221,17 @@ class AllItemsController extends Controller
             ['path' => request()->url(), 'query' => request()->query()]
         );
 
+        // Get active subscription
+        $activeSubscription = $manager->currentSubscription()->with('subscriptionPlan')->first();
+
         return view('manager.inventory.all_items.all_items', compact(
             'allItemsPaginated',
             'standardItems',
             'variantItems',
             'productVariants',
             'categories',
-            'suppliers'
+            'suppliers',
+            'activeSubscription'
         ));
     }
 

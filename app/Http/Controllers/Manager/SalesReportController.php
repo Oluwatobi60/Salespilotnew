@@ -81,7 +81,17 @@ class SalesReportController extends Controller
             ->orderBy('cart_items.created_at', 'desc')
             ->paginate(15);
 
-        return view('manager.sales.completed_sales', compact('completedSales'));
+        // Get current subscription plan
+        $currentSubscription = $manager->currentSubscription()->with('subscriptionPlan')->first();
+        $hideBranchColumn = false;
+        if ($currentSubscription && $currentSubscription->subscriptionPlan) {
+            $planName = strtolower(trim($currentSubscription->subscriptionPlan->name));
+            if ($planName === 'basic') {
+                $hideBranchColumn = true;
+            }
+        }
+
+        return view('manager.sales.completed_sales', compact('completedSales', 'hideBranchColumn'));
     }
 
     public function sales_summary()

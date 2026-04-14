@@ -4,86 +4,17 @@ All Items
 @endsection
 @section('manager_layout_content')
 
-<style>
-/* ── Page-level overrides ────────────────────────────────────────────────── */
+@php
+  $showInventoryColumns = true;
+  if(isset($activeSubscription) && $activeSubscription && $activeSubscription->subscriptionPlan) {
+    $planName = strtolower(trim($activeSubscription->subscriptionPlan->name ?? ''));
+    if($planName === 'basic') {
+      $showInventoryColumns = false;
+    }
+  }
+  $stockLabel = $showInventoryColumns ? 'General Stock' : 'In Stock';
+@endphp
 
-/* Summary stat cards */
-.ai-stat { border-radius: 12px; padding: 1rem 1.25rem; border: none; }
-.ai-stat .stat-icon { width: 42px; height: 42px; border-radius: 10px; display:flex; align-items:center; justify-content:center; font-size: 1.2rem; }
-.ai-stat .stat-label { font-size: .72rem; text-transform: uppercase; letter-spacing:.05em; color:#6b7280; }
-.ai-stat .stat-value { font-size: 1.45rem; font-weight: 700; line-height: 1.2; margin: 0; }
-
-/* Toolbar */
-.ai-toolbar { background: #fff; border-radius: 12px; border: 1px solid #e5e7eb; padding: 1rem 1.25rem; }
-
-/* Table card */
-.ai-table-card { background: #fff; border-radius: 12px; border: 1px solid #e5e7eb; overflow: hidden; }
-.ai-table-card .card-head { padding: .85rem 1.25rem; border-bottom: 1px solid #e5e7eb; background: #f9fafb; }
-
-/* Table */
-#itemsTable { margin: 0; border-collapse: separate; border-spacing: 0; }
-#itemsTable thead th {
-    background: #f9fafb;
-    font-size: .72rem;
-    text-transform: uppercase;
-    letter-spacing: .05em;
-    color: #6b7280;
-    font-weight: 600;
-    border-bottom: 2px solid #e5e7eb;
-    padding: .75rem 1rem;
-    white-space: nowrap;
-}
-#itemsTable tbody td { padding: .75rem 1rem; vertical-align: middle; border-bottom: 1px solid #f3f4f6; font-size: .875rem; }
-#itemsTable tbody tr:last-child td { border-bottom: none; }
-#itemsTable tbody tr:hover td { background: #f8faff; }
-#itemsTable tbody tr.selected td { background: #eff6ff; }
-
-/* Item cell */
-.item-thumb { width: 38px; height: 38px; border-radius: 8px; object-fit: cover; flex-shrink: 0; }
-.item-name { font-weight: 600; font-size: .875rem; color: #111827; }
-.item-code { font-size: .72rem; color: #9ca3af; font-family: monospace; }
-
-/* Type badges */
-.type-badge { font-size: .66rem; font-weight: 600; padding: .2em .55em; border-radius: 5px; }
-.type-std  { background: #dbeafe; color: #1d4ed8; }
-.type-var  { background: #e0e7ff; color: #4338ca; }
-.type-bnd  { background: #d1fae5; color: #065f46; }
-
-/* Stock pills */
-.stock-pill { font-size: .78rem; font-weight: 700; padding: .3em .7em; border-radius: 20px; display: inline-flex; align-items: center; gap: .3em; }
-.sp-good  { background: #d1fae5; color: #065f46; }
-.sp-low   { background: #fef3c7; color: #92400e; }
-.sp-empty { background: #fee2e2; color: #991b1b; }
-.sp-na    { background: #f3f4f6; color: #9ca3af; }
-
-/* Branch chips */
-.branch-chips { display: flex; flex-wrap: wrap; gap: .3rem; }
-.branch-chip {
-    display: inline-flex; align-items: center; gap: .4em;
-    font-size: .72rem; padding: .25em .6em; border-radius: 20px;
-    background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe;
-    white-space: nowrap; cursor: default;
-}
-.branch-chip .qty      { font-weight: 700; }
-.branch-chip .qty-warn  { color: #d97706; }
-.branch-chip .qty-empty { color: #dc2626; }
-.no-branches { font-size: .78rem; color: #9ca3af; }
-
-/* Price cells */
-.price-cell { font-size: .875rem; font-weight: 600; color: #374151; white-space: nowrap; }
-.price-cost { font-size: .78rem; color: #6b7280; }
-
-/* Actions */
-.ai-actions { display: flex; gap: .35rem; align-items: center; }
-
-/* Responsive column hiding */
-@media (max-width: 991.98px) { .col-hide-md { display: none !important; } }
-@media (max-width: 767.98px) {
-    .col-hide-sm { display: none !important; }
-    #itemsTable thead th, #itemsTable tbody td { padding: .6rem .5rem; }
-}
-@media (max-width: 575.98px) { .col-hide-xs { display: none !important; } }
-</style>
 
 <div class="content-wrapper d-flex">
 
@@ -136,7 +67,7 @@ All Items
                 <div class="d-flex align-items-center gap-3">
                     <div class="stat-icon bg-info bg-opacity-10 text-info"><i class="bi bi-archive"></i></div>
                     <div>
-                        <div class="stat-label">General Stock</div>
+                        <div class="stat-label">{{ $stockLabel }}</div>
                         <div class="stat-value">{{ number_format($totalGenStock) }}</div>
                     </div>
                 </div>
@@ -249,9 +180,10 @@ All Items
                         <th>
                             <span data-bs-toggle="tooltip"
                                   title="Total stock added (constant) = warehouse left + all branch allocations">
-                                General Stock
+                                {{ $stockLabel }}
                             </span>
                         </th>
+                        @if($showInventoryColumns)
                         <th>
                             <span data-bs-toggle="tooltip"
                                   title="Warehouse stock remaining after allocations. Decreases each time you allocate to a branch.">
@@ -259,6 +191,7 @@ All Items
                             </span>
                         </th>
                         <th class="col-hide-md">Branch Inventory</th>
+                        @endif
                         <th class="col-hide-sm">Selling Price</th>
                         <th class="col-hide-md">Cost Price</th>
                         <th class="col-hide-md">Supplier</th>
@@ -297,8 +230,15 @@ All Items
                         {{-- Item --}}
                         <td>
                             <div class="d-flex align-items-center gap-2">
-                                @if($item['image'])
-                                    <img src="{{ asset($item['image']) }}" alt="{{ $item['name'] }}" class="item-thumb">
+                                @php
+                                    $imagePath = $item['image'] ?? null;
+                                    $imageExists = false;
+                                    if ($imagePath && file_exists(public_path($imagePath))) {
+                                        $imageExists = true;
+                                    }
+                                @endphp
+                                @if($imageExists)
+                                    <img src="{{ asset($imagePath) }}" alt="{{ $item['name'] }}" class="item-thumb" onerror="this.onerror=null;this.src='{{ asset('manager_asset/images/faces/face1.jpg') }}';">
                                 @else
                                     <img src="{{ asset('manager_asset/images/faces/face1.jpg') }}" alt="Default" class="item-thumb">
                                 @endif
@@ -348,6 +288,7 @@ All Items
                                 <span class="stock-pill sp-na">N/A</span>
                             @endif
                         </td>
+                        @if($showInventoryColumns)
                         {{-- General Left --}}
                         <td>
                             <span class="stock-pill {{ $leftClass }}">
@@ -384,6 +325,7 @@ All Items
                                 <span class="no-branches"><i class="bi bi-dash"></i> No branches</span>
                             @endif
                         </td>
+                        @endif
                         {{-- Selling Price --}}
                         <td class="col-hide-sm">
                             @if(isset($item['selling_price']))

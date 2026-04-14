@@ -104,14 +104,6 @@ class AddManagerController extends Controller
             ->where('addby', '!=', '')
             ->count();
 
-        // Debug: Log the values
-        \Log::info('Manager Creation Check', [
-            'plan_name' => $planName,
-            'current_count' => $currentManagerCount,
-            'business_name' => $sessionManager->business_name,
-            'plan_id' => $subscription->subscription_plan_id ?? 'null'
-        ]);
-
         // Free plan: max 1 manager
         if ($planName === 'free' && $currentManagerCount >= 1) {
             return redirect()->back()

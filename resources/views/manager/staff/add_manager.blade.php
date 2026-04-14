@@ -71,16 +71,23 @@ Add Staff Member
                           $canAddManager = false;
                           $limitMessage = '';
                           $planName = '';
+                          $maxManagers = null;
                           $maxBranches = null;
+                          $currentBranchCount = $branchCount ?? 0;
+                          $currentManagerCount = $delegatedManagers ? count($delegatedManagers) : 0;
 
                           if(isset($activeSubscription) && $activeSubscription && $activeSubscription->subscriptionPlan) {
                             $planName = strtolower(trim($activeSubscription->subscriptionPlan->name ?? ''));
+                            $maxManagers = $activeSubscription->subscriptionPlan->max_managers;
                             $maxBranches = $activeSubscription->subscriptionPlan->max_branches;
-                            $currentBranchCount = $branchCount ?? 0;
 
-                            // Use max_branches if available, otherwise use plan name
-                            if($maxBranches !== null) {
-                              // Plan has a specific branch limit
+                            // Check manager count limit first
+                            if($maxManagers !== null && $currentManagerCount >= $maxManagers) {
+                              $canAddManager = false;
+                              $limitMessage = "You have reached your manager limit ({$maxManagers} manager" . ($maxManagers === 1 ? '' : 's') . "). Upgrade to add more managers.";
+                            }
+                            // Then check branch limit
+                            elseif($maxBranches !== null) {
                               if($maxBranches == 0) {
                                 // No branches allowed (Free/Basic)
                                 $canAddManager = false;
@@ -88,26 +95,31 @@ Add Staff Member
                               } elseif($currentBranchCount >= $maxBranches) {
                                 // Limit reached - can't add more managers without branches
                                 $canAddManager = false;
-                                $limitMessage = "You have reached your branch limit ({$maxBranches} branches). Upgrade to Premium for unlimited branches and managers.";
+                                $limitMessage = "You have reached your branch limit ({$maxBranches} branches). Upgrade to add more branches and managers.";
                               } else {
                                 // Can still add more managers
                                 $canAddManager = true;
                               }
-                            } elseif(!empty($planName)) {
+                            }
+                            elseif(!empty($planName)) {
                               // Fall back to plan name logic
-                              if(in_array($planName, ['free', 'basic'])) {
+                              if($planName === 'free' && $currentManagerCount >= 1) {
                                 $canAddManager = false;
-                                $limitMessage = 'Manager creation requires branches. Upgrade to Standard or Premium.';
-                              } elseif($planName === 'standard' && $currentBranchCount >= 2) {
+                                $limitMessage = 'You have reached your manager limit (1 manager). Upgrade your plan for more managers.';
+                              } elseif($planName === 'basic' && $currentManagerCount >= 1) {
                                 $canAddManager = false;
-                                $limitMessage = 'You have reached your branch limit (2 branches). Upgrade to Premium for unlimited branches and managers.';
-                              } elseif($planName === 'standard' && $currentBranchCount < 2) {
-                                $canAddManager = true;
-                              } elseif($planName === 'premium') {
+                                $limitMessage = 'You have reached your manager limit (1 manager). Upgrade to Standard or Premium for more managers.';
+                              } elseif($planName === 'standard' && $currentManagerCount >= 2) {
+                                $canAddManager = false;
+                                $limitMessage = 'You have reached your manager limit (2 managers). Upgrade to Premium for more managers.';
+                              } elseif($planName === 'premium' && $currentManagerCount >= 3) {
+                                $canAddManager = false;
+                                $limitMessage = 'You have reached your manager limit (3 managers).';
+                              } else {
                                 $canAddManager = true;
                               }
                             } else {
-                              // No max_branches and no plan name - allow as fallback
+                              // No max_managers and no plan name - allow as fallback
                               $canAddManager = true;
                             }
                           } else {

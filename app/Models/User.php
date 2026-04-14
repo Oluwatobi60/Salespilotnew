@@ -75,7 +75,7 @@ class User extends Authenticatable
         ];
     }
 
-    public function currentSubscription()
+    public function currentSubscription(): \Illuminate\Database\Eloquent\Relations\HasOne
     {
         return $this->hasOne(UserSubscription::class)->where('status', 'active')->latest('end_date');
     }
@@ -83,7 +83,7 @@ class User extends Authenticatable
     /**
      * Get the branch this user is assigned to (if any)
      */
-    public function branch()
+    public function branch(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(Branch::class, 'branch_id');
     }
@@ -91,7 +91,7 @@ class User extends Authenticatable
     /**
      * Get the branch this user manages (where they are the branch manager)
      */
-    public function managedBranch()
+    public function managedBranch(): \Illuminate\Database\Eloquent\Relations\HasOne
     {
         return $this->hasOne(Branch::class, 'manager_id');
     }
@@ -105,7 +105,7 @@ class User extends Authenticatable
         return is_null($this->addby) || $this->addby === $this->email || $this->addby === $this->id;
     }
 
-    public function brm()
+    public function brm(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(Brm::class, 'brm_id');
     }

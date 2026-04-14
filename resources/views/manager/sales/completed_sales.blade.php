@@ -85,7 +85,7 @@ Completed Sales
                     </div><br>
 
                     <div class="table-responsive">
-                      <table class="table table-striped" id="completedSalesTable">
+                      <table class="table table-striped" id="completedSalesTable" data-hide-branch="{{ $hideBranchColumn ? 'true' : 'false' }}">
                         <thead>
                           <tr>
                             <th>S/N</th>
@@ -93,7 +93,9 @@ Completed Sales
                             <th>Date</th>
                             <th>Customer</th>
                             <th>Sold by</th>
+                            @if(!$hideBranchColumn)
                             <th>Branch</th>
+                            @endif
                             <th>Items</th>
                             <th>Total</th>
                             <th>Status</th>
@@ -120,6 +122,7 @@ Completed Sales
                                 Unknown
                                 @endif
                             </td>
+                            @if(!$hideBranchColumn)
                             <td>
                                 @if($sale->branch_name)
                                 <span class="badge badge-primary">{{ $sale->branch_name }}</span>
@@ -127,13 +130,14 @@ Completed Sales
                                 <span class="text-muted">-</span>
                                 @endif
                             </td>
+                            @endif
                             <td><span class="badge badge-info">{{ $sale->items_count }} items</span></td>
                             <td><strong class="text-success">₦{{ number_format($sale->total, 2) }}</strong></td>
                             <td><span class="badge badge-opacity-success">Completed</span></td>
                           </tr>
                           @empty
                           <tr>
-                            <td colspan="9" class="text-center py-5">
+                            <td colspan="{{ $hideBranchColumn ? '8' : '9' }}" class="text-center py-5">
                               <div class="empty-state">
                                 <i class="bi bi-inbox"></i>
                                 <h5>No Completed Sales</h5>
