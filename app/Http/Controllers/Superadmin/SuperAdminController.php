@@ -9,10 +9,12 @@ use App\Models\UserSubscription;
 use App\Models\ActivityLog;
 use App\Models\Brm;
 use App\Mail\SubscriptionExpiryReminder;
+use App\Mail\BrmCreated;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 
 class SuperAdminController extends Controller
 {
@@ -200,14 +202,26 @@ class SuperAdminController extends Controller
             'password' => 'required|string|min:8|confirmed',
         ]);
 
+        // Store the plain password before it gets hashed
+        $plainPassword = $validated['password'];
+
         // Generate unique referral code if not provided
         if (empty($validated['referral_code'])) {
             $validated['referral_code'] = $this->generateUniqueBrmCode();
         }
 
-        Brm::create($validated + ['status' => 1]);
+        // Create the BRM
+        $brm = Brm::create($validated + ['status' => 1]);
 
-        return redirect()->route('superadmin.brms')->with('success', 'BRM registered successfully.');
+        // Send welcome email with credentials
+        try {
+            Mail::to($brm->email)->send(new BrmCreated($brm, $plainPassword));
+        } catch (\Exception $e) {
+            // Log the error but don't block BRM creation
+            Log::error('Failed to send BRM creation email: ' . $e->getMessage());
+        }
+
+        return redirect()->route('superadmin.brms')->with('success', 'BRM registered successfully. Welcome email sent to ' . $brm->email);
     }
 
     /**
