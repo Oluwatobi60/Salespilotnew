@@ -195,13 +195,37 @@ class SuperAdminController extends Controller
             'phone'    => 'nullable|string|max:20',
             'address'  => 'nullable|string|max:255',
             'region'   => 'nullable|string|max:100',
+            'referral_code' => 'nullable|string|max:6|unique:brms,referral_code',
             'notes'    => 'nullable|string|max:1000',
             'password' => 'required|string|min:8|confirmed',
         ]);
 
+        // Generate unique referral code if not provided
+        if (empty($validated['referral_code'])) {
+            $validated['referral_code'] = $this->generateUniqueBrmCode();
+        }
+
         Brm::create($validated + ['status' => 1]);
 
         return redirect()->route('superadmin.brms')->with('success', 'BRM registered successfully.');
+    }
+
+    /**
+     * Generate a unique 6-character alphanumeric code for BRM
+     */
+    private function generateUniqueBrmCode()
+    {
+        $characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        $code = '';
+
+        do {
+            $code = '';
+            for ($i = 0; $i < 6; $i++) {
+                $code .= $characters[rand(0, strlen($characters) - 1)];
+            }
+        } while (Brm::where('referral_code', $code)->exists());
+
+        return $code;
     }
 
     public function editBrm(Brm $brm)

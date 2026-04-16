@@ -73,7 +73,7 @@ Manage Branches
                         <p class="card-description mb-0">
                           Total: <strong>{{ $branches->total() }}</strong> branches
                           @if($activeSubscription && $activeSubscription->subscriptionPlan)
-                            ({{ $branches->total() }}/{{ $activeSubscription->subscriptionPlan->max_branches ?? 'Unlimited' }} used)
+                            ({{ $branches->total() }}/{{ $activeSubscription->subscriptionPlan->max_branches !== null ? $activeSubscription->subscriptionPlan->max_branches : 'Unlimited' }} used)
                             <br><small class="text-muted">Plan: {{ $activeSubscription->subscriptionPlan->name ?? 'N/A' }}</small>
                           @else
                             <br><small class="text-danger">No active subscription</small>

@@ -18,6 +18,10 @@ Route::middleware('guest')->group(function () {
 
     Route::post('register', [RegisteredUserController::class, 'store']);
 
+    // Verify referral code (AJAX endpoint)
+    Route::post('verify-referral-code', [RegisteredUserController::class, 'verifyReferralCode'])
+        ->name('verify.referral_code');
+
     // Password setup via email link (new accounts)
     Route::get('set-password/{token}', [SetPasswordController::class, 'showForm'])->name('password.setup');
     Route::post('set-password/{token}', [SetPasswordController::class, 'store'])->name('password.setup.store');

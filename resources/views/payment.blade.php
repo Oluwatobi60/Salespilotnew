@@ -61,7 +61,7 @@ Payment - SalesPilot
                         <strong>Plan Features:</strong><br>
                         • {{ $plan->max_managers }} Manager Account(s)<br>
                         • {{ $plan->max_staff ? $plan->max_staff . ' Staff Accounts' : 'Unlimited Staff' }}<br>
-                        • {{ $plan->max_branches ? $plan->max_branches . ' Branch(es)' : 'Multi-branch Support' }}
+                        • {{ $plan->max_branches !== null ? ($plan->max_branches == 0 ? 'No Branch Support' : $plan->max_branches . ' Branch(es)') : 'Multi-branch Support' }}
                     </p>
                 </div>
             </div>

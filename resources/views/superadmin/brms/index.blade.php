@@ -40,6 +40,7 @@
                     <th class="px-3 py-3 fw-semibold text-secondary col-hide-sm">Email</th>
                     <th class="px-3 py-3 fw-semibold text-secondary col-hide-sm">Phone</th>
                     <th class="px-3 py-3 fw-semibold text-secondary col-hide-sm">Region</th>
+                    <th class="px-3 py-3 fw-semibold text-secondary col-hide-sm">Ref. Code</th>
                     <th class="px-3 py-3 fw-semibold text-secondary text-center col-hide-sm">Customers</th>
                     <th class="px-3 py-3 fw-semibold text-secondary">Status</th>
                     <th class="px-3 py-3 fw-semibold text-secondary text-center">Actions</th>
@@ -60,6 +61,12 @@
                         <td class="px-3 col-hide-sm">{{ $brm->email }}</td>
                         <td class="px-3 col-hide-sm">{{ $brm->phone ?? '—' }}</td>
                         <td class="px-3 col-hide-sm">{{ $brm->region ?? '—' }}</td>
+
+                        <td class="px-3 col-hide-sm">
+                            <code class="bg-light px-2 py-1 rounded" style="font-size:0.8rem;font-weight:600;">
+                                {{ $brm->referral_code ?? '—' }}
+                            </code>
+                        </td>
 
                         <td class="px-3 text-center col-hide-sm">
                             <span class="badge rounded-pill" style="background:#ede9fe;color:#6f42c1;font-size:0.8rem;">

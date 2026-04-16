@@ -7,6 +7,7 @@ Set Your Password | SalesPilot
 @section('welcome_page_content')
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <link rel="stylesheet" href="{{ asset('manager_asset/css/set-password.css') }}">
+<link rel="stylesheet" href="{{ asset('manager_asset/css/password-validation.css') }}">
 
 <div class="sp-wrap">
     <div class="sp-card">
@@ -14,22 +15,19 @@ Set Your Password | SalesPilot
         <h2>Create Your Password</h2>
         <p class="subtitle">Choose a strong password to secure your SalesPilot account.</p>
 
-        <form method="POST" action="{{ route('password.setup.store', $token) }}">
+        <form id="setPasswordForm" method="POST" action="{{ route('password.setup.store', $token) }}">
             @csrf
 
             <label class="sp-label" for="password">Password</label>
             <div class="sp-input-wrap">
                 <input type="password" id="password" name="password"
                        placeholder="Enter your password" required autocomplete="new-password">
-                <span class="sp-toggle" onclick="toggleVisibility('password', this)">👁</span>
             </div>
-            <p class="sp-hint">Minimum 8 characters — use letters, numbers and symbols.</p>
 
             <label class="sp-label" for="password_confirmation">Confirm Password</label>
             <div class="sp-input-wrap">
                 <input type="password" id="password_confirmation" name="password_confirmation"
                        placeholder="Repeat your password" required autocomplete="new-password">
-                <span class="sp-toggle" onclick="toggleVisibility('password_confirmation', this)">👁</span>
             </div>
 
             <button type="submit" class="sp-btn">Set Password &amp; Go to Login</button>
@@ -56,16 +54,19 @@ Set Your Password | SalesPilot
 </script>
 @endif
 
+<!-- Password Validator Component -->
+<script src="{{ asset('manager_asset/js/password-validator.js') }}"></script>
 <script>
-function toggleVisibility(fieldId, icon) {
-    const input = document.getElementById(fieldId);
-    if (input.type === 'password') {
-        input.type = 'text';
-        icon.textContent = '🙈';
-    } else {
-        input.type = 'password';
-        icon.textContent = '👁';
-    }
-}
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize password validator for set-password form
+        const validator = new PasswordValidator({
+            passwordSelector: '#password',
+            confirmSelector: '#password_confirmation',
+            formSelector: '#setPasswordForm',
+            minLength: 8,
+            showToggle: true,
+            requiredConfirm: true
+        });
+    });
 </script>
 @endsection

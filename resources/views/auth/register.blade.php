@@ -100,10 +100,25 @@ Create Your SalesPilot Account
           <input type="tel" name="phone_number" id="phoneInput" placeholder="Phone number" required pattern="[0-9]{11}" maxlength="11" title="Please enter exactly 11 digits" value="{{ old('phone_number') }}" />
           <i class="uil uil-phone"></i>
         </div>
+
+        <!-- Referral code with real-time verification -->
         <div class="input_box">
-          <input type="text" name="referral_code" id="referralcode" placeholder="Agent Referral code(Optional)" maxlength="11" title="Enter agent referral code" value="{{ old('referral_code') }}" />
+          <input type="text" name="referral_code" id="referralcode" placeholder="BRM Referral code (Optional)" maxlength="255" title="Enter BRM referral code if you have one" value="{{ old('referral_code') }}" />
           <i class="uil uil-user-plus"></i>
+          <!-- Real-time verification spinner and feedback -->
+          <div id="referralSpinner" style="display: none; position: absolute; right: 10px; top: 50%; transform: translateY(-50%);">
+            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+          </div>
+          <div id="referralFeedback" style="display: none; margin-top: 8px; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; font-weight: 500;"></div>
         </div>
+        @if ($errors->has('referral_code'))
+          <div style="color: #d32f2f; font-size: 0.85rem; margin-top: -10px;">
+            <i class="uil uil-exclamation-triangle"></i> {{ $errors->first('referral_code') }}
+          </div>
+        @endif
+      </div>
+      <div style="background: #f5f5f5; padding: 12px; border-radius: 8px; margin: 12px 0; font-size: 0.85rem; color: #666;">
+        <i class="uil uil-info-circle"></i> <strong>BRM Referral Code:</strong> If you were referred by a Business Relation Manager, enter their referral code to associate your account with them. The code will be verified in real-time.
       </div>
       <div class="input_box email-full">
         <input type="email" name="email" value="{{ old('email', $signup_email ?? '') }}" placeholder="Verified E-mail" required readonly />
@@ -163,5 +178,98 @@ Create Your SalesPilot Account
 </script>
 @endif
 
- <script src="{{ asset('welcome_asset/js/register_lg.js') }}"></script>
+<script src="{{ asset('welcome_asset/js/register_lg.js') }}"></script>
+
+<!-- Real-time Referral Code Verification -->
+<script>
+(function() {
+    const referralInput = document.getElementById('referralcode');
+    const spinner = document.getElementById('referralSpinner');
+    const feedback = document.getElementById('referralFeedback');
+    const submitBtn = document.getElementById('signupSubmitBtn');
+    let verificationTimeout;
+
+    // Add position relative to the input container for spinner positioning
+    const inputBox = referralInput.closest('.input_box');
+    if (inputBox) {
+        inputBox.style.position = 'relative';
+    }
+
+    // Listen for input changes
+    referralInput.addEventListener('input', function() {
+        clearTimeout(verificationTimeout);
+        const code = this.value.trim();
+
+        // Hide feedback if input is empty
+        if (!code) {
+            spinner.style.display = 'none';
+            feedback.style.display = 'none';
+            if (submitBtn) submitBtn.disabled = false;
+            return;
+        }
+
+        // Show spinner while verifying
+        spinner.style.display = 'inline-block';
+        feedback.style.display = 'none';
+
+        // Debounce the verification (wait 800ms after user stops typing)
+        verificationTimeout = setTimeout(() => {
+            verifyReferralCode(code);
+        }, 800);
+    });
+
+    function verifyReferralCode(code) {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content ||
+                         document.querySelector('input[name="_token"]')?.value;
+
+        fetch('{{ route("verify.referral_code") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+            },
+            body: JSON.stringify({
+                referral_code: code
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            spinner.style.display = 'none';
+            feedback.style.display = 'block';
+
+            if (data.valid) {
+                // Success: Valid referral code
+                feedback.innerHTML = `
+                    <i class="uil uil-check-circle" style="color: #4CAF50;"></i>
+                    <span style="color: #4CAF50;"><strong>Valid!</strong> ${data.message}</span>
+                    <br><small style="color: #2e7d32;">Referred by: <strong>${data.brm_name}</strong> ${data.brm_region !== 'N/A' ? '('+data.brm_region+')' : ''}</small>
+                `;
+                feedback.style.backgroundColor = '#e8f5e9';
+                feedback.style.borderLeft = '4px solid #4CAF50';
+                if (submitBtn) submitBtn.disabled = false;
+            } else {
+                // Error: Invalid referral code
+                feedback.innerHTML = `
+                    <i class="uil uil-times-circle" style="color: #d32f2f;"></i>
+                    <span style="color: #d32f2f;"><strong>Invalid!</strong> ${data.message}</span>
+                `;
+                feedback.style.backgroundColor = '#ffebee';
+                feedback.style.borderLeft = '4px solid #d32f2f';
+                if (submitBtn) submitBtn.disabled = false; // Allow submission to show validation error
+            }
+        })
+        .catch(error => {
+            console.error('Error verifying referral code:', error);
+            spinner.style.display = 'none';
+            feedback.innerHTML = `
+                <i class="uil uil-exclamation-triangle" style="color: #ff9800;"></i>
+                <span style="color: #ff9800;"><strong>Error!</strong> Could not verify code. Please try again.</span>
+            `;
+            feedback.style.display = 'block';
+            feedback.style.backgroundColor = '#fff3e0';
+            feedback.style.borderLeft = '4px solid #ff9800';
+        });
+    }
+})();
+</script>
 @endsection

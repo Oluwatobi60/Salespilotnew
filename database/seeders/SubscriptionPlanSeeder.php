@@ -46,7 +46,7 @@ class SubscriptionPlanSeeder extends Seeder
                 ]),
                 'max_managers' => 1,
                 'max_staff' => 2,
-                'max_branches' => 1,
+                'max_branches' => 0,
                 'is_active' => true,
                 'is_popular' => true,
                 'trial_days' => 0,

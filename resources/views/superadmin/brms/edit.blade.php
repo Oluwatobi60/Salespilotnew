@@ -57,6 +57,13 @@
                         @error('address')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
 
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Referral Code</label>
+                        <input type="text" name="referral_code" value="{{ old('referral_code', $brm->referral_code) }}"
+                               class="form-control" readonly title="Unique code assigned to this BRM">
+                        <small class="text-muted d-block mt-1">Auto-generated: {{ $brm->referral_code ?? 'Not assigned' }}</small>
+                    </div>
+
                     <div class="col-12">
                         <label class="form-label fw-semibold">Notes</label>
                         <textarea name="notes" rows="3"

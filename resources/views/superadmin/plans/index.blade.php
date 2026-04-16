@@ -52,7 +52,7 @@
                         <i class="bi bi-people me-1"></i>{{ $plan->max_staff ? $plan->max_staff . ' Staff' : 'Unlimited Staff' }}
                     </span>
                     <span class="badge" style="background:#f0f2f5;color:#374151;font-size:0.72rem;">
-                        <i class="bi bi-diagram-3 me-1"></i>{{ $plan->max_branches ? $plan->max_branches . ' Branch' . ($plan->max_branches > 1 ? 'es' : '') : 'Unlimited Branches' }}
+                        <i class="bi bi-diagram-3 me-1"></i>{{ $plan->max_branches !== null ? ($plan->max_branches == 0 ? 'No Branches' : $plan->max_branches . ' Branch' . ($plan->max_branches > 1 ? 'es' : '')) : 'Unlimited Branches' }}
                     </span>
                     @if($plan->trial_days > 0)
                         <span class="badge" style="background:#dcfce7;color:#16a34a;font-size:0.72rem;">

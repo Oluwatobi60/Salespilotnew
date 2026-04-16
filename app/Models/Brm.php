@@ -15,6 +15,7 @@ class Brm extends Model
         'phone',
         'address',
         'region',
+        'referral_code',
         'password',
         'notes',
         'status',
