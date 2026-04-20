@@ -31,6 +31,11 @@ use App\Http\Controllers\Superadmin\SuperAdminController;
 use App\Http\Controllers\Superadmin\PlansController;
 use App\Http\Controllers\Superadmin\RevenueController;
 use App\Http\Controllers\Superadmin\SubscriptionRenewalController;
+use App\Http\Controllers\Superadmin\CommissionController;
+use App\Http\Controllers\Superadmin\WithdrawalController;
+use App\Http\Controllers\Brm\BrmController;
+use App\Http\Controllers\Brm\BrmCommissionController;
+use App\Http\Controllers\Brm\PerformanceController;
 
 
 /* Route::get('/dashboard', function () {
@@ -91,6 +96,67 @@ Route::middleware(['auth:superadmin'])->prefix('superadmin/subscriptions')->cont
     Route::post('/process-renewals', 'processRenewals')->name('superadmin.subscriptions.process-renewals');
 });
 
+// Superadmin Commissions routes
+Route::middleware(['auth:superadmin'])->prefix('superadmin/commissions')->controller(CommissionController::class)->group(function () {
+    Route::get('/', 'index')->name('superadmin.commissions');
+    Route::get('/{commission}', 'show')->name('superadmin.commissions.show');
+    Route::post('/{commission}/approve', 'approve')->name('superadmin.commissions.approve');
+    Route::post('/{commission}/mark-paid', 'markAsPaid')->name('superadmin.commissions.mark-paid');
+    Route::post('/{commission}/reject', 'reject')->name('superadmin.commissions.reject');
+    Route::post('/bulk-approve', 'bulkApprove')->name('superadmin.commissions.bulk-approve');
+    Route::post('/bulk-reject', 'bulkReject')->name('superadmin.commissions.bulk-reject');
+    Route::get('/brm/{brm}', 'brmSummary')->name('superadmin.commissions.brm-summary');
+});
+
+// Superadmin Withdrawals routes
+Route::middleware(['auth:superadmin'])->prefix('superadmin/withdrawals')->controller(WithdrawalController::class)->group(function () {
+    Route::get('/', 'index')->name('superadmin.withdrawals');
+    Route::get('/{withdrawal}', 'show')->name('superadmin.withdrawals.show');
+    Route::post('/{withdrawal}/approve', 'approve')->name('superadmin.withdrawals.approve');
+    Route::post('/{withdrawal}/mark-paid', 'markAsPaid')->name('superadmin.withdrawals.mark-paid');
+    Route::post('/{withdrawal}/reject', 'reject')->name('superadmin.withdrawals.reject');
+    Route::post('/bulk-approve', 'bulkApprove')->name('superadmin.withdrawals.bulk-approve');
+    Route::post('/bulk-mark-paid', 'bulkMarkPaid')->name('superadmin.withdrawals.bulk-mark-paid');
+});
+
+
+/* Route::get('/businessdashboard', function () {
+    return view('businessdashboard');
+})->middleware(['auth', 'verified', 'rolemanager:businessmanager'])->name('businessdashboard'); */
+
+// BRM auth routes (unauthenticated)
+Route::prefix('brm')->controller(BrmController::class)->group(function () {
+    Route::post('/signup', 'register')->name('brm.register');
+    Route::get('/login', 'showLogin')->name('brm.login');
+    Route::post('/login', 'login')->name('brm.login.submit');
+    Route::post('/logout', 'logout')->name('brm.logout');
+});
+
+
+// brms protected routes
+Route::middleware(['auth:brms'])->prefix('brms')->controller(BrmController::class)->group(function () {
+    Route::get('/dashboard', 'dashboard')->name('brm.dashboard');
+    Route::get('/customers', 'customers')->name('brm.customers');
+
+    // BRM Commissions routes
+    Route::controller(BrmCommissionController::class)->prefix('commissions')->group(function () {
+        Route::get('/', 'index')->name('brm.commissions');
+        Route::get('/history', 'history')->name('brm.commissions.history');
+        Route::get('/breakdown', 'breakdown')->name('brm.commissions.breakdown');
+        
+        // Wallet API routes
+        Route::post('/wallet/add-account', 'addAccount')->name('brm.wallet.add-account');
+        Route::get('/wallet/accounts', 'getAccounts')->name('brm.wallet.accounts');
+        Route::post('/wallet/withdraw', 'requestWithdrawal')->name('brm.wallet.withdraw');
+        Route::get('/withdrawals', 'getWithdrawals')->name('brm.withdrawals');
+    });
+
+    // BRM Performance routes
+    Route::controller(PerformanceController::class)->prefix('performance')->group(function () {
+        Route::get('/', 'index')->name('brm.performance');
+    });
+});
+
 
 Route::get('/', function () {
     return view('welcome');
@@ -112,7 +178,6 @@ Route::prefix('signup')->controller(SignupController::class)->group(function () 
 
 
 
-// (Removed duplicate staff routes)
 
 //Manager routes
 Route::middleware(['auth', 'verified', 'rolemanager:manager', 'check.subscription'])->group(function () {
@@ -297,9 +362,7 @@ Route::middleware(['auth', 'verified', 'rolemanager:manager', 'check.subscriptio
   });
 }); //End of manager router
 
-Route::get('/businessdashboard', function () {
-    return view('businessdashboard');
-})->middleware(['auth', 'verified', 'rolemanager:businessmanager'])->name('businessdashboard');
+
 
 
 

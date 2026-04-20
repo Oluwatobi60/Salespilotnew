@@ -48,6 +48,10 @@ return [
             'driver' => 'session',
             'provider' => 'superadmins',
         ],
+        'brms' => [
+            'driver' => 'session',
+            'provider' => 'brms',
+        ],
     ],
 
     /*
@@ -80,6 +84,10 @@ return [
             'driver' => 'eloquent',
             'model' => App\Models\SuperAdmin::class,
         ],
+        'brms' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Brm::class,
+        ],
     ],
 
     /*
@@ -111,6 +119,12 @@ return [
         'staffs' => [
             'provider' => 'staffs',
             'table' => 'staff_password_resets',
+            'expire' => 60,
+            'throttle' => 60,
+        ],
+        'brms' => [
+            'provider' => 'brms',
+            'table' => 'password_reset_tokens',
             'expire' => 60,
             'throttle' => 60,
         ],

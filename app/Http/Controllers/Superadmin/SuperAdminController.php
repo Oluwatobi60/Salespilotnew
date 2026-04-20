@@ -48,6 +48,7 @@ class SuperAdminController extends Controller
         return view('superadmin.auth.login');
     }
 
+    // Handle the login request
     public function login(Request $request)
     {
         $credentials = $request->validate([

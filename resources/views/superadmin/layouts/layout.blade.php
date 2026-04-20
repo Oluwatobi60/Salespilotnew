@@ -45,6 +45,12 @@
         <a href="{{ route('superadmin.revenue') }}" class="{{ request()->routeIs('superadmin.revenue*') ? 'active' : '' }}">
             <i class="bi bi-graph-up-arrow"></i> Revenue
         </a>
+        <a href="{{ route('superadmin.commissions') }}" class="{{ request()->routeIs('superadmin.commissions*') ? 'active' : '' }}">
+            <i class="bi bi-cash-coin"></i> Commissions
+        </a>
+        <a href="{{ route('superadmin.withdrawals') }}" class="{{ request()->routeIs('superadmin.withdrawals*') ? 'active' : '' }}">
+            <i class="bi bi-wallet2"></i> Withdrawals
+        </a>
     </nav>
     <div class="sidebar-footer">
         <div class="text-white-50 small mb-2 text-truncate">{{ $superadmin->name }}</div>

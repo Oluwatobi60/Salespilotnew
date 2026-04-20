@@ -73,6 +73,14 @@ class ProcessAutoRenewals extends Command
                     'last_renewed_at'      => Carbon::now(),
                 ]);
 
+                // Generate renewal commission for BRM
+                if ($sub->user && $sub->user->brm_id && $newSub->amount_paid > 0) {
+                    $commission = \App\Http\Controllers\Brm\BrmCommissionController::generateCommission($newSub);
+                    if ($commission) {
+                        $commission->update(['commission_type' => 'renewal']);
+                    }
+                }
+
                 DB::commit();
 
                 if ($sub->user && $sub->user->email) {

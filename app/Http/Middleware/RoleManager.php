@@ -41,8 +41,8 @@ class RoleManager
                     return $next($request);
                 }
                 break;
-            case 'businessmanager':
-                if($authUserRole == 'businessmanager'){
+            case 'brms':
+                if($authUserRole == 'brms'){
                     return $next($request);
                 }
                 break;
@@ -55,8 +55,8 @@ class RoleManager
                 return redirect()->route('manager');
             case 'staff':
                 return redirect()->route('dashboard');
-           case 'businessmanager':
-                return redirect()->route('businessdashboard');
+           case 'brms':
+                return redirect()->route('brm.dashboard');
         }
         return redirect()->route('login');
     }

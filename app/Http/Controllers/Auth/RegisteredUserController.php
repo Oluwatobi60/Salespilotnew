@@ -131,6 +131,7 @@ class RegisteredUserController extends Controller
             'email'         => $validated['email'],
             'password'      => Hash::make(Str::random(40)), // temporary — user sets via email link
             'role'          => $validated['role'],
+            'status'        => 1, // Automatically activate upon registration
             'password_set'  => false,
         ]);
 

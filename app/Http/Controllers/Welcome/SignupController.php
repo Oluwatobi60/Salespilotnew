@@ -365,6 +365,11 @@ class SignupController extends Controller
             'payment_reference' => $validated['payment_reference'] ?? 'FREE-' . Str::random(10),
         ]);
 
+        // Generate commission for BRM if customer has one and paid amount is > 0
+        if (Auth::user()->brm_id && $subscription->amount_paid > 0) {
+            \App\Http\Controllers\Brm\BrmCommissionController::generateCommission($subscription);
+        }
+
         // Send activation email
         Mail::to(Auth::user()->email)->send(new SubscriptionActivated(Auth::user(), $subscription));
 
@@ -410,6 +415,8 @@ class SignupController extends Controller
             'status' => 'active',
             'payment_reference' => 'FREE-TRIAL-' . Str::random(10),
         ]);
+
+        // Note: No commission generated for free trials (amount_paid = 0)
 
         // Send activation email
         Mail::to(Auth::user()->email)->send(new SubscriptionActivated(Auth::user(), $subscription));
