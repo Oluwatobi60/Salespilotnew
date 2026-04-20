@@ -5,7 +5,8 @@ Commission Breakdown
 @endsection
 
 @section('brms_page_content')
-<link rel="stylesheet" href="{{ asset('brm_asset/css/commission.css') }}">
+{{--  <link rel="stylesheet" href="{{ asset('brm_asset/css/commission.css') }}">  --}}
+<link rel="stylesheet" href="{{ asset('brm_asset/css/breakdown.css') }}">
 
 <!-- Page Header -->
 <div class="page-header">
@@ -204,142 +205,6 @@ Commission Breakdown
   </div>
 </div>
 
-<style>
-.breakdown-container {
-  display: grid;
-  gap: 2rem;
-}
 
-.breakdown-section {
-  background: white;
-  border-radius: 12px;
-  padding: 1.5rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.breakdown-section h3 {
-  margin: 0 0 1.5rem;
-  color: #2c3e50;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  font-size: 1.1rem;
-}
-
-.breakdown-table {
-  overflow-x: auto;
-}
-
-.breakdown-table table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.breakdown-table th {
-  background: #f8f9fa;
-  padding: 1rem;
-  text-align: left;
-  font-weight: 600;
-  color: #495057;
-  font-size: 0.9rem;
-  border-bottom: 2px solid #dee2e6;
-}
-
-.breakdown-table td {
-  padding: 1rem;
-  border-bottom: 1px solid #dee2e6;
-  color: #495057;
-}
-
-.breakdown-table tbody tr:hover {
-  background: #f8f9fa;
-}
-
-.breakdown-table .total-row {
-  background: #f8f9fa;
-  font-weight: 600;
-  border-top: 2px solid #dee2e6;
-}
-
-.progress-bar {
-  height: 8px;
-  background: #e9ecef;
-  border-radius: 4px;
-  margin-top: 0.5rem;
-  overflow: hidden;
-}
-
-.progress-fill {
-  height: 100%;
-  border-radius: 4px;
-  transition: width 0.3s ease;
-}
-
-.type-badge {
-  display: inline-block;
-  padding: 0.25rem 0.75rem;
-  border-radius: 6px;
-  font-size: 0.85rem;
-  font-weight: 500;
-}
-
-.type-badge.referral {
-  background: #e7f3ff;
-  color: #0066cc;
-}
-
-.type-badge.renewal {
-  background: #fff3e0;
-  color: #f57c00;
-}
-
-.type-badge.upgrade {
-  background: #f3e5f5;
-  color: #6a1b9a;
-}
-
-.status-badge {
-  display: inline-block;
-  padding: 0.35rem 0.85rem;
-  border-radius: 20px;
-  font-size: 0.85rem;
-  font-weight: 600;
-}
-
-.status-badge.pending {
-  background: #fff3cd;
-  color: #856404;
-}
-
-.status-badge.approved {
-  background: #d1ecf1;
-  color: #0c5460;
-}
-
-.status-badge.paid {
-  background: #d4edda;
-  color: #155724;
-}
-
-.status-badge.rejected {
-  background: #f8d7da;
-  color: #721c24;
-}
-
-@media (max-width: 768px) {
-  .breakdown-section {
-    padding: 1rem;
-  }
-
-  .breakdown-table {
-    font-size: 0.85rem;
-  }
-
-  .breakdown-table th,
-  .breakdown-table td {
-    padding: 0.75rem 0.5rem;
-  }
-}
-</style>
 
 @endsection
