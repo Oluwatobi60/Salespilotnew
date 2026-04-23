@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SalesPilot System Diagrams - Download</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+        
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .diagrams-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .diagram-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .diagram-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        }
+        
+        .diagram-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .diagram-header h2 {
+            font-size: 1.5em;
+        }
+        
+        .diagram-title-desc {
+            flex: 1;
+        }
+        
+        .diagram-title-desc p {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-top: 5px;
+        }
+        
+        .diagram-controls {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            background: white;
+            color: #667eea;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9em;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .btn:hover {
+            background: #f0f0f0;
+            transform: scale(1.05);
+        }
+        
+        .btn.download-svg {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .btn.download-svg:hover {
+            background: #45a049;
+        }
+        
+        .btn.download-png {
+            background: #FF9800;
+            color: white;
+        }
+        
+        .btn.download-png:hover {
+            background: #e68900;
+        }
+        
+        .btn.download-pdf {
+            background: #F44336;
+            color: white;
+        }
+        
+        .btn.download-pdf:hover {
+            background: #da190b;
+        }
+        
+        .diagram-content {
+            padding: 20px;
+            overflow-x: auto;
+            background: #f9f9f9;
+            min-height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .mermaid {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .footer {
+            text-align: center;
+            color: white;
+            padding: 20px;
+            margin-top: 40px;
+            opacity: 0.9;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #999;
+            font-style: italic;
+        }
+        
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 1.8em;
+            }
+            
+            .diagram-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            
+            .diagram-controls {
+                width: 100%;
+                flex-wrap: wrap;
+            }
+            
+            .btn {
+                font-size: 0.85em;
+                padding: 6px 12px;
+            }
+        }
+        
+        .success-message {
+            display: none;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #4CAF50;
+            color: white;
+            padding: 16px 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+        }
+        
+        .success-message.show {
+            display: block;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎯 SalesPilot System Diagrams</h1>
+            <p>Download flowcharts, architecture diagrams, and database schemas</p>
+        </header>
+        
+        <div class="diagrams-grid">
+            <!-- Diagram 1: Main Flow -->
+            <div class="diagram-card">
+                <div class="diagram-header">
+                    <div class="diagram-title-desc">
+                        <h2>Comprehensive Application Flow</h2>
+                        <p>Complete user journey from registration to commission withdrawal</p>
+                    </div>
+                    <div class="diagram-controls">
+                        <button class="btn download-svg" onclick="downloadDiagram('diagram1', 'svg')">📥 SVG</button>
+                        <button class="btn download-png" onclick="downloadDiagram('diagram1', 'png')">📥 PNG</button>
+                        <button class="btn download-pdf" onclick="downloadDiagram('diagram1', 'pdf')">📥 PDF</button>
+                    </div>
+                </div>
+                <div class="diagram-content">
+                    <div id="diagram1" class="mermaid">
+graph TD
+    A["👤 Business Creator Registration"] --> B["Email Verification"]
+    B --> C["Account Created & Auto-Activated<br/>status = 1"]
+    C --> D["Set Password via Email Link"]
+    D --> E["Select Subscription Plan"]
+    E --> F["Process Payment"]
+    F --> G["Subscription Activated<br/>UserSubscription: active"]
+    
+    G --> H["Dashboard Access"]
+    H --> I["Manage Staff & Managers"]
+    H --> J["Create Branches"]
+    H --> K["Track Features by Plan"]
+    
+    G --> L["✓ Commission Generation<br/>Triggered"]
+    L --> M["Is BRM Referral?"]
+    M -->|Yes| N["Create Commission<br/>status=pending<br/>type=referral"]
+    M -->|No| O["No Commission"]
+    
+    N --> P["Superadmin Dashboard"]
+    P --> Q["Review Pending<br/>Commissions"]
+    Q --> R["Approve Commission"]
+    R --> S["Commission Status: approved<br/>💰 Auto-add to BRM Wallet"]
+    
+    S --> T["BRM Dashboard"]
+    T --> U["View Wallet Balance"]
+    T --> V["View Commission Details"]
+    T --> W["Add Bank Account"]
+    W --> X["Request Withdrawal"]
+    
+    X --> Y["Withdrawal Status: pending"]
+    Y --> Z["Superadmin Reviews<br/>Withdrawal Request"]
+    Z --> AA["Approve Withdrawal"]
+    AA --> AB["Status: approved<br/>💸 Deduct from Wallet<br/>Await Bank Transfer"]
+    
+    AB --> AC["Superadmin Confirms<br/>Bank Transfer"]
+    AC --> AD["Mark as Paid<br/>Status: paid"]
+    AD --> AE["✓ Withdrawal Complete"]
+    
+    A2["📊 Subscription Renewal"] --> B2["Check Expiring Subscriptions"]
+    B2 --> C2["Auto-Renew if enabled"]
+    C2 --> D2["Commission Generated<br/>type=renewal"]
+    D2 --> E2["Add to BRM Wallet<br/>Same withdrawal flow"]
+    
+    G -.->|Auto Check| A2
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Diagram 2: User Roles -->
+            <div class="diagram-card">
+                <div class="diagram-header">
+                    <div class="diagram-title-desc">
+                        <h2>User Roles & System Interaction</h2>
+                        <p>Different user types and their interaction with system modules</p>
+                    </div>
+                    <div class="diagram-controls">
+                        <button class="btn download-svg" onclick="downloadDiagram('diagram2', 'svg')">📥 SVG</button>
+                        <button class="btn download-png" onclick="downloadDiagram('diagram2', 'png')">📥 PNG</button>
+                        <button class="btn download-pdf" onclick="downloadDiagram('diagram2', 'pdf')">📥 PDF</button>
+                    </div>
+                </div>
+                <div class="diagram-content">
+                    <div id="diagram2" class="mermaid">
+graph TB
+    subgraph Users["👥 USER TYPES"]
+        BC["Business Creator<br/>(Manager)"]
+        ST["Staff"]
+        MG["Manager<br/>(Delegated)"]
+        BRM["BRM<br/>Business Relation Manager"]
+        SA["Superadmin"]
+    end
+    
+    subgraph Core["📱 CORE SYSTEMS"]
+        Auth["Authentication<br/>3 Guards: web, brms, superadmin"]
+        Sub["Subscription<br/>Plans & Features"]
+        Staff["Staff & Manager<br/>Delegation"]
+        Branch["Branch<br/>Management"]
+    end
+    
+    subgraph Ops["🏢 OPERATIONS"]
+        Dashboard["Dashboard &<br/>Analytics"]
+        Reports["Reporting<br/>& Export"]
+        Inventory["Inventory<br/>Management"]
+        Billing["Billing &<br/>Support"]
+    end
+    
+    subgraph Commission["💰 COMMISSION SYSTEM"]
+        CommGen["Commission<br/>Generation<br/>referral/renewal"]
+        CommAppr["Commission<br/>Approval<br/>superadmin"]
+        CommWallet["Wallet<br/>Balance"]
+        Withdraw["Withdrawal<br/>Requests"]
+        WithAppr["Withdrawal<br/>Approval"]
+        Payment["Bank<br/>Transfer"]
+    end
+    
+    BC --> Auth
+    ST --> Auth
+    MG --> Auth
+    BRM --> Auth
+    SA --> Auth
+    
+    BC --> Sub
+    BC --> Staff
+    BC --> Branch
+    BC --> Ops
+    
+    MG --> Ops
+    ST --> Dashboard
+    
+    Sub -->|New Subscription| CommGen
+    CommGen -->|Pending| CommAppr
+    CommAppr -->|Approved| CommWallet
+    CommWallet -->|BRM See Balance| BRM
+    BRM --> Withdraw
+    Withdraw -->|Pending| WithAppr
+    WithAppr -->|Approved| Payment
+    SA --> CommAppr
+    SA --> WithAppr
+    SA --> Payment
+    
+    CommAppr -->|Dashboard| SA
+    WithAppr -->|Dashboard| SA
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Diagram 3: Process Flow -->
+            <div class="diagram-card">
+                <div class="diagram-header">
+                    <div class="diagram-title-desc">
+                        <h2>Complete State & Process Flow</h2>
+                        <p>Registration, subscription lifecycle, commissions, and withdrawals</p>
+                    </div>
+                    <div class="diagram-controls">
+                        <button class="btn download-svg" onclick="downloadDiagram('diagram3', 'svg')">📥 SVG</button>
+                        <button class="btn download-png" onclick="downloadDiagram('diagram3', 'png')">📥 PNG</button>
+                        <button class="btn download-pdf" onclick="downloadDiagram('diagram3', 'pdf')">📥 PDF</button>
+                    </div>
+                </div>
+                <div class="diagram-content">
+                    <div id="diagram3" class="mermaid">
+graph LR
+    subgraph RegFlow["REGISTRATION & ACTIVATION"]
+        R1["1. Email Verify"]
+        R2["2. Register Info"]
+        R3["3. Account Created<br/>✅ Auto-Active"]
+        R4["4. Set Password"]
+        R5["✅ Ready to Use"]
+        R1 --> R2 --> R3 --> R4 --> R5
+    end
+    
+    subgraph SubFlow["SUBSCRIPTION LIFECYCLE"]
+        S1["Select Plan"]
+        S2["Process Payment"]
+        S3["Create Subscription"]
+        S4["Active Period"]
+        S5["30 days before<br/>expiry"]
+        S6["Renewal Check"]
+        S61["❌ Expired"]
+        S62["✅ Renewed"]
+        S1 --> S2 --> S3 --> S4 --> S5 --> S6
+        S6 --> S61
+        S6 --> S62
+        S62 -.-> S3
+    end
+    
+    subgraph CommFlow["COMMISSION FLOW"]
+        C1["Subscription<br/>Created"]
+        C2["Commission<br/>Pending"]
+        C3["Superadmin<br/>Reviews"]
+        C4["Approve"]
+        C5["✅ In Wallet<br/>Balance"]
+        C6["❌ Reject"]
+        C1 --> C2 --> C3 --> C4 --> C5
+        C3 --> C6
+    end
+    
+    subgraph WithFlow["WITHDRAWAL FLOW"]
+        W1["BRM Requests<br/>Withdrawal"]
+        W2["Pending<br/>Approval"]
+        W3["Superadmin<br/>Reviews"]
+        W4["Approve"]
+        W5["Await Bank<br/>Transfer"]
+        W6["Mark Paid"]
+        W7["✅ Complete"]
+        W8["❌ Reject<br/>Return to wallet"]
+        W1 --> W2 --> W3 --> W4 --> W5 --> W6 --> W7
+        W3 --> W8
+    end
+    
+    RegFlow --> SubFlow
+    SubFlow --> CommFlow
+    CommFlow --> WithFlow
+    
+    style R3 fill:#90EE90
+    style R5 fill:#90EE90
+    style S62 fill:#90EE90
+    style C5 fill:#90EE90
+    style W7 fill:#90EE90
+    style S61 fill:#FFB6C6
+    style C6 fill:#FFB6C6
+    style W8 fill:#FFB6C6
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Diagram 4: Database -->
+            <div class="diagram-card">
+                <div class="diagram-header">
+                    <div class="diagram-title-desc">
+                        <h2>Database Entity Relationships</h2>
+                        <p>Data models and their relationships</p>
+                    </div>
+                    <div class="diagram-controls">
+                        <button class="btn download-svg" onclick="downloadDiagram('diagram4', 'svg')">📥 SVG</button>
+                        <button class="btn download-png" onclick="downloadDiagram('diagram4', 'png')">📥 PNG</button>
+                        <button class="btn download-pdf" onclick="downloadDiagram('diagram4', 'pdf')">📥 PDF</button>
+                    </div>
+                </div>
+                <div class="diagram-content">
+                    <div id="diagram4" class="mermaid">
+erDiagram
+    USERS ||--o{ SUBSCRIPTIONS : "has"
+    USERS ||--o{ COMMISSIONS : "gets_from"
+    SUBSCRIPTIONS ||--|| PLANS : "subscribes_to"
+    SUBSCRIPTIONS ||--o{ COMMISSIONS : "generates"
+    BRMS ||--o{ COMMISSIONS : "earns"
+    BRMS ||--o{ WITHDRAWALS : "requests"
+    BRMS ||--| BRM_WALLETS : "has"
+    BRMS ||--o{ WALLET_ACCOUNTS : "has"
+    WITHDRAWALS ||--|| WALLET_ACCOUNTS : "uses"
+    USERS }o--|| BRMS : "referred_by"
+    
+    USERS {
+        int id
+        string email
+        string business_name
+        int status
+    }
+    
+    BRMS {
+        int id
+        string name
+        string email
+        int commission_rate
+    }
+    
+    SUBSCRIPTIONS {
+        int id
+        int user_id
+        string status
+        decimal amount_paid
+    }
+    
+    PLANS {
+        int id
+        string name
+        decimal monthly_price
+    }
+    
+    COMMISSIONS {
+        int id
+        int brm_id
+        decimal commission_amount
+        string status
+        string commission_type
+    }
+    
+    WITHDRAWALS {
+        int id
+        int brm_id
+        decimal amount
+        string status
+    }
+    
+    WALLET_ACCOUNTS {
+        int id
+        int brm_id
+        string bank_name
+    }
+    
+    BRM_WALLETS {
+        int id
+        int brm_id
+        decimal balance
+    }
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>📊 SalesPilot System Documentation | Generated on April 23, 2026</p>
+        </div>
+    </div>
+    
+    <div class="success-message" id="successMessage">
+        ✓ Diagram saved successfully!
+    </div>
+    
+    <script>
+        // Initialize Mermaid
+        mermaid.initialize({ startOnLoad: true, theme: 'default' });
+        mermaid.contentLoaded();
+        
+        async function downloadDiagram(diagramId, format) {
+            const diagramElement = document.getElementById(diagramId);
+            const svg = diagramElement.querySelector('svg');
+            
+            if (!svg) {
+                alert('Diagram not ready. Please wait a moment and try again.');
+                return;
+            }
+            
+            try {
+                if (format === 'svg') {
+                    downloadSVG(svg, diagramId);
+                } else if (format === 'png') {
+                    await downloadPNG(svg, diagramId);
+                } else if (format === 'pdf') {
+                    await downloadPDF(svg, diagramId);
+                }
+                showSuccessMessage();
+            } catch (error) {
+                alert('Error downloading diagram: ' + error.message);
+            }
+        }
+        
+        function downloadSVG(svg, diagramId) {
+            const svgData = new XMLSerializer().serializeToString(svg);
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const img = new Image();
+            
+            img.onload = function() {
+                canvas.width = img.width;
+                canvas.height = img.height;
+                ctx.drawImage(img, 0, 0);
+                
+                const link = document.createElement('a');
+                link.href = 'data:image/svg+xml;base64,' + btoa(svgData);
+                link.download = `salespilot-${diagramId}.svg`;
+                link.click();
+            };
+            
+            img.src = 'data:image/svg+xml;base64,' + btoa(svgData);
+        }
+        
+        async function downloadPNG(svg, diagramId) {
+            const canvas = await html2canvas(svg.parentElement, {
+                scale: 2,
+                backgroundColor: '#ffffff'
+            });
+            
+            const link = document.createElement('a');
+            link.href = canvas.toDataURL('image/png');
+            link.download = `salespilot-${diagramId}.png`;
+            link.click();
+        }
+        
+        async function downloadPDF(svg, diagramId) {
+            const canvas = await html2canvas(svg.parentElement, {
+                scale: 2,
+                backgroundColor: '#ffffff'
+            });
+            
+            const { jsPDF } = window.jspdf;
+            const imgData = canvas.toDataURL('image/png');
+            const pdf = new jsPDF({
+                orientation: 'landscape',
+                unit: 'mm',
+                format: 'a4'
+            });
+            
+            const imgWidth = 280;
+            const imgHeight = (canvas.height * imgWidth) / canvas.width;
+            
+            pdf.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight);
+            pdf.save(`salespilot-${diagramId}.pdf`);
+        }
+        
+        function showSuccessMessage() {
+            const message = document.getElementById('successMessage');
+            message.classList.add('show');
+            setTimeout(() => {
+                message.classList.remove('show');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

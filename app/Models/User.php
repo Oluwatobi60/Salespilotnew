@@ -81,6 +81,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Get all subscriptions for this user
+     */
+    public function subscriptions(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(UserSubscription::class);
+    }
+
+    /**
      * Get the branch this user is assigned to (if any)
      */
     public function branch(): \Illuminate\Database\Eloquent\Relations\BelongsTo

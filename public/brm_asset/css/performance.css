@@ -272,6 +272,11 @@
         box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
       }
 
+      .achievement-badge.achievement-locked:hover {
+        transform: none;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      }
+
       .achievement-badge i {
         font-size: 2.5rem;
         margin-bottom: 0.75rem;

@@ -20,10 +20,10 @@ BRm Commissions
               <div class="stat-icon">
                 <i class="bi bi-people-fill"></i>
               </div>
-              <h3>145</h3>
+              <h3>{{ $totalCustomers }}</h3>
               <p>Total Customers</p>
               <div class="stat-trend positive">
-                <i class="bi bi-arrow-up"></i> +12% from last month
+                <i class="bi bi-arrow-up"></i> Customers acquired
               </div>
             </div>
 
@@ -31,10 +31,10 @@ BRm Commissions
               <div class="stat-icon">
                 <i class="bi bi-check-circle-fill"></i>
               </div>
-              <h3>23</h3>
+              <h3>{{ $thisMonthConversions }}</h3>
               <p>This Month Conversions</p>
-              <div class="stat-trend positive">
-                <i class="bi bi-arrow-up"></i> +18% from last month
+              <div class="stat-trend {{ $conversionTrend >= 0 ? 'positive' : 'negative' }}">
+                <i class="bi {{ $conversionTrend >= 0 ? 'bi-arrow-up' : 'bi-arrow-down' }}"></i> {{ abs($conversionTrend) }}% from last month
               </div>
             </div>
 
@@ -42,10 +42,10 @@ BRm Commissions
               <div class="stat-icon">
                 <i class="bi bi-cash-stack"></i>
               </div>
-              <h3>₦4.5M</h3>
+              <h3>₦{{ number_format($thisMonthRevenue, 0) }}</h3>
               <p>Total Revenue Generated</p>
-              <div class="stat-trend positive">
-                <i class="bi bi-arrow-up"></i> +25% from last month
+              <div class="stat-trend {{ $revenueTrend >= 0 ? 'positive' : 'negative' }}">
+                <i class="bi {{ $revenueTrend >= 0 ? 'bi-arrow-up' : 'bi-arrow-down' }}"></i> {{ abs($revenueTrend) }}% from last month
               </div>
             </div>
 
@@ -53,10 +53,10 @@ BRm Commissions
               <div class="stat-icon">
                 <i class="bi bi-percent"></i>
               </div>
-              <h3>68%</h3>
+              <h3>{{ $conversionRate }}%</h3>
               <p>Conversion Rate</p>
               <div class="stat-trend positive">
-                <i class="bi bi-arrow-up"></i> +5% from last month
+                <i class="bi bi-target"></i> Customer conversion
               </div>
             </div>
           </div>
@@ -86,50 +86,26 @@ BRm Commissions
               <div class="leaderboard-section">
                 <h4><i class="bi bi-trophy-fill"></i> BRM Leaderboard</h4>
                 <ul class="leaderboard-list">
-                  <li class="leaderboard-item">
-                    <div class="leaderboard-rank gold">1</div>
-                    <div class="leaderboard-info">
-                      <h6>You</h6>
-                      <p>145 customers • 68% conversion</p>
-                    </div>
-                    <div class="leaderboard-value">₦450K</div>
-                  </li>
-
-                  <li class="leaderboard-item">
-                    <div class="leaderboard-rank silver">2</div>
-                    <div class="leaderboard-info">
-                      <h6>Sarah Johnson</h6>
-                      <p>132 customers • 65% conversion</p>
-                    </div>
-                    <div class="leaderboard-value">₦420K</div>
-                  </li>
-
-                  <li class="leaderboard-item">
-                    <div class="leaderboard-rank bronze">3</div>
-                    <div class="leaderboard-info">
-                      <h6>Michael Chen</h6>
-                      <p>118 customers • 62% conversion</p>
-                    </div>
-                    <div class="leaderboard-value">₦385K</div>
-                  </li>
-
-                  <li class="leaderboard-item">
-                    <div class="leaderboard-rank regular">4</div>
-                    <div class="leaderboard-info">
-                      <h6>Emily Davis</h6>
-                      <p>105 customers • 58% conversion</p>
-                    </div>
-                    <div class="leaderboard-value">₦340K</div>
-                  </li>
-
-                  <li class="leaderboard-item">
-                    <div class="leaderboard-rank regular">5</div>
-                    <div class="leaderboard-info">
-                      <h6>James Wilson</h6>
-                      <p>98 customers • 55% conversion</p>
-                    </div>
-                    <div class="leaderboard-value">₦320K</div>
-                  </li>
+                  @forelse($leaderboard as $index => $leader)
+                    @php
+                      $rankClass = 'regular';
+                      if ($index === 0) $rankClass = 'gold';
+                      elseif ($index === 1) $rankClass = 'silver';
+                      elseif ($index === 2) $rankClass = 'bronze';
+                    @endphp
+                    <li class="leaderboard-item">
+                      <div class="leaderboard-rank {{ $rankClass }}">{{ $index + 1 }}</div>
+                      <div class="leaderboard-info">
+                        <h6>{{ $leader['name'] }}</h6>
+                        <p>{{ $leader['customers'] }} customers • {{ $leader['conversionRate'] }}% conversion</p>
+                      </div>
+                      <div class="leaderboard-value">₦{{ number_format($leader['totalCommission'], 0) }}</div>
+                    </li>
+                  @empty
+                    <li class="leaderboard-item text-center text-muted py-4">
+                      <p>No BRM data available</p>
+                    </li>
+                  @endforelse
                 </ul>
               </div>
             </div>
@@ -138,42 +114,20 @@ BRm Commissions
             <div class="col-lg-6 mb-4">
               <div class="achievements-section">
                 <h4><i class="bi bi-award-fill"></i> Achievements & Badges</h4>
+                <div style="text-align: center; margin-bottom: 1rem; color: #6c757d;">
+                  <small>{{ $achievements['unlockedCount'] }} of {{ $achievements['totalCount'] }} unlocked</small>
+                </div>
                 <div class="achievements-grid">
-                  <div class="achievement-badge">
-                    <i class="bi bi-trophy-fill"></i>
-                    <h6>Top Performer</h6>
-                    <p>Rank #1 This Month</p>
-                  </div>
-
-                  <div class="achievement-badge" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
-                    <i class="bi bi-star-fill"></i>
-                    <h6>100 Customers</h6>
-                    <p>Century Club</p>
-                  </div>
-
-                  <div class="achievement-badge" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
-                    <i class="bi bi-lightning-fill"></i>
-                    <h6>Fast Closer</h6>
-                    <p>20 Deals in a Month</p>
-                  </div>
-
-                  <div class="achievement-badge" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
-                    <i class="bi bi-graph-up-arrow"></i>
-                    <h6>Growth Leader</h6>
-                    <p>+25% Month Growth</p>
-                  </div>
-
-                  <div class="achievement-badge" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
-                    <i class="bi bi-gem"></i>
-                    <h6>Premium Seller</h6>
-                    <p>10 Enterprise Deals</p>
-                  </div>
-
-                  <div class="achievement-badge" style="background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);">
-                    <i class="bi bi-fire"></i>
-                    <h6>Hot Streak</h6>
-                    <p>7 Days Consecutive</p>
-                  </div>
+                  @forelse($achievements['list'] as $achievement)
+                    <div class="achievement-badge {{ !$achievement['unlocked'] ? 'achievement-locked' : '' }}" 
+                         style="background: {{ $achievement['unlocked'] ? $achievement['gradient'] : '#e9ecef' }}; {{ !$achievement['unlocked'] ? 'opacity: 0.6;' : '' }}">
+                      <i class="bi {{ $achievement['icon'] }}"></i>
+                      <h6>{{ $achievement['title'] }}</h6>
+                      <p>{{ $achievement['description'] }}</p>
+                    </div>
+                  @empty
+                    <p class="text-muted">No achievements yet</p>
+                  @endforelse
                 </div>
               </div>
             </div>
