@@ -8,7 +8,7 @@ All Items
   $showInventoryColumns = true;
   if(isset($activeSubscription) && $activeSubscription && $activeSubscription->subscriptionPlan) {
     $planName = strtolower(trim($activeSubscription->subscriptionPlan->name ?? ''));
-    if($planName === 'basic') {
+    if($planName === 'basic' || $planName === 'free') {
       $showInventoryColumns = false;
     }
   }
@@ -73,6 +73,7 @@ All Items
                 </div>
             </div>
         </div>
+        @if($showInventoryColumns)
         <div class="col-6 col-md-3">
             <div class="ai-stat card shadow-sm">
                 <div class="d-flex align-items-center gap-3">
@@ -84,6 +85,7 @@ All Items
                 </div>
             </div>
         </div>
+        @endif
         <div class="col-6 col-md-3">
             <div class="ai-stat card shadow-sm">
                 <div class="d-flex align-items-center gap-3">

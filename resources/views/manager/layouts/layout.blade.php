@@ -93,7 +93,16 @@
           <li class="nav-item"><a class="nav-link" href=" {{ route('manager.staff_sales') }} ">Sales by Staff</a></li>
           <li class="nav-item"><a class="nav-link" href="{{ route('manager.sales_by_item') }} ">Sales by Item</a></li>
           <li class="nav-item"><a class="nav-link" href="{{ route('manager.sales_by_category') }}">Sales by Category</a></li>
+            @php
+            $currentSubscription = $manager->currentSubscription()->first();
+            $planName = $currentSubscription && $currentSubscription->subscriptionPlan
+                ? strtolower(trim($currentSubscription->subscriptionPlan->name))
+                : 'free';
+            $isFreePlan = ($planName === 'free');
+          @endphp
+          @if(!$isFreePlan)
           <li class="nav-item"><a class="nav-link" href="{{ route('manager.valuation_report') }}">Inventory Valuation</a></li>
+           @endif
       {{--      <li class="nav-item"><a class="nav-link" href="{{ route('manager.taxes') }}">Taxes</a></li>  --}}
           <li class="nav-item"><a class="nav-link" href="{{ route('manager.discount_report') }}">Discount Report</a></li>
         </ul>
@@ -128,7 +137,7 @@
             $planName = $currentSubscription && $currentSubscription->subscriptionPlan
                 ? strtolower(trim($currentSubscription->subscriptionPlan->name))
                 : 'free';
-            $isBasicPlan = ($planName === 'basic');
+            $isBasicPlan = ($planName === 'basic' || $planName === 'free');
           @endphp
           @if(!$isBasicPlan)
             <li class="nav-item"> <a class="nav-link" href="{{ route('manager.manager') }}">Managers</a></li>
