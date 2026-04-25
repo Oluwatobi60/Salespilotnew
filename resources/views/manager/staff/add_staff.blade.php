@@ -185,7 +185,7 @@ Add Staff Member
                               $showBranchColumn = true;
                               if(isset($activeSubscription) && $activeSubscription && $activeSubscription->subscriptionPlan) {
                                 $planName = strtolower(trim($activeSubscription->subscriptionPlan->name ?? ''));
-                                if($planName === 'basic') {
+                                if($planName === 'basic' || $planName === 'free') {
                                   $showBranchColumn = false;
                                 }
                               }
@@ -390,7 +390,6 @@ Add Staff Member
                 <div class="col-md-6 mb-2">
                   <label for="role" class="form-label">Role <span class="text-danger">*</span></label>
                   <select class="form-select" id="role" name="role" required>
-                    <option value="">Select Role</option>
                     <option value="staff" {{ old('role') == 'staff' ? 'selected' : '' }}>Staff</option>
                   </select>
                   @error('role')
@@ -414,7 +413,7 @@ Add Staff Member
                 $showBranchField = true;
                 if(isset($activeSubscription) && $activeSubscription && $activeSubscription->subscriptionPlan) {
                   $planName = strtolower(trim($activeSubscription->subscriptionPlan->name ?? ''));
-                  if($planName === 'basic') {
+                  if($planName === 'basic' || $planName === 'free') {
                     $showBranchField = false;
                   }
                 }
