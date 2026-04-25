@@ -64,7 +64,6 @@ class RegisteredUserController extends Controller
                 'message' => "Valid referral code for {$brm->name}",
                 'brm_id' => $brm->id,
                 'brm_name' => $brm->name,
-                'brm_region' => $brm->region ?? 'N/A',
             ]);
         }
 

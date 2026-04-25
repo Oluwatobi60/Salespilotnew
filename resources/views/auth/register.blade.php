@@ -241,8 +241,7 @@ Create Your SalesPilot Account
                 // Success: Valid referral code
                 feedback.innerHTML = `
                     <i class="uil uil-check-circle" style="color: #4CAF50;"></i>
-                    <span style="color: #4CAF50;"><strong>Valid!</strong> ${data.message}</span>
-                    <br><small style="color: #2e7d32;">Referred by: <strong>${data.brm_name}</strong> ${data.brm_region !== 'N/A' ? '('+data.brm_region+')' : ''}</small>
+                    <span style="color: #2e7d32;">Referred by: <strong>${data.brm_name}</strong></span>
                 `;
                 feedback.style.backgroundColor = '#e8f5e9';
                 feedback.style.borderLeft = '4px solid #4CAF50';
