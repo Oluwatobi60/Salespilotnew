@@ -81,6 +81,11 @@ class StandardItem extends Model
         return $this->belongsTo(Supplier::class);
     }
 
+    public function unit()
+    {
+        return $this->belongsTo(Unit::class, 'unit', 'id');
+    }
+
     public function pricingTiers()
     {
         return $this->hasMany(PricingTier::class);

@@ -3,94 +3,164 @@
 Manager Profile
 @endsection
 @section('manager_layout_content')
-<link rel="stylesheet" href="{{ asset('manager_asset/css/profile_style.css') }}">
+
+<link rel="stylesheet" href="{{ asset('manager_asset/css/showprofile.css') }}">
 
 <div class="content-wrapper">
-    @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <i class="bi bi-check-circle me-2"></i>
-            <strong>Success!</strong> {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    <!-- Cover Banner -->
+    <div class="profile-cover"></div>
+
+    <div class="container-fluid px-4">
+        @php $manager = isset($manager) ? $manager : Auth::user(); @endphp
+
+        <!-- Alerts -->
+        @if(session('success'))
+            <div class="alert alert-success alert-modern alert-dismissible fade show mt-3" role="alert">
+                <i class="bi bi-check-circle me-2"></i>
+                <strong>Success!</strong> {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        @endif
+        @if(session('error'))
+            <div class="alert alert-danger alert-modern alert-dismissible fade show mt-3" role="alert">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                <strong>Error!</strong> {{ session('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        @endif
+
+        <!-- Avatar & Header Info -->
+        <div class="profile-avatar-container">
+            @if($manager->business_logo)
+                <img src="{{ asset('storage/' . $manager->business_logo) }}" alt="Business Logo" class="profile-avatar">
+            @else
+                <img src="{{ asset('manager_asset/assets/images/faces/face8.jpg') }}" alt="Profile" class="profile-avatar">
+            @endif
         </div>
-    @endif
-    @if(session('error'))
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <i class="bi bi-exclamation-triangle me-2"></i>
-            <strong>Error!</strong> {{ session('error') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="profile-header-info">
+                    <h1 class="profile-name">{{ $manager->first_name }} {{ $manager->other_name }} {{ $manager->surname }}</h1>
+                    <p class="profile-email"><i class="bi bi-envelope me-2"></i>{{ $manager->email }}</p>
+                    <div class="profile-actions">
+                        <button class="btn btn-modern btn-primary-modern" id="openEditPanel">
+                            <i class="bi bi-pencil-square"></i> Edit Profile
+                        </button>
+                        <button class="btn btn-modern btn-secondary-modern" id="openPasswordPanel">
+                            <i class="bi bi-key"></i> Change Password
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
-    @endif
-    @if($errors->any())
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <i class="bi bi-exclamation-triangle me-2"></i>
-            <strong>Error!</strong>
-            <ul class="mb-0">
-                @foreach($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
-    <div class="row">
-        <div class="col-12">
-            <div class="profile-header text-center position-relative">
-                @php $manager = isset($manager) ? $manager : Auth::user(); @endphp
-                {{-- Debug: Show business_logo value and path --}}
-                {{--  <div style="font-size:12px;color:#c00;background:#fffbe6;padding:2px 8px;margin-bottom:4px;display:inline-block;">
-                    business_logo: {{ $manager->business_logo ?? 'NULL' }}<br>
-                    path: {{ $manager->business_logo ? asset('storage/' . $manager->business_logo) : 'default avatar' }}
-                </div>  --}}
-                @if($manager->business_logo)
-                    <img src="{{ asset('storage/' . $manager->business_logo) }}" alt="Business Logo" class="profile-avatar mb-3">
-                @else
-                    <img src="{{ asset('manager_asset/assets/images/faces/face8.jpg') }}" alt="Profile" class="profile-avatar mb-3">
-                @endif
-                <h3 class="mb-1">{{ $manager->first_name }} {{ $manager->other_name }} {{ $manager->surname }}</h3>
-                <p class="mb-0">{{ $manager->email }}</p>
-                <div class="profile-btns position-absolute top-0 end-0 mt-3 me-3">
-                    <button class="btn btn-outline-primary" id="openEditPanel">
-                        <i class="bi bi-pencil-square"></i> Edit Profile
-                    </button>
-                    <button class="btn btn-outline-warning" id="openPasswordPanel">
-                        <i class="bi bi-key"></i> Change Password
-                    </button>
+
+        <!-- Info Cards -->
+        <div class="row justify-content-center mt-4">
+            <div class="col-lg-10">
+                <div class="row">
+                    <!-- Personal Information Card -->
+                    <div class="col-md-6">
+                        <div class="info-card">
+                            <div class="info-card-header">
+                                <div class="info-card-icon icon-purple">
+                                    <i class="bi bi-person-circle"></i>
+                                </div>
+                                <h3 class="info-card-title">Personal Information</h3>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label"><i class="bi bi-person"></i>Full Name</span>
+                                <span class="info-value">{{ $manager->first_name }} {{ $manager->other_name }} {{ $manager->surname }}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label"><i class="bi bi-envelope"></i>Email</span>
+                                <span class="info-value">{{ $manager->email }}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label"><i class="bi bi-telephone"></i>Phone</span>
+                                <span class="info-value">{{ $manager->phone_number ?? 'Not provided' }}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label"><i class="bi bi-briefcase"></i>Business</span>
+                                <span class="info-value">{{ $manager->business_name }}</span>
+                            </div>
+                            @if($manager->addby)
+                            <div class="info-item">
+                                <span class="info-label"><i class="bi bi-building"></i>Branch</span>
+                                <span class="info-value">{{ $manager->branch_name ?? ($manager->managedBranch ? $manager->managedBranch->branch_name : 'Not assigned') }}</span>
+                            </div>
+                            @endif
+                            <div class="info-item">
+                                <span class="info-label"><i class="bi bi-geo-alt"></i>Address</span>
+                                <span class="info-value">{{ $manager->address ?? '-' }}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label"><i class="bi bi-calendar-check"></i>Joined</span>
+                                <span class="info-value">{{ $manager->created_at ? $manager->created_at->format('M d, Y') : '-' }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Subscription Information Card -->
+                    @if(!$manager->addby)
+                    <div class="col-md-6">
+                        <div class="info-card">
+                            <div class="info-card-header">
+                                <div class="info-card-icon icon-blue">
+                                    <i class="bi bi-building"></i>
+                                </div>
+                                <h3 class="info-card-title">Subscription</h3>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label"><i class="bi bi-award"></i>Plan</span>
+                                <span class="info-value">{{ $plan ? $plan->name : 'No active subscription' }}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label"><i class="bi bi-calendar-event"></i>Expires</span>
+                                <span class="info-value">{{ $subscription ? $subscription->end_date->format('M d, Y') : '-' }}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label"><i class="bi bi-shield-check"></i>Status</span>
+                                <span class="info-value">
+                                    @if($subscription && $subscription->isActive())
+                                        <span class="badge-modern badge-success-modern">Active</span>
+                                    @else
+                                        <span class="badge-modern badge-danger-modern">Expired</span>
+                                    @endif
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- BRM Contact Card -->
+                        @if($manager->brm)
+                        <div class="info-card">
+                            <div class="info-card-header">
+                                <div class="info-card-icon icon-green">
+                                    <i class="bi bi-person-badge"></i>
+                                </div>
+                                <h3 class="info-card-title">Your BRM</h3>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label"><i class="bi bi-person"></i>Name</span>
+                                <span class="info-value">{{ $manager->brm->name ?? 'N/A' }}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label"><i class="bi bi-envelope"></i>Email</span>
+                                <span class="info-value">{{ $manager->brm->email ?? 'N/A' }}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label"><i class="bi bi-telephone"></i>Phone</span>
+                                <span class="info-value">{{ $manager->brm->phone ?? 'N/A' }}</span>
+                            </div>
+                        </div>
+                        @endif
+                    </div>
+                    @endif
                 </div>
             </div>
         </div>
     </div>
-    <div class="row justify-content-center">
-        <div class="col-md-6 col-12">
-            <div class="profile-info-card text-center">
-                <h5><i class="bi bi-person-circle me-2"></i>Personal Information</h5>
-                <div class="info-row"><span class="info-label"><i class="bi bi-person"></i>Full Name</span><span class="info-value">{{ $manager->first_name }} {{ $manager->other_name }} {{ $manager->surname }}</span></div>
-                <div class="info-row"><span class="info-label"><i class="bi bi-envelope"></i>Email</span><span class="info-value">{{ $manager->email }}</span></div>
-                <div class="info-row"><span class="info-label"><i class="bi bi-telephone"></i>Phone</span><span class="info-value">{{ $manager->phone_number ?? 'Not provided' }}</span></div>
-                <div class="info-row"><span class="info-label"><i class="bi bi-briefcase"></i>Business Name</span><span class="info-value">{{ $manager->business_name }}</span></div>
-                @if($manager->addby)
-                <div class="info-row"><span class="info-label"><i class="bi bi-building"></i>Branch</span><span class="info-value">{{ $manager->branch_name ?? ($manager->managedBranch ? $manager->managedBranch->branch_name : 'Not assigned') }}</span></div>
-                @endif
-                <div class="info-row"><span class="info-label"><i class="bi bi-geo-alt"></i>Address</span><span class="info-value">{{ $manager->address ?? '-' }}</span></div>
-                <div class="info-row"><span class="info-label"><i class="bi bi-calendar-check"></i>Account Created</span><span class="info-value">{{ $manager->created_at ? $manager->created_at->format('F d, Y') : '-' }}</span></div>
-            </div>
-        </div>
-        @if(!$manager->addby)
-        <div class="col-md-6 col-12">
-            <div class="profile-info-card">
-                <h5><i class="bi bi-building me-2"></i>Subscription Information</h5>
-                <div class="info-row"><span class="info-label"><i class="bi bi-award"></i>Current Plan</span><span class="info-value">{{ $plan ? $plan->name : 'No active subscription' }}</span></div>
-                <div class="info-row"><span class="info-label"><i class="bi bi-calendar-event"></i>Expiry Date</span><span class="info-value">{{ $subscription ? $subscription->end_date->format('F d, Y') : '-' }}</span></div>
-                <div class="info-row"><span class="info-label"><i class="bi bi-shield-check"></i>Status</span><span class="info-value badge {{ $subscription && $subscription->isActive() ? 'bg-success' : 'bg-danger' }}">
-                    @if($subscription && $subscription->isActive())
-                        Active
-                    @else
-                        Expired
-                    @endif
-                </span></div>
-            </div>
-        </div>
-        @endif
-    </div>
+
     <!-- Edit Profile Side Panel -->
     <div class="edit-panel" id="editPanel" style="display:none;">
       <div class="panel-overlay" id="editPanelOverlay"></div>
@@ -145,8 +215,10 @@ Manager Profile
               <input type="text" class="form-control" id="address" name="address" value="{{ old('address', $manager->address) }}">
             </div>
             <div class="profile-btns">
-                <button type="submit" class="btn btn-success">Update</button>
                 <button type="button" class="btn btn-secondary" id="cancelEditPanelBtn">Cancel</button>
+                <button type="submit" class="btn btn-modern btn-primary-modern">
+                    <i class="bi bi-check-lg"></i> Update Profile
+                </button>
             </div>
           </form>
         </div>
@@ -158,7 +230,7 @@ Manager Profile
       <div class="panel-content">
         <div class="panel-header">
           <h5 class="panel-title">
-            <i class="bi bi-key me-2"></i>Change Password
+            <i class="bi bi-shield-lock me-2"></i>Change Password
           </h5>
           <button type="button" class="btn-close-panel" id="closePanelBtn">
             <i class="bi bi-x-lg"></i>
@@ -166,54 +238,122 @@ Manager Profile
         </div>
         <div class="panel-body">
           @if($errors->any() && session('panel') === 'password')
-            <div class="alert alert-danger">
-              <ul>
+            <div class="alert alert-danger alert-modern">
+              <strong><i class="bi bi-exclamation-circle me-2"></i>Please fix the following errors:</strong>
+              <ul class="mb-0 mt-2">
                 @foreach($errors->all() as $error)
                   <li>{{ $error }}</li>
                 @endforeach
               </ul>
             </div>
           @endif
-          <form method="POST" action="{{ route('manager.profile.change_password.post') }}">
+
+          <div class="password-info-box mb-4">
+            <i class="bi bi-info-circle me-2"></i>
+            <span>Choose a strong password to keep your account secure</span>
+          </div>
+
+          <form method="POST" action="{{ route('manager.profile.change_password.post') }}" id="changePasswordForm">
             @csrf
-            <div class="mb-3">
-              <label for="current_password" class="form-label">Current Password</label>
-              <div class="input-group">
-                <input type="password" class="form-control" id="current_password" name="current_password" required>
-                <button class="btn btn-outline-secondary" type="button" id="toggleCurrentPassword">
-                  <i class="bi bi-eye"></i>
+
+            <!-- Current Password -->
+            <div class="mb-4">
+              <label for="current_password" class="form-label">
+                <i class="bi bi-key text-primary me-2"></i>Current Password
+              </label>
+              <div class="password-input-wrapper">
+                <input type="password"
+                       class="form-control form-control-modern"
+                       id="current_password"
+                       name="current_password"
+                       placeholder="Enter your current password"
+                       required>
+                <button class="password-toggle-btn" type="button" onclick="togglePasswordVisibility('current_password')">
+                  <i class="bi bi-eye" id="current_password_icon"></i>
                 </button>
               </div>
             </div>
-            <div class="mb-3">
-              <label for="new_password" class="form-label">New Password</label>
-              <div class="input-group">
-                <input type="password" class="form-control" id="new_password" name="new_password" required>
-                <button class="btn btn-outline-secondary" type="button" id="toggleNewPassword">
-                  <i class="bi bi-eye"></i>
+
+            <!-- New Password -->
+            <div class="mb-4">
+              <label for="new_password" class="form-label">
+                <i class="bi bi-lock text-success me-2"></i>New Password
+              </label>
+              <div class="password-input-wrapper">
+                <input type="password"
+                       class="form-control form-control-modern"
+                       id="new_password"
+                       name="new_password"
+                       placeholder="Enter new password"
+                       required
+                       oninput="checkPasswordStrength(this.value)">
+                <button class="password-toggle-btn" type="button" onclick="togglePasswordVisibility('new_password')">
+                  <i class="bi bi-eye" id="new_password_icon"></i>
                 </button>
               </div>
-              <small class="form-text text-muted">Password must be at least 8 characters long</small>
-            </div>
-            <div class="mb-3">
-              <label for="new_password_confirmation" class="form-label">Confirm New Password</label>
-              <div class="input-group">
-                <input type="password" class="form-control" id="new_password_confirmation" name="new_password_confirmation" required>
-                <button class="btn btn-outline-secondary" type="button" id="toggleConfirmPassword">
-                  <i class="bi bi-eye"></i>
-                </button>
+
+              <!-- Password Strength Indicator -->
+              <div class="password-strength-container mt-2">
+                <div class="password-strength-bar">
+                  <div class="password-strength-progress" id="passwordStrengthBar"></div>
+                </div>
+                <small class="password-strength-text" id="passwordStrengthText">Password strength: <span>Not set</span></small>
+              </div>
+
+              <!-- Password Requirements -->
+              <div class="password-requirements mt-3">
+                <small class="text-muted d-block mb-2"><strong>Password must contain:</strong></small>
+                <div class="requirement-item" id="req-length">
+                  <i class="bi bi-circle"></i> At least 8 characters
+                </div>
+                <div class="requirement-item" id="req-uppercase">
+                  <i class="bi bi-circle"></i> One uppercase letter
+                </div>
+                <div class="requirement-item" id="req-lowercase">
+                  <i class="bi bi-circle"></i> One lowercase letter
+                </div>
+                <div class="requirement-item" id="req-number">
+                  <i class="bi bi-circle"></i> One number
+                </div>
               </div>
             </div>
+
+            <!-- Confirm Password -->
+            <div class="mb-4">
+              <label for="new_password_confirmation" class="form-label">
+                <i class="bi bi-check-circle text-info me-2"></i>Confirm New Password
+              </label>
+              <div class="password-input-wrapper">
+                <input type="password"
+                       class="form-control form-control-modern"
+                       id="new_password_confirmation"
+                       name="new_password_confirmation"
+                       placeholder="Re-enter new password"
+                       required
+                       oninput="checkPasswordMatch()">
+                <button class="password-toggle-btn" type="button" onclick="togglePasswordVisibility('new_password_confirmation')">
+                  <i class="bi bi-eye" id="new_password_confirmation_icon"></i>
+                </button>
+              </div>
+              <small class="password-match-text mt-2" id="passwordMatchText"></small>
+            </div>
+
+            <!-- Action Buttons -->
             <div class="profile-btns">
-                <button type="button" class="btn btn-secondary" id="cancelPasswordPanelBtn">Cancel</button>
-                <button type="submit" class="btn btn-primary">
-                    <i class="bi bi-check-lg me-1"></i>Update
+                <button type="button" class="btn btn-light btn-cancel" id="cancelPasswordPanelBtn">
+                  <i class="bi bi-x-circle me-2"></i>Cancel
+                </button>
+                <button type="submit" class="btn btn-modern btn-secondary-modern" id="submitPasswordBtn">
+                    <i class="bi bi-shield-check me-2"></i>Update Password
                 </button>
             </div>
           </form>
         </div>
       </div>
     </div>
+
+
+
 </div>
 <script src="{{ asset('manager_asset/js/profile.js') }}"></script>
 @endsection

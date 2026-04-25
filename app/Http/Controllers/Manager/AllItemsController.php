@@ -25,6 +25,7 @@ class AllItemsController extends Controller
         // Base query for Standard Items
         $standardQuery = StandardItem::with([
             'supplier',
+            'unit',
             'pricingTiers'
         ])->where('business_name', $businessName);
 
@@ -108,6 +109,12 @@ class AllItemsController extends Controller
             $totalAllocated = $branchInventories->sum('allocated_quantity');
             $generalStock = ($item->current_stock ?? 0) + $totalAllocated; // constant: total ever stocked
             $generalLeft  = $item->current_stock ?? 0;                     // warehouse remaining after allocations
+
+            // Get the unit object - the 'unit' field contains the unit ID
+            /** @var \App\Models\StandardItem $item */
+            $unitId = $item->getAttribute('unit');
+            $unitObj = $unitId ? Unit::find($unitId) : null;
+
             // For 'addby' managers, only show items with at least one allocation
             if (!$manager->addby || $branch_inventory_list->count() > 0) {
                 $allItems->push([
@@ -118,7 +125,7 @@ class AllItemsController extends Controller
                     'barcode' => $item->barcode,
                     'category' => $item->category_name,
                     'supplier' => $item->supplier,
-                    'unit' => $item->unit,
+                    'unit' => $unitObj,
                     'image' => $item->item_image,
                     'cost_price' => $item->cost_price,
                     'selling_price' => $item->selling_price,
@@ -278,9 +285,14 @@ class AllItemsController extends Controller
 
             switch ($type) {
                 case 'standard':
-                    $item = StandardItem::with(['supplier', 'pricingTiers'])
+                    $item = StandardItem::with(['supplier', 'unit', 'pricingTiers'])
                         ->where('business_name', $businessName)
                         ->findOrFail($id);
+
+                    // Get the unit object - the 'unit' field contains the unit ID
+                    $unitId = $item->getAttribute('unit');
+                    $unitObj = $unitId ? Unit::find($unitId) : null;
+
                     $formattedItem = [
                         'id' => $item->id,
                         'type' => 'standard',
@@ -288,7 +300,7 @@ class AllItemsController extends Controller
                         'item_code' => $item->item_code,
                         'barcode' => $item->barcode,
                         'category' => $item->category,
-                        'unit' => $item->unit,
+                        'unit' => $unitObj,
                         'item_image' => $item->item_image,
                         'cost_price' => $item->cost_price,
                         'selling_price' => $item->selling_price,
@@ -387,7 +399,7 @@ class AllItemsController extends Controller
 
             switch ($type) {
                 case 'standard':
-                    $item = StandardItem::with(['supplier', 'pricingTiers'])
+                    $item = StandardItem::with(['supplier', 'unit', 'pricingTiers'])
                         ->where('business_name', $businessName)
                         ->findOrFail($id);
                     break;

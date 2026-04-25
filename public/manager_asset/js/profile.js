@@ -82,3 +82,99 @@ if (cancelPasswordPanelBtn && passwordPanel) {
         });
     }
 });
+
+
+
+
+// for change password form
+// Toggle password visibility
+
+    // Toggle password visibility
+    function togglePasswordVisibility(fieldId) {
+        const field = document.getElementById(fieldId);
+        const icon = document.getElementById(fieldId + '_icon');
+
+        if (field.type === 'password') {
+            field.type = 'text';
+            icon.classList.remove('bi-eye');
+            icon.classList.add('bi-eye-slash');
+        } else {
+            field.type = 'password';
+            icon.classList.remove('bi-eye-slash');
+            icon.classList.add('bi-eye');
+        }
+    }
+
+    // Check password strength
+    function checkPasswordStrength(password) {
+        const strengthBar = document.getElementById('passwordStrengthBar');
+        const strengthText = document.getElementById('passwordStrengthText');
+
+        // Check requirements
+        const hasLength = password.length >= 8;
+        const hasUpper = /[A-Z]/.test(password);
+        const hasLower = /[a-z]/.test(password);
+        const hasNumber = /[0-9]/.test(password);
+
+        // Update requirement indicators
+        updateRequirement('req-length', hasLength);
+        updateRequirement('req-uppercase', hasUpper);
+        updateRequirement('req-lowercase', hasLower);
+        updateRequirement('req-number', hasNumber);
+
+        // Calculate strength
+        let strength = 0;
+        if (hasLength) strength++;
+        if (hasUpper) strength++;
+        if (hasLower) strength++;
+        if (hasNumber) strength++;
+        if (password.length >= 12) strength++;
+        if (/[!@#$%^&*(),.?":{}|<>]/.test(password)) strength++;
+
+        // Update strength bar
+        strengthBar.className = 'password-strength-progress';
+        if (strength <= 2) {
+            strengthBar.classList.add('weak');
+            strengthText.innerHTML = 'Password strength: <span style="color: #f56565;">Weak</span>';
+        } else if (strength <= 4) {
+            strengthBar.classList.add('medium');
+            strengthText.innerHTML = 'Password strength: <span style="color: #ed8936;">Medium</span>';
+        } else {
+            strengthBar.classList.add('strong');
+            strengthText.innerHTML = 'Password strength: <span style="color: #48bb78;">Strong</span>';
+        }
+
+        // Check password match if confirm field has value
+        checkPasswordMatch();
+    }
+
+    // Update requirement indicator
+    function updateRequirement(id, met) {
+        const element = document.getElementById(id);
+        if (met) {
+            element.classList.add('met');
+        } else {
+            element.classList.remove('met');
+        }
+    }
+
+    // Check if passwords match
+    function checkPasswordMatch() {
+        const newPassword = document.getElementById('new_password').value;
+        const confirmPassword = document.getElementById('new_password_confirmation').value;
+        const matchText = document.getElementById('passwordMatchText');
+
+        if (confirmPassword.length === 0) {
+            matchText.textContent = '';
+            matchText.className = 'password-match-text';
+            return;
+        }
+
+        if (newPassword === confirmPassword) {
+            matchText.textContent = '✓ Passwords match';
+            matchText.className = 'password-match-text match';
+        } else {
+            matchText.textContent = '✗ Passwords do not match';
+            matchText.className = 'password-match-text no-match';
+        }
+    }

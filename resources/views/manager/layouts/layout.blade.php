@@ -123,7 +123,16 @@
       <div class="collapse" id="add-staff">
         <ul class="nav flex-column sub-menu">
           <li class="nav-item"> <a class="nav-link" href="{{ route('manager.staff') }}">Staffs</a></li>
-          <li class="nav-item"> <a class="nav-link" href="{{ route('manager.manager') }}">Managers</a></li>
+          @php
+            $currentSubscription = $manager->currentSubscription()->first();
+            $planName = $currentSubscription && $currentSubscription->subscriptionPlan
+                ? strtolower(trim($currentSubscription->subscriptionPlan->name))
+                : 'free';
+            $isBasicPlan = ($planName === 'basic');
+          @endphp
+          @if(!$isBasicPlan)
+            <li class="nav-item"> <a class="nav-link" href="{{ route('manager.manager') }}">Managers</a></li>
+          @endif
         </ul>
       </div>
     </li>
@@ -208,10 +217,7 @@
         @if(empty($manager->addby))
           <a class="dropdown-item" href="{{ route('manager.system.preferences') }}"><i class="dropdown-item-icon bi bi-gear-wide text-primary me-2"></i> System Preference</a>
         @endif
-        <a class="dropdown-item" href="#" style="padding: 10px 20px;"><i class="dropdown-item-icon mdi mdi-message-text-outline text-primary me-2"></i> Messages</a>
-        <a class="dropdown-item" href="views/activity_logs.php" style="padding: 10px 20px;"><i class="dropdown-item-icon mdi mdi-calendar-check-outline text-primary me-2"></i> Activity</a>
-        <a class="dropdown-item" href="#" style="padding: 10px 20px;"><i class="dropdown-item-icon mdi mdi-help-circle-outline text-primary me-2"></i> FAQ</a>
-       {{--   <a class="dropdown-item" href="../index.php" style="padding: 10px 20px;"><i class="dropdown-item-icon mdi mdi-power text-primary me-2"></i>Sign Out</a>  --}}
+
 
         <form method="POST" action="{{ route('logout') }}">
             @csrf
@@ -317,14 +323,6 @@
                     </div>
                   </button>
 
-                 {{--   <button type="button" class="list-group-item list-group-item-action d-flex align-items-center p-3 item-option"
-                          data-type="bundled" onclick="showItemDetails('bundled')" style="border: 2px solid #e0e0e0; border-radius: 10px; transition: all 0.3s ease;">
-                    <i class="bi bi-collection text-warning me-3" style="font-size: 1.75rem;"></i>
-                    <div>
-                      <h6 class="mb-0 text-warning" style="font-weight: 600;">Bundled Item</h6>
-                      <small class="text-muted">Package of products</small>
-                    </div>
-                  </button>  --}}
                 </div>
               </div>
 
@@ -453,9 +451,7 @@
           </div>
           <div class="modal-footer" style="border-top: 1px solid #dee2e6; background-color: #f8f9fa; padding: 1rem 1.5rem; flex-shrink: 0;">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="padding: 0.75rem 1.5rem;">Cancel</button>
-          {{--  <button type="button" class="btn btn-primary" style="padding: 0.75rem 1.5rem;">
-              <i class="bi bi-arrow-right me-1"></i>Continue
-            </button> --}}
+
           </div>
         </div>
       </div>

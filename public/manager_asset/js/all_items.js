@@ -206,8 +206,12 @@ document.addEventListener('DOMContentLoaded', function() {
 		    // Make AJAX request to fetch item details
 		    fetch(`/manager/Show_Item_Details/${type}/${id}`)
 		      .then(response => {
+		        console.log('Response status:', response.status); // Debug log
 		        if (!response.ok) {
-		          throw new Error('Network response was not ok');
+		          return response.json().then(errorData => {
+		            console.error('Error response:', errorData);
+		            throw new Error(errorData.message || errorData.error || 'Network response was not ok');
+		          });
 		        }
 		        return response.json();
 		      })
@@ -219,7 +223,7 @@ document.addEventListener('DOMContentLoaded', function() {
 		      })
 		      .catch(error => {
 		        console.error('Error fetching item details:', error);
-		        alert('Error loading item details. Please try again.');
+		        alert('Error loading item details: ' + error.message);
 		        hideItemPanel();
 		      });
 		  }
@@ -227,6 +231,7 @@ document.addEventListener('DOMContentLoaded', function() {
 		  // Function to populate panel with data from server
 		  function populateItemPanelFromServer(item, type) {
 		    console.log('Populating panel with:', item); // Debug log
+		    console.log('Item image value:', item.item_image); // Debug log
 
 		    // Set image
 		    const itemImage = document.getElementById('panelItemImage');
@@ -237,12 +242,16 @@ document.addEventListener('DOMContentLoaded', function() {
 		        imagePath = `/${item.item_image}`;
 		      } else if (type === 'variant' && item.item_image) {
 		        imagePath = `/${item.item_image}`;
+		      } else if (type === 'product_variant' && item.item_image) {
+		        imagePath = `/${item.item_image}`;
 		      } else if (type === 'bundle' && item.bundle_image) {
 		        imagePath = `/${item.bundle_image}`;
 		      }
 
+		      console.log('Setting image path to:', imagePath); // Debug log
 		      itemImage.src = imagePath;
 		      itemImage.onerror = function() {
+		        console.error('Image failed to load:', imagePath); // Debug log
 		        this.src = '/manager_asset/images/faces/face1.jpg';
 		      };
 		    }
@@ -259,44 +268,42 @@ document.addEventListener('DOMContentLoaded', function() {
 
 		    // Set unit
 		    let unitValue = 'N/A';
-		    if (type === 'standard') {
-		      unitValue = item.unit || 'N/A';
-		    } else if (type === 'variant' || type === 'bundle') {
-		      unitValue = item.unit ? (item.unit.name || item.unit) : 'N/A';
-		    }
-		    document.getElementById('panelItemUnit').value = unitValue;
+    if (item.unit) {
+      // Check if unit is an object with a name property
+      unitValue = (typeof item.unit === 'object' && item.unit.name) ? item.unit.name : item.unit;
+    }
+    document.getElementById('panelItemUnit').value = unitValue;
 
-		    // Set supplier
-		    const supplierValue = item.supplier ? item.supplier.name : 'N/A';
-		    document.getElementById('panelItemSupplier').value = supplierValue;
+    // Set supplier
+    const supplierValue = item.supplier ? item.supplier.name : 'N/A';
+    document.getElementById('panelItemSupplier').value = supplierValue;
 
-		    // Set stock value
-		    const stockValue = parseInt(item.current_stock) || 0;
-		    document.getElementById('panelItemStock').value = stockValue;
+    // Set stock value
+    const stockValue = parseInt(item.current_stock) || 0;
+    document.getElementById('panelItemStock').value = stockValue;
 
-		    // Set prices
-		    const formattedSellingPrice = sellingPrice ? `₦${parseFloat(sellingPrice).toLocaleString('en-NG', {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : 'N/A';
-		    const formattedCostPrice = costPrice ? `₦${parseFloat(costPrice).toLocaleString('en-NG', {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : 'N/A';
+    // Set prices
+    const formattedSellingPrice = sellingPrice ? `₦${parseFloat(sellingPrice).toLocaleString('en-NG', {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : 'N/A';
+    const formattedCostPrice = costPrice ? `₦${parseFloat(costPrice).toLocaleString('en-NG', {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : 'N/A';
+    document.getElementById('panelItemSellingPrice').value = formattedSellingPrice;
+    document.getElementById('panelItemCostPrice').value = formattedCostPrice;
 
-		    document.getElementById('panelItemSellingPrice').value = formattedSellingPrice;
-		    document.getElementById('panelItemCostPrice').value = formattedCostPrice;
+    // Calculate and display profit margin
+    if (sellingPrice && costPrice && !isNaN(sellingPrice) && !isNaN(costPrice) && costPrice > 0) {
+      const profitMargin = ((sellingPrice - costPrice) / costPrice * 100).toFixed(2);
+      document.getElementById('panelItemProfit').textContent = `${profitMargin}%`;
 
-		    // Calculate and display profit margin
-		    if (sellingPrice && costPrice && costPrice > 0) {
-		      const profitMargin = ((sellingPrice - costPrice) / costPrice * 100).toFixed(2);
-		      document.getElementById('panelItemProfit').textContent = `${profitMargin}%`;
-
-		      // Calculate total value
-		      const totalValue = (sellingPrice * stockValue).toLocaleString('en-NG', {
-		        style: 'currency',
-		        currency: 'NGN',
-		        minimumFractionDigits: 0
-		      });
-		      document.getElementById('panelItemTotalValue').textContent = totalValue;
-		    } else {
-		      document.getElementById('panelItemProfit').textContent = '0%';
-		      document.getElementById('panelItemTotalValue').textContent = '₦0';
-		    }
+      // Calculate total value
+      const totalValue = (sellingPrice * stockValue).toLocaleString('en-NG', {
+        style: 'currency',
+        currency: 'NGN',
+        minimumFractionDigits: 0
+      });
+      document.getElementById('panelItemTotalValue').textContent = totalValue;
+    } else {
+      document.getElementById('panelItemProfit').textContent = '0%';
+      document.getElementById('panelItemTotalValue').textContent = '₦0';
+    }
 
 		    // Set stock status
 		    const statusElement = document.getElementById('panelStockStatus');
@@ -329,7 +336,9 @@ document.addEventListener('DOMContentLoaded', function() {
 		      editBtn.setAttribute('data-item-id', item.id);
 		      editBtn.setAttribute('data-item-type', type);
 		    }
-		  }		  // Function to show item panel
+		  }
+
+		  // Function to show item panel
 		  function showItemPanel() {
 		    console.log('showItemPanel called'); // Debug log
 		    console.log('itemDetailsPanel element:', itemDetailsPanel); // Debug log
@@ -717,7 +726,6 @@ document.addEventListener('DOMContentLoaded', function() {
 		  } else {
 		    console.error('Add Item button not found!');
 		  }
-		});
 
 		// Function to show item details when clicking on options
 		function showItemDetails(type) {
@@ -829,3 +837,4 @@ document.addEventListener('DOMContentLoaded', function() {
 		    alert('Please select an item type first.');
 		  }
 		}
+});

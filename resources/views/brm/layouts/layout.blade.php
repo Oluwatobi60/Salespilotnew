@@ -56,8 +56,8 @@
       </a>
       <div class="collapse" id="commissions-menu">
         <ul class="nav flex-column sub-menu">
-          <li class="nav-item"> <a class="nav-link" href="{{ route('brm.commissions') }}">My Commissions</a></li>
-          <li class="nav-item"> <a class="nav-link" href="{{ route('brm.commissions.history') }}">History</a></li>
+          <li class="nav-item"> <a class="nav-link {{ request()->routeIs('brm.commissions') ? 'active' : '' }}" href="{{ route('brm.commissions') }}">My Commissions</a></li>
+          <li class="nav-item"> <a class="nav-link {{ request()->routeIs('brm.commissions.history') ? 'active' : '' }}" href="{{ route('brm.commissions.history') }}">History</a></li>
         </ul>
       </div>
     </li>

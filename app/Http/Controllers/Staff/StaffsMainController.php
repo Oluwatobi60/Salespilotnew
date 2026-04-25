@@ -763,7 +763,6 @@ class StaffsMainController extends Controller
         $businessName = $staff->business_name;
 
         $customers = AddCustomer::where('business_name', $businessName)
-                                ->where('staff_id', $staff->id)
                                 ->select('id', 'customer_name', 'email', 'phone_number')
                                 ->orderBy('customer_name', 'asc')
                                 ->get();

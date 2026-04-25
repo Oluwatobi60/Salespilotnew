@@ -96,6 +96,7 @@ function showInfo(message) {
                 data-cost-price="{{ $item->cost_price ?? 0 }}"
                 data-stock="{{ $item->current_stock ?? 0 }}"
                 data-category="{{ $item->category_name }}"
+                data-description="{{ $item->description ?? 'No description available' }}"
                 data-img="{{ $item->item_image ? asset($item->item_image) : asset('manager_asset/images/salespilot logo1.png') }}">
 
             @if($item->item_image)
@@ -129,6 +130,7 @@ function showInfo(message) {
                     data-cost-price="{{ $variant->cost_price ?? $variant->manual_cost_price ?? $variant->margin_cost_price ?? $variant->range_cost_price ?? 0 }}"
                     data-stock="{{ $variant->stock_quantity ?? 0 }}"
                     data-category="{{ $item->category_name }}"
+                    data-description="{{ $item->description ?? 'No description available' }}"
                     data-primary-value="{{ $variant->primary_value ?? '' }}"
                     data-secondary-value="{{ $variant->secondary_value ?? '' }}"
                     data-tertiary-value="{{ $variant->tertiary_value ?? '' }}"
@@ -454,6 +456,7 @@ function showInfo(message) {
     <div class="receipt-modal" id="receiptModal">
       <div class="receipt-container">
         <div class="receipt-header">
+          <img src="{{ asset('manager_asset/images/salespilot logo1.png') }}" alt="SalesPilot Logo" class="receipt-logo">
           <h2><i class="bi bi-receipt"></i> Receipt</h2>
           <div class="business-name">SalesPilot Inventory</div>
           <div class="receipt-date" id="receiptDate"></div>

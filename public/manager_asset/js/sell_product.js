@@ -1014,11 +1014,10 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => response.json())
         .then(data => {
           if (data.success) {
-            // Generate and show receipt first
+            // Generate receipt data
             generateReceipt();
-            receiptModal.classList.add('active');
 
-            // Show success message then reload
+            // Show success message
             Swal.fire({
               icon: 'success',
               title: 'Sale Complete!',
@@ -1027,8 +1026,12 @@ document.addEventListener('DOMContentLoaded', function() {
               timer: 2000,
               showConfirmButton: false
             }).then(() => {
-              // Reload the page after SweetAlert closes
-              location.reload();
+              // Show receipt after success message
+              receiptModal.classList.add('active');
+
+              // Reset checkout button
+              checkoutBtn.disabled = false;
+              checkoutBtn.innerHTML = originalButtonText;
             });
           } else {
             Swal.fire({

@@ -263,9 +263,7 @@ All Items
                         <td class="col-hide-sm text-muted">{{ $item['category'] ?? '—' }}</td>
                         {{-- Unit --}}
                         <td class="col-hide-sm text-muted">
-                            @if($item['type'] === 'standard')
-                                {{ $item['unit'] ?? '—' }}
-                            @elseif(isset($item['unit']) && is_object($item['unit']))
+                            @if(isset($item['unit']) && is_object($item['unit']))
                                 {{ $item['unit']->name ?? '—' }}
                             @elseif(isset($item['unit']))
                                 {{ $item['unit'] }}

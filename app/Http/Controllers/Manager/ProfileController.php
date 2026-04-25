@@ -14,7 +14,7 @@ class ProfileController extends Controller
     {
         /** @var \App\Models\User $manager */
         $manager = Auth::user();
-        $manager->load('managedBranch');
+        $manager->load('managedBranch', 'brm');
         $subscription = $manager->currentSubscription;
         $plan = $subscription ? $subscription->subscriptionPlan : null;
         return view('manager.profile.show', compact('manager', 'subscription', 'plan'));

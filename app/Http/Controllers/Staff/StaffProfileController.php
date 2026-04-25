@@ -22,7 +22,12 @@ class StaffProfileController extends Controller
             return redirect()->route('staff.login')->with('error', 'Please login to view your profile');
         }
 
-        return view('staff.profile.profile', compact('staff'));
+        // Get manager's subscription to check plan type
+        $manager = \App\Models\User::where('email', $staff->manager_email)->first();
+        $subscription = $manager ? $manager->currentSubscription : null;
+        $plan = $subscription ? $subscription->subscriptionPlan : null;
+
+        return view('staff.profile.profile', compact('staff', 'manager', 'subscription', 'plan'));
     }
 
     public function updatePassword(Request $request)

@@ -887,12 +887,16 @@
       // Checkout functionality
       checkoutBtn.addEventListener('click', function() {
         if (checkoutBtn.disabled) return;
-        checkoutBtn.disabled = true;
+
         if (cartItems.length === 0) {
           showError('Cart is empty. Add items before checkout.');
-          checkoutBtn.disabled = false;
           return;
         }
+
+        // Show processing state
+        const originalButtonText = checkoutBtn.innerHTML;
+        checkoutBtn.disabled = true;
+        checkoutBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
 
         // Calculate subtotal
         const cartSubtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
@@ -936,27 +940,46 @@
         })
         .then(response => response.json())
         .then(data => {
+          // Reset button
           checkoutBtn.disabled = false;
+          checkoutBtn.innerHTML = originalButtonText;
+
           if (data.success) {
-
-
-            // Show success message and reload after OK
+            // Show success message first, then show receipt
             Swal.fire({
               icon: 'success',
-              title: 'Success',
+              title: 'Success!',
               text: 'Order has been sold successfully! Receipt #' + (data.receipt_number || 'N/A'),
               confirmButtonColor: '#3085d6',
+              timer: 2000,
+              showConfirmButton: false
             }).then(() => {
-              window.location.reload();
+              // Generate and show receipt after success message
+              generateReceipt();
+              receiptModal.classList.add('active');
             });
           } else {
-            showError('Checkout failed: ' + (data.message || 'Unknown error'));
+            // Show error message
+            Swal.fire({
+              icon: 'error',
+              title: 'Checkout Failed',
+              text: data.message || 'Unknown error occurred',
+              confirmButtonColor: '#d33'
+            });
           }
         })
         .catch(error => {
+          // Reset button
           checkoutBtn.disabled = false;
+          checkoutBtn.innerHTML = originalButtonText;
+
           console.error('Error:', error);
-          showError('An error occurred during checkout. Please try again.');
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'An error occurred during checkout. Please try again.',
+            confirmButtonColor: '#d33'
+          });
         });
       });
 
@@ -1023,6 +1046,8 @@
         selectedCustomer = { id: null, name: 'Walk-in Customer' };
         document.getElementById('customerName').textContent = 'Walk-in Customer';
         updateCartUI();
+        // Reload page after closing receipt to reset everything
+        window.location.reload();
       });
 
       receiptModal.addEventListener('click', function(e) {
@@ -1032,6 +1057,8 @@
           selectedCustomer = { id: null, name: 'Walk-in Customer' };
           document.getElementById('customerName').textContent = 'Walk-in Customer';
           updateCartUI();
+          // Reload page after closing receipt
+          window.location.reload();
         }
       });
 
@@ -1177,6 +1204,17 @@
         }
         updateCartUI();
         modal.classList.remove('active');
+
+        // Show success toast notification
+        Swal.fire({
+          icon: 'success',
+          title: 'Added to Cart!',
+          text: currentItem.name + ' has been added to your cart',
+          timer: 1500,
+          showConfirmButton: false,
+          toast: true,
+          position: 'top-end'
+        });
       });
 
       // Search functionality

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Item Details Endpoint</title>
+</head>
+<body>
+    <h1>Test Item Details Endpoint</h1>
+    <button onclick="testEndpoint()">Test Endpoint</button>
+    <pre id="output"></pre>
+
+    <script>
+        async function testEndpoint() {
+            const output = document.getElementById('output');
+            output.textContent = 'Fetching...';
+
+            try {
+                const response = await fetch('/manager/Show_Item_Details/standard/16');
+                output.textContent = 'Response status: ' + response.status + '\n';
+                output.textContent += 'Response ok: ' + response.ok + '\n\n';
+
+                const text = await response.text();
+                output.textContent += 'Response body:\n' + text;
+
+                // Try to parse as JSON
+                try {
+                    const json = JSON.parse(text);
+                    output.textContent += '\n\nParsed JSON:\n' + JSON.stringify(json, null, 2);
+                } catch (e) {
+                    output.textContent += '\n\nJSON parse error: ' + e.message;
+                }
+            } catch (error) {
+                output.textContent = 'Fetch error: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>
