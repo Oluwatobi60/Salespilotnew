@@ -1082,12 +1082,13 @@
             name: this.dataset.name,
             price: parseFloat(this.dataset.price),
             stock: stock,
+            unit: this.dataset.unit || 'units',
             img: this.dataset.img,
             costPrice: parseFloat(this.dataset.costPrice || 0)
           };
           document.getElementById('modalTitle').textContent = currentItem.name;
           document.getElementById('modalItemName').textContent = currentItem.name;
-          document.getElementById('modalItemStock').textContent = 'Available: ' + currentItem.stock + ' units';
+          document.getElementById('modalItemStock').textContent = 'Available: ' + currentItem.stock + ' ' + currentItem.unit;
           document.getElementById('modalItemImg').src = currentItem.img;
           itemQuantity.value = 1;
           itemQuantity.max = currentItem.stock;

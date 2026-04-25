@@ -39,6 +39,7 @@ class SellProductController extends Controller
             // Fetch allocated StandardItems + items added by this manager
             $standard_items = StandardItem::with([
                 'supplier',
+                'unit',
                 'pricingTiers'
             ])
             ->where('enable_sale', true)
@@ -108,6 +109,7 @@ class SellProductController extends Controller
             // Business creator - show all items
             $standard_items = StandardItem::with([
                 'supplier',
+                'unit',
                 'pricingTiers'
             ])
             ->where('enable_sale', true)

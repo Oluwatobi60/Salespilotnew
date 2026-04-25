@@ -184,6 +184,7 @@ class StaffsMainController extends Controller
         // Fetch StandardItems - only items in the staff's branch inventory
         $standard_items = StandardItem::with([
             'supplier',
+            'unit',
             'pricingTiers'
         ])
         ->where('business_name', $businessName)

@@ -95,6 +95,7 @@ function showInfo(message) {
                 data-price="{{ $item->final_price ?? $item->selling_price }}"
                 data-cost-price="{{ $item->cost_price ?? 0 }}"
                 data-stock="{{ $item->current_stock ?? 0 }}"
+                data-unit="{{ $item->unit_name }}"
                 data-category="{{ $item->category_name }}"
                 data-description="{{ $item->description ?? 'No description available' }}"
                 data-img="{{ $item->item_image ? asset($item->item_image) : asset('manager_asset/images/salespilot logo1.png') }}">
@@ -129,6 +130,7 @@ function showInfo(message) {
                     data-price="{{ $variant->final_price ?? $variant->selling_price ?? 0 }}"
                     data-cost-price="{{ $variant->cost_price ?? $variant->manual_cost_price ?? $variant->margin_cost_price ?? $variant->range_cost_price ?? 0 }}"
                     data-stock="{{ $variant->stock_quantity ?? 0 }}"
+                    data-unit="{{ $item->unit_name }}"
                     data-category="{{ $item->category_name }}"
                     data-description="{{ $item->description ?? 'No description available' }}"
                     data-primary-value="{{ $variant->primary_value ?? '' }}"

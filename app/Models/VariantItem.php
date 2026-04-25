@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\BranchInventory;
+use App\Models\Unit;
 
 class VariantItem extends Model
 {
@@ -68,5 +69,16 @@ class VariantItem extends Model
             return $category ? $category->category_name : $this->category;
         }
         return $this->category;
+    }
+
+    // Accessor to get unit name
+    public function getUnitNameAttribute()
+    {
+        $unitId = $this->getAttribute('unit');
+        if ($unitId && is_numeric($unitId)) {
+            $unit = Unit::find($unitId);
+            return $unit ? $unit->name : 'units';
+        }
+        return 'units';
     }
 }
