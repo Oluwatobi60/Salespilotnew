@@ -21,6 +21,8 @@ class UserSubscription extends Model
         'auto_renew',
         'last_renewed_at',
         'renewal_notified_at',
+        'cancellation_reason',
+        'cancelled_at',
     ];
 
     protected $casts = [
@@ -31,6 +33,7 @@ class UserSubscription extends Model
         'auto_renew' => 'boolean',
         'last_renewed_at' => 'datetime',
         'renewal_notified_at' => 'datetime',
+        'cancelled_at' => 'datetime',
     ];
 
     /**

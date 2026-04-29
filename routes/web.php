@@ -143,7 +143,7 @@ Route::middleware(['auth:brms'])->prefix('brms')->controller(BrmController::clas
         Route::get('/', 'index')->name('brm.commissions');
         Route::get('/history', 'history')->name('brm.commissions.history');
         Route::get('/breakdown', 'breakdown')->name('brm.commissions.breakdown');
-        
+
         // Wallet API routes
         Route::post('/wallet/add-account', 'addAccount')->name('brm.wallet.add-account');
         Route::get('/wallet/accounts', 'getAccounts')->name('brm.wallet.accounts');
@@ -159,7 +159,15 @@ Route::middleware(['auth:brms'])->prefix('brms')->controller(BrmController::clas
 
 
 Route::get('/', function () {
-    return view('welcome');
+    // Get dynamic statistics from database
+    $stats = [
+        'active_businesses' => \App\Models\Brm::where('status', 1)->count(),
+        'total_transactions' => \App\Models\SellProduct::count(),
+        'uptime' => '99.9', // Can be calculated from monitoring system
+        'support' => '24/7' // Static value
+    ];
+
+    return view('welcome', compact('stats'));
 });
 
 // Signup routes
@@ -173,6 +181,7 @@ Route::prefix('signup')->controller(SignupController::class)->group(function () 
     Route::post('/plan_pricing', 'selectPlan')->name('select.plan')->middleware('auth');
     Route::get('/payment', 'showPayment')->name('payment.show')->middleware('auth');
     Route::post('/payment', 'processPayment')->name('payment.process')->middleware('auth');
+    Route::get('/payment/callback', 'verifyPaystackPayment')->name('payment.callback')->middleware('auth');
     Route::get('/account-created', 'accountCreated')->name('signup.account.created');
 });
 

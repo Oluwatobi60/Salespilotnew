@@ -3,41 +3,160 @@
 Welcome to SalesPilot
 @endsection
 @section('welcome_page_content')
+<link rel="stylesheet" href="{{ asset('welcome_asset/style.css') }}">
 <link rel="stylesheet" href="{{ asset('welcome_asset/pricing-responsive.css') }}">
 
 <!-- Hero Section -->
-		<section class="hero" id="home">
-			<div class="hero-content">
-				<h1>Transform Your Business with Modern Inventory Management</h1>
-				<p>SalesPilot is the all-in-one solution for managing inventory, sales, customers, and analytics. Built for modern businesses that demand efficiency and growth.</p>
-				<div class="cta">
-					<a class="btn btn-primary" href="{{ route('get_started') }}">Get Started Free</a>
-					<a class="btn btn-outline" href="#features">Learn More</a>
-				</div>
-			</div>
-		</section>
+<section class="hero" id="home">
+    <div class="hero-content">
+        <h1>Transform Your Business with Modern Inventory Management</h1>
+        <p>SalesPilot is the all-in-one solution for managing inventory, sales, customers, and analytics. Built for modern businesses that demand efficiency and growth.</p>
+        <div class="cta">
+            <a class="btn btn-primary" href="{{ route('get_started') }}">
+                <span>Get Started Free</span>
+            </a>
+            <a class="btn btn-outline" href="#features">
+                <span>Learn More</span>
+            </a>
+        </div>
+    </div>
+</section>
 
-	<!-- Stats Section -->
-		<section class="stats">
-			<div class="stats-grid">
-				<div class="stat">
-					<h3>5,000+</h3>
-					<p>Active Businesses</p>
-				</div>
-				<div class="stat">
-					<h3>99.9%</h3>
-					<p>Uptime Guarantee</p>
-				</div>
-				<div class="stat">
-					<h3>24/7</h3>
-					<p>Customer Support</p>
-				</div>
-				<div class="stat">
-					<h3>50M+</h3>
-					<p>Transactions Processed</p>
-				</div>
-			</div>
-		</section>
+<!-- Dynamic Stats Section with Modern Cards -->
+<section class="stats-section">
+    <div class="stats-container">
+        <div class="stats-header">
+            <h2>Trusted by Businesses Worldwide</h2>
+            <p>Real-time statistics showcasing our impact</p>
+        </div>
+
+        <div class="stats-grid">
+            <!-- Active Businesses Card -->
+            <div class="stat-card">
+                <div class="shine"></div>
+                <div class="stat-icon-wrapper">
+                    <span class="stat-icon">🏢</span>
+                </div>
+                <div class="stat-value" data-target="{{ $stats['active_businesses'] ?? 0 }}">
+                    {{ number_format($stats['active_businesses'] ?? 0) }}+
+                </div>
+                <div class="stat-label">Active Businesses</div>
+                <div class="stat-description">Growing every day</div>
+                @if(($stats['active_businesses'] ?? 0) > 0)
+                    <div class="stat-trend up">12% this month</div>
+                @endif
+            </div>
+
+            <!-- Uptime Card -->
+            <div class="stat-card">
+                <div class="shine"></div>
+                <div class="stat-icon-wrapper">
+                    <span class="stat-icon">⚡</span>
+                </div>
+                <div class="stat-value">
+                    {{ $stats['uptime'] ?? '99.9' }}%
+                </div>
+                <div class="stat-label">Uptime Guarantee</div>
+                <div class="stat-description">Always available</div>
+            </div>
+
+            <!-- Support Card -->
+            <div class="stat-card">
+                <div class="shine"></div>
+                <div class="stat-icon-wrapper">
+                    <span class="stat-icon">🎧</span>
+                </div>
+                <div class="stat-value">
+                    {{ $stats['support'] ?? '24/7' }}
+                </div>
+                <div class="stat-label">Customer Support</div>
+                <div class="stat-description">We're here to help</div>
+            </div>
+
+            <!-- Transactions Card -->
+            <div class="stat-card">
+                <div class="shine"></div>
+                <div class="stat-icon-wrapper">
+                    <span class="stat-icon">💰</span>
+                </div>
+                <div class="stat-value" data-target="{{ $stats['total_transactions'] ?? 0 }}">
+                    @if(($stats['total_transactions'] ?? 0) >= 1000000)
+                        {{ number_format(($stats['total_transactions'] ?? 0) / 1000000, 1) }}M+
+                    @elseif(($stats['total_transactions'] ?? 0) >= 1000)
+                        {{ number_format(($stats['total_transactions'] ?? 0) / 1000, 1) }}K+
+                    @else
+                        {{ number_format($stats['total_transactions'] ?? 0) }}+
+                    @endif
+                </div>
+                <div class="stat-label">Transactions Processed</div>
+                <div class="stat-description">Secure & reliable</div>
+                @if(($stats['total_transactions'] ?? 0) > 0)
+                    <div class="stat-trend up">18% this quarter</div>
+                @endif
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Count up animation for numbers
+        document.addEventListener('DOMContentLoaded', function() {
+            const observerOptions = {
+                threshold: 0.5,
+                rootMargin: '0px'
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const valueElements = entry.target.querySelectorAll('.stat-value[data-target]');
+                        valueElements.forEach(el => {
+                            const target = parseInt(el.dataset.target);
+                            if (target > 0 && target < 10000) {
+                                animateValue(el, 0, target, 2000);
+                            }
+                        });
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, observerOptions);
+
+            const statsSection = document.querySelector('.stats-section');
+            if (statsSection) {
+                observer.observe(statsSection);
+            }
+
+            function animateValue(element, start, end, duration) {
+                const originalText = element.textContent;
+                const suffix = originalText.replace(/[0-9,]/g, '');
+                let startTimestamp = null;
+
+                const step = (timestamp) => {
+                    if (!startTimestamp) startTimestamp = timestamp;
+                    const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                    const current = Math.floor(progress * (end - start) + start);
+                    element.textContent = current.toLocaleString() + suffix;
+                    element.classList.add('animate');
+
+                    if (progress < 1) {
+                        window.requestAnimationFrame(step);
+                    }
+                };
+
+                window.requestAnimationFrame(step);
+            }
+
+            // Add pulse effect on hover
+            document.querySelectorAll('.stat-card').forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    this.style.animation = 'none';
+                    setTimeout(() => {
+                        this.style.animation = '';
+                    }, 10);
+                });
+            });
+        });
+    </script>
+</section>
 
 
         <!-- Features Section -->
@@ -92,22 +211,22 @@ Welcome to SalesPilot
         </div>
 
         <!-- Duration Selector -->
-		<div class="text-center mb-4">
-			<div class="duration-selector d-inline-flex bg-light p-2 rounded-pill gap-2">
+		<div class="duration-selector-wrapper">
+			<div class="duration-selector">
 				<button type="button" class="duration-btn active" data-months="1">
                     1 Month
                 </button>
 				<button type="button" class="duration-btn" data-months="3">
                     3 Months
-                    <span style="display: block; font-size: 12px; font-weight: 400;">Save 5%</span>
+                    <span>Save 5%</span>
                 </button>
 				<button type="button" class="duration-btn" data-months="6">
                     6 Months
-                    <span style="display: block; font-size: 12px; font-weight: 400;">Save 10%</span>
+                    <span>Save 10%</span>
                 </button>
 				<button type="button" class="duration-btn" data-months="12">
                     1 Year
-                    <span style="display: block; font-size: 12px; font-weight: 400;">Save 15%</span>
+                    <span>Save 15%</span>
                 </button>
             </div>
         </div>

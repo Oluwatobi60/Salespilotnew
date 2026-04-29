@@ -12,6 +12,7 @@ use App\Mail\SetupPassword;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use App\Models\User;
 use Carbon\Carbon;
 
@@ -251,21 +252,6 @@ class SignupController extends Controller
             'duration' => 'required|integer|in:1,3,6,12',
         ]);
 
-        // Check if user has an active subscription
-        if (Auth::check()) {
-            $activeSubscription = UserSubscription::where('user_id', Auth::id())
-                ->where('status', 'active')
-                ->where('end_date', '>=', now())
-                ->first();
-
-            if ($activeSubscription) {
-                $redirectUrl = $this->getUserDashboardRoute();
-                return redirect()->back()
-                    ->with('error', 'You already have an active subscription. Please wait until your current subscription expires before upgrading to a different plan.')
-                    ->with('redirect_url', $redirectUrl);
-            }
-        }
-
         // Get the selected plan
         $plan = SubscriptionPlan::where('name', $validated['plan'])->first();
 
@@ -301,24 +287,12 @@ class SignupController extends Controller
             return redirect()->route('plan_pricing')->with('error', 'Please select a plan first.');
         }
 
-        // Check if user has an active subscription
-        $activeSubscription = UserSubscription::where('user_id', Auth::id())
-            ->where('status', 'active')
-            ->where('end_date', '>=', now())
-            ->first();
-
-        if ($activeSubscription) {
-            $redirectUrl = $this->getUserDashboardRoute();
-            return redirect()->back()
-                ->with('error', 'You already have an active subscription. Please wait until your current subscription expires before upgrading to a different plan.')
-                ->with('redirect_url', $redirectUrl);
-        }
-
         $plan = SubscriptionPlan::find(session('selected_plan'));
         $duration = session('selected_duration');
         $pricing = session('pricing');
+        $paystackPublicKey = config('services.paystack.public_key');
 
-        return view('payment', compact('plan', 'duration', 'pricing'));
+        return view('payment', compact('plan', 'duration', 'pricing', 'paystackPublicKey'));
     }
 
     /**
@@ -335,18 +309,8 @@ class SignupController extends Controller
             return redirect()->route('plan_pricing')->with('error', 'Session expired. Please select a plan again.');
         }
 
-        // Check if user has an active subscription
-        $activeSubscription = UserSubscription::where('user_id', Auth::id())
-            ->where('status', 'active')
-            ->where('end_date', '>=', now())
-            ->first();
-
-        if ($activeSubscription) {
-            $redirectUrl = $this->getUserDashboardRoute();
-            return redirect()->back()
-                ->with('error', 'You already have an active subscription. Please wait until your current subscription expires before upgrading to a different plan.')
-                ->with('redirect_url', $redirectUrl);
-        }
+        // Cancel any existing active subscriptions before creating new one
+        $this->cancelExistingSubscriptions(Auth::id());
 
         $plan = SubscriptionPlan::find(session('selected_plan'));
         $duration = (int) session('selected_duration');
@@ -389,18 +353,8 @@ class SignupController extends Controller
      */
     protected function activateFreePlan($plan, $duration)
     {
-        // Check if user has an active subscription
-        $activeSubscription = UserSubscription::where('user_id', Auth::id())
-            ->where('status', 'active')
-            ->where('end_date', '>=', now())
-            ->first();
-
-        if ($activeSubscription) {
-            $redirectUrl = $this->getUserDashboardRoute();
-            return redirect()->back()
-                ->with('error', 'You already have an active subscription. Please wait until your current subscription expires before upgrading to a different plan.')
-                ->with('redirect_url', $redirectUrl);
-        }
+        // Cancel any existing active subscriptions before creating new one
+        $this->cancelExistingSubscriptions(Auth::id());
 
         $duration = (int) $duration;
 
@@ -476,5 +430,116 @@ class SignupController extends Controller
         ])->save();
 
         Mail::to($user->email)->send(new SetupPassword($user, $token));
+    }
+
+    /**
+     * Verify Paystack payment
+     */
+    public function verifyPaystackPayment(Request $request)
+    {
+        $reference = $request->query('reference');
+
+        if (!$reference) {
+            return redirect()->route('payment.show')->with('error', 'Invalid payment reference.');
+        }
+
+        // Verify payment with Paystack
+        $url = "https://api.paystack.co/transaction/verify/{$reference}";
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            "Authorization: Bearer " . config('services.paystack.secret_key')
+        ]);
+
+        $response = curl_exec($ch);
+        curl_close($ch);
+
+        $result = json_decode($response);
+
+        if (!$result->status || $result->data->status !== 'success') {
+            return redirect()->route('payment.show')->with('error', 'Payment verification failed. Please try again.');
+        }
+
+        if (!session('selected_plan')) {
+            return redirect()->route('plan_pricing')->with('error', 'Session expired. Please select a plan again.');
+        }
+
+        // Cancel any existing active subscriptions before creating new one
+        $this->cancelExistingSubscriptions(Auth::id());
+
+        $plan = SubscriptionPlan::find(session('selected_plan'));
+        $duration = (int) session('selected_duration');
+        $pricing = session('pricing');
+
+        // Verify amount matches
+        $expectedAmount = $pricing['discounted_price'] * 100; // Paystack uses kobo
+        if ($result->data->amount != $expectedAmount) {
+            return redirect()->route('payment.show')
+                ->with('error', 'Payment amount mismatch. Please contact support.');
+        }
+
+        // Create subscription
+        $subscription = UserSubscription::create([
+            'user_id' => Auth::id(),
+            'subscription_plan_id' => $plan->id,
+            'duration_months' => $duration,
+            'amount_paid' => $pricing['discounted_price'],
+            'discount_percentage' => $pricing['discount_percentage'],
+            'start_date' => Carbon::today(),
+            'end_date' => Carbon::today()->addMonths($duration),
+            'status' => 'active',
+            'payment_reference' => $reference,
+        ]);
+
+        // Generate commission for BRM if customer has one and paid amount is > 0
+        if (Auth::user()->brm_id && $subscription->amount_paid > 0) {
+            \App\Http\Controllers\Brm\BrmCommissionController::generateCommission($subscription);
+        }
+
+        // Send activation email
+        Mail::to(Auth::user()->email)->send(new SubscriptionActivated(Auth::user(), $subscription));
+
+        // Send set-password email
+        $this->sendPasswordSetupEmail(Auth::user());
+
+        // Log the user out — they must set password before logging in
+        $userEmail = Auth::user()->email;
+        Auth::logout();
+        session()->forget(['selected_plan', 'selected_duration', 'pricing']);
+
+        return redirect()->route('signup.account.created')->with('setup_email', $userEmail);
+    }
+
+    /**
+     * Cancel existing active subscriptions for a user (for upgrades)
+     */
+    protected function cancelExistingSubscriptions($userId)
+    {
+        $activeSubscriptions = UserSubscription::where('user_id', $userId)
+            ->where('status', 'active')
+            ->where('end_date', '>=', now())
+            ->get();
+
+        foreach ($activeSubscriptions as $subscription) {
+            // Mark as cancelled and set end date to now
+            $subscription->update([
+                'status' => 'cancelled',
+                'end_date' => now(),
+                'cancellation_reason' => 'Upgraded to a new plan',
+                'cancelled_at' => now(),
+            ]);
+
+            // Log the cancellation
+            Log::info('Subscription cancelled for upgrade', [
+                'user_id' => $userId,
+                'subscription_id' => $subscription->id,
+                'old_plan' => $subscription->subscriptionPlan->name ?? 'N/A',
+                'cancelled_at' => now(),
+            ]);
+        }
+
+        return $activeSubscriptions->count();
     }
 }

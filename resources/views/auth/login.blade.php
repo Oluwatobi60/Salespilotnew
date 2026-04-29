@@ -3,71 +3,148 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manager Login</title>
+    <title>Manager Login - SalesPilot</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap" rel="stylesheet">
-    <style>
-        .manager-login-title {
-            font-family: 'Montserrat', Arial, sans-serif;
-            font-size: 2.2rem;
-            color: #0d6efd;
-            text-shadow: 1px 2px 8px rgba(13,110,253,0.12);
-            letter-spacing: 1px;
-            font-weight: 600;
-        }
-    </style>
+    <link rel="stylesheet" href="https://unicons.iconscout.com/release/v4.0.0/css/line.css">
+    <link rel="stylesheet" href="{{ asset('welcome_asset/login.css') }}">
+    <link rel="stylesheet" href="{{ asset('welcome_asset/css/loading-button.css') }}">
 </head>
-<body class="bg-light">
-    <div class="container d-flex align-items-center justify-content-center min-vh-100">
-        <div class="row w-100 justify-content-center">
-            <div class="col-md-6 col-lg-5">
-                <img src="{{ asset('manager_asset/images/salespilot logo1.png') }}" alt="SalesPilot Logo" class="mb-4" style="max-width: 180px; display: block; margin-left: auto; margin-right: auto;">
-                <div class="card shadow-lg">
-                    <div class="card-body p-4">
-                        <h3 class="mb-4 text-center manager-login-title">Manager Login</h3>
-                        @if (session('status'))
-                            <div class="alert alert-info">{{ session('status') }}</div>
-                        @endif
-                        <form method="POST" action="{{ route('login') }}">
-                            @csrf
-                            <div class="mb-3">
-                                <label for="email" class="form-label">Email</label>
-                                <input id="email" type="email" name="email" class="form-control @error('email') is-invalid @enderror" value="{{ old('email') }}" required autofocus autocomplete="username">
+<body>
+    <div class="login-container">
+        <!-- Left Side - Branding -->
+        <div class="login-left">
+            <div class="login-branding">
+                <div class="brand-logo-wrapper">
+
+                    <img src="{{ asset('manager_asset/images/salespilot logo1.png') }}" alt="SalesPilot Logo" class="brand-logo-img">
+
+                </div>
+                <h1>Welcome Back!</h1>
+                <p>Sign in to manage your inventory, track sales, and grow your business with powerful analytics.</p>
+
+                <div class="features-grid">
+                    <div class="feature-box">
+                        <div class="feature-icon">📊</div>
+                        <h4>Real-time Analytics</h4>
+                        <p>Track performance instantly</p>
+                    </div>
+                    <div class="feature-box">
+                        <div class="feature-icon">🔐</div>
+                        <h4>Secure Access</h4>
+                        <p>Bank-level security</p>
+                    </div>
+                    <div class="feature-box">
+                        <div class="feature-icon">📦</div>
+                        <h4>Inventory Control</h4>
+                        <p>Manage stock efficiently</p>
+                    </div>
+                    <div class="feature-box">
+                        <div class="feature-icon">💼</div>
+                        <h4>Business Growth</h4>
+                        <p>Scale with confidence</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Side - Form -->
+        <div class="login-right">
+            <div class="form-wrapper">
+                <div class="form-logo">
+                    <img src="{{ asset('manager_asset/images/salespilot logo1.png') }}" alt="SalesPilot Logo">
+                </div>
+                <div class="form-header">
+                    <h2>Manager Login</h2>
+                    <p>Enter your credentials to access your dashboard</p>
+                </div>
+
+                <div class="form-card">
+                    @if (session('status'))
+                        <div class="custom-alert alert-info">
+                            <i class="uil uil-info-circle"></i> {{ session('status') }}
+                        </div>
+                    @endif
+
+                    <form method="POST" action="{{ route('login') }}">
+                        @csrf
+
+                        <div class="input-group">
+                            <label for="email">Email Address</label>
+                            <div class="input-wrapper">
+                                <i class="uil uil-envelope-alt"></i>
+                                <input
+                                    id="email"
+                                    type="email"
+                                    name="email"
+                                    class="@error('email') is-invalid @enderror"
+                                    value="{{ old('email') }}"
+                                    placeholder="your@email.com"
+                                    required
+                                    autofocus
+                                    autocomplete="username"
+                                >
                                 @error('email')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
-                            <div class="mb-3">
-                                <label for="password" class="form-label">Password</label>
-                                <input id="password" type="password" name="password" class="form-control @error('password') is-invalid @enderror" required autocomplete="current-password">
+                        </div>
+
+                        <div class="input-group">
+                            <label for="password">Password</label>
+                            <div class="input-wrapper">
+                                <i class="uil uil-lock-alt"></i>
+                                <input
+                                    id="password"
+                                    type="password"
+                                    name="password"
+                                    class="@error('password') is-invalid @enderror"
+                                    placeholder="Enter your password"
+                                    required
+                                    autocomplete="current-password"
+                                >
                                 @error('password')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
-                            <div class="mb-3 form-check">
-                                <input type="checkbox" class="form-check-input" id="remember_me" name="remember">
-                                <label class="form-check-label" for="remember_me">Remember me</label>
-                            </div>
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                @if (Route::has('password.request'))
-                                    <a class="text-decoration-none" href="{{ route('password.request') }}">Forgot your password?</a>
-                                @endif
-                                <button type="submit" class="btn btn-primary">Log in</button>
-                            </div>
-                        </form>
-                        <div class="text-center mt-4">
-                            <div class="alert alert-secondary p-2 mb-2" style="font-size: 0.97rem;">
-                                Are you a staff member? Please use the staff login page below.
-                            </div>
-                            <a class="btn btn-outline-primary w-100" href="{{ route('staff.login') }}">
-                                Go to Staff Login
-                            </a>
                         </div>
+
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div class="custom-checkbox">
+                                <input type="checkbox" id="remember_me" name="remember">
+                                <label for="remember_me">Remember me</label>
+                            </div>
+                            @if (Route::has('password.request'))
+                                <a class="forgot-link" href="{{ route('password.request') }}">
+                                    Forgot password?
+                                </a>
+                            @endif
+                        </div>
+
+                        <button type="submit" class="btn-primary-custom btn-loading" data-loading-text="Signing in...">
+                            <span class="btn-text">Sign In</span>
+                            <span class="btn-spinner"></span>
+                        </button>
+                    </form>
+
+                    <div class="divider">
+                        <span>OR</span>
+                    </div>
+
+                    <div class="staff-login-box">
+                        <p>
+                            <i class="uil uil-users-alt"></i> Are you a staff member?
+                        </p>
+                        <a class="btn-outline-custom" href="{{ route('staff.login') }}">
+                            <i class="uil uil-arrow-right"></i>
+                            Go to Staff Login
+                        </a>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ asset('welcome_asset/js/loading-button.js') }}"></script>
 </body>
 </html>
