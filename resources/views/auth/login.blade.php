@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manager Login - SalesPilot</title>
+    <title>Manager Login - {{ app_name() }}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://unicons.iconscout.com/release/v4.0.0/css/line.css">
     <link rel="stylesheet" href="{{ asset('welcome_asset/login.css') }}">
@@ -16,7 +16,7 @@
             <div class="login-branding">
                 <div class="brand-logo-wrapper">
 
-                    <img src="{{ asset('manager_asset/images/salespilot logo1.png') }}" alt="SalesPilot Logo" class="brand-logo-img">
+                    <img src="{{ asset('manager_asset/images/salespilot logo1.png') }}" alt="{{ app_name() }} Logo" class="brand-logo-img">
 
                 </div>
                 <h1>Welcome Back!</h1>
@@ -51,7 +51,7 @@
         <div class="login-right">
             <div class="form-wrapper">
                 <div class="form-logo">
-                    <img src="{{ asset('manager_asset/images/salespilot logo1.png') }}" alt="SalesPilot Logo">
+                    <img src="{{ asset('manager_asset/images/salespilot logo1.png') }}" alt="{{ app_name() }} Logo">
                 </div>
                 <div class="form-header">
                     <h2>Manager Login</h2>

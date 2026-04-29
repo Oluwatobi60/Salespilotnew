@@ -14,7 +14,7 @@
                     <tr>
                         <td style="background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%); padding: 40px 30px; text-align: center;">
                             <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 600;">
-                                🎉 Welcome to SalesPilot!
+                                🎉 Welcome to {{ app_name() }}!
                             </h1>
                             <p style="color: #ffffff; margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">
                                 Your subscription has been successfully activated
@@ -30,7 +30,7 @@
                             </p>
 
                             <p style="color: #333; font-size: 16px; line-height: 1.6; margin: 0 0 25px 0;">
-                                Great news! Your SalesPilot subscription has been successfully activated. You now have full access to all features of your selected plan.
+                                Great news! Your {{ app_name() }} subscription has been successfully activated. You now have full access to all features of your selected plan.
                             </p>
 
                             <!-- Subscription Details -->
@@ -117,7 +117,7 @@
                                     🚀 Getting Started
                                 </h3>
                                 <p style="color: #856404; margin: 0; font-size: 14px; line-height: 1.6;">
-                                    Log in to your dashboard to start managing your inventory, tracking sales, and growing your business with SalesPilot!
+                                    Log in to your dashboard to start managing your inventory, tracking sales, and growing your business with {{ app_name() }}!
                                 </p>
                             </div>
 

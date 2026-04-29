@@ -44,7 +44,7 @@
                                     🚨 Your subscription expires today!
                                 </h3>
                                 <p style="color: #721c24; margin: 0; font-size: 14px; line-height: 1.6;">
-                                    Renew now to avoid losing access to your SalesPilot account and business data.
+                                    Renew now to avoid losing access to your {{ app_name() }} account and business data.
                                 </p>
                             </div>
                             @endif
@@ -113,7 +113,7 @@
 
                             <p style="color: #666; font-size: 14px; line-height: 1.6; margin: 25px 0 0 0; text-align: center;">
                                 Need help? Contact our support team at
-                                <a href="mailto:support@salespilot.com" style="color: #4CAF50; text-decoration: none;">support@salespilot.com</a>
+                                <a href="mailto:support@salespilot.com" style="color: #4CAF50; text-decoration: none;">{{ support_email() }}</a>
                             </p>
                         </td>
                     </tr>
@@ -125,7 +125,7 @@
                                 This is an automated reminder. You will receive daily reminders until your subscription is renewed.
                             </p>
                             <p style="color: #999; font-size: 12px; margin: 0;">
-                                &copy; {{ date('Y') }} SalesPilot. All rights reserved.
+                                &copy; {{ date('Y') }} {{ app_name() }}. All rights reserved.
                             </p>
                         </td>
                     </tr>

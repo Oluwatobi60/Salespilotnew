@@ -17,6 +17,12 @@ return Application::configure(basePath: dirname(__DIR__))
             'rolemanager' => RoleManager::class,
             'check.subscription' => CheckSubscriptionStatus::class
         ]);
+
+        // Allow superadmin routes to bypass maintenance mode
+        $middleware->preventRequestsDuringMaintenance([
+            'superadmin/*',
+            'superadmin-bypass',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

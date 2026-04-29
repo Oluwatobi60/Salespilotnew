@@ -25,7 +25,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 
     <!-- endinject -->
-    <link rel="shortcut icon" href="{{ asset('manager_asset/images/favicon.png') }}" />
+    <link rel="shortcut icon" href="{{ app_favicon() }}" />
   </head>
   <body class="with-welcome-text">
 
@@ -47,49 +47,68 @@
 </div>
 
 <!-- Sidebar Navigation -->
+@php 
+  $staff = Auth::guard('staff')->user();
+  
+  // If no staff user, try regular auth (in case staff uses same table)
+  if (!$staff) {
+    $staff = Auth::user();
+  }
+@endphp
+
 <nav class="sidebar sidebar-offcanvas" id="sidebar">
   <ul class="nav">
-    <li class="nav-item">
-      <a class="nav-link" href="{{ route('staff.sell_product') }}">
-        <i class="menu-icon bi bi-house-door-fill"></i>
-        <span class="menu-title">Sell</span>
-      </a>
-    </li>
-
+    @if(user_has_feature('staff_pos', $staff))
+      <li class="nav-item">
+        <a class="nav-link" href="{{ route('staff.sell_product') }}">
+          <i class="menu-icon bi bi-house-door-fill"></i>
+          <span class="menu-title">Sell</span>
+        </a>
+      </li>
+    @endif
 
     <li class="nav-item nav-category">Menu</li>
 
-    <li class="nav-item">
-      <a class="nav-link" data-bs-toggle="collapse" href="#sales-menu" aria-expanded="false" aria-controls="sales-menu">
-        <i class="menu-icon bi bi-wallet-fill"></i>
-        <span class="menu-title">Sales</span>
-        <i class="menu-arrow"></i>
-      </a>
-      <div class="collapse" id="sales-menu">
-        <ul class="nav flex-column sub-menu">
-          <li class="nav-item"> <a class="nav-link" href="{{ route('staff.completed_sales') }}">Completed Sales</a></li>
-         {{--   <li class="nav-item"> <a class="nav-link" href="pending_sales.php">Pending Sales</a></li>
-          <li class="nav-item"> <a class="nav-link" href="returns.php">Returns</a></li>  --}}
-        </ul>
-      </div>
-    </li>
+    @php
+      // Check if staff has any report features
+      $hasAnySalesReport = user_has_feature('staff_sales_summary', $staff) 
+        || user_has_feature('staff_sales_by_item', $staff);
+    @endphp
+    
+    @if($hasAnySalesReport)
+      <li class="nav-item">
+        <a class="nav-link" data-bs-toggle="collapse" href="#sales-menu" aria-expanded="false" aria-controls="sales-menu">
+          <i class="menu-icon bi bi-wallet-fill"></i>
+          <span class="menu-title">Sales</span>
+          <i class="menu-arrow"></i>
+        </a>
+        <div class="collapse" id="sales-menu">
+          <ul class="nav flex-column sub-menu">
+            @if(user_has_feature('staff_sales_summary', $staff))
+              <li class="nav-item"> <a class="nav-link" href="{{ route('staff.completed_sales') }}">Completed Sales</a></li>
+            @endif
+          </ul>
+        </div>
+      </li>
+    @endif
 
+    @if(user_has_feature('staff_pos', $staff))
+      <li class="nav-item">
+        <a class="nav-link" href="{{ route('staff.view_saved_carts') }}">
+          <i class="menu-icon bi bi-bookmark-fill"></i>
+          <span class="menu-title">Saved Carts</span>
+        </a>
+      </li>
+    @endif
 
-
-    <li class="nav-item">
-      <a class="nav-link" href="{{ route('staff.view_saved_carts') }}">
-        <i class="menu-icon bi bi-bookmark-fill"></i>
-        <span class="menu-title">Saved Carts</span>
-      </a>
-    </li>
-
-
-     <li class="nav-item">
-      <a class="nav-link" href="{{ route('staff.customers') }}">
-        <i class="menu-icon bi bi-people-fill"></i>
-        <span class="menu-title">Customer</span>
-      </a>
-    </li>
+    @if(user_has_feature('staff_customers', $staff))
+      <li class="nav-item">
+        <a class="nav-link" href="{{ route('staff.customers') }}">
+          <i class="menu-icon bi bi-people-fill"></i>
+          <span class="menu-title">Customer</span>
+        </a>
+      </li>
+    @endif
 
 
 
@@ -138,7 +157,7 @@
             <div class="d-sm-flex justify-content-center justify-content-sm-between">
 
               <span class="float-none float-sm-end d-block mt-1 mt-sm-0 text-center">
-                Copyright © 2025. All rights reserved.
+                Copyright © {{ date('Y') }} {{ app_name() }}. All rights reserved.
               </span>
             </div>
           </footer>

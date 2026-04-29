@@ -44,7 +44,7 @@
                     <h5 class="alert-heading mb-2">{{ $title }}</h5>
                     @if($subscriptionAlert['is_expired'])
                         <p class="mb-2">Your <strong>{{ $subscriptionAlert['plan_name'] }}</strong> subscription has expired on {{ $subscriptionAlert['end_date'] }}.</p>
-                        <p class="mb-0">Please renew your subscription to continue using SalesPilot without interruption.</p>
+                        <p class="mb-0">Please renew your subscription to continue using {{ app_name() }} without interruption.</p>
                     @else
                         <p class="mb-2">Your <strong>{{ $subscriptionAlert['plan_name'] }}</strong> subscription will expire in <strong>{{ $subscriptionAlert['days_remaining'] }} {{ $subscriptionAlert['days_remaining'] == 1 ? 'day' : 'days' }}</strong> on {{ $subscriptionAlert['end_date'] }}.</p>
                         <p class="mb-0">Renew now to avoid service interruption and continue enjoying all features.</p>
@@ -62,7 +62,7 @@
 
    <!-- Welcome Section -->
             <div class="welcome-section">
-              <h1 class="welcome-title">Welcome to SalesPilot</h1>
+              <h1 class="welcome-title">Welcome to {{ app_name() }}</h1>
               <p class="welcome-subtitle">Your comprehensive inventory management solution</p>
             </div>
 

@@ -19,7 +19,7 @@
                             ✅ Subscription Auto-Renewed
                         </h1>
                         <p style="color:rgba(255,255,255,0.9);margin:10px 0 0;font-size:15px;">
-                            Your SalesPilot subscription has been successfully renewed
+                            Your {{ app_name() }} subscription has been successfully renewed
                         </p>
                     </td>
                 </tr>
@@ -36,7 +36,7 @@
                                 🎉 Great news! Your subscription has been auto-renewed.
                             </h3>
                             <p style="color:#166534;margin:0;font-size:14px;line-height:1.6;">
-                                Your access to SalesPilot continues uninterrupted. No action is needed from you.
+                                Your access to {{ app_name() }} continues uninterrupted. No action is needed from you.
                             </p>
                         </div>
 
@@ -100,16 +100,16 @@
                         <div style="background-color:#fffbeb;border:1px solid #fbbf24;border-radius:6px;padding:16px;margin-bottom:25px;">
                             <p style="color:#92400e;font-size:13px;margin:0;line-height:1.6;">
                                 <strong>Want to turn off auto-renewal?</strong><br>
-                                Log into your SalesPilot account and visit <em>Settings → Subscription</em> to manage your renewal preferences anytime.
+                                Log into your {{ app_name() }} account and visit <em>Settings → Subscription</em> to manage your renewal preferences anytime.
                             </p>
                         </div>
 
                         <p style="color:#555;font-size:14px;line-height:1.6;margin:0 0 5px;">
-                            Thank you for continuing with SalesPilot. If you have any questions, please contact our support team.
+                            Thank you for continuing with {{ app_name() }}. If you have any questions, please contact our support team.
                         </p>
                         <p style="color:#555;font-size:14px;line-height:1.6;margin:0;">
                             Best regards,<br>
-                            <strong>The SalesPilot Team</strong>
+                            <strong>The {{ app_name() }} Team</strong>
                         </p>
                     </td>
                 </tr>
@@ -118,7 +118,7 @@
                 <tr>
                     <td style="background-color:#f9f9f9;padding:20px 30px;text-align:center;border-top:1px solid #eee;">
                         <p style="color:#999;font-size:12px;margin:0;">
-                            © {{ date('Y') }} SalesPilot. All rights reserved.<br>
+                            © {{ date('Y') }} {{ app_name() }}. All rights reserved.<br>
                             This is an automated message. Please do not reply directly to this email.
                         </p>
                     </td>

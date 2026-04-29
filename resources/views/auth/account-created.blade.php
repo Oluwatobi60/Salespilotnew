@@ -1,6 +1,6 @@
 @extends('layout.layout')
 @section('welcome_page_title')
-Account Created — Check Your Email | SalesPilot
+Account Created — Check Your Email | {{ app_name() }}
 @endsection
 @if(session('setup_email'))
     @section('hide_nav_links') 1 @endsection
@@ -25,7 +25,7 @@ Account Created — Check Your Email | SalesPilot
                 <li>Open the email we just sent you</li>
                 <li>Click the <strong>"Set My Password"</strong> link</li>
                 <li>Choose a secure password</li>
-                <li>Log in and start using SalesPilot</li>
+                <li>Log in and start using {{ app_name() }}</li>
             </ol>
         </div>
 

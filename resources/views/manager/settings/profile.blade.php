@@ -84,7 +84,7 @@ Manager Profile Settings
                     </div>
            <footer class="footer">
             <div class="d-sm-flex justify-content-center justify-content-sm-between">
-							<span class="text-muted text-center text-sm-left d-block d-sm-inline-block">© 2025 SalesPilot. All rights reserved.</span>
+							<span class="text-muted text-center text-sm-left d-block d-sm-inline-block">© {{ date('Y') }} {{ app_name() }}. All rights reserved.</span>
             </div>
           </footer>
         </div>

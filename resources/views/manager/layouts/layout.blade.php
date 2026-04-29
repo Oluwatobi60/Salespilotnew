@@ -25,7 +25,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 
     <!-- endinject -->
-    <link rel="shortcut icon" href="{{ asset('manager_asset/images/favicon.png') }}" />
+    <link rel="shortcut icon" href="{{ app_favicon() }}" />
   </head>
   <body class="with-welcome-text">
 
@@ -47,7 +47,28 @@
 </div>
 
 <!-- Sidebar Navigation -->
-@php $manager = Auth::user(); @endphp
+@php 
+  $manager = Auth::user(); 
+  // Determine user role for feature checks
+  $isBusinessCreator = empty($manager->addby); // Owner/Business Creator has no addby
+  
+  // Feature slug prefixes based on role
+  $posFeature = $isBusinessCreator ? 'pos_system' : 'manager_pos';
+  $inventoryFeature = $isBusinessCreator ? 'advanced_inventory' : 'manager_inventory';
+  $suppliersFeature = $isBusinessCreator ? 'supplier_management' : 'manager_suppliers';
+  $customersFeature = $isBusinessCreator ? 'customer_management' : 'manager_customers';
+  $activityLogsFeature = $isBusinessCreator ? 'activity_logs' : 'manager_activity_logs';
+  $discountsFeature = $isBusinessCreator ? 'discounts_promotions' : 'manager_discounts';
+  $branchesFeature = $isBusinessCreator ? 'multi_branch' : 'manager_view_branches';
+  
+  // Individual report features
+  $salesSummaryFeature = $isBusinessCreator ? 'sales_summary' : 'manager_sales_summary';
+  $salesByStaffFeature = $isBusinessCreator ? 'sales_by_staff' : 'manager_sales_by_staff';
+  $salesByItemFeature = $isBusinessCreator ? 'sales_by_item' : 'manager_sales_by_item';
+  $salesByCategoryFeature = $isBusinessCreator ? 'sales_by_category' : 'manager_sales_by_category';
+  $inventoryValuationFeature = $isBusinessCreator ? 'inventory_valuation' : 'manager_inventory_valuation';
+  $discountReportFeature = $isBusinessCreator ? 'discount_report' : 'manager_discount_report';
+@endphp
 <nav class="sidebar sidebar-offcanvas" id="sidebar">
   <ul class="nav">
     <li class="nav-item">
@@ -58,14 +79,17 @@
     </li>
     <li class="nav-item nav-category">Menu</li>
 
+@if(user_has_feature($posFeature, $manager))
   <li class="nav-item">
       <a class="nav-link" href="{{ route('manager.sell_product') }}">
         <i class="menu-icon bi bi-cart-fill"></i>
         <span class="menu-title">Sell</span>
       </a>
     </li>
+@endif
 
 
+@if(user_has_feature($salesSummaryFeature, $manager) || user_has_feature($salesByStaffFeature, $manager) || user_has_feature($salesByItemFeature, $manager) || user_has_feature($salesByCategoryFeature, $manager))
     <li class="nav-item">
       <a class="nav-link" data-bs-toggle="collapse" href="#ui-basic" aria-expanded="false" aria-controls="ui-basic">
         <i class="menu-icon bi bi-wallet-fill"></i>
@@ -79,8 +103,19 @@
         </ul>
       </div>
     </li>
+@endif
 
 
+@php
+  // Check if user has any report features to show Reports menu
+  $hasAnyReport = user_has_feature($salesSummaryFeature, $manager) 
+    || user_has_feature($salesByStaffFeature, $manager) 
+    || user_has_feature($salesByItemFeature, $manager) 
+    || user_has_feature($salesByCategoryFeature, $manager)
+    || user_has_feature($inventoryValuationFeature, $manager)
+    || user_has_feature($discountReportFeature, $manager);
+@endphp
+@if($hasAnyReport)
     <li class="nav-item">
       <a class="nav-link" data-bs-toggle="collapse" href="#form-elements" aria-expanded="false" aria-controls="form-elements">
         <i class="menu-icon mdi mdi-card-text-outline"></i>
@@ -89,24 +124,35 @@
       </a>
      <div class="collapse" id="form-elements">
         <ul class="nav flex-column sub-menu">
-          <li class="nav-item"><a class="nav-link" href="{{ route('manager.sales_summary') }}">Sales Summary</a></li>
-          <li class="nav-item"><a class="nav-link" href=" {{ route('manager.staff_sales') }} ">Sales by Staff</a></li>
-          <li class="nav-item"><a class="nav-link" href="{{ route('manager.sales_by_item') }} ">Sales by Item</a></li>
-          <li class="nav-item"><a class="nav-link" href="{{ route('manager.sales_by_category') }}">Sales by Category</a></li>
-            @php
-            $currentSubscription = $manager->currentSubscription()->first();
-            $planName = $currentSubscription && $currentSubscription->subscriptionPlan
-                ? strtolower(trim($currentSubscription->subscriptionPlan->name))
-                : 'free';
-            $isFreePlan = ($planName === 'free');
-          @endphp
-          @if(!$isFreePlan)
-          <li class="nav-item"><a class="nav-link" href="{{ route('manager.valuation_report') }}">Inventory Valuation</a></li>
-           @endif
-      {{--      <li class="nav-item"><a class="nav-link" href="{{ route('manager.taxes') }}">Taxes</a></li>  --}}
-          <li class="nav-item"><a class="nav-link" href="{{ route('manager.discount_report') }}">Discount Report</a></li>
+          @if(user_has_feature($salesSummaryFeature, $manager))
+            <li class="nav-item"><a class="nav-link" href="{{ route('manager.sales_summary') }}">Sales Summary</a></li>
+          @endif
+          
+          @if(user_has_feature($salesByStaffFeature, $manager))
+            <li class="nav-item"><a class="nav-link" href=" {{ route('manager.staff_sales') }} ">Sales by Staff</a></li>
+          @endif
+          
+          @if(user_has_feature($salesByItemFeature, $manager))
+            <li class="nav-item"><a class="nav-link" href="{{ route('manager.sales_by_item') }} ">Sales by Item</a></li>
+          @endif
+          
+          @if(user_has_feature($salesByCategoryFeature, $manager))
+            <li class="nav-item"><a class="nav-link" href="{{ route('manager.sales_by_category') }}">Sales by Category</a></li>
+          @endif
+          
+          @if(user_has_feature($inventoryValuationFeature, $manager))
+            <li class="nav-item"><a class="nav-link" href="{{ route('manager.valuation_report') }}">Inventory Valuation</a></li>
+          @endif
+      
+          @if(user_has_feature($discountReportFeature, $manager))
+            <li class="nav-item"><a class="nav-link" href="{{ route('manager.discount_report') }}">Discount Report</a></li>
+          @endif
         </ul>
       </div>
+    </li>
+@endif
+
+@if(user_has_feature($customersFeature, $manager) || user_has_feature($discountsFeature, $manager))
      <li class="nav-item">
       <a class="nav-link" data-bs-toggle="collapse" href="#crm-menu" aria-expanded="false" aria-controls="crm-menu">
         <i class="menu-icon bi bi-people-fill"></i>
@@ -115,14 +161,19 @@
       </a>
       <div class="collapse" id="crm-menu">
         <ul class="nav flex-column sub-menu">
-          <li class="nav-item"> <a class="nav-link" href="{{ route('manager.customers') }}">Customers</a></li>
-          <li class="nav-item"> <a class="nav-link" href="{{ route('manager.add_discount') }}">Discount</a></li>
+          @if(user_has_feature($customersFeature, $manager))
+            <li class="nav-item"> <a class="nav-link" href="{{ route('manager.customers') }}">Customers</a></li>
+          @endif
+          @if(user_has_feature($discountsFeature, $manager))
+            <li class="nav-item"> <a class="nav-link" href="{{ route('manager.add_discount') }}">Discount</a></li>
+          @endif
         </ul>
       </div>
     </li>
+@endif
 
 
-    @if(empty($manager->addby))
+    @if($isBusinessCreator)
     <li class="nav-item">
       <a class="nav-link" data-bs-toggle="collapse" href="#add-staff" aria-expanded="false" aria-controls="add-staff">
         <i class="menu-icon bi bi-person-workspace"></i>
@@ -131,64 +182,58 @@
       </a>
       <div class="collapse" id="add-staff">
         <ul class="nav flex-column sub-menu">
-          <li class="nav-item"> <a class="nav-link" href="{{ route('manager.staff') }}">Staffs</a></li>
-          @php
-            $currentSubscription = $manager->currentSubscription()->first();
-            $planName = $currentSubscription && $currentSubscription->subscriptionPlan
-                ? strtolower(trim($currentSubscription->subscriptionPlan->name))
-                : 'free';
-            $isBasicPlan = ($planName === 'basic' || $planName === 'free');
-          @endphp
-          @if(!$isBasicPlan)
+          @if(user_has_feature('manage_staff', $manager))
+            <li class="nav-item"> <a class="nav-link" href="{{ route('manager.staff') }}">Staffs</a></li>
+          @endif
+          @if(user_has_feature('manage_managers', $manager))
             <li class="nav-item"> <a class="nav-link" href="{{ route('manager.manager') }}">Managers</a></li>
+          @endif
+        </ul>
+      </div>
+    </li>
+    @else
+      {{-- Managers can also manage staff if enabled --}}
+      @if(user_has_feature('manager_manage_staff', $manager))
+        <li class="nav-item">
+          <a class="nav-link" href="{{ route('manager.staff') }}">
+            <i class="menu-icon bi bi-person-workspace"></i>
+            <span class="menu-title">Manage Staff</span>
+          </a>
+        </li>
+      @endif
+    @endif
+
+@if(user_has_feature($branchesFeature, $manager))
+  <li class="nav-item">
+      <a class="nav-link" data-bs-toggle="collapse" href="#add-branches" aria-expanded="false" aria-controls="add-branches">
+        <i class="menu-icon bi bi-building"></i>
+        <span class="menu-title">{{ $isBusinessCreator ? 'Add Branches' : 'View Branches' }}</span>
+        <i class="menu-arrow"></i>
+      </a>
+      <div class="collapse" id="add-branches">
+        <ul class="nav flex-column sub-menu">
+          <li class="nav-item"> <a class="nav-link" href="{{ route('manager.branches') }} ">Branches</a></li>
+          @if($isBusinessCreator)
+            <li class="nav-item"> <a class="nav-link" href="{{ route('manager.inventory.allocation') }} ">Allocate Branch</a></li>
           @endif
         </ul>
       </div>
     </li>
 @endif
 
-@php
-  $currentSubscription = $manager->currentSubscription()->first();
-  $planName = $currentSubscription && $currentSubscription->subscriptionPlan
-      ? strtolower(trim($currentSubscription->subscriptionPlan->name))
-      : 'free';
-  $canAccessBranches = in_array($planName, ['standard', 'premium']);
-
-  // Debug: Log plan name to help troubleshoot
-  \Log::info('Branch Access Check', [
-      'plan_name' => $planName,
-      'raw_plan_name' => $currentSubscription && $currentSubscription->subscriptionPlan ? $currentSubscription->subscriptionPlan->plan_name : 'no plan',
-      'can_access' => $canAccessBranches,
-      'user_id' => $manager->id
-  ]);
-@endphp
-
-@if($canAccessBranches)
-  <li class="nav-item">
-      <a class="nav-link" data-bs-toggle="collapse" href="#add-branches" aria-expanded="false" aria-controls="add-branches">
-        <i class="menu-icon bi bi-person-workspace"></i>
-        <span class="menu-title">Add Branches</span>
-        <i class="menu-arrow"></i>
-      </a>
-      <div class="collapse" id="add-branches">
-        <ul class="nav flex-column sub-menu">
-          <li class="nav-item"> <a class="nav-link" href="{{ route('manager.branches') }} ">Branches</a></li>
-        <li class="nav-item"> <a class="nav-link" href="{{ route('manager.inventory.allocation') }} ">Allocate Branch</a></li>
-        </ul>
-      </div>
-    </li>
-@endif
 
 
 
-
+@if(user_has_feature($activityLogsFeature, $manager))
     <li class="nav-item">
       <a class="nav-link" href="{{ route('manager.activity_logs') }}">
         <i class="menu-icon bi bi-activity"></i>
         <span class="menu-title">Activity Logs</span>
       </a>
     </li>
+@endif
 
+@if(user_has_feature($inventoryFeature, $manager))
     <li class="nav-item">
       <a class="nav-link" data-bs-toggle="collapse" href="#icons" aria-expanded="false" aria-controls="icons">
        <i class="menu-icon bi bi-shop-window"></i>
@@ -203,12 +248,16 @@
         </ul>
       </div>
     </li>
+@endif
+
+@if(user_has_feature($suppliersFeature, $manager))
   <li class="nav-item">
       <a class="nav-link" href="{{ route('manager.suppliers') }} ">
         <i class="menu-icon bi bi-truck"></i>
         <span class="menu-title">Suppliers</span>
       </a>
     </li>
+@endif
 
 
 
@@ -252,7 +301,7 @@
             <div class="d-sm-flex justify-content-center justify-content-sm-between">
 
               <span class="float-none float-sm-end d-block mt-1 mt-sm-0 text-center">
-                Copyright © 2025. All rights reserved.
+                Copyright © {{ date('Y') }} {{ app_name() }}. All rights reserved.
               </span>
             </div>
           </footer>

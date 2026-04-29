@@ -33,6 +33,8 @@ use App\Http\Controllers\Superadmin\RevenueController;
 use App\Http\Controllers\Superadmin\SubscriptionRenewalController;
 use App\Http\Controllers\Superadmin\CommissionController;
 use App\Http\Controllers\Superadmin\WithdrawalController;
+use App\Http\Controllers\Superadmin\SettingsController;
+use App\Http\Controllers\Superadmin\SubscriptionFeaturesController;
 use App\Http\Controllers\Brm\BrmController;
 use App\Http\Controllers\Brm\BrmCommissionController;
 use App\Http\Controllers\Brm\PerformanceController;
@@ -117,6 +119,27 @@ Route::middleware(['auth:superadmin'])->prefix('superadmin/withdrawals')->contro
     Route::post('/{withdrawal}/reject', 'reject')->name('superadmin.withdrawals.reject');
     Route::post('/bulk-approve', 'bulkApprove')->name('superadmin.withdrawals.bulk-approve');
     Route::post('/bulk-mark-paid', 'bulkMarkPaid')->name('superadmin.withdrawals.bulk-mark-paid');
+});
+
+// Superadmin Settings routes
+Route::middleware(['auth:superadmin'])->prefix('superadmin/settings')->controller(SettingsController::class)->group(function () {
+    Route::get('/', 'index')->name('superadmin.settings');
+    Route::put('/', 'update')->name('superadmin.settings.update');
+    Route::post('/test-email', 'testEmail')->name('superadmin.settings.test-email');
+    Route::post('/clear-cache', 'clearCache')->name('superadmin.settings.clear-cache');
+    Route::post('/run-backup', 'runBackup')->name('superadmin.settings.run-backup');
+    Route::post('/toggle-maintenance', 'toggleMaintenance')->name('superadmin.settings.toggle-maintenance');
+});
+
+// Superadmin Subscription Features routes
+Route::middleware(['auth:superadmin'])->prefix('superadmin/subscription-features')->controller(SubscriptionFeaturesController::class)->group(function () {
+    Route::get('/', 'index')->name('superadmin.subscription-features');
+    Route::post('/plans/{plan}/toggle-feature', 'toggleFeature')->name('superadmin.subscription-features.toggle-feature');
+    Route::post('/plans/{plan}/features', 'updatePlanFeatures')->name('superadmin.subscription-features.update-plan-features');
+    Route::put('/plans/{plan}/info', 'updatePlanInfo')->name('superadmin.subscription-features.update-plan-info');
+    Route::post('/features', 'createFeature')->name('superadmin.subscription-features.create-feature');
+    Route::delete('/features/{feature}', 'deleteFeature')->name('superadmin.subscription-features.delete-feature');
+    Route::post('/clone', 'cloneFeatures')->name('superadmin.subscription-features.clone');
 });
 
 

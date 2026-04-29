@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Create Your SalesPilot Account</title>
+    <title>Create Your {{ app_name() }} Account</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://unicons.iconscout.com/release/v4.0.0/css/line.css">
     <link rel="stylesheet" href="{{ asset('welcome_asset/register.css') }}">
@@ -18,9 +18,9 @@
         <div class="register-left">
             <div class="register-branding">
                 <div class="brand-logo-wrapper">
-                    <img src="{{ asset('manager_asset/images/salespilot logo1.png') }}" alt="SalesPilot Logo" class="brand-logo-img">
+                    <img src="{{ asset('manager_asset/images/salespilot logo1.png') }}" alt="{{ app_name() }} Logo" class="brand-logo-img">
                 </div>
-                <h1>Join SalesPilot Today</h1>
+                <h1>Join {{ app_name() }} Today</h1>
                 <p>Start managing your business with powerful tools designed for growth and success.</p>
 
                 <div class="progress-steps">
@@ -73,7 +73,7 @@
             <div class="form-wrapper">
                 <div class="form-header">
                     <h2>Create Your Account</h2>
-                    <p>Get started with SalesPilot in just a few minutes</p>
+                    <p>Get started with {{ app_name() }} in just a few minutes</p>
                 </div>
 
                 <div class="form-card">

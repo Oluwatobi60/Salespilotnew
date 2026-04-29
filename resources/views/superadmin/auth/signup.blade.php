@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Superadmin Sign Up - SalesPilot</title>
+    <title>Superadmin Sign Up - {{ app_name() }}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap" rel="stylesheet">
     <style>
@@ -25,7 +25,7 @@
     <div class="row w-100 justify-content-center">
         <div class="col-md-6 col-lg-5">
             <div class="text-center mb-4">
-                <img src="{{ asset('manager_asset/images/salespilot logo1.png') }}" alt="SalesPilot Logo" style="max-width: 160px;">
+                <img src="{{ asset('manager_asset/images/salespilot logo1.png') }}" alt="{{ app_name() }} Logo" style="max-width: 160px;">
                 <h3 class="brand-title mt-3">Superadmin Sign Up</h3>
             </div>
 

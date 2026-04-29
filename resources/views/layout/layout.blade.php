@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <!-- CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('welcome_page_title')</title>
+    <title>@yield('welcome_page_title', app_name())</title>
     <!-- plugins:css -->
     <link rel="stylesheet" href="{{ asset('manager_asset/vendors/feather/feather.css') }}">
     <link rel="stylesheet" href="{{ asset('manager_asset/vendors/mdi/css/materialdesignicons.min.css') }}">
@@ -23,7 +23,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 
     <!-- endinject -->
-    <link rel="shortcut icon" href="{{ asset('manager_asset/images/favicon.png') }}" />
+    <link rel="shortcut icon" href="{{ app_favicon() }}" />
   </head>
   <body>
 
@@ -105,8 +105,8 @@
         <a href="{{ route('get_started') }}" class="sp-brand-logo">
             <div class="sp-brand-icon">📊</div>
             <div class="sp-brand-text">
-                <div class="sp-brand-name">Sales<span>Pilot</span></div>
-                <div class="sp-brand-tagline">Business Management Suite</div>
+                <div class="sp-brand-name">{{ app_name() }}</div>
+                <div class="sp-brand-tagline">{{ setting('app_tagline', 'Business Management Suite') }}</div>
             </div>
         </a>
         @yield('brand_bar_step')
@@ -115,7 +115,7 @@
 @else
 <nav class="navbar" id="navbar">
     <div class="nav-container">
-        <div class="logo">SalesPilot</div>
+        <div class="logo">{{ app_name() }}</div>
         <button class="mobile-menu-btn" onclick="toggleMenu()">☰</button>
         <ul class="nav-links" id="navLinks">
             <li><a href="#home">Home</a></li>

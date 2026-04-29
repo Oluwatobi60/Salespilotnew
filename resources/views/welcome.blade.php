@@ -1,6 +1,6 @@
 @extends('layout.layout')
 @section('welcome_page_title')
-Welcome to SalesPilot
+Welcome to {{ app_name() }}
 @endsection
 @section('welcome_page_content')
 <link rel="stylesheet" href="{{ asset('welcome_asset/style.css') }}">
@@ -10,7 +10,7 @@ Welcome to SalesPilot
 <section class="hero" id="home">
     <div class="hero-content">
         <h1>Transform Your Business with Modern Inventory Management</h1>
-        <p>SalesPilot is the all-in-one solution for managing inventory, sales, customers, and analytics. Built for modern businesses that demand efficiency and growth.</p>
+        <p>{{ app_name() }} is the all-in-one solution for managing inventory, sales, customers, and analytics. {{ setting('app_tagline', 'Built for modern businesses that demand efficiency and growth.') }}</p>
         <div class="cta">
             <a class="btn btn-primary" href="{{ route('get_started') }}">
                 <span>Get Started Free</span>
@@ -364,10 +364,10 @@ Welcome to SalesPilot
 		<section class="container" id="about">
 			<div class="about-content">
 				<div class="about-text">
-					<h2>About SalesPilot</h2>
-					<p>SalesPilot was founded with a simple mission: to empower small and medium-sized businesses with enterprise-grade inventory and point-of-sale solutions that are both powerful and easy to use.</p>
+					<h2>About {{ app_name() }}</h2>
+					<p>{{ app_name() }} was founded with a simple mission: to empower small and medium-sized businesses with enterprise-grade inventory and point-of-sale solutions that are both powerful and easy to use.</p>
 					<p>We understand the challenges of running a retail business. That's why we've built a platform that combines sophisticated inventory management, seamless POS operations, and insightful analytics in one intuitive interface.</p>
-					<p>Our team is dedicated to helping businesses grow through technology. With continuous updates, responsive support, and a commitment to your success, SalesPilot is more than just software—it's your business partner.</p>
+					<p>Our team is dedicated to helping businesses grow through technology. With continuous updates, responsive support, and a commitment to your success, {{ app_name() }} is more than just software—it's your business partner.</p>
 					<a href="{{ route('get_started') }}" class="btn btn-primary btn-large">Start Your Free Trial</a>
 				</div>
 				<div class="about-image">
@@ -389,15 +389,14 @@ Welcome to SalesPilot
 							<div class="contact-icon">📧</div>
 							<div>
 								<h3>Email Us</h3>
-								<a href="mailto:info.salespilots@gmail.com">info.salespilots@gmail.com</a><br>
-								<a href="mailto:support@salespilot.com">support@salespilot.com</a>
+							<a href="mailto:{{ support_email() }}">{{ support_email() }}</a>
 							</div>
 						</div>
 						<div class="contact-item">
 							<div class="contact-icon">📞</div>
 							<div>
 								<h3>Call Us</h3>
-								<p>+234 800 123 4567</p>
+							<p>{{ support_phone() }}</p>
 								<p>Mon-Fri, 8am-6pm WAT</p>
 							</div>
 						</div>
@@ -451,8 +450,8 @@ Welcome to SalesPilot
 		<footer class="footer">
 			<div class="footer-content">
 				<div class="footer-section">
-					<h3>SalesPilot</h3>
-					<p>Empowering businesses with modern inventory and POS solutions.</p>
+					<h3>{{ app_name() }}</h3>
+					<p>{{ setting('app_tagline', 'Empowering businesses with modern inventory and POS solutions.') }}</p>
 					<div class="social-links">
 						<a href="#">f</a>
 						<a href="#">𝕏</a>
@@ -489,7 +488,7 @@ Welcome to SalesPilot
 				</div>
 			</div>
 			<div class="footer-bottom">
-				<p>&copy; 2026 SalesPilot. All rights reserved. Built with ❤️ for businesses everywhere.</p>
+				<p>{{ setting('footer_text', '© ' . date('Y') . ' ' . app_name() . '. All rights reserved.') }}</p>
 			</div>
 		</footer>
 

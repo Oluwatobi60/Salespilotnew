@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('superadmin_page_title') - SalesPilot</title>
+    <title>@yield('superadmin_page_title') - {{ app_name() }}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="shortcut icon" href="{{ asset('manager_asset/images/favicon.png') }}" />
+    <link rel="shortcut icon" href="{{ app_favicon() }}" />
     <link rel="stylesheet" href="{{ asset('superadmin_asset/css/superadmin_layout.css') }}">
 </head>
 <body>
@@ -20,7 +20,7 @@
 <!-- Sidebar -->
 <div class="sa-sidebar" id="saSidebar">
     <div class="brand">
-        <img src="{{ asset('manager_asset/images/salespilot logo1.png') }}" alt="SalesPilot">
+        <img src="{{ asset('manager_asset/images/salespilot logo1.png') }}" alt="{{ app_name() }}">
         <span>Admin Panel</span>
     </div>
     <nav>
@@ -42,6 +42,9 @@
         <a href="{{ route('superadmin.plans') }}" class="{{ request()->routeIs('superadmin.plans*') ? 'active' : '' }}">
             <i class="bi bi-card-list"></i> Plans
         </a>
+        <a href="{{ route('superadmin.subscription-features') }}" class="{{ request()->routeIs('superadmin.subscription-features*') ? 'active' : '' }}">
+            <i class="bi bi-star"></i> Plan Features
+        </a>
         <a href="{{ route('superadmin.revenue') }}" class="{{ request()->routeIs('superadmin.revenue*') ? 'active' : '' }}">
             <i class="bi bi-graph-up-arrow"></i> Revenue
         </a>
@@ -50,6 +53,11 @@
         </a>
         <a href="{{ route('superadmin.withdrawals') }}" class="{{ request()->routeIs('superadmin.withdrawals*') ? 'active' : '' }}">
             <i class="bi bi-wallet2"></i> Withdrawals
+        </a>
+
+        <span class="nav-group-label">System</span>
+        <a href="{{ route('superadmin.settings') }}" class="{{ request()->routeIs('superadmin.settings*') ? 'active' : '' }}">
+            <i class="bi bi-gear"></i> Settings
         </a>
     </nav>
     <div class="sidebar-footer">

@@ -74,4 +74,59 @@ class SubscriptionPlan extends Model
     {
         return $query->where('is_popular', true);
     }
+
+    /**
+     * Check if plan has a specific feature
+     */
+    public function hasFeature(string $featureSlug): bool
+    {
+        return in_array($featureSlug, $this->features ?? []);
+    }
+
+    /**
+     * Add feature to plan
+     */
+    public function addFeature(string $featureSlug): void
+    {
+        $features = $this->features ?? [];
+        if (!in_array($featureSlug, $features)) {
+            $features[] = $featureSlug;
+            $this->features = $features;
+            $this->save();
+        }
+    }
+
+    /**
+     * Remove feature from plan
+     */
+    public function removeFeature(string $featureSlug): void
+    {
+        $features = $this->features ?? [];
+        $this->features = array_values(array_filter($features, fn($f) => $f !== $featureSlug));
+        $this->save();
+    }
+
+    /**
+     * Set features for plan
+     */
+    public function setFeatures(array $featureSlugs): void
+    {
+        $this->features = $featureSlugs;
+        $this->save();
+    }
+
+    /**
+     * Get feature details for this plan
+     */
+    public function getFeatureDetails()
+    {
+        if (empty($this->features)) {
+            return collect([]);
+        }
+
+        return SubscriptionFeature::whereIn('slug', $this->features)
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->get();
+    }
 }

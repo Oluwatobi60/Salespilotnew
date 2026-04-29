@@ -1,6 +1,6 @@
 @extends('layout.layout')
 @section('welcome_page_title')
-Choose Your Plan - SalesPilot
+Choose Your Plan - {{ app_name() }}
 @endsection
 @if(auth()->check() && (!auth()->user()->password_set || isset($activeSubscription)))
     @section('hide_nav_links') 1 @endsection

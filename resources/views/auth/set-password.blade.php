@@ -1,6 +1,6 @@
 @extends('layout.layout')
 @section('welcome_page_title')
-Set Your Password | SalesPilot
+Set Your Password | {{ app_name() }}
 @endsection
 @section('hide_nav_links') 1 @endsection
 @section('brand_bar_step')<span class="sp-brand-step">Final Step &mdash; Set Your Password</span>@endsection
@@ -13,7 +13,7 @@ Set Your Password | SalesPilot
     <div class="sp-card">
         <div class="sp-icon">🔐</div>
         <h2>Create Your Password</h2>
-        <p class="subtitle">Choose a strong password to secure your SalesPilot account.</p>
+        <p class="subtitle">Choose a strong password to secure your {{ app_name() }} account.</p>
 
         <form id="setPasswordForm" method="POST" action="{{ route('password.setup.store', $token) }}">
             @csrf
