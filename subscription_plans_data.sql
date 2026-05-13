@@ -1,0 +1,1 @@
+INSERT INTO `subscription_plans` (`id`, `name`, `monthly_price`, `description`, `features`, `max_managers`, `max_staff`, `max_branches`, `is_active`, `is_popular`, `trial_days`, `created_at`, `updated_at`) VALUES
