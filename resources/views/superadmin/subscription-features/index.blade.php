@@ -8,9 +8,12 @@
         <p class="sa-header-subtitle">Control what each role can do in every subscription plan</p>
     </div>
     <div class="sa-header-actions">
-        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addFeatureModal">
-            <i class="bi bi-plus-circle me-1"></i>Add New Feature
+        <button type="button" class="btn btn-outline-warning" onclick="if(confirm('This will enable ALL features for ALL plans. Are you sure?')) { window.location.href='{{ route('superadmin.subscription-features.index') }}?reset_features=true'; }">
+            <i class="bi bi-arrow-clockwise me-1"></i>Reset All Features
         </button>
+       {{--   <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addFeatureModal">
+            <i class="bi bi-plus-circle me-1"></i>Add New Feature
+        </button>  --}}
     </div>
 </div>
 
@@ -127,6 +130,8 @@
                                     type="checkbox"
                                     id="plan{{ $plan->id }}_feature{{ $feature->id }}"
                                     value="{{ $feature->slug }}"
+                                    data-plan-id="{{ $plan->id }}"
+                                    data-feature-slug="{{ $feature->slug }}"
                                     {{ in_array($feature->slug, $planFeatureSlugs) ? 'checked' : '' }}
                                     onchange="toggleFeature({{ $plan->id }}, '{{ $feature->slug }}', this.checked)">
                                 <label class="form-check-label" for="plan{{ $plan->id }}_feature{{ $feature->id }}">

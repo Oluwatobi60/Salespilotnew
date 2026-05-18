@@ -7,6 +7,7 @@ use App\Models\SubscriptionPlan;
 use App\Models\SubscriptionFeature;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 class SubscriptionFeaturesController extends Controller
 {
@@ -15,8 +16,12 @@ class SubscriptionFeaturesController extends Controller
      */
     public function index()
     {
-        // Auto-enable all features for all plans
-        $this->autoEnableAllFeatures();
+        // Auto-enable all features only if manually triggered via query parameter
+        if (request()->has('reset_features') && request()->get('reset_features') === 'true') {
+            $this->autoEnableAllFeatures();
+            return redirect()->route('superadmin.subscription-features.index')
+                ->with('success', 'All features have been reset and enabled for all plans');
+        }
 
         $plans = SubscriptionPlan::orderBy('monthly_price')->get();
         $features = SubscriptionFeature::getGroupedFeatures();
@@ -49,35 +54,75 @@ class SubscriptionFeaturesController extends Controller
      */
     public function toggleFeature(Request $request, SubscriptionPlan $plan)
     {
-        $validated = $request->validate([
-            'feature_slug' => 'required|string|exists:subscription_features,slug',
-            'enabled' => 'required|boolean',
-        ]);
+        try {
+            $validated = $request->validate([
+                'feature_slug' => 'required|string|exists:subscription_features,slug',
+                'enabled' => 'required|boolean',
+            ]);
 
-        // Ensure features is always an array (handle JSON string from database)
-        $currentFeatures = is_array($plan->features) ? $plan->features : [];
+            // Ensure features is always an array (handle JSON string from database)
+            $currentFeatures = is_array($plan->features) ? $plan->features : [];
 
-        if ($validated['enabled']) {
-            // Add feature if not already present
-            if (!in_array($validated['feature_slug'], $currentFeatures)) {
-                $currentFeatures[] = $validated['feature_slug'];
+            if ($validated['enabled']) {
+                // Add feature if not already present
+                if (!in_array($validated['feature_slug'], $currentFeatures)) {
+                    $currentFeatures[] = $validated['feature_slug'];
+                }
+            } else {
+                // Remove feature
+                $currentFeatures = array_values(array_filter($currentFeatures, fn($f) => $f !== $validated['feature_slug']));
             }
-        } else {
-            // Remove feature
-            $currentFeatures = array_values(array_filter($currentFeatures, fn($f) => $f !== $validated['feature_slug']));
+
+            Log::info('Before setFeatures', [
+                'plan_id' => $plan->id,
+                'current_features_in_plan' => $plan->features,
+                'new_features_array' => $currentFeatures,
+                'feature_slug' => $validated['feature_slug'],
+                'enabled' => $validated['enabled']
+            ]);
+
+            $plan->setFeatures($currentFeatures);
+
+            // Verify the save worked
+            $plan->refresh();
+            Log::info('After setFeatures and refresh', [
+                'plan_id' => $plan->id,
+                'features_now' => $plan->features,
+                'expected' => $currentFeatures
+            ]);
+
+            // Clear cache with error handling
+            try {
+                Cache::forget("subscription_plan_{$plan->id}");
+                Cache::forget('active_subscription_plans');
+            } catch (\Exception $cacheError) {
+                Log::warning('Cache clearing failed in toggleFeature: ' . $cacheError->getMessage());
+                // Continue anyway - cache clearing failure shouldn't stop the operation
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Feature ' . ($validated['enabled'] ? 'enabled' : 'disabled') . ' successfully',
+                'features_count' => count($currentFeatures),
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation error: ' . implode(', ', $e->validator->errors()->all()),
+                'errors' => $e->validator->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            Log::error('Error in toggleFeature: ' . $e->getMessage(), [
+                'plan_id' => $plan->id,
+                'feature_slug' => $request->input('feature_slug'),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Server error: ' . $e->getMessage()
+            ], 500);
         }
-
-        $plan->setFeatures($currentFeatures);
-
-        // Clear cache
-        Cache::forget("subscription_plan_{$plan->id}");
-        Cache::forget('active_subscription_plans');
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Feature ' . ($validated['enabled'] ? 'enabled' : 'disabled') . ' successfully',
-            'features_count' => count($currentFeatures),
-        ]);
     }
 
     /**

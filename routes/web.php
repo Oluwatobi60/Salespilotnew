@@ -134,7 +134,7 @@ Route::middleware(['auth:superadmin'])->prefix('superadmin/settings')->controlle
 
 // Superadmin Subscription Features routes
 Route::middleware(['auth:superadmin'])->prefix('superadmin/subscription-features')->controller(SubscriptionFeaturesController::class)->group(function () {
-    Route::get('/', 'index')->name('superadmin.subscription-features');
+    Route::get('/', 'index')->name('superadmin.subscription-features.index');
     Route::post('/plans/{plan}/toggle-feature', 'toggleFeature')->name('superadmin.subscription-features.toggle-feature');
     Route::post('/plans/{plan}/features', 'updatePlanFeatures')->name('superadmin.subscription-features.update-plan-features');
     Route::put('/plans/{plan}/info', 'updatePlanInfo')->name('superadmin.subscription-features.update-plan-info');

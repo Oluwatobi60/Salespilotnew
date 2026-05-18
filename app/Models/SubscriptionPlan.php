@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Log;
 
 class SubscriptionPlan extends Model
 {
@@ -113,7 +114,16 @@ class SubscriptionPlan extends Model
     public function setFeatures(array $featureSlugs): void
     {
         $this->features = $featureSlugs;
-        $this->save();
+        $saved = $this->save();
+
+        Log::info('setFeatures called', [
+            'plan_id' => $this->id,
+            'plan_name' => $this->name,
+            'features_before' => $this->getOriginal('features'),
+            'features_after' => $featureSlugs,
+            'save_result' => $saved,
+            'features_in_db' => $this->fresh()->features
+        ]);
     }
 
     /**

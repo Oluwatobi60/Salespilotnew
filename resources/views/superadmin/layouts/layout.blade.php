@@ -42,7 +42,7 @@
         <a href="{{ route('superadmin.plans') }}" class="{{ request()->routeIs('superadmin.plans*') ? 'active' : '' }}">
             <i class="bi bi-card-list"></i> Plans
         </a>
-        <a href="{{ route('superadmin.subscription-features') }}" class="{{ request()->routeIs('superadmin.subscription-features*') ? 'active' : '' }}">
+        <a href="{{ route('superadmin.subscription-features.index') }}" class="{{ request()->routeIs('superadmin.subscription-features*') ? 'active' : '' }}">
             <i class="bi bi-star"></i> Plan Features
         </a>
         <a href="{{ route('superadmin.revenue') }}" class="{{ request()->routeIs('superadmin.revenue*') ? 'active' : '' }}">
