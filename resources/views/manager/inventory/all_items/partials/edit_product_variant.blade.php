@@ -120,7 +120,10 @@
                 @if($item->variantItem->item_image)
                     <div class="mt-2">
                         <strong>Item Image:</strong><br>
-                        <img src="{{ asset($item->variantItem->item_image) }}" alt="Item Image" class="mt-2" style="max-width: 150px; max-height: 150px;">
+                        <img src="{{ str_starts_with($item->variantItem->item_image, 'uploads/') ? asset($item->variantItem->item_image) : asset('storage/' . $item->variantItem->item_image) }}" 
+                             alt="Item Image" class="mt-2" 
+                             style="max-width: 150px; max-height: 150px;"
+                             onerror="this.style.display='none'">
                     </div>
                 @endif
             </div>

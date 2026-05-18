@@ -23,6 +23,7 @@ class SalesReportController extends Controller
     // Display completed sales with pagination
     public function completed_sales()
     {
+        /** @var \App\Models\User $manager */
         $manager = Auth::user();
         $businessName = $manager->business_name;
 

@@ -9,7 +9,6 @@ use App\Models\BranchInventory;
 use App\Models\Branch\Branch;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 
 class StandardItemController extends Controller
@@ -62,12 +61,10 @@ class StandardItemController extends Controller
             $validatedData['track_stock'] = $request->has('track_stock') ? 1 : 0;
             $validatedData['current_stock'] = $validatedData['opening_stock'] ?? 0;
 
-            // Handle file upload
+            // Handle file upload - SECURE: Uses Laravel's storage with auto-generated safe filename
             if ($request->hasFile('item_image')) {
-                $image = $request->file('item_image');
-                $imageName = time() . '_' . $image->getClientOriginalName();
-                $image->move(public_path('uploads/item_images'), $imageName);
-                $validatedData['item_image'] = 'uploads/item_images/' . $imageName;
+                $path = $request->file('item_image')->store('item_images', 'public');
+                $validatedData['item_image'] = $path;
             }
 
             // Generate item code if not provided

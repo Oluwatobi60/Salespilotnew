@@ -11,9 +11,8 @@ use App\Models\CartItem;
 use App\Models\Unit;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
-use App\Models\staffs;
+use App\Models\Staffs;
 use App\Models\ProductVariant;
 use App\Models\AddCustomer;
 use App\Models\BranchInventory;
@@ -635,7 +634,7 @@ class StaffsMainController extends Controller
             $firstItem = $cartItems->first();
             $total = $cartItems->sum('total');
             // Get staff name from staffs table
-            $staff = staffs::find($firstItem->staff_id);
+            $staff = Staffs::find($firstItem->staff_id);
             $userName = $staff ? $staff->fullname : 'Unknown Staff';
 
             return response()->json([

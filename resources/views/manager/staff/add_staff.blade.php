@@ -212,7 +212,7 @@ Add Staff Member
                             </td>
                             <td>
                               <div class="d-flex align-items-center">
-                                <img src="{{ $staff->passport_photo ? asset($staff->passport_photo) : asset('manager_asset/images/faces/face1.jpg') }}" alt="Profile" class="me-2" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
+                                <img src="{{ $staff->passport_photo ? (str_starts_with($staff->passport_photo, 'uploads/') ? asset($staff->passport_photo) : asset('storage/' . $staff->passport_photo)) : asset('manager_asset/images/faces/face1.jpg') }}" alt="Profile" class="me-2" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
                                 <div>
                                   <h6 class="mb-0">{{ $staff->fullname }}</h6>
                                   <p class="text-muted mb-0">{{ 'ID: ' . $staff->staffsid }}</p>

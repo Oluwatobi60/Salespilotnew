@@ -40,10 +40,8 @@ Staff Profile
 
         <!-- Avatar & Header Info -->
         <div class="profile-avatar-container">
-            @if($staff->passport_photo && file_exists(public_path('uploads/' . $staff->passport_photo)))
-                <img src="{{ asset('uploads/' . $staff->passport_photo) }}" alt="Profile" class="profile-avatar">
-            @elseif($staff->passport_photo)
-                <img src="{{ asset($staff->passport_photo) }}" alt="Profile" class="profile-avatar" onerror="this.src='{{ asset('manager_asset/assets/images/faces/face8.jpg') }}'">
+            @if($staff->passport_photo)
+                <img src="{{ str_starts_with($staff->passport_photo, 'uploads/') ? asset($staff->passport_photo) : asset('storage/' . $staff->passport_photo) }}" alt="Profile" class="profile-avatar" onerror="this.src='{{ asset('manager_asset/assets/images/faces/face8.jpg') }}'">
             @else
                 <img src="{{ asset('manager_asset/assets/images/faces/face8.jpg') }}" alt="Profile" class="profile-avatar">
             @endif

@@ -63,13 +63,23 @@ class SupplierController extends Controller
 
     public function edit_supplier($id)
     {
-        $supplier = Supplier::findOrFail($id);
+        $manager = Auth::user();
+        $businessName = $manager->business_name;
+        
+        // ✅ SECURITY: Verify supplier belongs to manager's business
+        $supplier = Supplier::where('business_name', $businessName)
+            ->findOrFail($id);
         return view('manager.supplier.edit_supplier', compact('supplier'));
     }
 
     public function update_supplier(Request $request, $id)
     {
-        $supplier = Supplier::findOrFail($id);
+        $manager = Auth::user();
+        $businessName = $manager->business_name;
+        
+        // ✅ SECURITY: Verify supplier belongs to manager's business
+        $supplier = Supplier::where('business_name', $businessName)
+            ->findOrFail($id);
 
         // Validate the request data
         $validatedData = $request->validate([
@@ -106,7 +116,12 @@ class SupplierController extends Controller
 
     public function delete_supplier($id)
     {
-        $supplier = Supplier::findOrFail($id);
+        $manager = Auth::user();
+        $businessName = $manager->business_name;
+        
+        // ✅ SECURITY: Verify supplier belongs to manager's business
+        $supplier = Supplier::where('business_name', $businessName)
+            ->findOrFail($id);
         $supplier->delete();
 
         // Check if the request expects JSON (AJAX request)

@@ -61,12 +61,10 @@ Sell Product
                 data-cost-price="{{ $item->cost_price ?? 0 }}"
                 data-stock="{{ $item->current_stock ?? 0 }}"
                 data-category="{{ $item->category_name }}"
-                data-img="{{ $item->item_image ? asset($item->item_image) : asset('manager_asset/images/salespilot logo1.png') }}">
+                data-img="{{ $item->item_image ? (str_starts_with($item->item_image, 'uploads/') ? asset($item->item_image) : asset('storage/' . $item->item_image)) : '' }}">
 
             @if($item->item_image)
-            <img src="{{ asset($item->item_image) }}" alt="{{ $item->item_name }}" onerror="console.error('Image failed:', '{{ $item->item_image }}'); this.src='{{ asset('manager_asset/images/salespilot logo1.png') }}'">
-            @else
-            <img src="{{ asset('manager_asset/images/salespilot logo1.png') }}" alt="{{ $item->item_name }}">
+            <img src="{{ str_starts_with($item->item_image, 'uploads/') ? asset($item->item_image) : asset('storage/' . $item->item_image) }}" alt="{{ $item->item_name }}" onerror="this.style.display='none';">
             @endif
             <div class="item-overlay">
             <div class="item-name">{{ $item->item_name }}</div>
@@ -97,11 +95,9 @@ Sell Product
                     data-primary-value="{{ $variant->primary_value ?? '' }}"
                     data-secondary-value="{{ $variant->secondary_value ?? '' }}"
                     data-tertiary-value="{{ $variant->tertiary_value ?? '' }}"
-                    data-img="{{ $item->item_image ? asset($item->item_image) : asset('manager_asset/images/salespilot logo1.png') }}">
+                    data-img="{{ $item->item_image ? (str_starts_with($item->item_image, 'uploads/') ? asset($item->item_image) : asset('storage/' . $item->item_image)) : '' }}">
                 @if($item->item_image)
-                    <img src="{{ asset($item->item_image) }}" alt="{{ $item->item_name }}" onerror="this.src='{{ asset('manager_asset/images/salespilot logo1.png') }}'">
-                @else
-                    <img src="{{ asset('manager_asset/images/salespilot logo1.png') }}" alt="{{ $item->item_name }}">
+                    <img src="{{ str_starts_with($item->item_image, 'uploads/') ? asset($item->item_image) : asset('storage/' . $item->item_image) }}" alt="{{ $item->item_name }}" onerror="this.style.display='none';">
                 @endif
                 <div class="item-overlay">
                     <div class="item-name">{{ $item->item_name }}</div>
@@ -128,9 +124,7 @@ Sell Product
                     <!-- Variant item without variants configured yet -->
                     <div class="item-card disabled" style="opacity: 0.6; cursor: not-allowed;">
                     @if($item->item_image)
-                        <img src="{{ asset($item->item_image) }}" alt="{{ $item->item_name }}" onerror="this.src='{{ asset('manager_asset/images/salespilot logo1.png') }}'">
-                    @else
-                        <img src="{{ asset('manager_asset/images/salespilot logo1.png') }}" alt="{{ $item->item_name }}">
+                        <img src="{{ str_starts_with($item->item_image, 'uploads/') ? asset($item->item_image) : asset('storage/' . $item->item_image) }}" alt="{{ $item->item_name }}" onerror="this.style.display='none';">
                     @endif
                     <div class="item-overlay">
                         <div class="item-name">{{ $item->item_name }}</div>

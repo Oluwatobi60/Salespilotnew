@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 use App\Models\Staffs;
 use App\Mail\StaffCredentials;
 use App\Models\UserSubscription;
@@ -50,6 +51,7 @@ class StaffMainController extends Controller
             unset($validatedData['staff_id']);
 
             // Auto-populate business_name, manager_name, and manager_email from the logged-in manager's user record
+            /** @var \App\Models\User $manager */
             $manager = Auth::user();
             $validatedData['business_name'] = $manager->business_name ?? null;
             $managerFullName = trim(($manager->firstname ?? '') . ' ' . ($manager->othername ?? '') . ' ' . ($manager->surname ?? ''));
@@ -87,12 +89,10 @@ class StaffMainController extends Controller
                 // Premium plan: unlimited staff (no check needed)
             }
 
-            // Handle file upload
+            // Handle file upload - SECURE: Uses Laravel's storage with auto-generated safe filename
             if($request->hasFile('passport_photo')) {
-                $image = $request->file('passport_photo');
-                $imageName = time().'_'.$image->getClientOriginalName();
-                $image->move(public_path('uploads/staff_photos'), $imageName);
-                $validatedData['passport_photo'] = 'uploads/staff_photos/'.$imageName;
+                $path = $request->file('passport_photo')->store('staff_photos', 'public');
+                $validatedData['passport_photo'] = $path;
             }
 
             // Create a new staff member
@@ -164,6 +164,7 @@ class StaffMainController extends Controller
 
     public function add_staff()
     {
+        /** @var \App\Models\User $manager */
         $manager = Auth::user();
         $businessName = $manager->business_name;
 
@@ -203,6 +204,7 @@ class StaffMainController extends Controller
 
     public function editstaff($id)
     {
+        /** @var \App\Models\User $manager */
         $manager = Auth::user();
         $businessName = $manager->business_name;
 
@@ -288,14 +290,13 @@ class StaffMainController extends Controller
             // Handle file upload
             if($request->hasFile('passport_photo')) {
                 // Delete old photo if exists
-                if($staff->passport_photo && file_exists(public_path($staff->passport_photo))) {
-                    unlink(public_path($staff->passport_photo));
+                if($staff->passport_photo && Storage::disk('public')->exists($staff->passport_photo)) {
+                    Storage::disk('public')->delete($staff->passport_photo);
                 }
 
-                $image = $request->file('passport_photo');
-                $imageName = time().'_'.$image->getClientOriginalName();
-                $image->move(public_path('uploads/staff_photos'), $imageName);
-                $validatedData['passport_photo'] = 'uploads/staff_photos/'.$imageName;
+                // SECURE: Uses Laravel's storage with auto-generated safe filename
+                $path = $request->file('passport_photo')->store('staff_photos', 'public');
+                $validatedData['passport_photo'] = $path;
             }
 
             // Update the staff member
@@ -351,8 +352,12 @@ class StaffMainController extends Controller
 
     public function toggleStatus(Request $request, $id)
     {
-        // Find the manager by ID
-        $staff = Staffs::findOrFail($id);
+        $manager = Auth::user();
+        $businessName = $manager->business_name;
+        
+        // ✅ SECURITY: Verify staff belongs to manager's business
+        $staff = Staffs::where('business_name', $businessName)
+            ->findOrFail($id);
         // Toggle the status
         $staff->status = !$staff->status;
         $staff->save();

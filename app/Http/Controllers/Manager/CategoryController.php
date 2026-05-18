@@ -82,13 +82,23 @@ class CategoryController extends Controller
 
     public function edit_category($id)
     {
-        $category = Category::findOrFail($id);
+        $manager = Auth::user();
+        $businessName = $manager->business_name;
+        
+        // ✅ SECURITY: Verify category belongs to manager's business
+        $category = Category::where('business_name', $businessName)
+            ->findOrFail($id);
         return view('manager.category.edit_category', compact('category'));
     }
 
     public function update_category(Request $request, $id)
     {
-        $category = Category::findOrFail($id);
+        $manager = Auth::user();
+        $businessName = $manager->business_name;
+        
+        // ✅ SECURITY: Verify category belongs to manager's business
+        $category = Category::where('business_name', $businessName)
+            ->findOrFail($id);
 
         // Validate the request data
         $validatedData = $request->validate([
@@ -106,7 +116,12 @@ class CategoryController extends Controller
 
     public function delete_category($id)
     {
-        $category = Category::findOrFail($id);
+        $manager = Auth::user();
+        $businessName = $manager->business_name;
+        
+        // ✅ SECURITY: Verify category belongs to manager's business
+        $category = Category::where('business_name', $businessName)
+            ->findOrFail($id);
 
         // Check if any items are associated with this category
         $standardCount = StandardItem::where('category', $category->id)->count();

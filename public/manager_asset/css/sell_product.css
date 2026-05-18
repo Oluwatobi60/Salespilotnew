@@ -447,6 +447,7 @@
         color: #333;
         background: #fff;
         -moz-appearance: textfield;
+        appearance: textfield;
       }
 
       .qty-input::-webkit-outer-spin-button,

@@ -102,8 +102,12 @@ class UnitController extends Controller
      */
     public function update_unit(Request $request, $id)
     {
-        $unit = Unit::findOrFail($id);
         $manager = Auth::user();
+        $businessName = $manager->business_name;
+        
+        // ✅ SECURITY: Verify unit belongs to manager's business
+        $unit = Unit::where('business_name', $businessName)
+            ->findOrFail($id);
 
         // Validate the request data - unit name and abbreviation must be unique per business (excluding current unit)
         $validatedata = $request->validate([
@@ -156,7 +160,12 @@ class UnitController extends Controller
      */
     public function delete_unit($id)
     {
-        $unit = Unit::findOrFail($id);
+        $manager = Auth::user();
+        $businessName = $manager->business_name;
+        
+        // ✅ SECURITY: Verify unit belongs to manager's business
+        $unit = Unit::where('business_name', $businessName)
+            ->findOrFail($id);
 
         // Check if unit is used by any items before deleting
         // You might want to add this check based on your database structure

@@ -100,7 +100,10 @@
     @if($item->item_image)
         <div class="mt-2">
             <small class="text-muted d-block">Current Image:</small>
-            <img src="{{ asset($item->item_image) }}" alt="Current Image" class="mt-1 border rounded" style="max-width: 150px; max-height: 150px; object-fit: cover;">
+            <img src="{{ str_starts_with($item->item_image, 'uploads/') ? asset($item->item_image) : asset('storage/' . $item->item_image) }}" 
+                 alt="Current Image" class="mt-1 border rounded" 
+                 style="max-width: 150px; max-height: 150px; object-fit: cover;"
+                 onerror="this.style.display='none'">
         </div>
     @endif
     @error('item_image')

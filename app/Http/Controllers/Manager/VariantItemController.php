@@ -12,7 +12,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 
 class VariantItemController extends Controller
 {
@@ -74,12 +73,10 @@ class VariantItemController extends Controller
                 $validatedData['item_code'] = 'VAR-' . strtoupper(substr($validatedData['item_name'], 0, 3)) . '-' . time();
             }
 
-            // Handle file upload
+            // Handle file upload - SECURE: Uses Laravel's storage with auto-generated safe filename
             if ($request->hasFile('item_image')) {
-                $image = $request->file('item_image');
-                $imageName = time() . '_' . $image->getClientOriginalName();
-                $image->move(public_path('uploads/item_images'), $imageName);
-                $validatedData['item_image'] = 'uploads/item_images/' . $imageName;
+                $path = $request->file('item_image')->store('item_images', 'public');
+                $validatedData['item_image'] = $path;
             }
 
             // Extract variant sets configuration from the first variant
@@ -184,7 +181,7 @@ class VariantItemController extends Controller
                         ->where('business_name', $manager->business_name)
                         ->whereNull('staff_id')
                         ->first();
-                    
+
                     if ($managerBranch) {
                         BranchInventory::create([
                             'branch_id' => $managerBranch->id,

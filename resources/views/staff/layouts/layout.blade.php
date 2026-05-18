@@ -118,7 +118,7 @@
     <li class="nav-item dropdown user-dropdown">
       @php
         $staffUser = Auth::guard('staff')->user();
-        $staffImg = $staffUser && $staffUser->passport_photo ? asset($staffUser->passport_photo) : asset('manager_asset/images/faces/face8.jpg');
+        $staffImg = $staffUser && $staffUser->passport_photo ? (str_starts_with($staffUser->passport_photo, 'uploads/') ? asset($staffUser->passport_photo) : asset('storage/' . $staffUser->passport_photo)) : asset('manager_asset/images/faces/face8.jpg');
         $staffName = $staffUser ? ($staffUser->fullname ?? ($staffUser->surname . ' ' . $staffUser->first_name)) : 'Staff User';
         $staffEmail = $staffUser ? $staffUser->email : 'staff@salespilot.com';
       @endphp

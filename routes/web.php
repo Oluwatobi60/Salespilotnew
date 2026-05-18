@@ -56,7 +56,7 @@ Route::prefix('superadmin')->controller(SuperAdminController::class)->group(func
 });
 
 // Superadmin protected routes
-Route::middleware(['auth:superadmin'])->prefix('superadmin')->controller(SuperAdminController::class)->group(function () {
+Route::middleware(['auth:superadmin', 'throttle:60,1'])->prefix('superadmin')->controller(SuperAdminController::class)->group(function () {
     Route::get('/dashboard', 'dashboard')->name('superadmin');
     Route::get('/customers', 'customers')->name('superadmin.customers');
     Route::post('/customers/{user}/toggle-status', 'toggleCustomerStatus')->name('superadmin.customers.toggle');
@@ -76,7 +76,7 @@ Route::middleware(['auth:superadmin'])->prefix('superadmin')->controller(SuperAd
 });
 
 // Superadmin Plans routes
-Route::middleware(['auth:superadmin'])->prefix('superadmin/plans')->controller(PlansController::class)->group(function () {
+Route::middleware(['auth:superadmin', 'throttle:60,1'])->prefix('superadmin/plans')->controller(PlansController::class)->group(function () {
     Route::get('/', 'index')->name('superadmin.plans');
     Route::get('/create', 'create')->name('superadmin.plans.create');
     Route::post('/', 'store')->name('superadmin.plans.store');
@@ -86,12 +86,12 @@ Route::middleware(['auth:superadmin'])->prefix('superadmin/plans')->controller(P
 });
 
 // Superadmin Revenue routes
-Route::middleware(['auth:superadmin'])->prefix('superadmin/revenue')->controller(RevenueController::class)->group(function () {
+Route::middleware(['auth:superadmin', 'throttle:60,1'])->prefix('superadmin/revenue')->controller(RevenueController::class)->group(function () {
     Route::get('/', 'index')->name('superadmin.revenue');
 });
 
 // Superadmin Subscription Renewal routes
-Route::middleware(['auth:superadmin'])->prefix('superadmin/subscriptions')->controller(SubscriptionRenewalController::class)->group(function () {
+Route::middleware(['auth:superadmin', 'throttle:60,1'])->prefix('superadmin/subscriptions')->controller(SubscriptionRenewalController::class)->group(function () {
     Route::get('/', 'index')->name('superadmin.subscriptions');
     Route::post('/{subscription}/toggle-renewal', 'toggle')->name('superadmin.subscriptions.toggle');
     Route::post('/bulk-toggle', 'bulkToggle')->name('superadmin.subscriptions.bulk-toggle');
@@ -100,7 +100,7 @@ Route::middleware(['auth:superadmin'])->prefix('superadmin/subscriptions')->cont
 });
 
 // Superadmin Commissions routes
-Route::middleware(['auth:superadmin'])->prefix('superadmin/commissions')->controller(CommissionController::class)->group(function () {
+Route::middleware(['auth:superadmin', 'throttle:60,1'])->prefix('superadmin/commissions')->controller(CommissionController::class)->group(function () {
     Route::get('/', 'index')->name('superadmin.commissions');
     Route::get('/{commission}', 'show')->name('superadmin.commissions.show');
     Route::post('/{commission}/approve', 'approve')->name('superadmin.commissions.approve');
@@ -112,7 +112,7 @@ Route::middleware(['auth:superadmin'])->prefix('superadmin/commissions')->contro
 });
 
 // Superadmin Withdrawals routes
-Route::middleware(['auth:superadmin'])->prefix('superadmin/withdrawals')->controller(WithdrawalController::class)->group(function () {
+Route::middleware(['auth:superadmin', 'throttle:60,1'])->prefix('superadmin/withdrawals')->controller(WithdrawalController::class)->group(function () {
     Route::get('/', 'index')->name('superadmin.withdrawals');
     Route::get('/{withdrawal}', 'show')->name('superadmin.withdrawals.show');
     Route::post('/{withdrawal}/approve', 'approve')->name('superadmin.withdrawals.approve');
@@ -123,7 +123,7 @@ Route::middleware(['auth:superadmin'])->prefix('superadmin/withdrawals')->contro
 });
 
 // Superadmin Settings routes
-Route::middleware(['auth:superadmin'])->prefix('superadmin/settings')->controller(SettingsController::class)->group(function () {
+Route::middleware(['auth:superadmin', 'throttle:60,1'])->prefix('superadmin/settings')->controller(SettingsController::class)->group(function () {
     Route::get('/', 'index')->name('superadmin.settings');
     Route::put('/', 'update')->name('superadmin.settings.update');
     Route::post('/test-email', 'testEmail')->name('superadmin.settings.test-email');
@@ -133,7 +133,7 @@ Route::middleware(['auth:superadmin'])->prefix('superadmin/settings')->controlle
 });
 
 // Superadmin Subscription Features routes
-Route::middleware(['auth:superadmin'])->prefix('superadmin/subscription-features')->controller(SubscriptionFeaturesController::class)->group(function () {
+Route::middleware(['auth:superadmin', 'throttle:60,1'])->prefix('superadmin/subscription-features')->controller(SubscriptionFeaturesController::class)->group(function () {
     Route::get('/', 'index')->name('superadmin.subscription-features.index');
     Route::post('/plans/{plan}/toggle-feature', 'toggleFeature')->name('superadmin.subscription-features.toggle-feature');
     Route::post('/plans/{plan}/features', 'updatePlanFeatures')->name('superadmin.subscription-features.update-plan-features');
@@ -159,7 +159,7 @@ Route::prefix('brm')->controller(BrmController::class)->group(function () {
 
 
 // brms protected routes
-Route::middleware(['auth:brms'])->prefix('brms')->controller(BrmController::class)->group(function () {
+Route::middleware(['auth:brms', 'throttle:60,1'])->prefix('brms')->controller(BrmController::class)->group(function () {
     Route::get('/dashboard', 'dashboard')->name('brm.dashboard');
     Route::get('/customers', 'customers')->name('brm.customers');
 
@@ -214,7 +214,7 @@ Route::prefix('signup')->controller(SignupController::class)->group(function () 
 
 
 //Manager routes
-Route::middleware(['auth', 'verified', 'rolemanager:manager', 'check.subscription'])->group(function () {
+Route::middleware(['auth', 'verified', 'rolemanager:manager', 'check.subscription', 'throttle:60,1'])->group(function () {
   Route::prefix('manager')->group(function () {
     // Manager Profile routes
     Route::controller(\App\Http\Controllers\Manager\ProfileController::class)->group(function () {
@@ -423,7 +423,7 @@ Route::prefix('staff')->group(function () {
 });
 
 // Staff dashboard and main routes (protected)
-Route::middleware(['auth:staff'])->prefix('staff')->group(function () {
+Route::middleware(['auth:staff', 'throttle:60,1'])->prefix('staff')->group(function () {
     Route::controller(StaffsMainController::class)->group(function () {
         Route::get('/dashboard', 'index')->name('staff.dashboard');
         Route::get('/sell_product', 'sell_product')->name('staff.sell_product');

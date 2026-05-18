@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Manager;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
-use App\Models\SubscriptionPlan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
@@ -17,8 +16,7 @@ use App\Models\Branch\Branch;
 class AddManagerController extends Controller
 {
     public function add_manager()
-    {
-        $manager = Auth::user();
+    {        /** @var \App\Models\User $manager */        $manager = Auth::user();
         $businessName = $manager->business_name;
 
         // All managers for the business (for main table)
@@ -128,13 +126,10 @@ class AddManagerController extends Controller
                 ->with('error', 'You have reached your manager limit (3 managers).');
         }
 
-        // Handle file upload for business_logo
+        // Handle file upload for business_logo - SECURE: Uses Laravel's storage
         $businessLogoPath = $sessionManager->business_logo;
         if ($request->hasFile('business_logo')) {
-            $image = $request->file('business_logo');
-            $imageName = time().'_'.$image->getClientOriginalName();
-            $image->move(public_path('business_logos'), $imageName);
-            $businessLogoPath = 'business_logos/'.$imageName;
+            $businessLogoPath = $request->file('business_logo')->store('business_logos', 'public');
         }
 
         $status = strtolower($validatedData['status']) === 'active' ? 1 : 0;
@@ -176,7 +171,12 @@ class AddManagerController extends Controller
 
     public function editmanager($id)
     {
-        $manageredit = User::findOrFail($id);
+        $currentManager = Auth::user();
+        $businessName = $currentManager->business_name;
+        
+        // ✅ SECURITY: Verify manager belongs to same business
+        $manageredit = User::where('business_name', $businessName)
+            ->findOrFail($id);
         return view('manager.staff.edit_manager', compact('manageredit'));
     }
 
@@ -184,6 +184,9 @@ class AddManagerController extends Controller
 
     public function updatemanager(Request $request, $id)
     {
+        $currentManager = Auth::user();
+        $businessName = $currentManager->business_name;
+        
         $validatedData = $request->validate([
             'first_name' => 'required|string|max:255',
             'surname' => 'required|string|max:255',
@@ -191,7 +194,9 @@ class AddManagerController extends Controller
             'phone' => 'nullable|string|max:20',
         ]);
 
-        $manager = User::findOrFail($id);
+        // ✅ SECURITY: Verify manager belongs to same business
+        $manager = User::where('business_name', $businessName)
+            ->findOrFail($id);
         $manager->surname = $validatedData['surname'];
         $manager->first_name = $validatedData['first_name'];
         $manager->other_name = $validatedData['other_name'];
@@ -205,8 +210,12 @@ class AddManagerController extends Controller
 
     public function toggleStatus(Request $request, $id)
     {
-        // Find the manager by ID
-        $manager = User::findOrFail($id);
+        $currentManager = Auth::user();
+        $businessName = $currentManager->business_name;
+        
+        // ✅ SECURITY: Verify manager belongs to same business
+        $manager = User::where('business_name', $businessName)
+            ->findOrFail($id);
         // Toggle the status
         $manager->status = !$manager->status;
         $manager->save();

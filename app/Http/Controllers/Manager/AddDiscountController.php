@@ -169,7 +169,12 @@ class AddDiscountController extends Controller
 
     public function update_discount(Request $request, $id)
     {
-        $discount = AddDiscount::findOrFail($id);
+        $manager = Auth::user();
+        $businessName = $manager->business_name;
+        
+        // ✅ SECURITY: Verify discount belongs to manager's business
+        $discount = AddDiscount::where('business_name', $businessName)
+            ->findOrFail($id);
 
         // Validate the request data
         $validatedData = $request->validate([
@@ -197,7 +202,12 @@ class AddDiscountController extends Controller
 
     public function delete_discount($id)
     {
-        $discount = AddDiscount::findOrFail($id);
+        $manager = Auth::user();
+        $businessName = $manager->business_name;
+        
+        // ✅ SECURITY: Verify discount belongs to manager's business
+        $discount = AddDiscount::where('business_name', $businessName)
+            ->findOrFail($id);
         $discount->delete();
 
         // Check if the request expects JSON (AJAX request)

@@ -135,7 +135,9 @@
             <input type="file" class="form-control" id="item_image" name="item_image" accept="image/*">
             @if($item->item_image)
                 <small class="text-muted d-block mt-1">Current: {{ basename($item->item_image) }}</small>
-                <img src="{{ asset($item->item_image) }}" alt="Current Image" class="mt-2" style="max-width: 100px; max-height: 100px;">
+                <img src="{{ str_starts_with($item->item_image, 'uploads/') ? asset($item->item_image) : asset('storage/' . $item->item_image) }}" 
+                     alt="Current Image" class="mt-2" style="max-width: 100px; max-height: 100px;"
+                     onerror="this.style.display='none'">
             @endif
             @error('item_image')
                 <div class="text-danger small">{{ $message }}</div>

@@ -19,6 +19,7 @@ class AllItemsController extends Controller
     public function all_items()
     {
         // Get manager information
+        /** @var \App\Models\User $manager */
         $manager = Auth::user();
         $businessName = $manager->business_name;
 
@@ -249,6 +250,7 @@ class AllItemsController extends Controller
 
     public function delete_item($type, $id)
     {
+        /** @var \App\Models\User $manager */
         $manager = Auth::user();
         $businessName = $manager->business_name;
 
@@ -320,7 +322,10 @@ class AllItemsController extends Controller
                     break;
 
                 case 'variant':
-                    $item = VariantItem::with(['supplier', 'unit', 'variants.pricingTiers'])->findOrFail($id);
+                    // ✅ SECURITY: Verify variant item belongs to manager's business
+                    $item = VariantItem::with(['supplier', 'unit', 'variants.pricingTiers'])
+                        ->where('business_name', $businessName)
+                        ->findOrFail($id);
                     $formattedItem = [
                         'id' => $item->id,
                         'type' => 'variant',
@@ -459,12 +464,10 @@ class AllItemsController extends Controller
                         'item_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
                     ]);
 
-                    // Handle image upload
+                    // Handle image upload - SECURE: Uses Laravel's storage
                     if ($request->hasFile('item_image')) {
-                        $image = $request->file('item_image');
-                        $imageName = time() . '_' . $image->getClientOriginalName();
-                        $imagePath = $image->move(public_path('uploads/item_images'), $imageName);
-                        $validatedData['item_image'] = 'uploads/item_images/' . $imageName;
+                        $path = $request->file('item_image')->store('item_images', 'public');
+                        $validatedData['item_image'] = $path;
                     }
 
                     // Calculate profit margin
@@ -492,12 +495,10 @@ class AllItemsController extends Controller
                         'item_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
                     ]);
 
-                    // Handle image upload
+                    // Handle image upload - SECURE: Uses Laravel's storage
                     if ($request->hasFile('item_image')) {
-                        $image = $request->file('item_image');
-                        $imageName = time() . '_' . $image->getClientOriginalName();
-                        $imagePath = $image->move(public_path('uploads/item_images'), $imageName);
-                        $validatedData['item_image'] = 'uploads/item_images/' . $imageName;
+                        $path = $request->file('item_image')->store('item_images', 'public');
+                        $validatedData['item_image'] = $path;
                     }
 
                     $item->update($validatedData);

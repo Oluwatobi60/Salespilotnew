@@ -267,13 +267,13 @@ All Items
                         }
 
                         if ($stock === null) {
-                            $stockClass = 'sp-na'; $stockIcon = '';
+                            $stockClass = 'sp-na';
                         } elseif ($stock <= 0) {
-                            $stockClass = 'sp-empty'; $stockIcon = '<i class="bi bi-x-circle-fill"></i>';
+                            $stockClass = 'sp-empty';
                         } elseif ($threshold !== null && $stock <= $threshold) {
-                            $stockClass = 'sp-low'; $stockIcon = '<i class="bi bi-exclamation-circle-fill"></i>';
+                            $stockClass = 'sp-low';
                         } else {
-                            $stockClass = 'sp-good'; $stockIcon = '<i class="bi bi-check-circle-fill"></i>';
+                            $stockClass = 'sp-good';
                         }
 
                         $leftClass = $genLeft <= 0
@@ -297,15 +297,18 @@ All Items
                             <div class="d-flex align-items-center gap-2">
                                 @php
                                     $imagePath = $item['image'] ?? null;
-                                    $imageExists = false;
-                                    if ($imagePath && file_exists(public_path($imagePath))) {
-                                        $imageExists = true;
+                                    $displayPath = null;
+                                    if ($imagePath) {
+                                        // Backward compatibility: support both old (uploads/) and new (storage/) paths
+                                        if (str_starts_with($imagePath, 'uploads/')) {
+                                            $displayPath = asset($imagePath);
+                                        } else {
+                                            $displayPath = asset('storage/' . $imagePath);
+                                        }
                                     }
                                 @endphp
-                                @if($imageExists)
-                                    <img src="{{ asset($imagePath) }}" alt="{{ $item['name'] }}" class="item-thumb" onerror="this.onerror=null;this.src='{{ asset('manager_asset/images/faces/face1.jpg') }}';">
-                                @else
-                                    <img src="{{ asset('manager_asset/images/faces/face1.jpg') }}" alt="Default" class="item-thumb">
+                                @if($displayPath)
+                                    <img src="{{ $displayPath }}" alt="{{ $item['name'] }}" class="item-thumb" onerror="this.style.display='none';">
                                 @endif
                                 <div>
                                     <div class="item-name">{{ $item['name'] }}</div>
@@ -341,7 +344,14 @@ All Items
                         <td>
                             @if($stock !== null)
                                 <span class="stock-pill {{ $stockClass }}">
-                                    {!! $stockIcon !!} {{ number_format($stock) }}
+                                    @if($stock <= 0)
+                                        <i class="bi bi-x-circle-fill"></i>
+                                    @elseif($threshold !== null && $stock <= $threshold)
+                                        <i class="bi bi-exclamation-circle-fill"></i>
+                                    @else
+                                        <i class="bi bi-check-circle-fill"></i>
+                                    @endif
+                                    {{ number_format($stock) }}
                                 </span>
                                 @if($threshold !== null && $stock <= $threshold && $stock > 0)
                                     <div class="mt-1" style="font-size:.68rem; color:#d97706;">
@@ -406,17 +416,21 @@ All Items
 
                                 if ($currentStock <= 0) {
                                     $currentStockClass = 'sp-empty';
-                                    $currentStockIcon = '<i class="bi bi-x-circle-fill"></i>';
                                 } elseif ($threshold !== null && $currentStock <= $threshold) {
                                     $currentStockClass = 'sp-low';
-                                    $currentStockIcon = '<i class="bi bi-exclamation-circle-fill"></i>';
                                 } else {
                                     $currentStockClass = 'sp-good';
-                                    $currentStockIcon = '<i class="bi bi-check-circle-fill"></i>';
                                 }
                             @endphp
                             <span class="stock-pill {{ $currentStockClass }}">
-                                {!! $currentStockIcon !!} {{ number_format($currentStock) }}
+                                @if($currentStock <= 0)
+                                    <i class="bi bi-x-circle-fill"></i>
+                                @elseif($threshold !== null && $currentStock <= $threshold)
+                                    <i class="bi bi-exclamation-circle-fill"></i>
+                                @else
+                                    <i class="bi bi-check-circle-fill"></i>
+                                @endif
+                                {{ number_format($currentStock) }}
                             </span>
                             @if($threshold !== null && $currentStock <= $threshold && $currentStock > 0)
                                 <div class="mt-1" style="font-size:.68rem; color:#d97706;">
@@ -504,9 +518,9 @@ All Items
             <button type="button" class="btn-close-panel" id="closePanelBtn"><i class="bi bi-x-lg"></i></button>
         </div>
         <div class="panel-body">
-            <div class="item-image-section">
-                <img id="panelItemImage" src="{{ asset('manager_asset/images/faces/face1.jpg') }}"
-                     alt="Item Image" class="item-image">
+            <div class="item-image-section" id="panelImageSection" style="display:none;">
+                <img id="panelItemImage" src=""
+                     alt="Item Image" class="item-image" onerror="this.parentElement.style.display='none';">
                 <div class="image-overlay">
                     <button class="btn btn-light btn-sm"><i class="bi bi-camera"></i> Change Image</button>
                 </div>

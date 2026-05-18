@@ -235,25 +235,45 @@ document.addEventListener('DOMContentLoaded', function() {
 
 		    // Set image
 		    const itemImage = document.getElementById('panelItemImage');
-		    if (itemImage) {
-		      let imagePath = '/manager_asset/images/faces/face1.jpg'; // Default image
+		    const imageSection = document.getElementById('panelImageSection');
+		    
+		    if (itemImage && imageSection) {
+		      let imagePath = null;
 
+		      // Get the raw image path from item
+		      let rawImagePath = null;
 		      if (type === 'standard' && item.item_image) {
-		        imagePath = `/${item.item_image}`;
+		        rawImagePath = item.item_image;
 		      } else if (type === 'variant' && item.item_image) {
-		        imagePath = `/${item.item_image}`;
+		        rawImagePath = item.item_image;
 		      } else if (type === 'product_variant' && item.item_image) {
-		        imagePath = `/${item.item_image}`;
+		        rawImagePath = item.item_image;
 		      } else if (type === 'bundle' && item.bundle_image) {
-		        imagePath = `/${item.bundle_image}`;
+		        rawImagePath = item.bundle_image;
 		      }
 
-		      console.log('Setting image path to:', imagePath); // Debug log
-		      itemImage.src = imagePath;
-		      itemImage.onerror = function() {
-		        console.error('Image failed to load:', imagePath); // Debug log
-		        this.src = '/manager_asset/images/faces/face1.jpg';
-		      };
+		      // Apply backward compatibility logic
+		      if (rawImagePath) {
+		        if (rawImagePath.startsWith('uploads/')) {
+		          // Old system: use path as-is
+		          imagePath = `/${rawImagePath}`;
+		        } else {
+		          // New system: prepend storage/
+		          imagePath = `/storage/${rawImagePath}`;
+		        }
+
+		        console.log('Setting image path to:', imagePath); // Debug log
+		        itemImage.src = imagePath;
+		        imageSection.style.display = 'block';
+		        
+		        itemImage.onerror = function() {
+		          console.error('Image failed to load:', imagePath); // Debug log
+		          imageSection.style.display = 'none';
+		        };
+		      } else {
+		        // No image available - hide the image section
+		        imageSection.style.display = 'none';
+		      }
 		    }
 
 		    // Set basic information based on item type
