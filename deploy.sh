@@ -50,6 +50,21 @@ echo "5. Waiting for startup..."
 sleep 15
 
 echo ""
+echo "6. Running Laravel commands..."
+docker-compose exec -T php php artisan storage:link 2>/dev/null || echo "Storage link already exists"
+docker-compose exec -T php php artisan migrate --force
+docker-compose exec -T php php artisan config:clear
+docker-compose exec -T php php artisan cache:clear
+docker-compose exec -T php php artisan route:clear
+docker-compose exec -T php php artisan view:clear
+docker-compose exec -T php php artisan optimize
+
+echo ""
+echo "7. Setting permissions..."
+docker-compose exec -T php chmod -R 775 storage bootstrap/cache
+docker-compose exec -T php chmod -R 775 public/uploads/item_images public/uploads/staff_photos public/uploads/business_logos public/business_logos 2>/dev/null || echo "Upload folders already writable"
+
+echo ""
 echo "6. Verifying deployment..."
 echo "Containers:"
 docker-compose ps

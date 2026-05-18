@@ -19,7 +19,14 @@ echo "3. Restart containers..."
 docker-compose restart
 
 echo ""
-echo "4. Wait and check..."
+echo "4. Laravel setup..."
+docker-compose exec -T php php artisan storage:link 2>/dev/null || echo "Storage link exists"
+docker-compose exec -T php php artisan migrate --force
+docker-compose exec -T php php artisan optimize
+docker-compose exec -T php chmod -R 775 storage bootstrap/cache public/uploads/item_images public/uploads/staff_photos public/uploads/business_logos public/business_logos 2>/dev/null
+
+echo ""
+echo "5. Wait and check..."
 sleep 10
 
 if docker-compose ps | grep -q "Up" && curl -s -f http://localhost:8787 > /dev/null; then

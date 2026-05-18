@@ -16,6 +16,14 @@
 /public/build
 /public/hot
 /public/storage
+/public/uploads/item_images/*
+!/public/uploads/item_images/.gitkeep
+/public/uploads/staff_photos/*
+!/public/uploads/staff_photos/.gitkeep
+/public/uploads/business_logos/*
+!/public/uploads/business_logos/.gitkeep
+/public/business_logos/*
+!/public/business_logos/.gitkeep
 /storage/*.key
 /storage/pail
 /vendor
