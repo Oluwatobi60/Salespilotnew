@@ -42,13 +42,26 @@ All Items
     {{-- ── Summary Stat Cards ────────────────────────────────────────── --}}
     @php
         $totalItems    = $allItemsPaginated->total();
-        $totalGenStock = $allItemsPaginated->sum('current_stock');
-        $totalGenLeft  = $allItemsPaginated->sum('general_left');
-        $lowStockCount = collect($allItemsPaginated->items())->filter(fn($i) =>
-            isset($i['current_stock'], $i['low_stock_threshold']) &&
-            $i['current_stock'] > 0 &&
-            $i['current_stock'] <= $i['low_stock_threshold']
-        )->count();
+
+        if($showInventoryColumns) {
+            // Premium subscription
+            $totalGenStock = $allItemsPaginated->sum('current_stock');
+            $totalGenLeft  = $allItemsPaginated->sum('general_left');
+            $lowStockCount = collect($allItemsPaginated->items())->filter(fn($i) =>
+                isset($i['current_stock'], $i['low_stock_threshold']) &&
+                $i['current_stock'] > 0 &&
+                $i['current_stock'] <= $i['low_stock_threshold']
+            )->count();
+        } else {
+            // Basic/Free subscription
+            $totalOpeningStock = $allItemsPaginated->sum('opening_stock');
+            $totalCurrentStock = $allItemsPaginated->sum('actual_current_stock');
+            $lowStockCount = collect($allItemsPaginated->items())->filter(fn($i) =>
+                isset($i['actual_current_stock'], $i['low_stock_threshold']) &&
+                $i['actual_current_stock'] > 0 &&
+                $i['actual_current_stock'] <= $i['low_stock_threshold']
+            )->count();
+        }
     @endphp
     <div class="row g-3 mb-4">
         <div class="col-6 col-md-3">
@@ -62,18 +75,18 @@ All Items
                 </div>
             </div>
         </div>
+        @if($showInventoryColumns)
         <div class="col-6 col-md-3">
             <div class="ai-stat card shadow-sm">
                 <div class="d-flex align-items-center gap-3">
                     <div class="stat-icon bg-info bg-opacity-10 text-info"><i class="bi bi-archive"></i></div>
                     <div>
-                        <div class="stat-label">{{ $stockLabel }}</div>
+                        <div class="stat-label">General Stock</div>
                         <div class="stat-value">{{ number_format($totalGenStock) }}</div>
                     </div>
                 </div>
             </div>
         </div>
-        @if($showInventoryColumns)
         <div class="col-6 col-md-3">
             <div class="ai-stat card shadow-sm">
                 <div class="d-flex align-items-center gap-3">
@@ -81,6 +94,29 @@ All Items
                     <div>
                         <div class="stat-label">General Left</div>
                         <div class="stat-value">{{ number_format($totalGenLeft) }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @else
+        <div class="col-6 col-md-3">
+            <div class="ai-stat card shadow-sm">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="stat-icon bg-info bg-opacity-10 text-info"><i class="bi bi-archive"></i></div>
+                    <div>
+                        <div class="stat-label">Total Stock</div>
+                        <div class="stat-value">{{ number_format($totalOpeningStock) }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="ai-stat card shadow-sm">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="stat-icon bg-success bg-opacity-10 text-success"><i class="bi bi-box-seam"></i></div>
+                    <div>
+                        <div class="stat-label">Current Stock</div>
+                        <div class="stat-value">{{ number_format($totalCurrentStock) }}</div>
                     </div>
                 </div>
             </div>
@@ -179,13 +215,13 @@ All Items
                         <th>Item</th>
                         <th class="col-hide-sm">Category</th>
                         <th class="col-hide-sm">Unit</th>
+                        @if($showInventoryColumns)
                         <th>
                             <span data-bs-toggle="tooltip"
                                   title="Total stock added (constant) = warehouse left + all branch allocations">
                                 {{ $stockLabel }}
                             </span>
                         </th>
-                        @if($showInventoryColumns)
                         <th>
                             <span data-bs-toggle="tooltip"
                                   title="Warehouse stock remaining after allocations. Decreases each time you allocate to a branch.">
@@ -193,6 +229,19 @@ All Items
                             </span>
                         </th>
                         <th class="col-hide-md">Branch Inventory</th>
+                        @else
+                        <th>
+                            <span data-bs-toggle="tooltip"
+                                  title="Initial total stock quantity (never changes after first entry)">
+                                Total Stock
+                            </span>
+                        </th>
+                        <th>
+                            <span data-bs-toggle="tooltip"
+                                  title="Current remaining stock (decreases as items are sold)">
+                                Current Stock
+                            </span>
+                        </th>
                         @endif
                         <th class="col-hide-sm">Selling Price</th>
                         <th class="col-hide-md">Cost Price</th>
@@ -206,6 +255,16 @@ All Items
                         $stock     = $item['current_stock'] ?? null;
                         $threshold = $item['low_stock_threshold'] ?? null;
                         $genLeft   = $item['general_left'] ?? 0;
+
+                        // Determine stock status for filtering
+                        $filterStock = $showInventoryColumns ? $stock : ($item['actual_current_stock'] ?? 0);
+                        if ($filterStock === null || $filterStock <= 0) {
+                            $stockStatus = 'out-of-stock';
+                        } elseif ($threshold !== null && $filterStock <= $threshold) {
+                            $stockStatus = 'low-stock';
+                        } else {
+                            $stockStatus = 'in-stock';
+                        }
 
                         if ($stock === null) {
                             $stockClass = 'sp-na'; $stockIcon = '';
@@ -221,7 +280,11 @@ All Items
                             ? 'sp-empty'
                             : ($threshold !== null && $genLeft <= $threshold ? 'sp-low' : 'sp-good');
                     @endphp
-                    <tr data-supplier-id="{{ isset($item['supplier']) && is_object($item['supplier']) ? $item['supplier']->id : '' }}">
+                    <tr data-supplier-id="{{ isset($item['supplier']) && is_object($item['supplier']) ? $item['supplier']->id : '' }}"
+                        data-stock-status="{{ $stockStatus }}"
+                        data-stock-qty="{{ $filterStock ?? 0 }}"
+                        data-category="{{ strtolower($item['category'] ?? '') }}"
+                        data-subscription-type="{{ $showInventoryColumns ? 'premium' : 'basic' }}">
                         <td class="text-muted" style="font-size:.78rem;">
                             {{ $allItemsPaginated->firstItem() + $loop->index }}
                         </td>
@@ -273,6 +336,7 @@ All Items
                                 —
                             @endif
                         </td>
+                        @if($showInventoryColumns)
                         {{-- General Stock --}}
                         <td>
                             @if($stock !== null)
@@ -288,7 +352,6 @@ All Items
                                 <span class="stock-pill sp-na">N/A</span>
                             @endif
                         </td>
-                        @if($showInventoryColumns)
                         {{-- General Left --}}
                         <td>
                             <span class="stock-pill {{ $leftClass }}">
@@ -323,6 +386,42 @@ All Items
                                 </div>
                             @else
                                 <span class="no-branches"><i class="bi bi-dash"></i> No branches</span>
+                            @endif
+                        </td>
+                        @else
+                        {{-- Total Stock (for Basic/Free) --}}
+                        <td>
+                            @php
+                                $totalStock = $item['opening_stock'] ?? 0;
+                            @endphp
+                            <span class="stock-pill sp-good">
+                                <i class="bi bi-archive"></i> {{ number_format($totalStock) }}
+                            </span>
+                        </td>
+                        {{-- Current Stock (for Basic/Free) --}}
+                        <td>
+                            @php
+                                $currentStock = $item['actual_current_stock'] ?? 0;
+                                $threshold = $item['low_stock_threshold'] ?? null;
+
+                                if ($currentStock <= 0) {
+                                    $currentStockClass = 'sp-empty';
+                                    $currentStockIcon = '<i class="bi bi-x-circle-fill"></i>';
+                                } elseif ($threshold !== null && $currentStock <= $threshold) {
+                                    $currentStockClass = 'sp-low';
+                                    $currentStockIcon = '<i class="bi bi-exclamation-circle-fill"></i>';
+                                } else {
+                                    $currentStockClass = 'sp-good';
+                                    $currentStockIcon = '<i class="bi bi-check-circle-fill"></i>';
+                                }
+                            @endphp
+                            <span class="stock-pill {{ $currentStockClass }}">
+                                {!! $currentStockIcon !!} {{ number_format($currentStock) }}
+                            </span>
+                            @if($threshold !== null && $currentStock <= $threshold && $currentStock > 0)
+                                <div class="mt-1" style="font-size:.68rem; color:#d97706;">
+                                    <i class="bi bi-arrow-down-circle"></i> Restock needed
+                                </div>
                             @endif
                         </td>
                         @endif

@@ -1120,6 +1120,8 @@ document.addEventListener('DOMContentLoaded', function() {
         selectedCustomer = { id: null, name: 'Walk-in Customer' };
         document.getElementById('customerName').textContent = 'Walk-in Customer';
         updateCartUI();
+        // Reload the page to ensure complete reset
+        location.reload();
       });
 
       receiptModal.addEventListener('click', function(e) {

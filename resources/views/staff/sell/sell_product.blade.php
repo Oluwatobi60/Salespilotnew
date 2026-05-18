@@ -476,7 +476,7 @@ function showInfo(message) {
             </div>
             <div class="receipt-info-row">
               <span class="receipt-info-label">Served By:</span>
-              <span class="receipt-info-value">Manager</span>
+              <span class="receipt-info-value">{{ $staff->fullname }}</span>
             </div>
           </div>
 

@@ -16,7 +16,7 @@ class CategoryController extends Controller
         $manager = Auth::user();
         $businessName = $manager->business_name;
 
-        $categories = Category::where('business_name', $businessName)->get();
+        $categories = Category::where('business_name', $businessName)->paginate(10);
 
         // Count items for each category
         foreach ($categories as $category) {

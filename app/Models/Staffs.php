@@ -6,10 +6,11 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use App\Models\Branch\Branch;
+use App\Traits\TrackLoginAttempts;
 
 class Staffs extends Authenticatable
 {
-    use Notifiable;
+    use Notifiable, TrackLoginAttempts;
 
     protected $table = 'staffs';
 

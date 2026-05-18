@@ -20,20 +20,20 @@
       </div>
 
       <div class="mb-3">
-        <label for="newSupplierEmail" class="form-label">Email Address <span class="text-danger">*</span></label>
-        <input type="email" class="form-control" id="newSupplierEmail" name="email" placeholder="Enter email address" required autocomplete="off">
+        <label for="newSupplierPhone" class="form-label">Phone Number <span class="text-danger">*</span></label>
+        <input type="tel" class="form-control" id="newSupplierPhone" name="phone" placeholder="Enter phone number" required autocomplete="off">
+        <div class="invalid-feedback" id="supplierPhoneError"></div>
+      </div>
+
+      <div class="mb-3">
+        <label for="newSupplierEmail" class="form-label">Email Address</label>
+        <input type="email" class="form-control" id="newSupplierEmail" name="email" placeholder="Enter email address (optional)" autocomplete="off">
         <div class="invalid-feedback" id="supplierEmailError"></div>
       </div>
 
-      <div class="row">
-        <div class="col-md-6 mb-3">
-          <label for="newSupplierContact" class="form-label">Contact Person</label>
-          <input type="text" class="form-control" id="newSupplierContact" name="contact_person" placeholder="Enter contact person" autocomplete="off">
-        </div>
-        <div class="col-md-6 mb-3">
-          <label for="newSupplierPhone" class="form-label">Phone Number</label>
-          <input type="tel" class="form-control" id="newSupplierPhone" name="phone" placeholder="Enter phone number" autocomplete="off">
-        </div>
+      <div class="mb-3">
+        <label for="newSupplierContact" class="form-label">Contact Person</label>
+        <input type="text" class="form-control" id="newSupplierContact" name="contact_person" placeholder="Enter contact person" autocomplete="off">
       </div>
 
       <div class="mb-3">

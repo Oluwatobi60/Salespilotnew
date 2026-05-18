@@ -18,16 +18,16 @@
 <div id="alertContainer"></div>
 
 <!-- Quick Reference Guide -->
-<div class="alert alert-info mb-4" style="background: linear-gradient(135deg, #e0f2fe 0%, #dbeafe 100%); border: 1px solid #3b82f6; border-radius: 12px;">
+<div class="alert alert-info mb-4" style="background: linear-gradient(135deg, {{ primary_color() }}15 0%, {{ primary_color() }}25 100%); border: 1px solid {{ primary_color() }}; border-radius: 12px;">
     <div class="d-flex align-items-start gap-3">
-        <i class="bi bi-info-circle-fill" style="font-size: 24px; color: #3b82f6; margin-top: 2px;"></i>
+        <i class="bi bi-info-circle-fill" style="font-size: 24px; color: {{ primary_color() }}; margin-top: 2px;"></i>
         <div style="flex: 1;">
-            <h5 class="mb-2" style="color: #1e40af; font-weight: 600;">
+            <h5 class="mb-2" style="color: {{ primary_color() }}; font-weight: 600;">
                 <i class="bi bi-lightbulb me-1"></i>User Hierarchy & Feature Control
             </h5>
             <div class="row g-3">
                 <div class="col-md-6">
-                    <strong style="color: #1e40af;">Feature Organization:</strong>
+                    <strong style="color: {{ primary_color() }};">Feature Organization:</strong>
                     <ul class="mb-0 mt-1" style="font-size: 0.9rem;">
                         <li><span class="badge bg-danger">Business Creator</span> - Owner/Full Access (addby = null)</li>
                         <li><span class="badge bg-primary">Manager</span> - Added by owner (addby = owner email)</li>
@@ -35,7 +35,7 @@
                     </ul>
                 </div>
                 <div class="col-md-6">
-                    <strong style="color: #1e40af;">Key Business Creator Features:</strong>
+                    <strong style="color: {{ primary_color() }};">Key Business Creator Features:</strong>
                     <ul class="mb-0 mt-1" style="font-size: 0.9rem;">
                         <li><code>manage_managers</code> → Add/manage managers</li>
                         <li><code>multi_branch</code> → Create branches</li>
@@ -44,8 +44,8 @@
                     </ul>
                 </div>
             </div>
-            <div class="mt-2 pt-2" style="border-top: 1px solid #3b82f6;">
-                <small style="color: #1e40af;">
+            <div class="mt-2 pt-2" style="border-top: 1px solid {{ primary_color() }};">
+                <small style="color: {{ primary_color() }};">
                     <i class="bi bi-check-circle me-1"></i>
                     <strong>Tip:</strong> Features are role-specific. Manager features have "manager_" prefix, staff features have "staff_" prefix. Check the boxes below to enable!
                 </small>
@@ -60,32 +60,32 @@
     <div class="plan-section-header">
         <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
             <div class="d-flex align-items-center gap-3">
-                <div class="plan-icon-lg" style="background: linear-gradient(135deg, 
+                <div class="plan-icon-lg" style="background: linear-gradient(135deg,
                     @if($loop->index == 0) #10b981 0%, #059669 100%
-                    @elseif($loop->index == 1) #3b82f6 0%, #2563eb 100%
-                    @elseif($loop->index == 2) #8b5cf6 0%, #7c3aed 100%
-                    @else #ef4444 0%, #dc2626 100%
+                    @elseif($loop->index == 1) {{ primary_color() }} 0%, {{ secondary_color() }} 100%
+                    @elseif($loop->index == 2) {{ primary_color() }} 0%, {{ secondary_color() }} 100%
+                    @else {{ secondary_color() }} 0%, {{ primary_color() }} 100%
                     @endif
                 );">
-                    <i class="bi bi-{{ 
-                        $loop->index == 0 ? 'box' : 
-                        ($loop->index == 1 ? 'briefcase' : 
-                        ($loop->index == 2 ? 'rocket-takeoff' : 'gem')) 
+                    <i class="bi bi-{{
+                        $loop->index == 0 ? 'box' :
+                        ($loop->index == 1 ? 'briefcase' :
+                        ($loop->index == 2 ? 'rocket-takeoff' : 'gem'))
                     }}"></i>
                 </div>
                 <div>
                     <h2 class="plan-section-title">{{ ucfirst($plan->name) }} Plan</h2>
                     <p class="plan-section-subtitle">
-                        ₦{{ number_format($plan->monthly_price, 2) }}/month  •  
-                        {{ $plan->max_managers }} Manager(s)  •  
-                        {{ $plan->max_staff ?? '∞' }} Staff  •  
+                        ₦{{ number_format($plan->monthly_price, 2) }}/month  •
+                        {{ $plan->max_managers }} Manager(s)  •
+                        {{ $plan->max_staff ?? '∞' }} Staff  •
                         {{ $plan->max_branches ?? '∞' }} Branch(es)
                     </p>
                 </div>
             </div>
             <div class="form-check form-switch">
-                <input class="form-check-input plan-status-toggle" type="checkbox" 
-                    id="planStatus{{ $plan->id }}" 
+                <input class="form-check-input plan-status-toggle" type="checkbox"
+                    id="planStatus{{ $plan->id }}"
                     {{ $plan->is_active ? 'checked' : '' }}
                     onchange="togglePlanStatus({{ $plan->id }}, this.checked)">
                 <label class="form-check-label fw-semibold" for="planStatus{{ $plan->id }}">
@@ -99,7 +99,8 @@
         @foreach($roles as $role)
             @php
                 $roleFeatures = $features[$role['slug']] ?? collect([]);
-                $planFeatureSlugs = $plan->features ?? [];
+                // Ensure features is always an array (handle JSON string)
+                $planFeatureSlugs = is_array($plan->features) ? $plan->features : (is_string($plan->features) ? json_decode($plan->features, true) ?? [] : []);
             @endphp
             <div class="role-card">
                 <div class="role-card-header">
@@ -122,9 +123,9 @@
                         @endphp
                         <div class="feature-checkbox-wrapper">
                             <div class="form-check">
-                                <input class="form-check-input" 
-                                    type="checkbox" 
-                                    id="plan{{ $plan->id }}_feature{{ $feature->id }}" 
+                                <input class="form-check-input"
+                                    type="checkbox"
+                                    id="plan{{ $plan->id }}_feature{{ $feature->id }}"
                                     value="{{ $feature->slug }}"
                                     {{ in_array($feature->slug, $planFeatureSlugs) ? 'checked' : '' }}
                                     onchange="toggleFeature({{ $plan->id }}, '{{ $feature->slug }}', this.checked)">
@@ -147,10 +148,10 @@
                 <div class="role-card-footer">
                     <small class="text-muted">
                         <i class="bi bi-check-circle-fill text-success"></i>
-                        {{ $roleFeatures->filter(fn($f) => in_array($f->slug, $planFeatureSlugs))->count() }} / 
+                        {{ $roleFeatures->filter(fn($f) => in_array($f->slug, $planFeatureSlugs))->count() }} /
                         {{ $roleFeatures->count() }} enabled
                     </small>
-                    <button type="button" class="btn btn-sm btn-outline-secondary" 
+                    <button type="button" class="btn btn-sm btn-outline-secondary"
                         onclick="toggleAllRoleFeatures({{ $plan->id }}, '{{ $role['slug'] }}', {{ json_encode($roleFeatures->pluck('slug')->toArray()) }})">
                         <i class="bi bi-check-all"></i> Toggle All
                     </button>
@@ -175,20 +176,20 @@
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label">Feature Name *</label>
-                        <input type="text" class="form-control" name="name" required 
+                        <input type="text" class="form-control" name="name" required
                             placeholder="e.g., Advanced Analytics">
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Slug (Identifier) *</label>
-                        <input type="text" class="form-control" name="slug" required 
-                            placeholder="e.g., advanced_analytics" 
-                            pattern="[a-z0-9_]+" 
+                        <input type="text" class="form-control" name="slug" required
+                            placeholder="e.g., advanced_analytics"
+                            pattern="[a-z0-9_]+"
                             title="Only lowercase letters, numbers, and underscores">
                         <small class="form-text text-muted">Used in code. Only lowercase, numbers, underscores.</small>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Description</label>
-                        <textarea class="form-control" name="description" rows="3" 
+                        <textarea class="form-control" name="description" rows="3"
                             placeholder="Describe what this feature does"></textarea>
                     </div>
                     <div class="mb-3">

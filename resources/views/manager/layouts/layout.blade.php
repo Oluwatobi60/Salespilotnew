@@ -47,11 +47,11 @@
 </div>
 
 <!-- Sidebar Navigation -->
-@php 
-  $manager = Auth::user(); 
+@php
+  $manager = Auth::user();
   // Determine user role for feature checks
   $isBusinessCreator = empty($manager->addby); // Owner/Business Creator has no addby
-  
+
   // Feature slug prefixes based on role
   $posFeature = $isBusinessCreator ? 'pos_system' : 'manager_pos';
   $inventoryFeature = $isBusinessCreator ? 'advanced_inventory' : 'manager_inventory';
@@ -60,7 +60,7 @@
   $activityLogsFeature = $isBusinessCreator ? 'activity_logs' : 'manager_activity_logs';
   $discountsFeature = $isBusinessCreator ? 'discounts_promotions' : 'manager_discounts';
   $branchesFeature = $isBusinessCreator ? 'multi_branch' : 'manager_view_branches';
-  
+
   // Individual report features
   $salesSummaryFeature = $isBusinessCreator ? 'sales_summary' : 'manager_sales_summary';
   $salesByStaffFeature = $isBusinessCreator ? 'sales_by_staff' : 'manager_sales_by_staff';
@@ -108,9 +108,9 @@
 
 @php
   // Check if user has any report features to show Reports menu
-  $hasAnyReport = user_has_feature($salesSummaryFeature, $manager) 
-    || user_has_feature($salesByStaffFeature, $manager) 
-    || user_has_feature($salesByItemFeature, $manager) 
+  $hasAnyReport = user_has_feature($salesSummaryFeature, $manager)
+    || user_has_feature($salesByStaffFeature, $manager)
+    || user_has_feature($salesByItemFeature, $manager)
     || user_has_feature($salesByCategoryFeature, $manager)
     || user_has_feature($inventoryValuationFeature, $manager)
     || user_has_feature($discountReportFeature, $manager);
@@ -127,23 +127,23 @@
           @if(user_has_feature($salesSummaryFeature, $manager))
             <li class="nav-item"><a class="nav-link" href="{{ route('manager.sales_summary') }}">Sales Summary</a></li>
           @endif
-          
+
           @if(user_has_feature($salesByStaffFeature, $manager))
             <li class="nav-item"><a class="nav-link" href=" {{ route('manager.staff_sales') }} ">Sales by Staff</a></li>
           @endif
-          
+
           @if(user_has_feature($salesByItemFeature, $manager))
             <li class="nav-item"><a class="nav-link" href="{{ route('manager.sales_by_item') }} ">Sales by Item</a></li>
           @endif
-          
+
           @if(user_has_feature($salesByCategoryFeature, $manager))
             <li class="nav-item"><a class="nav-link" href="{{ route('manager.sales_by_category') }}">Sales by Category</a></li>
           @endif
-          
+
           @if(user_has_feature($inventoryValuationFeature, $manager))
             <li class="nav-item"><a class="nav-link" href="{{ route('manager.valuation_report') }}">Inventory Valuation</a></li>
           @endif
-      
+
           @if(user_has_feature($discountReportFeature, $manager))
             <li class="nav-item"><a class="nav-link" href="{{ route('manager.discount_report') }}">Discount Report</a></li>
           @endif
@@ -244,6 +244,7 @@
         <ul class="nav flex-column sub-menu">
           <li class="nav-item"> <a class="nav-link" href="{{ route('all_items') }}">All items</a></li>
           <li class="nav-item"> <a class="nav-link" href="{{ route('all_categories') }}">Categories</a></li>
+          <li class="nav-item"> <a class="nav-link" href="{{ route('manager.units') }}">Units</a></li>
          {{--   <li class="nav-item"> <a class="nav-link" href="views/stock_history.php">Stock History</a></li>  --}}
         </ul>
       </div>

@@ -11,9 +11,59 @@ BRM Dashboard
 
           <!-- Dashboard Header -->
           <div class="dashboard-header">
-            <h1><i class="bi bi-speedometer2"></i> BRM Dashboard</h1>
-            <p>Welcome back {{ $brm->name }}! Here's your performance overview</p>
+            <div style="display: flex; justify-content: space-between; align-items: start; flex-wrap: wrap; gap: 1rem;">
+              <div>
+                <h1><i class="bi bi-speedometer2"></i> BRM Dashboard</h1>
+                <p>Welcome back {{ $brm->name }}! Here's your performance overview</p>
+              </div>
+              <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 12px; padding: 1rem 1.5rem; min-width: 250px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem;">
+                  <div>
+                    <div style="font-size: 0.75rem; opacity: 0.9; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.25rem;">Your BRM Code</div>
+                    <div style="font-size: 1.5rem; font-weight: bold; font-family: 'Courier New', monospace; letter-spacing: 1px;">{{ $brm->referral_code }}</div>
+                  </div>
+                  <button onclick="copyBrmCode('{{ $brm->referral_code }}')"
+                          style="background: rgba(255,255,255,0.2); border: none; color: white; padding: 0.5rem; border-radius: 8px; cursor: pointer; transition: all 0.3s;"
+                          onmouseover="this.style.background='rgba(255,255,255,0.3)'"
+                          onmouseout="this.style.background='rgba(255,255,255,0.2)'"
+                          title="Copy BRM Code">
+                    <i class="bi bi-clipboard" style="font-size: 1.2rem;"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
+
+          <script>
+          function copyBrmCode(code) {
+            navigator.clipboard.writeText(code).then(function() {
+              // Show success feedback
+              const btn = event.currentTarget;
+              const originalHTML = btn.innerHTML;
+              btn.innerHTML = '<i class="bi bi-check-lg" style="font-size: 1.2rem;"></i>';
+              btn.style.background = 'rgba(255,255,255,0.4)';
+
+              setTimeout(function() {
+                btn.innerHTML = originalHTML;
+                btn.style.background = 'rgba(255,255,255,0.2)';
+              }, 2000);
+
+              // Optional: Show toast notification
+              if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                  toast: true,
+                  position: 'top-end',
+                  icon: 'success',
+                  title: 'BRM Code copied!',
+                  showConfirmButton: false,
+                  timer: 2000
+                });
+              }
+            }).catch(function(err) {
+              console.error('Could not copy text: ', err);
+            });
+          }
+          </script>
 
           <!-- Key Metrics -->
           <div class="row mb-4">

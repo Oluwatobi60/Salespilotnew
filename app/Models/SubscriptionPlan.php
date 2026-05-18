@@ -80,7 +80,8 @@ class SubscriptionPlan extends Model
      */
     public function hasFeature(string $featureSlug): bool
     {
-        return in_array($featureSlug, $this->features ?? []);
+        $features = is_array($this->features) ? $this->features : [];
+        return in_array($featureSlug, $features);
     }
 
     /**
@@ -88,7 +89,7 @@ class SubscriptionPlan extends Model
      */
     public function addFeature(string $featureSlug): void
     {
-        $features = $this->features ?? [];
+        $features = is_array($this->features) ? $this->features : [];
         if (!in_array($featureSlug, $features)) {
             $features[] = $featureSlug;
             $this->features = $features;
@@ -101,7 +102,7 @@ class SubscriptionPlan extends Model
      */
     public function removeFeature(string $featureSlug): void
     {
-        $features = $this->features ?? [];
+        $features = is_array($this->features) ? $this->features : [];
         $this->features = array_values(array_filter($features, fn($f) => $f !== $featureSlug));
         $this->save();
     }

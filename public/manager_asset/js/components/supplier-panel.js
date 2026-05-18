@@ -28,7 +28,8 @@ const SupplierPanel = {
       phoneInput: document.getElementById('newSupplierPhone'),
       addressInput: document.getElementById('newSupplierAddress'),
       nameError: document.getElementById('supplierNameError'),
-      emailError: document.getElementById('supplierEmailError')
+      emailError: document.getElementById('supplierEmailError'),
+      phoneError: document.getElementById('supplierPhoneError')
     };
 
     // Verify required elements exist
@@ -100,6 +101,13 @@ const SupplierPanel = {
       });
     }
 
+    if (this.elements.phoneInput) {
+      this.elements.phoneInput.addEventListener('input', function() {
+        this.classList.remove('is-invalid');
+        self.elements.phoneError.textContent = '';
+      });
+    }
+
     if (this.elements.emailInput) {
       this.elements.emailInput.addEventListener('input', function() {
         this.classList.remove('is-invalid');
@@ -147,6 +155,7 @@ const SupplierPanel = {
         });
 
         if (this.elements.nameError) this.elements.nameError.textContent = '';
+        if (this.elements.phoneError) this.elements.phoneError.textContent = '';
         if (this.elements.emailError) this.elements.emailError.textContent = '';
       }
     }
@@ -179,11 +188,14 @@ const SupplierPanel = {
       hasError = true;
     }
 
-    if (!supplierEmail) {
-      this.elements.emailInput.classList.add('is-invalid');
-      this.elements.emailError.textContent = 'Email address is required';
+    if (!supplierPhone) {
+      this.elements.phoneInput.classList.add('is-invalid');
+      this.elements.phoneError.textContent = 'Phone number is required';
       hasError = true;
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(supplierEmail)) {
+    }
+
+    // Email is optional, but validate format if provided
+    if (supplierEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(supplierEmail)) {
       this.elements.emailInput.classList.add('is-invalid');
       this.elements.emailError.textContent = 'Please enter a valid email address';
       hasError = true;

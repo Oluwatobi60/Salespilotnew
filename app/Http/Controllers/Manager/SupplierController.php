@@ -14,7 +14,7 @@ class SupplierController extends Controller
         $manager = Auth::user();
         $businessName = $manager->business_name;
 
-        $suppliers = Supplier::where('business_name', $businessName)->get();
+        $suppliers = Supplier::where('business_name', $businessName)->paginate(10);
         return view('manager.supplier.supplier', compact('suppliers'));
     }
 
@@ -24,8 +24,8 @@ class SupplierController extends Controller
         $validatedData = $request->validate([
             'name' => 'required|string|max:255',
             'contact_person' => 'nullable|string|max:255',
-            'email' => 'required|email|max:255|unique:suppliers,email',
-            'phone' => 'nullable|string|max:20',
+            'email' => 'nullable|email|max:255|unique:suppliers,email',
+            'phone' => 'required|string|max:20',
             'address' => 'nullable|string|max:500',
         ]);
 
@@ -75,8 +75,8 @@ class SupplierController extends Controller
         $validatedData = $request->validate([
             'name' => 'required|string|max:255',
             'contact_person' => 'nullable|string|max:255',
-            'email' => 'required|email|max:255|unique:suppliers,email,' . $supplier->id,
-            'phone' => 'nullable|string|max:20',
+            'email' => 'nullable|email|max:255|unique:suppliers,email,' . $supplier->id,
+            'phone' => 'required|string|max:20',
             'address' => 'nullable|string|max:500',
         ]);
 

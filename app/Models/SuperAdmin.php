@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use App\Traits\TrackLoginAttempts;
 
 class SuperAdmin extends Authenticatable
 {
-    use Notifiable;
+    use Notifiable, TrackLoginAttempts;
 
     protected $table = 'superadmins';
 

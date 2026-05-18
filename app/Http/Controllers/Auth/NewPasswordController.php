@@ -47,6 +47,11 @@ class NewPasswordController extends Controller
                     'remember_token' => Str::random(60),
                 ])->save();
 
+                // Reset login attempts and unlock account when password is changed
+                if (method_exists($user, 'resetLoginAttempts')) {
+                    $user->resetLoginAttempts();
+                }
+
                 event(new PasswordReset($user));
             }
         );

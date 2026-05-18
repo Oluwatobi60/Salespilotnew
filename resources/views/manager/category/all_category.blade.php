@@ -70,7 +70,7 @@ Add Categories
                     <tbody>
                         @foreach ($categories as $index => $category)
                         <tr>
-                        <td>{{ $index + 1 }}</td>
+                        <td>{{ ($categories->firstItem() ?? 0) + $index }}</td>
                         <td>{{ $category->category_name }}</td>
                         <td>{{ $category->items_count ?? 0 }}</td>
                         <td style="white-space: nowrap;">
@@ -100,6 +100,16 @@ Add Categories
 
                     </tbody>
                   </table>
+                </div>
+
+                <!-- Pagination -->
+                <div class="d-flex justify-content-between align-items-center mt-3 px-3">
+                  <div class="text-muted">
+                    Showing {{ $categories->firstItem() ?? 0 }} to {{ $categories->lastItem() ?? 0 }} of {{ $categories->total() }} entries
+                  </div>
+                  <div>
+                    {{ $categories->links('pagination::bootstrap-5') }}
+                  </div>
                 </div>
               </div>
             </div>

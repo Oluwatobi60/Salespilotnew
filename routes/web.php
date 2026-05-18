@@ -8,6 +8,7 @@ use App\Http\Controllers\Manager\AllItemsController;
 use App\Http\Controllers\Manager\CategoryController;
 use App\Http\Controllers\Manager\CustomerController;
 use App\Http\Controllers\Manager\SupplierController;
+use App\Http\Controllers\Manager\UnitController;
 use App\Http\Controllers\Manager\StaffMainController;
 use App\Http\Controllers\Manager\ManagerMainController;
 use App\Http\Controllers\Manager\SalesReportController;
@@ -140,6 +141,7 @@ Route::middleware(['auth:superadmin'])->prefix('superadmin/subscription-features
     Route::post('/features', 'createFeature')->name('superadmin.subscription-features.create-feature');
     Route::delete('/features/{feature}', 'deleteFeature')->name('superadmin.subscription-features.delete-feature');
     Route::post('/clone', 'cloneFeatures')->name('superadmin.subscription-features.clone');
+    Route::post('/sync-all', 'syncAllFeatures')->name('superadmin.subscription-features.sync-all');
 });
 
 
@@ -343,6 +345,13 @@ Route::middleware(['auth', 'verified', 'rolemanager:manager', 'check.subscriptio
          Route::get('/edit_supplier/{id}', 'edit_supplier')->name('supplier.edit');
          Route::put('/update_supplier/{id}', 'update_supplier')->name('supplier.update');
          Route::delete('/delete_supplier/{id}', 'delete_supplier')->name('supplier.delete');
+    });
+
+    Route::controller(UnitController::class)->group(function () {
+         Route::get('/units', 'all_units')->name('manager.units');
+         Route::post('/unit/create', 'create_unit')->name('unit.create');
+         Route::put('/unit/update/{id}', 'update_unit')->name('unit.update');
+         Route::delete('/unit/delete/{id}', 'delete_unit')->name('unit.delete');
     });
 
     Route::controller(SellProductController::class)->group(function () {

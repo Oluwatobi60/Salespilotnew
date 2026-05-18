@@ -24,9 +24,41 @@ class BrmController extends Controller
             'password' => 'required|string',
         ]);
 
+        // Check if BRM exists and is locked
+        $brm = \App\Models\Brm::where('email', $request->email)->first();
+        
+        if ($brm && method_exists($brm, 'isLocked') && $brm->isLocked()) {
+            $minutes = $brm->getRemainingLockTimeMinutes();
+            return back()->withErrors([
+                'email' => "Account is locked due to too many failed login attempts. Please try again in {$minutes} minutes.",
+            ])->onlyInput('email');
+        }
+
         if (Auth::guard('brms')->attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
+            
+            // Reset failed attempts on successful login
+            if ($brm && method_exists($brm, 'resetLoginAttempts')) {
+                $brm->resetLoginAttempts();
+            }
+            
             return redirect()->route('brm.dashboard');
+        }
+
+        // Track failed login attempt
+        if ($brm && method_exists($brm, 'incrementFailedLoginAttempts')) {
+            $brm->incrementFailedLoginAttempts();
+            $remaining = $brm->getRemainingAttempts();
+            
+            if ($remaining > 0) {
+                return back()->withErrors([
+                    'email' => "These credentials do not match our records. You have {$remaining} attempts remaining.",
+                ])->onlyInput('email');
+            } else {
+                return back()->withErrors([
+                    'email' => 'Too many failed attempts. Your account has been locked for 30 minutes and you must change your password.',
+                ])->onlyInput('email');
+            }
         }
 
         return back()->withErrors([

@@ -483,14 +483,6 @@ document.addEventListener('DOMContentLoaded', function() {
 		  const applyFiltersBtn = document.getElementById('applyFilters');
 		  const clearFiltersBtn = document.getElementById('clearFilters');
 
-		  // Function to determine stock status based on quantity
-		  function getStockStatus(quantity) {
-		    const qty = parseInt(quantity);
-		    if (qty === 0) return 'out-of-stock';
-		    if (qty <= 10) return 'low-stock';
-		    return 'in-stock';
-		  }
-
 		  // Function to apply all filters
 		  function applyAllFilters() {
 		    const searchTerm = searchInput.value.toLowerCase();
@@ -499,22 +491,33 @@ document.addEventListener('DOMContentLoaded', function() {
 		    const selectedSupplier = supplierFilter.value;
 		    const tableRows = document.querySelectorAll('#itemsTable tbody tr');
 
+		    let visibleCount = 0;
+
 		    tableRows.forEach(row => {
-		      const itemName = row.querySelector('h6').textContent.toLowerCase();
-		      const itemCode = row.querySelector('small.text-muted')?.textContent.toLowerCase() || '';
-		      const category = row.cells[3].textContent.trim().toLowerCase(); // Category column
-		      const stockQuantity = parseInt(row.cells[5].querySelector('span.badge')?.textContent.trim()) || 0; // Stock column
-		      const stockStatus = getStockStatus(stockQuantity);
+		      // Get item name from the h6 or div.item-name in column 2
+		      const itemNameEl = row.querySelector('.item-name');
+		      const itemName = itemNameEl ? itemNameEl.textContent.toLowerCase() : '';
+
+		      // Get item code from span.item-code if it exists
+		      const itemCodeEl = row.querySelector('.item-code');
+		      const itemCode = itemCodeEl ? itemCodeEl.textContent.toLowerCase() : '';
+
+		      // Get category from data attribute
+		      const category = row.getAttribute('data-category') || '';
+
+		      // Get stock status from data attribute
+		      const stockStatus = row.getAttribute('data-stock-status') || '';
 
 		      // Search filter - search in name, code, and category
-		      const matchesSearch = itemName.includes(searchTerm) ||
+		      const matchesSearch = !searchTerm ||
+		                           itemName.includes(searchTerm) ||
 		                           itemCode.includes(searchTerm) ||
 		                           category.includes(searchTerm);
 
-		      // Category filter - case-insensitive comparison
-		      const matchesCategory = !selectedCategory || category === selectedCategory || category === 'n/a';
+		      // Category filter
+		      const matchesCategory = !selectedCategory || category === selectedCategory;
 
-		      // Inventory filter
+		      // Inventory filter using data attribute
 		      const matchesInventory = !selectedInventory || stockStatus === selectedInventory;
 
 		      // Supplier filter
@@ -524,16 +527,34 @@ document.addEventListener('DOMContentLoaded', function() {
 		      // Show/hide row based on all filters
 		      if (matchesSearch && matchesCategory && matchesInventory && matchesSupplier) {
 		        row.style.display = '';
+		        visibleCount++;
 		      } else {
 		        row.style.display = 'none';
 		      }
 		    });
+
+		    // Update the showing count text
+		    updateFilteredCount(visibleCount);
+		  }
+
+		  // Function to update filtered count display
+		  function updateFilteredCount(visibleCount) {
+		    const cardHead = document.querySelector('.ai-table-card .card-head span');
+		    if (cardHead && visibleCount > 0) {
+		      cardHead.innerHTML = `Showing <strong>1–${visibleCount}</strong> of <strong>${visibleCount}</strong> items (filtered)`;
+		    } else if (cardHead && visibleCount === 0) {
+		      cardHead.innerHTML = `<span class="text-warning">No items match your filters</span>`;
+		    }
 		  }
 
 		  // Real-time search
 		  if (searchInput) {
 		    searchInput.addEventListener('input', applyAllFilters);
 		  }
+
+		  // Store original count text on page load
+		  const cardHead = document.querySelector('.ai-table-card .card-head span');
+		  const originalCountText = cardHead ? cardHead.innerHTML : '';
 
 		  // Apply filters button
 		  if (applyFiltersBtn) {
@@ -547,7 +568,17 @@ document.addEventListener('DOMContentLoaded', function() {
 		      categoryFilter.value = '';
 		      inventoryFilter.value = '';
 		      supplierFilter.value = '';
-		      applyAllFilters();
+
+		      // Show all rows
+		      const tableRows = document.querySelectorAll('#itemsTable tbody tr');
+		      tableRows.forEach(row => {
+		        row.style.display = '';
+		      });
+
+		      // Restore original count text
+		      if (cardHead && originalCountText) {
+		        cardHead.innerHTML = originalCountText;
+		      }
 		    });
 		  }
 

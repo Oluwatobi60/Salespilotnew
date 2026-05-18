@@ -254,8 +254,8 @@
                     <span class="receipt-info-value">
                         @if($sale->staff_id && $sale->staff)
                             {{ $sale->staff->fullname }}
-                        @elseif($sale->user)
-                            {{ $sale->user->name }}
+                        @elseif($sale->user_id && $sale->user)
+                            {{ trim(($sale->user->first_name ?? '') . ' ' . ($sale->user->surname ?? '')) ?: $sale->user->email }}
                         @else
                             Staff
                         @endif
@@ -280,7 +280,7 @@
                     @foreach($items as $item)
                         <tr>
                             <td><strong>{{ $item->item_name }}</strong></td>
-                            <td style="text-align: center;">{{ $item->quantity }}</td>
+                            <td style="text-align: center;">{{ $item->quantity }} {{ $item->unit_abbr ?? 'units' }}</td>
                             <td style="text-align: right;">₦{{ number_format($item->item_price, 2) }}</td>
                             <td style="text-align: right;">₦{{ number_format($item->subtotal, 2) }}</td>
                             <td style="text-align: right;">₦{{ number_format($item->discount, 2) }}</td>

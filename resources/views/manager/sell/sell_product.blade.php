@@ -444,7 +444,7 @@ Sell Product
             </div>
             <div class="receipt-info-row">
               <span class="receipt-info-label">Served By:</span>
-              <span class="receipt-info-value">Manager</span>
+              <span class="receipt-info-value">{{ $manager->other_name }} {{ $manager->surname }}</span>
             </div>
           </div>
 

@@ -12,6 +12,7 @@ use App\Models\ProductVariant;
 use App\Models\Staffs;
 use App\Models\User;
 use App\Models\Category;
+use App\Models\Unit;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 
@@ -630,12 +631,34 @@ class SalesReportController extends Controller
     public function print_receipt($receiptNumber)
     {
         // Get all items for this receipt
-        $items = CartItem::where('receipt_number', $receiptNumber)
+        $items = CartItem::with(['staff', 'user'])
+            ->where('receipt_number', $receiptNumber)
             ->where('status', 'completed')
             ->get();
 
         if ($items->isEmpty()) {
             abort(404, 'Sale not found');
+        }
+
+        // Attach unit abbreviation to each item
+        foreach ($items as $item) {
+            $unitAbbr = 'units';
+
+            if ($item->item_type === 'standard') {
+                $standardItem = StandardItem::find($item->item_id);
+                if ($standardItem && $standardItem->unit) {
+                    $unit = Unit::find($standardItem->unit);
+                    $unitAbbr = $unit ? $unit->abbreviation : 'units';
+                }
+            } elseif ($item->item_type === 'variant') {
+                $variantItem = VariantItem::find($item->item_id);
+                if ($variantItem && $variantItem->unit) {
+                    $unit = Unit::find($variantItem->unit);
+                    $unitAbbr = $unit ? $unit->abbreviation : 'units';
+                }
+            }
+
+            $item->unit_abbr = $unitAbbr;
         }
 
         // Get sale summary (customer, date, total, discount, etc.)

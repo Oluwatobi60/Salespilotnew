@@ -67,7 +67,7 @@ Suppliers Page
             <tbody>
               @forelse($suppliers as $index => $supplier)
               <tr>
-                <td>{{ $index + 1 }}</td>
+                <td>{{ ($suppliers->firstItem() ?? 0) + $index }}</td>
                 <td>{{ $supplier->created_at ? $supplier->created_at->format('M d, Y') : 'N/A' }}</td>
                 <td class="text-truncate" style="max-width: 200px;" title="{{ $supplier->name }}">{{ $supplier->name }}</td>
                 <td class="text-truncate" style="max-width: 150px;" title="{{ $supplier->email }}">{{ $supplier->email }}</td>
@@ -110,6 +110,16 @@ Suppliers Page
             </tbody>
           </table>
         </div>
+
+        <!-- Pagination -->
+        <div class="d-flex justify-content-between align-items-center mt-3 px-3">
+          <div class="text-muted">
+            Showing {{ $suppliers->firstItem() ?? 0 }} to {{ $suppliers->lastItem() ?? 0 }} of {{ $suppliers->total() }} entries
+          </div>
+          <div>
+            {{ $suppliers->links('pagination::bootstrap-5') }}
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -151,21 +161,24 @@ Suppliers Page
                 @enderror
               </div>
               <div class="col-md-6 mb-2">
-                <label for="contact_person" class="form-label">Contact Person</label>
-                <input type="text" class="form-control" id="contact_person" name="contact_person" placeholder="Enter contact person" value="{{ old('contact_person') }}">
+                <label for="phone" class="form-label">Phone Number <span class="text-danger">*</span></label>
+                <input type="tel" class="form-control @error('phone') is-invalid @enderror" id="phone" name="phone" placeholder="Enter phone number" value="{{ old('phone') }}" required>
+                @error('phone')
+                  <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
               </div>
             </div>
             <div class="row mb-3">
               <div class="col-md-6 mb-2">
-                <label for="email" class="form-label">Email Address <span class="text-danger">*</span></label>
-                <input type="email" class="form-control @error('email') is-invalid @enderror" id="email" name="email" placeholder="Enter email address" value="{{ old('email') }}" required>
+                <label for="email" class="form-label">Email Address</label>
+                <input type="email" class="form-control @error('email') is-invalid @enderror" id="email" name="email" placeholder="Enter email address (optional)" value="{{ old('email') }}">
                 @error('email')
                   <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
               </div>
               <div class="col-md-6 mb-2">
-                <label for="phone" class="form-label">Phone Number</label>
-                <input type="tel" class="form-control" id="phone" name="phone" placeholder="Enter phone number" value="{{ old('phone') }}">
+                <label for="contact_person" class="form-label">Contact Person</label>
+                <input type="text" class="form-control" id="contact_person" name="contact_person" placeholder="Enter contact person" value="{{ old('contact_person') }}">
               </div>
             </div>
             <div class="row mb-3">
@@ -208,18 +221,18 @@ Suppliers Page
                 <input type="text" class="form-control" id="edit_supplier_name" name="name" placeholder="Enter supplier or company name" required>
               </div>
               <div class="col-md-6 mb-2">
-                <label for="edit_contact_person" class="form-label">Contact Person</label>
-                <input type="text" class="form-control" id="edit_contact_person" name="contact_person" placeholder="Enter contact person">
+                <label for="edit_phone" class="form-label">Phone Number <span class="text-danger">*</span></label>
+                <input type="tel" class="form-control" id="edit_phone" name="phone" placeholder="Enter phone number" required>
               </div>
             </div>
             <div class="row mb-3">
               <div class="col-md-6 mb-2">
-                <label for="edit_email" class="form-label">Email Address <span class="text-danger">*</span></label>
-                <input type="email" class="form-control" id="edit_email" name="email" placeholder="Enter email address" required>
+                <label for="edit_email" class="form-label">Email Address</label>
+                <input type="email" class="form-control" id="edit_email" name="email" placeholder="Enter email address (optional)">
               </div>
               <div class="col-md-6 mb-2">
-                <label for="edit_phone" class="form-label">Phone Number</label>
-                <input type="tel" class="form-control" id="edit_phone" name="phone" placeholder="Enter phone number">
+                <label for="edit_contact_person" class="form-label">Contact Person</label>
+                <input type="text" class="form-control" id="edit_contact_person" name="contact_person" placeholder="Enter contact person">
               </div>
             </div>
             <div class="row mb-3">

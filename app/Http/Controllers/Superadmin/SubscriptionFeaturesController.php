@@ -15,11 +15,33 @@ class SubscriptionFeaturesController extends Controller
      */
     public function index()
     {
+        // Auto-enable all features for all plans
+        $this->autoEnableAllFeatures();
+
         $plans = SubscriptionPlan::orderBy('monthly_price')->get();
         $features = SubscriptionFeature::getGroupedFeatures();
         $roles = SubscriptionFeature::getRoles();
 
         return view('superadmin.subscription-features.index', compact('plans', 'features', 'roles'));
+    }
+
+    /**
+     * Automatically enable all active features for all plans
+     */
+    private function autoEnableAllFeatures()
+    {
+        $allFeatureSlugs = SubscriptionFeature::where('is_active', true)
+            ->pluck('slug')
+            ->toArray();
+
+        $plans = SubscriptionPlan::all();
+
+        foreach ($plans as $plan) {
+            $plan->setFeatures($allFeatureSlugs);
+            Cache::forget("subscription_plan_{$plan->id}");
+        }
+
+        Cache::forget('active_subscription_plans');
     }
 
     /**
@@ -32,8 +54,9 @@ class SubscriptionFeaturesController extends Controller
             'enabled' => 'required|boolean',
         ]);
 
-        $currentFeatures = $plan->features ?? [];
-        
+        // Ensure features is always an array (handle JSON string from database)
+        $currentFeatures = is_array($plan->features) ? $plan->features : [];
+
         if ($validated['enabled']) {
             // Add feature if not already present
             if (!in_array($validated['feature_slug'], $currentFeatures)) {
@@ -45,7 +68,7 @@ class SubscriptionFeaturesController extends Controller
         }
 
         $plan->setFeatures($currentFeatures);
-        
+
         // Clear cache
         Cache::forget("subscription_plan_{$plan->id}");
         Cache::forget('active_subscription_plans');
@@ -68,7 +91,7 @@ class SubscriptionFeaturesController extends Controller
         ]);
 
         $plan->setFeatures($validated['features'] ?? []);
-        
+
         // Clear cache
         Cache::forget("subscription_plan_{$plan->id}");
         Cache::forget('active_subscription_plans');
@@ -94,7 +117,7 @@ class SubscriptionFeaturesController extends Controller
         ]);
 
         $maxSortOrder = SubscriptionFeature::where('role', $validated['role'])->max('sort_order') ?? 0;
-        
+
         $feature = SubscriptionFeature::create([
             'name' => $validated['name'],
             'slug' => $validated['slug'],
@@ -105,9 +128,22 @@ class SubscriptionFeaturesController extends Controller
             'sort_order' => $maxSortOrder + 1,
         ]);
 
+        // Automatically add the new feature to all plans
+        $plans = SubscriptionPlan::all();
+        foreach ($plans as $plan) {
+            $currentFeatures = is_array($plan->features) ? $plan->features : [];
+            if (!in_array($feature->slug, $currentFeatures)) {
+                $currentFeatures[] = $feature->slug;
+                $plan->features = $currentFeatures;
+                $plan->save();
+            }
+            Cache::forget("subscription_plan_{$plan->id}");
+        }
+        Cache::forget('active_subscription_plans');
+
         return response()->json([
             'success' => true,
-            'message' => 'Feature created successfully!',
+            'message' => 'Feature created and automatically enabled for all plans!',
             'feature' => $feature,
         ]);
     }
@@ -179,6 +215,34 @@ class SubscriptionFeaturesController extends Controller
         return response()->json([
             'success' => true,
             'message' => "Features cloned from {$sourcePlan->name} to {$targetPlan->name}!",
+        ]);
+    }
+
+    /**
+     * Manually sync all features to all plans
+     */
+    public function syncAllFeatures()
+    {
+        $allFeatureSlugs = SubscriptionFeature::where('is_active', true)
+            ->pluck('slug')
+            ->toArray();
+
+        $plans = SubscriptionPlan::all();
+        $updatedCount = 0;
+
+        foreach ($plans as $plan) {
+            $plan->setFeatures($allFeatureSlugs);
+            Cache::forget("subscription_plan_{$plan->id}");
+            $updatedCount++;
+        }
+
+        Cache::forget('active_subscription_plans');
+
+        return response()->json([
+            'success' => true,
+            'message' => "All features synced! {$updatedCount} plans updated with " . count($allFeatureSlugs) . " features.",
+            'plans_updated' => $updatedCount,
+            'features_count' => count($allFeatureSlugs),
         ]);
     }
 }

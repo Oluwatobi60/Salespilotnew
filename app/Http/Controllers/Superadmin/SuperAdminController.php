@@ -56,9 +56,41 @@ class SuperAdminController extends Controller
             'password' => 'required|string',
         ]);
 
+        // Check if superadmin exists and is locked
+        $superadmin = \App\Models\SuperAdmin::where('email', $request->email)->first();
+        
+        if ($superadmin && method_exists($superadmin, 'isLocked') && $superadmin->isLocked()) {
+            $minutes = $superadmin->getRemainingLockTimeMinutes();
+            return back()->withErrors([
+                'email' => "Account is locked due to too many failed login attempts. Please try again in {$minutes} minutes.",
+            ])->onlyInput('email');
+        }
+
         if (Auth::guard('superadmin')->attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
+            
+            // Reset failed attempts on successful login
+            if ($superadmin && method_exists($superadmin, 'resetLoginAttempts')) {
+                $superadmin->resetLoginAttempts();
+            }
+            
             return redirect()->route('superadmin');
+        }
+
+        // Track failed login attempt
+        if ($superadmin && method_exists($superadmin, 'incrementFailedLoginAttempts')) {
+            $superadmin->incrementFailedLoginAttempts();
+            $remaining = $superadmin->getRemainingAttempts();
+            
+            if ($remaining > 0) {
+                return back()->withErrors([
+                    'email' => "These credentials do not match our records. You have {$remaining} attempts remaining.",
+                ])->onlyInput('email');
+            } else {
+                return back()->withErrors([
+                    'email' => 'Too many failed attempts. Your account has been locked for 30 minutes and you must change your password.',
+                ])->onlyInput('email');
+            }
         }
 
         return back()->withErrors([

@@ -8,6 +8,7 @@ use App\Models\StandardItem;
 use App\Models\VariantItem;
 use App\Models\Category;
 use App\Models\CartItem;
+use App\Models\Unit;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -279,7 +280,7 @@ class StaffsMainController extends Controller
             $all_items->push($item);
         }
 
-        return view('staff.sell.sell_product', compact('all_items', 'standard_items', 'variant_items', 'categories'));
+        return view('staff.sell.sell_product', compact('all_items', 'standard_items', 'variant_items', 'categories', 'staff'));
     }
 
     public function save_cart(Request $request)
@@ -949,13 +950,35 @@ class StaffsMainController extends Controller
         $businessName = $staff->business_name;
 
         // Get all items for this receipt
-        $items = CartItem::where('receipt_number', $receiptNumber)
+        $items = CartItem::with(['staff', 'user'])
+            ->where('receipt_number', $receiptNumber)
             ->where('status', 'completed')
             ->where('business_name', $businessName)
             ->get();
 
         if ($items->isEmpty()) {
             abort(404, 'Sale not found');
+        }
+
+        // Attach unit abbreviation to each item
+        foreach ($items as $item) {
+            $unitAbbr = 'units';
+
+            if ($item->item_type === 'standard') {
+                $standardItem = StandardItem::find($item->item_id);
+                if ($standardItem && $standardItem->unit) {
+                    $unit = Unit::find($standardItem->unit);
+                    $unitAbbr = $unit ? $unit->abbreviation : 'units';
+                }
+            } elseif ($item->item_type === 'variant') {
+                $variantItem = VariantItem::find($item->item_id);
+                if ($variantItem && $variantItem->unit) {
+                    $unit = Unit::find($variantItem->unit);
+                    $unitAbbr = $unit ? $unit->abbreviation : 'units';
+                }
+            }
+
+            $item->unit_abbr = $unitAbbr;
         }
 
         // Get sale summary (customer, date, total, discount, etc.)

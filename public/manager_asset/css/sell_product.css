@@ -172,11 +172,14 @@
       .item-name {
         font-size: 14px;
         font-weight: 600;
-        color: white;
+        color: #ffffff;
         margin-bottom: 8px;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+        /* background-color: rgba(0, 0, 0, 0.75);
+        padding: 6px 10px;
+        border-radius: 4px; */
       }
 
       .item-price {

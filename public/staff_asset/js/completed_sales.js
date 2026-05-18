@@ -6,8 +6,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Elements
     const completedSalesTable = document.getElementById('completedSalesTable');
     const searchInput = document.getElementById('searchSales');
-    const sellerFilter = document.getElementById('sellerFilter');
-    const statusFilter = document.getElementById('statusFilter');
     const dateRangeFilter = document.getElementById('dateRangeFilter');
     const applyFiltersBtn = document.getElementById('applyFilters');
     const clearFiltersBtn = document.getElementById('clearFilters');
@@ -64,8 +62,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Search functionality
     function performSearch() {
         const searchTerm = searchInput.value.toLowerCase();
-        const selectedSeller = sellerFilter.value;
-        const selectedStatus = statusFilter.value;
         const dateRange = dateRangeFilter.value;
 
         let filtered = allSales.filter(sale => {
@@ -75,12 +71,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 sale.customer.toLowerCase().includes(searchTerm) ||
                 sale.seller.toLowerCase().includes(searchTerm) ||
                 sale.total.toLowerCase().includes(searchTerm);
-
-            // Seller filter
-            const matchesSeller = !selectedSeller || sale.seller === selectedSeller;
-
-            // Status filter
-            const matchesStatus = !selectedStatus || sale.status === selectedStatus;
 
             // Date filter
             let matchesDate = true;
@@ -128,7 +118,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
 
-            return matchesSearch && matchesSeller && matchesStatus && matchesDate;
+            return matchesSearch && matchesDate;
         });
 
         renderFilteredSales(filtered);
@@ -211,14 +201,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Event listeners
     searchInput.addEventListener('input', performSearch);
-    sellerFilter.addEventListener('change', performSearch);
-    statusFilter.addEventListener('change', performSearch);
     applyFiltersBtn.addEventListener('click', performSearch);
 
     clearFiltersBtn.addEventListener('click', function() {
         searchInput.value = '';
-        sellerFilter.value = '';
-        statusFilter.value = '';
         dateRangeFilter.value = '';
         customStartDate.value = '';
         customEndDate.value = '';

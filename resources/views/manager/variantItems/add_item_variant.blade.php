@@ -94,6 +94,9 @@ Add Item Variant
                                       {{ $unit->name }}
                                     </option>
                                   @endforeach
+                                  <option value="add_new_unit" style="color: #007bff; font-weight: 600;">
+                                    <i class="mdi mdi-plus"></i> + Add New Unit
+                                  </option>
                          </select>
                       <div id="customUnitContainer" class="mt-2" style="display: none;">
                         <div class="input-group">
@@ -1171,8 +1174,12 @@ Add Item Variant
     <!-- Supplier Panel Component -->
     <x-supplier-panel />
 
+    <!-- Unit Panel Component -->
+    <x-unit-panel />
+
      <script src="{{ asset('manager_asset/js/components/category-panel.js') }}"></script>
      <script src="{{ asset('manager_asset/js/components/supplier-panel.js') }}"></script>
+     <script src="{{ asset('manager_asset/js/components/unit-panel.js') }}"></script>
      <script src="{{ asset('manager_asset/js/add_item_variant.js') }}"></script>
 
 @endsection

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Auth\Authenticatable as AuthenticableTrait;
+use App\Traits\TrackLoginAttempts;
 
 /**
  * @property int $id
@@ -23,7 +24,7 @@ use Illuminate\Auth\Authenticatable as AuthenticableTrait;
  */
 class Brm extends Model implements Authenticatable
 {
-    use AuthenticableTrait;
+    use AuthenticableTrait, TrackLoginAttempts;
 
     protected $table = 'brms';
 

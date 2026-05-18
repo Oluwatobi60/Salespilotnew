@@ -20,9 +20,16 @@ class PasswordController extends Controller
             'password' => ['required', Password::defaults(), 'confirmed'],
         ]);
 
-        $request->user()->update([
+        $user = $request->user();
+        
+        $user->update([
             'password' => Hash::make($validated['password']),
         ]);
+
+        // Reset login attempts and unlock account when password is changed
+        if (method_exists($user, 'resetLoginAttempts')) {
+            $user->resetLoginAttempts();
+        }
 
         return back()->with('status', 'password-updated');
     }

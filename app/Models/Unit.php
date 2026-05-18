@@ -10,6 +10,9 @@ class Unit extends Model
         'name',
         'abbreviation',
         'is_custom',
+        'business_name',
+        'manager_name',
+        'manager_email',
     ];
 
     protected $casts = [

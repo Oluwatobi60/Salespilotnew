@@ -8,6 +8,8 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use App\Models\UserSubscription;
 use App\Models\Branch\Branch;
+use App\Traits\TrackLoginAttempts;
+use Carbon\Carbon;
 
 /**
  * @property int $id
@@ -20,7 +22,7 @@ use App\Models\Branch\Branch;
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, TrackLoginAttempts;
 
     /**
      * The attributes that are mass assignable.
@@ -75,9 +77,15 @@ class User extends Authenticatable
         ];
     }
 
+    // Relationships and Methods
     public function currentSubscription(): \Illuminate\Database\Eloquent\Relations\HasOne
     {
-        return $this->hasOne(UserSubscription::class)->where('status', 'active')->latest('end_date');
+
+    // Get the most recent active subscription for this user
+        return $this->hasOne(UserSubscription::class)
+            ->where('status', 'active')
+            ->where('end_date', '>=', Carbon::today())
+            ->latest('end_date');
     }
 
     /**

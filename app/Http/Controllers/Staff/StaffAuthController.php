@@ -33,6 +33,16 @@ class StaffAuthController extends Controller
         // Determine if login is email or staffsid
         $fieldType = filter_var($loginField, FILTER_VALIDATE_EMAIL) ? 'email' : 'staffsid';
 
+        // Check if staff exists and is locked
+        $staff = \App\Models\Staffs::where($fieldType, $loginField)->first();
+        
+        if ($staff && method_exists($staff, 'isLocked') && $staff->isLocked()) {
+            $minutes = $staff->getRemainingLockTimeMinutes();
+            return back()->withErrors([
+                'login' => "Account is locked due to too many failed login attempts. Please try again in {$minutes} minutes.",
+            ])->withInput($request->only('login'));
+        }
+
         $credentials = [
             $fieldType => $loginField,
             'password' => $password,
@@ -40,6 +50,11 @@ class StaffAuthController extends Controller
 
         if (Auth::guard('staff')->attempt($credentials, $request->filled('remember'))) {
             $request->session()->regenerate();
+
+            // Reset failed attempts on successful login
+            if ($staff && method_exists($staff, 'resetLoginAttempts')) {
+                $staff->resetLoginAttempts();
+            }
 
             // Get the authenticated staff
             /** @var Staffs $staff */
@@ -116,6 +131,23 @@ class StaffAuthController extends Controller
             \App\Helpers\ActivityLogger::log('login', json_encode($details));
             return redirect()->intended('/staff/dashboard');
         }
+        
+        // Track failed login attempt
+        if ($staff && method_exists($staff, 'incrementFailedLoginAttempts')) {
+            $staff->incrementFailedLoginAttempts();
+            $remaining = $staff->getRemainingAttempts();
+            
+            if ($remaining > 0) {
+                return back()->withErrors([
+                    'login' => "Invalid credentials or inactive account. You have {$remaining} attempts remaining.",
+                ])->withInput($request->only('login'));
+            } else {
+                return back()->withErrors([
+                    'login' => 'Too many failed attempts. Your account has been locked for 30 minutes and you must change your password.',
+                ])->withInput($request->only('login'));
+            }
+        }
+        
         return back()->withErrors([
             'login' => 'Invalid credentials or inactive account.',
         ])->withInput($request->only('login', 'remember'));

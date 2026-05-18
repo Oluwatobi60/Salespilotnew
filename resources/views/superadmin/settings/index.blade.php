@@ -62,7 +62,7 @@ use App\Models\AppSetting;
         <div class="col-lg-6">
             <div class="sa-card h-100">
                 <div class="d-flex align-items-center mb-3">
-                    <div class="widget-icon me-3" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <div class="widget-icon me-3" style="background: linear-gradient(135deg, {{ primary_color() }} 0%, {{ secondary_color() }} 100%);">
                         <i class="bi bi-gear-fill text-white"></i>
                     </div>
                     <div>
@@ -103,7 +103,7 @@ use App\Models\AppSetting;
         <div class="col-lg-6">
             <div class="sa-card h-100">
                 <div class="d-flex align-items-center mb-3">
-                    <div class="widget-icon me-3" style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);">
+                    <div class="widget-icon me-3" style="background: linear-gradient(135deg, {{ primary_color() }} 0%, {{ secondary_color() }} 100%);">
                         <i class="bi bi-envelope-fill text-white"></i>
                     </div>
                     <div>
@@ -370,19 +370,19 @@ use App\Models\AppSetting;
 }
 
 .form-check-input:checked {
-    background-color: #667eea;
-    border-color: #667eea;
+    background-color: {{ primary_color() }};
+    border-color: {{ primary_color() }};
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, {{ primary_color() }} 0%, {{ secondary_color() }} 100%);
     border: none;
     transition: all 0.3s ease;
 }
 
 .btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 4px 12px {{ primary_color() }}66;
 }
 </style>
 

@@ -145,7 +145,7 @@ class SellProductController extends Controller
             $all_items->push($item);
         }
 
-        return view('manager.sell.sell_product', compact('all_items', 'standard_items', 'variant_items', 'categories'));
+        return view('manager.sell.sell_product', compact('all_items', 'standard_items', 'variant_items', 'categories', 'manager'));
     }
 
     public function save_cart(Request $request)

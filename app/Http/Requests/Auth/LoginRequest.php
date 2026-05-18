@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Models\User;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
@@ -41,12 +42,43 @@ class LoginRequest extends FormRequest
     {
         $this->ensureIsNotRateLimited();
 
+        // Check if user exists and is locked
+        $user = User::where('email', $this->email)->first();
+        
+        if ($user && method_exists($user, 'isLocked') && $user->isLocked()) {
+            $minutes = $user->getRemainingLockTimeMinutes();
+            throw ValidationException::withMessages([
+                'email' => "Account is locked due to too many failed login attempts. Please try again in {$minutes} minutes.",
+            ]);
+        }
+
         if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());
+
+            // Track failed login attempt
+            if ($user && method_exists($user, 'incrementFailedLoginAttempts')) {
+                $user->incrementFailedLoginAttempts();
+                $remaining = $user->getRemainingAttempts();
+                
+                if ($remaining > 0) {
+                    throw ValidationException::withMessages([
+                        'email' => trans('auth.failed') . " You have {$remaining} attempts remaining.",
+                    ]);
+                } else {
+                    throw ValidationException::withMessages([
+                        'email' => 'Too many failed attempts. Your account has been locked for 30 minutes and you must change your password.',
+                    ]);
+                }
+            }
 
             throw ValidationException::withMessages([
                 'email' => trans('auth.failed'),
             ]);
+        }
+
+        // Reset failed attempts on successful login
+        if ($user && method_exists($user, 'resetLoginAttempts')) {
+            $user->resetLoginAttempts();
         }
 
         RateLimiter::clear($this->throttleKey());
@@ -59,7 +91,9 @@ class LoginRequest extends FormRequest
      */
     public function ensureIsNotRateLimited(): void
     {
-        if (! RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
+        $maxAttempts = (int) setting('max_login_attempts', 5);
+        
+        if (! RateLimiter::tooManyAttempts($this->throttleKey(), $maxAttempts)) {
             return;
         }
 
