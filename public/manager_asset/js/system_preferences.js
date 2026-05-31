@@ -237,3 +237,118 @@
           });
         }
       });
+
+      // Receipt Settings Live Preview
+      document.addEventListener('DOMContentLoaded', function() {
+        // Get all form elements
+        const receiptTitleInput = document.getElementById('receiptTitleInput');
+        const headerTextInput = document.getElementById('headerTextInput');
+        const footerTextInput = document.getElementById('footerTextInput');
+        const paperSizeSelect = document.getElementById('paperSizeSelect');
+        const fontSizeSelect = document.getElementById('fontSizeSelect');
+
+        // Get all preview elements
+        const receiptTitlePreview = document.getElementById('receiptTitlePreview');
+        const headerTextPreview = document.getElementById('headerTextPreview');
+        const footerTextPreview = document.getElementById('footerTextPreview');
+
+        // Update text fields in real-time
+        if (receiptTitleInput && receiptTitlePreview) {
+          receiptTitleInput.addEventListener('input', function() {
+            receiptTitlePreview.textContent = this.value || 'SALES RECEIPT';
+          });
+        }
+
+        if (headerTextInput && headerTextPreview) {
+          headerTextInput.addEventListener('input', function() {
+            headerTextPreview.textContent = this.value || '';
+            headerTextPreview.style.display = this.value ? 'block' : 'none';
+          });
+        }
+
+        if (footerTextInput && footerTextPreview) {
+          footerTextInput.addEventListener('input', function() {
+            footerTextPreview.textContent = this.value || '';
+          });
+        }
+
+        // Handle all checkboxes with data-preview attribute
+        const checkboxes = document.querySelectorAll('input[type="checkbox"][data-preview]');
+
+        checkboxes.forEach(function(checkbox) {
+          // Initialize preview state based on current checkbox state
+          const previewIds = checkbox.getAttribute('data-preview').split(',');
+          const displayType = checkbox.getAttribute('data-display') || 'block';
+          const isChecked = checkbox.checked;
+
+          previewIds.forEach(function(previewId) {
+            const previewElement = document.getElementById(previewId.trim());
+            if (previewElement) {
+              previewElement.style.display = isChecked ? displayType : 'none';
+            }
+          });
+
+          // Add change event listener for live updates
+          checkbox.addEventListener('change', function() {
+            const previewIds = this.getAttribute('data-preview').split(',');
+            const displayType = this.getAttribute('data-display') || 'block';
+            const isChecked = this.checked;
+
+            previewIds.forEach(function(previewId) {
+              const previewElement = document.getElementById(previewId.trim());
+              if (previewElement) {
+                previewElement.style.display = isChecked ? displayType : 'none';
+              }
+            });
+          });
+        });
+
+        // Optional: Handle paper size changes (adjust preview width)
+        if (paperSizeSelect) {
+          paperSizeSelect.addEventListener('change', function() {
+            const receiptPreviewInner = document.getElementById('receiptPreviewInner');
+            if (receiptPreviewInner) {
+              switch(this.value) {
+                case '58mm Thermal':
+                  receiptPreviewInner.style.width = '220px';
+                  break;
+                case '80mm Thermal':
+                  receiptPreviewInner.style.width = '300px';
+                  break;
+                case 'A4 Paper':
+                  receiptPreviewInner.style.width = '100%';
+                  receiptPreviewInner.style.maxWidth = '600px';
+                  break;
+                case 'Letter Size':
+                  receiptPreviewInner.style.width = '100%';
+                  receiptPreviewInner.style.maxWidth = '650px';
+                  break;
+                default:
+                  receiptPreviewInner.style.width = '300px';
+              }
+            }
+          });
+        }
+
+        // Optional: Handle font size changes
+        if (fontSizeSelect) {
+          fontSizeSelect.addEventListener('change', function() {
+            const receiptPreviewInner = document.getElementById('receiptPreviewInner');
+            if (receiptPreviewInner) {
+              switch(this.value) {
+                case 'Small':
+                  receiptPreviewInner.style.fontSize = '0.85em';
+                  break;
+                case 'Medium':
+                  receiptPreviewInner.style.fontSize = '1em';
+                  break;
+                case 'Large':
+                  receiptPreviewInner.style.fontSize = '1.15em';
+                  break;
+                default:
+                  receiptPreviewInner.style.fontSize = '1em';
+              }
+            }
+          });
+        }
+      });

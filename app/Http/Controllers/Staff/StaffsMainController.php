@@ -18,6 +18,8 @@ use App\Models\AddCustomer;
 use App\Models\BranchInventory;
 use App\Models\User;
 use App\Models\Branch\Branch;
+use Carbon\Carbon;
+use Illuminate\Pagination\Paginator;
 
 class StaffsMainController extends Controller
 {
@@ -147,8 +149,50 @@ class StaffsMainController extends Controller
             $all_items->push($item);
         }
 
+        // Staff-specific KPIs
+        $staffId = Auth::guard('staff')->id();
 
-        return view('staff.dashboard', compact('categories', 'all_items', 'standard_items', 'variant_items'));
+        $completedBase = CartItem::where('status', 'completed')
+            ->where('business_name', $businessName)
+            ->where('staff_id', $staffId);
+
+        $today = Carbon::today();
+        $startOfMonth = Carbon::now()->startOfMonth();
+        $endOfMonth = Carbon::now()->endOfMonth();
+
+        $completed_sales_today_count = (clone $completedBase)
+            ->whereDate('created_at', $today)
+            ->distinct('receipt_number')->count('receipt_number');
+
+        $completed_sales_month_count = (clone $completedBase)
+            ->whereBetween('created_at', [$startOfMonth, $endOfMonth])
+            ->distinct('receipt_number')->count('receipt_number');
+
+        $completed_sales_today_total = (clone $completedBase)
+            ->whereDate('created_at', $today)
+            ->sum('total');
+
+        $completed_sales_month_total = (clone $completedBase)
+            ->whereBetween('created_at', [$startOfMonth, $endOfMonth])
+            ->sum('total');
+
+        // Saved orders (distinct sessions) for this staff
+        $saved_orders_count = CartItem::where('status', 'saved')
+            ->where('business_name', $businessName)
+            ->where('staff_id', $staffId)
+            ->distinct('session_id')->count('session_id');
+
+        // Customers added by this staff
+        $new_customers_count = AddCustomer::where('business_name', $businessName)
+            ->where('staff_id', $staffId)
+            ->count();
+
+        return view('staff.dashboard', compact(
+            'categories', 'all_items', 'standard_items', 'variant_items',
+            'completed_sales_today_count', 'completed_sales_month_count',
+            'completed_sales_today_total', 'completed_sales_month_total',
+            'saved_orders_count', 'new_customers_count', 'staff'
+        ));
     }
 
 
@@ -278,6 +322,21 @@ class StaffsMainController extends Controller
             $item->item_type = 'variant';
             $all_items->push($item);
         }
+
+        // Paginate the items (12 per page)
+        $perPage = 12;
+        $page = Paginator::resolveCurrentPage();
+        $items = $all_items->forPage($page, $perPage);
+        $all_items = new \Illuminate\Pagination\LengthAwarePaginator(
+            $items,
+            $all_items->count(),
+            $perPage,
+            $page,
+            [
+                'path' => route('staff.sell_product'),
+                'query' => request()->query(),
+            ]
+        );
 
         return view('staff.sell.sell_product', compact('all_items', 'standard_items', 'variant_items', 'categories', 'staff'));
     }

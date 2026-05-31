@@ -23,6 +23,11 @@ class AllItemsController extends Controller
         $manager = Auth::user();
         $businessName = $manager->business_name;
 
+        // Determine plan scope for the manager
+        $activeSubscription = $manager->currentSubscription()->with('subscriptionPlan')->first();
+        $planName = strtolower(trim($activeSubscription->subscriptionPlan->name ?? ''));
+        $isBasicOrFree = in_array($planName, ['basic', 'free']);
+
         // Base query for Standard Items
         $standardQuery = StandardItem::with([
             'supplier',
@@ -108,16 +113,24 @@ class AllItemsController extends Controller
                 return null;
             })->filter()->values();
             $totalAllocated = $branchInventories->sum('allocated_quantity');
-            $generalStock = ($item->current_stock ?? 0) + $totalAllocated; // constant: total ever stocked
-            $generalLeft  = $item->current_stock ?? 0;                     // warehouse remaining after allocations
+            $branchCurrent = $branchInventories->sum('current_quantity');
 
-            // Get the unit object - the 'unit' field contains the unit ID
-            /** @var \App\Models\StandardItem $item */
-            $unitId = $item->getAttribute('unit');
-            $unitObj = $unitId ? Unit::find($unitId) : null;
+            if ($isBasicOrFree) {
+                $openingStock = ($item->opening_stock ?? 0) > 0
+                    ? $item->opening_stock
+                    : (($item->current_stock ?? 0) + $totalAllocated);
+                $currentStock = $branchInventories->count() > 0
+                    ? $branchCurrent
+                    : ($item->current_stock ?? 0);
+                $generalLeft = $currentStock;
+            } else {
+                $openingStock = ($item->current_stock ?? 0) + $totalAllocated;
+                $currentStock = $openingStock;
+                $generalLeft = $item->current_stock ?? 0;
+            }
 
-            // For 'addby' managers, only show items with at least one allocation
             if (!$manager->addby || $branch_inventory_list->count() > 0) {
+                $unit = $item->relationLoaded('unit') ? $item->getRelation('unit') : (Unit::find($item->getAttribute('unit')) ?? null);
                 $allItems->push([
                     'id' => $item->id,
                     'type' => 'standard',
@@ -126,15 +139,16 @@ class AllItemsController extends Controller
                     'barcode' => $item->barcode,
                     'category' => $item->category_name,
                     'supplier' => $item->supplier,
-                    'unit' => $unitObj,
+                    'unit' => $unit,
+                    'unit_abbreviation' => $unit?->abbreviation ?? $item->unit ?? null,
                     'image' => $item->item_image,
                     'cost_price' => $item->cost_price,
                     'selling_price' => $item->selling_price,
                     'profit_margin' => $item->profit_margin,
-                    'current_stock' => $generalStock,
+                    'current_stock' => $currentStock,
                     'general_left' => $generalLeft,
-                    'opening_stock' => $item->opening_stock ?? 0,
-                    'actual_current_stock' => $item->current_stock ?? 0,
+                    'opening_stock' => $openingStock,
+                    'actual_current_stock' => $branchInventories->count() > 0 ? $branchCurrent : ($item->current_stock ?? 0),
                     'low_stock_threshold' => $item->low_stock_threshold,
                     'pricing_tiers' => $item->pricingTiers,
                     'created_at' => $item->created_at,
@@ -163,9 +177,23 @@ class AllItemsController extends Controller
                         return null;
                     })->filter()->values();
                     $totalAllocated = $branchInventories->sum('allocated_quantity');
-                    $generalStock   = ($variant->stock_quantity ?? 0) + $totalAllocated; // constant: total ever stocked
-                    $generalLeft    = $variant->stock_quantity ?? 0;                     // warehouse remaining after allocations
+                    $branchCurrent = $branchInventories->sum('current_quantity');
+
+                    if ($isBasicOrFree) {
+                        $openingStock = ($variant->opening_stock ?? 0) > 0
+                            ? $variant->opening_stock
+                            : (($variant->current_stock ?? 0) + $totalAllocated);
+                        $currentStock = $branchInventories->count() > 0
+                            ? $branchCurrent
+                            : ($variant->current_stock ?? 0);
+                        $generalLeft = $currentStock;
+                    } else {
+                        $openingStock = ($variant->current_stock ?? 0) + $totalAllocated;
+                        $currentStock = $variant->current_stock ?? 0;
+                        $generalLeft = $variant->current_stock ?? 0;
+                    }
                     if (!$manager->addby || $branch_inventory_list->count() > 0) {
+                        $unit = $item->relationLoaded('unit') ? $item->getRelation('unit') : (Unit::find($item->getAttribute('unit')) ?? null);
                         $allItems->push([
                             'id' => $variant->id,
                             'type' => 'product_variant',
@@ -175,15 +203,16 @@ class AllItemsController extends Controller
                             'barcode' => $variant->barcode ?? $item->barcode,
                             'category' => $item->category_name,
                             'supplier' => $item->supplier,
-                            'unit' => $item->unit,
+                            'unit' => $unit,
+                            'unit_abbreviation' => $unit?->abbreviation ?? $item->unit ?? null,
                             'image' => $item->item_image,
                             'cost_price' => $variant->cost_price ?? $variant->manual_cost_price ?? $variant->margin_cost_price ?? $variant->range_cost_price,
                             'selling_price' => $variant->selling_price ?? $variant->calculated_price ?? $variant->final_price,
                             'profit_margin' => $variant->profit_margin ?? $variant->target_margin,
-                            'current_stock' => $generalStock,
+                            'current_stock' => $currentStock,
                             'general_left' => $generalLeft,
-                            'opening_stock' => $variant->opening_stock ?? 0,
-                            'actual_current_stock' => $variant->stock_quantity ?? 0,
+                            'opening_stock' => $openingStock,
+                            'actual_current_stock' => $currentStock,
                             'low_stock_threshold' => $variant->low_stock_threshold,
                             'variant_name' => $variant->variant_name,
                             'variant_options' => $variant->variant_options,
@@ -197,6 +226,7 @@ class AllItemsController extends Controller
                 }
             } else {
                 if (!$manager->addby) {
+                    $unit = $item->relationLoaded('unit') ? $item->getRelation('unit') : (Unit::find($item->getAttribute('unit')) ?? null);
                     $allItems->push([
                         'id' => $item->id,
                         'type' => 'variant',
@@ -205,12 +235,17 @@ class AllItemsController extends Controller
                         'barcode' => $item->barcode,
                         'category' => $item->category_name,
                         'supplier' => $item->supplier,
-                        'unit' => $item->unit,
+                        'unit' => $unit,
+                        'unit_abbreviation' => $unit?->abbreviation ?? $item->unit ?? null,
                         'image' => $item->item_image,
                         'variant_sets' => $item->variant_sets,
                         'variants' => $item->variants,
-                        'current_stock' => 0,
-                        'general_left' => 0,
+                        'current_stock' => $item->variants->sum(function ($variant) {
+                            return $variant->current_stock ?? $variant->opening_stock ?? $variant->current_stock ?? 0;
+                        }),
+                        'general_left' => $item->variants->sum(function ($variant) {
+                            return $variant->current_stock ?? $variant->opening_stock ?? $variant->current_stock ?? 0;
+                        }),
                         'created_at' => $item->created_at,
                         'data' => $item,
                         'branch_inventory_list' => collect(),
@@ -369,7 +404,7 @@ class AllItemsController extends Controller
                         'cost_price' => $variant->cost_price ?? $variant->manual_cost_price ?? $variant->margin_cost_price ?? $variant->range_cost_price,
                         'selling_price' => $variant->selling_price ?? $variant->calculated_price ?? $variant->final_price,
                         'profit_margin' => $variant->profit_margin ?? $variant->target_margin,
-                        'current_stock' => $variant->stock_quantity,
+                        'current_stock' => $variant->current_stock ?? $variant->opening_stock ?? $variant->current_stock ?? 0,
                         'low_stock_threshold' => $variant->low_stock_threshold,
                         'supplier' => $variant->variantItem->supplier,
                         'pricing_tiers' => $variant->pricingTiers,

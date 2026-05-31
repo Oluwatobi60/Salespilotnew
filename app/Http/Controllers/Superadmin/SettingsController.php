@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class SettingsController extends Controller
 {
@@ -17,6 +19,9 @@ class SettingsController extends Controller
      */
     public function index()
     {
+        // Clear settings cache to ensure fresh data
+        AppSetting::clearCache();
+
         $groups = [
             'general' => AppSetting::getByGroup('general'),
             'email' => AppSetting::getByGroup('email'),
@@ -26,7 +31,11 @@ class SettingsController extends Controller
             'security' => AppSetting::getByGroup('security'),
         ];
 
-        return view('superadmin.settings.index', compact('groups'));
+        return response()
+            ->view('superadmin.settings.index', compact('groups'))
+            ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', '0');
     }
 
     /**
@@ -35,46 +44,92 @@ class SettingsController extends Controller
     public function update(Request $request)
     {
         $validated = $request->validate([
-            'settings' => 'required|array',
+            'settings' => 'nullable|array',
             'settings.*' => 'nullable',
         ]);
 
-        foreach ($validated['settings'] as $key => $value) {
-            $setting = AppSetting::where('key', $key)->first();
-            
-            if (!$setting) {
-                continue;
+        // Get submitted settings array
+        $submittedSettings = $request->input('settings', []);
+
+        // Log the request data for debugging
+        Log::info('Settings Update Request', [
+            'submitted_settings' => $submittedSettings,
+            'has_auto_backup_in_array' => isset($submittedSettings['auto_backup_enabled']),
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            // Get all boolean settings to handle unchecked checkboxes
+            $booleanSettings = AppSetting::where('type', 'boolean')->get();
+
+            // Update all boolean settings (unchecked checkboxes won't be in the request)
+            foreach ($booleanSettings as $setting) {
+                // Check if the key exists in the submitted settings array
+                $isChecked = isset($submittedSettings[$setting->key]);
+
+                Log::info("Updating boolean setting: {$setting->key}", [
+                    'is_checked' => $isChecked,
+                    'old_value' => $setting->value,
+                    'new_value' => $isChecked ? '1' : '0',
+                ]);
+
+                // Update directly in database to avoid cache issues
+                $setting->value = $isChecked ? '1' : '0';
+                $setting->save();
+
+                // Clear cache immediately
+                Cache::forget("app_setting_{$setting->key}");
             }
 
-            // Handle file uploads
-            if ($setting->type === 'file' && $request->hasFile("settings.{$key}")) {
-                $file = $request->file("settings.{$key}");
-                $path = $file->store('settings', 'public');
-                $value = $path;
+            // Process all other submitted settings
+            if (!empty($submittedSettings)) {
+                foreach ($submittedSettings as $key => $value) {
+                    $setting = AppSetting::where('key', $key)->first();
 
-                // Delete old file if exists
-                if ($setting->value && Storage::disk('public')->exists($setting->value)) {
-                    Storage::disk('public')->delete($setting->value);
+                    if (!$setting || $setting->type === 'boolean') {
+                        // Skip if not found or already processed as boolean
+                        continue;
+                    }
+
+                    // Handle file uploads
+                    if ($setting->type === 'file' && $request->hasFile("settings.{$key}")) {
+                        $file = $request->file("settings.{$key}");
+                        $path = $file->store('settings', 'public');
+                        $value = $path;
+
+                        // Delete old file if exists
+                        if ($setting->value && Storage::disk('public')->exists($setting->value)) {
+                            Storage::disk('public')->delete($setting->value);
+                        }
+                    }
+
+                    // Update the setting
+                    $setting->value = $value;
+                    $setting->save();
+
+                    // Clear cache for this setting
+                    Cache::forget("app_setting_{$key}");
                 }
             }
 
-            // Handle boolean values
-            if ($setting->type === 'boolean') {
-                $value = $request->has("settings.{$key}") ? '1' : '0';
-            }
+            DB::commit();
 
-            $setting->value = $value;
-            $setting->save();
+            // Clear all settings cache after commit
+            Cache::flush();
+
+            // Clear application cache for immediate effect
+            Artisan::call('config:clear');
+
+            Log::info('Settings updated successfully');
+
+            return back()->with('success', 'Settings updated successfully!');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Settings update failed', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            return back()->with('error', 'Failed to update settings: ' . $e->getMessage());
         }
-
-        // Clear all settings cache
-        AppSetting::clearCache();
-
-        // Clear application cache for immediate effect
-        Artisan::call('config:clear');
-        Cache::flush();
-
-        return back()->with('success', 'Settings updated successfully!');
     }
 
     /**
@@ -130,16 +185,87 @@ class SettingsController extends Controller
     }
 
     /**
+     * Update individual toggle setting via AJAX
+     */
+    public function updateToggle(Request $request)
+    {
+        $validated = $request->validate([
+            'key' => 'required|string',
+            'value' => 'required|in:0,1',
+        ]);
+
+        try {
+            $setting = AppSetting::where('key', $validated['key'])->first();
+
+            if (!$setting) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Setting not found'
+                ], 404);
+            }
+
+            if ($setting->type !== 'boolean') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This setting is not a boolean type'
+                ], 400);
+            }
+
+            // Update the setting
+            $setting->value = $validated['value'];
+            $setting->save();
+
+            // Clear cache for this setting
+            Cache::forget("app_setting_{$validated['key']}");
+
+            // Clear application config cache
+            Artisan::call('config:clear');
+
+            Log::info("Toggle setting updated", [
+                'key' => $validated['key'],
+                'value' => $validated['value'],
+                'label' => $setting->label
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => $setting->label . ' updated successfully!'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Toggle update failed', [
+                'key' => $validated['key'],
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update setting: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Run database backup
      */
     public function runBackup()
     {
         try {
-            Artisan::call('backup:run');
-            return response()->json([
-                'success' => true,
-                'message' => 'Database backup completed successfully!'
-            ]);
+            // Run the custom backup command
+            Artisan::call('backup:database');
+            $output = Artisan::output();
+
+            // Check if backup was successful
+            if (str_contains($output, 'successfully')) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Database backup completed successfully!'
+                ]);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Backup failed. Please check server logs.'
+                ], 500);
+            }
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,

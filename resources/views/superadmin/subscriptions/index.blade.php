@@ -1,6 +1,5 @@
 @extends('superadmin.layouts.layout')
-
-@section('superadmin_page_title')Subscription Renewals@endsection
+@section('superadmin_page_title', 'Subscription Renewals')
 
 @section('superadmin_page_styles')
 <style>
@@ -157,7 +156,15 @@
                             {{ $sub->subscriptionPlan->name ?? '—' }}
                         </span>
                     </td>
-                    <td>{{ $sub->duration_months }}mo</td>
+                    <td>
+                        @if($sub->duration_months > 0)
+                            {{ $sub->duration_months }}mo
+                        @elseif($sub->subscriptionPlan && $sub->subscriptionPlan->trial_days > 0)
+                            {{ $sub->subscriptionPlan->trial_days }} days
+                        @else
+                            <span class="text-muted">—</span>
+                        @endif
+                    </td>
                     <td>{{ $sub->start_date?->format('d M Y') }}</td>
                     <td>
                         {{ $sub->end_date?->format('d M Y') }}

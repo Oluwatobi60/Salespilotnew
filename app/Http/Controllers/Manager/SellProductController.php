@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use App\Models\User;
 use App\Models\Staffs;
+use Illuminate\Pagination\Paginator;
 
 class SellProductController extends Controller
 {
@@ -98,7 +99,7 @@ class SellProductController extends Controller
                         ->where('item_id', $variant->id)
                         ->first();
                     if ($branchStock) {
-                        $variant->stock_quantity = $branchStock->current_quantity;
+                        $variant->current_stock = $branchStock->current_quantity;
                         $variant->branch_inventory_id = $branchStock->id;
                     }
                     // If variant was added by manager but not in branch_inventory yet, keep original stock
@@ -144,6 +145,21 @@ class SellProductController extends Controller
             $item->item_type = 'variant';
             $all_items->push($item);
         }
+
+        // Paginate the items (12 per page)
+        $perPage = 12;
+        $page = Paginator::resolveCurrentPage();
+        $items = $all_items->forPage($page, $perPage);
+        $all_items = new \Illuminate\Pagination\LengthAwarePaginator(
+            $items,
+            $all_items->count(),
+            $perPage,
+            $page,
+            [
+                'path' => route('manager.sell_product'),
+                'query' => request()->query(),
+            ]
+        );
 
         return view('manager.sell.sell_product', compact('all_items', 'standard_items', 'variant_items', 'categories', 'manager'));
     }
@@ -364,16 +380,16 @@ class SellProductController extends Controller
                                 ], 400);
                             }
 
-                            if ($productVariant->stock_quantity < $item['quantity']) {
+                                if ($productVariant->current_stock < $item['quantity']) {
                                 return response()->json([
                                     'success' => false,
                                     'message' => "Insufficient stock for variant: {$item['name']}"
                                 ], 400);
                             }
 
-                            $productVariant->stock_quantity -= $item['quantity'];
-                            if ($productVariant->stock_quantity < 0) {
-                                $productVariant->stock_quantity = 0;
+                            $productVariant->current_stock -= $item['quantity'];
+                            if ($productVariant->current_stock < 0) {
+                                $productVariant->current_stock = 0;
                             }
                             $productVariant->save();
                         }
@@ -422,9 +438,9 @@ class SellProductController extends Controller
                     } elseif ($itemType === 'variant') {
                         $productVariant = ProductVariant::find($item['id']);
                         if ($productVariant) {
-                            $productVariant->stock_quantity -= $item['quantity'];
-                            if ($productVariant->stock_quantity < 0) {
-                                $productVariant->stock_quantity = 0;
+                            $productVariant->current_stock -= $item['quantity'];
+                            if ($productVariant->current_stock < 0) {
+                                $productVariant->current_stock = 0;
                             }
                             $productVariant->save();
                         }

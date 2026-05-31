@@ -99,6 +99,8 @@ class StandardItemController extends Controller
                         'allocated_quantity' => $validatedData['opening_stock'] ?? 0,
                         'current_quantity' => $validatedData['opening_stock'] ?? 0,
                         'sold_quantity' => 0,
+                        'allocated_by' => $manager->id,
+                        'allocated_at' => now(),
                     ]);
                 }
             }

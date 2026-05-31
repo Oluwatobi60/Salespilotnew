@@ -1098,16 +1098,22 @@ document.addEventListener('DOMContentLoaded', function() {
         // Show discount and discounted total if applied
         let discountAmount = 0;
         if (window.selectedDiscount) {
-          discountAmount = parseFloat(window.selectedDiscount.discount_rate) || 0;
+          const discountRate = parseFloat(window.selectedDiscount.discount_rate) || 0;
+          if (window.selectedDiscount.type === 'percentage') {
+            discountAmount = (subtotal * discountRate) / 100;
+          } else {
+            discountAmount = discountRate;
+          }
         }
         const receiptDiscount = document.getElementById('receiptDiscount');
+        const receiptDiscountRow = document.getElementById('receiptDiscountRow');
         if (receiptDiscount) {
           if (discountAmount > 0) {
             receiptDiscount.textContent = '-₦' + discountAmount.toLocaleString();
-            receiptDiscount.style.display = '';
+            if (receiptDiscountRow) receiptDiscountRow.style.display = '';
           } else {
             receiptDiscount.textContent = '';
-            receiptDiscount.style.display = 'none';
+            if (receiptDiscountRow) receiptDiscountRow.style.display = 'none';
           }
         }
         const discountedTotal = subtotal - discountAmount;
@@ -1451,17 +1457,23 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Discount logic
         if (window.selectedDiscount && cartTotalElement) {
-          let discountAmount = parseFloat(window.selectedDiscount.discount_rate);
+          let discountAmount = 0;
+          const discountRate = parseFloat(window.selectedDiscount.discount_rate) || 0;
+          if (window.selectedDiscount.type === 'percentage') {
+            discountAmount = (total * discountRate) / 100;
+          } else {
+            discountAmount = discountRate;
+          }
           let newTotal = total - discountAmount;
           if (newTotal < 0) newTotal = 0;
           cartTotalElement.textContent = formatCurrency(newTotal);
-          // Optionally show discount info somewhere
+          // Show discount info with cancel action
           let discountInfo = document.getElementById('cartDiscountInfo');
           if (!discountInfo) {
             discountInfo = document.createElement('div');
             discountInfo.id = 'cartDiscountInfo';
-            discountInfo.className = 'text-success fw-bold';
-            cartTotalElement.parentNode.insertBefore(discountInfo, cartTotalElement);
+            discountInfo.className = 'cart-discount-wrapper';
+            cartTotalElement.parentNode.parentNode.insertBefore(discountInfo, cartTotalElement.parentNode.nextSibling);
           }
           let discountLabel = '';
           if (window.selectedDiscount.type === 'percentage') {
@@ -1469,10 +1481,26 @@ document.addEventListener('DOMContentLoaded', function() {
           } else {
             discountLabel = `<span style='color:#d32f2f;'>-${formatCurrency(discountAmount)}</span>`;
           }
-          discountInfo.innerHTML = `<span style="background:#e0f7fa;color:#00796b;padding:4px 10px;border-radius:16px;font-weight:bold;display:inline-block; font-size:13px">
-            <i class='bi bi-tag-fill' style='color:#009688;margin-right:4px;'></i>
-            Discount: ${discountLabel} <span style='color:#1976d2;'>(${window.selectedDiscount.discount_name})</span>
-          </span>`;
+          discountInfo.innerHTML = `
+            <div class="cart-discount-info">
+              <span class="cart-discount-badge">
+                <i class='bi bi-tag-fill'></i>
+                Discount: ${discountLabel} <span style='color:#1976d2;'>(${window.selectedDiscount.discount_name})</span>
+              </span>
+              <button id="clearCartDiscountBtn" type="button" class="cart-discount-cancel-btn">Cancel</button>
+            </div>
+          `;
+          const clearBtn = document.getElementById('clearCartDiscountBtn');
+          if (clearBtn) {
+            clearBtn.addEventListener('click', function() {
+              window.selectedDiscount = null;
+              updateCartUI();
+              if (discountSelect) {
+                discountSelect.value = '';
+                if (applyDiscountBtn) applyDiscountBtn.disabled = true;
+              }
+            });
+          }
         } else {
           // Remove discount info if not applied
           let discountInfo = document.getElementById('cartDiscountInfo');

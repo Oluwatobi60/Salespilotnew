@@ -2,7 +2,7 @@
 
 /**
  * Settings Helper Functions
- * 
+ *
  * These functions provide easy access to application settings
  * configured through the superadmin panel.
  */
@@ -35,7 +35,7 @@ if (!function_exists('settings')) {
         if ($group) {
             return AppSetting::getByGroup($group);
         }
-        
+
         return AppSetting::all();
     }
 }
@@ -188,6 +188,201 @@ if (!function_exists('currency_code')) {
     }
 }
 
+if (!function_exists('default_currency')) {
+    /**
+     * Get default system currency
+     *
+     * @return string
+     */
+    function default_currency(): string
+    {
+        return setting('default_currency', 'NGN');
+    }
+}
+
+if (!function_exists('default_timezone')) {
+    /**
+     * Get default system timezone
+     *
+     * @return string
+     */
+    function default_timezone(): string
+    {
+        return setting('default_timezone', 'Africa/Lagos');
+    }
+}
+
+if (!function_exists('system_date_format')) {
+    /**
+     * Get system date format
+     *
+     * @return string
+     */
+    function system_date_format(): string
+    {
+        return setting('date_format', 'Y-m-d');
+    }
+}
+
+if (!function_exists('system_time_format')) {
+    /**
+     * Get system time format
+     *
+     * @return string
+     */
+    function system_time_format(): string
+    {
+        return setting('time_format', 'H:i:s');
+    }
+}
+
+if (!function_exists('system_datetime_format')) {
+    /**
+     * Get system datetime format
+     *
+     * @return string
+     */
+    function system_datetime_format(): string
+    {
+        return system_date_format() . ' ' . system_time_format();
+    }
+}
+
+if (!function_exists('items_per_page')) {
+    /**
+     * Get default items per page for pagination
+     *
+     * @return int
+     */
+    function items_per_page(): int
+    {
+        return (int) setting('items_per_page', 10);
+    }
+}
+
+if (!function_exists('session_timeout')) {
+    /**
+     * Get session timeout in minutes
+     *
+     * @return int
+     */
+    function session_timeout(): int
+    {
+        return (int) setting('session_timeout', 120);
+    }
+}
+
+if (!function_exists('max_upload_size')) {
+    /**
+     * Get maximum upload size in KB
+     *
+     * @return int
+     */
+    function max_upload_size(): int
+    {
+        return (int) setting('max_upload_size', 2048);
+    }
+}
+
+if (!function_exists('max_upload_size_mb')) {
+    /**
+     * Get maximum upload size in MB
+     *
+     * @return float
+     */
+    function max_upload_size_mb(): float
+    {
+        return max_upload_size() / 1024;
+    }
+}
+
+if (!function_exists('allowed_file_types')) {
+    /**
+     * Get allowed file types as array
+     *
+     * @return array
+     */
+    function allowed_file_types(): array
+    {
+        $types = setting('allowed_file_types', 'jpg,jpeg,png,pdf');
+        return array_map('trim', explode(',', $types));
+    }
+}
+
+if (!function_exists('format_date')) {
+    /**
+     * Format a date according to system settings
+     *
+     * @param mixed $date Date string or Carbon instance
+     * @return string
+     */
+    function format_date($date): string
+    {
+        if (!$date) return '';
+
+        try {
+            $carbon = $date instanceof \Carbon\Carbon ? $date : \Carbon\Carbon::parse($date);
+            return $carbon->format(system_date_format());
+        } catch (\Exception $e) {
+            return (string) $date;
+        }
+    }
+}
+
+if (!function_exists('format_time')) {
+    /**
+     * Format a time according to system settings
+     *
+     * @param mixed $time Time string or Carbon instance
+     * @return string
+     */
+    function format_time($time): string
+    {
+        if (!$time) return '';
+
+        try {
+            $carbon = $time instanceof \Carbon\Carbon ? $time : \Carbon\Carbon::parse($time);
+            return $carbon->format(system_time_format());
+        } catch (\Exception $e) {
+            return (string) $time;
+        }
+    }
+}
+
+if (!function_exists('format_datetime')) {
+    /**
+     * Format a datetime according to system settings
+     *
+     * @param mixed $datetime Datetime string or Carbon instance
+     * @return string
+     */
+    function format_datetime($datetime): string
+    {
+        if (!$datetime) return '';
+
+        try {
+            $carbon = $datetime instanceof \Carbon\Carbon ? $datetime : \Carbon\Carbon::parse($datetime);
+            return $carbon->format(system_datetime_format());
+        } catch (\Exception $e) {
+            return (string) $datetime;
+        }
+    }
+}
+
+if (!function_exists('is_allowed_file')) {
+    /**
+     * Check if a file extension is allowed
+     *
+     * @param string $filename Filename or extension
+     * @return bool
+     */
+    function is_allowed_file(string $filename): bool
+    {
+        $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+        return in_array($extension, allowed_file_types());
+    }
+}
+
 if (!function_exists('user_has_feature')) {
     /**
      * Check if the authenticated user's subscription plan has a specific feature
@@ -202,31 +397,31 @@ if (!function_exists('user_has_feature')) {
         if (!$user) {
             $user = auth()->user();
         }
-        
+
         if (!$user) {
             return false;
         }
-        
+
         // If this is a staff user, get the parent user's subscription
         if ($user instanceof \App\Models\Staffs) {
             // Staff users inherit features from their manager/business creator
             $parentUser = \App\Models\User::where('email', $user->manager_email)->first();
-            
+
             if (!$parentUser) {
                 return false;
             }
-            
+
             // Get parent user's subscription
             $subscription = $parentUser->currentSubscription()->first();
         } else {
             // Regular user - get their own subscription
             $subscription = $user->currentSubscription()->first();
         }
-        
+
         if (!$subscription || !$subscription->subscriptionPlan) {
             return false;
         }
-        
+
         // Check if plan has the feature
         return $subscription->subscriptionPlan->hasFeature($featureSlug);
     }
@@ -245,11 +440,11 @@ if (!function_exists('plan_has_feature')) {
         if (is_numeric($plan)) {
             $plan = \App\Models\SubscriptionPlan::find($plan);
         }
-        
+
         if (!$plan) {
             return false;
         }
-        
+
         return $plan->hasFeature($featureSlug);
     }
 }
@@ -267,18 +462,18 @@ if (!function_exists('user_subscription_features')) {
         if (!$user) {
             $user = auth()->user();
         }
-        
+
         if (!$user) {
             return [];
         }
-        
+
         // Get user's active subscription
         $subscription = $user->currentSubscription()->first();
-        
+
         if (!$subscription || !$subscription->subscriptionPlan) {
             return [];
         }
-        
+
         return $subscription->subscriptionPlan->features ?? [];
     }
 }

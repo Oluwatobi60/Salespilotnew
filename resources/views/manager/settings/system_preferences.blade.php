@@ -36,63 +36,166 @@ System Preferences
       <!-- Personal & Business Information -->
           <div class="tab-pane fade show active" id="business" role="tabpanel" aria-labelledby="business-tab">
 
-            <div class="card mb-4 p-3">
-                  <h5 class="mb-3" style="color:#007bff;font-weight:600;">Business Information</h5>
-                <div class="row">
+            @if(session('success'))
+              <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="bi bi-check-circle me-2"></i>{{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+            @endif
 
-                    <div class="row">
-                      <div class="col-md-6">
-                        <div class="form-group mb-3">
-                          <label class="form-label">Business Name <span class="text-danger">*</span></label>
-                          <input type="text" class="form-control" placeholder="Enter business name" value="SalesPilot">
+            @if(session('error'))
+              <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="bi bi-exclamation-triangle me-2"></i>{{ session('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+            @endif
+
+            <form action="{{ route('manager.system.preferences.update') }}" method="POST" enctype="multipart/form-data">
+              @csrf
+              <div class="card mb-4 p-3">
+                <h5 class="mb-3" style="color:#007bff;font-weight:600;">Business Information</h5>
+
+                <!-- Business Logo Upload -->
+                <div class="row mb-3">
+                  <div class="col-md-12">
+                    <label class="form-label">Business Logo</label>
+                    <div class="d-flex align-items-center gap-3">
+                      @if($businessOwner->business_logo)
+                        <img src="{{ asset('business_logos/' . $businessOwner->business_logo) }}"
+                             alt="Business Logo"
+                             class="rounded"
+                             style="width: 100px; height: 100px; object-fit: cover;">
+                      @else
+                        <div class="bg-light rounded d-flex align-items-center justify-content-center"
+                             style="width: 100px; height: 100px;">
+                          <i class="bi bi-building" style="font-size: 2rem; color: #6c757d;"></i>
                         </div>
+                      @endif
+                      @if($isBusinessCreator)
+                        <div class="flex-grow-1">
+                          <input type="file" class="form-control @error('business_logo') is-invalid @enderror"
+                                 name="business_logo"
+                                 accept="image/jpeg,image/jpg,image/png,image/gif">
+                          <small class="text-muted">Recommended: Square image, max 2MB (JPG, PNG, GIF)</small>
+                          @error('business_logo')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                          @enderror
                         </div>
-                        <div class="col-md-6">
-                          <div class="form-group mb-3 pe-md-3">
-                            <label class="form-label">Business Email <span class="text-danger">*</span></label>
-                            <input type="email" class="form-control" placeholder="Enter business email" value="info@salespilot.com">
-                          </div>
+                      @endif
+                    </div>
+                  </div>
+                </div>
+
+                <div class="row">
+                  <div class="row">
+                    <div class="col-md-6">
+                      <div class="form-group mb-3">
+                        <label class="form-label">Business Name <span class="text-danger">*</span></label>
+                        <input type="text"
+                               class="form-control @error('business_name') is-invalid @enderror"
+                               name="business_name"
+                               placeholder="Enter business name"
+                               value="{{ old('business_name', $businessOwner->business_name) }}"
+                               {{ !$isBusinessCreator ? 'readonly' : '' }}>
+                        @error('business_name')
+                          <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
                       </div>
                     </div>
-
-                    <div class="row">
-                        <div class="col-md-6">
-                          <div class="form-group mb-3 ps-md-3">
-                            <label class="form-label">Business Phone</label>
-                            <input type="tel" class="form-control" placeholder="Enter phone number" value="+1 234 567 8900">
-                          </div>
-                        </div>
-                        <div class="col-md-6">
-                        <div class="form-group mb-3">
-                          <label class="form-label">Business Address</label>
-                          <textarea class="form-control" rows="3" placeholder="Enter business address">123 Business Street, City, State 12345</textarea>
-                        </div>
-                        </div>
+                    <div class="col-md-6">
+                      <div class="form-group mb-3">
+                        <label class="form-label">Business Email</label>
+                        <input type="email"
+                               class="form-control @error('business_email') is-invalid @enderror"
+                               name="business_email"
+                               placeholder="Enter business email"
+                               value="{{ old('business_email', $businessOwner->business_email) }}"
+                               {{ !$isBusinessCreator ? 'readonly' : '' }}>
+                        @error('business_email')
+                          <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                      </div>
                     </div>
+                  </div>
 
-                    <div class="row">
-                        <div class="col-md-6">
-                          <div class="form-group mb-3">
-                            <label class="form-label">Business Registration Number (CAC)</label>
-                            <input type="text" class="form-control" placeholder="Enter CAC number">
-                          </div>
-                        </div>
-                        <div class="col-md-6">
-                          <div class="form-group mb-3">
-                            <label class="form-label">Tax Identification Number (TIN)</label>
-                            <input type="text" class="form-control" placeholder="Enter TIN number">
-                          </div>
-                        </div>
+                  <div class="row">
+                    <div class="col-md-6">
+                      <div class="form-group mb-3">
+                        <label class="form-label">Business Phone</label>
+                        <input type="tel"
+                               class="form-control @error('phone_number') is-invalid @enderror"
+                               name="phone_number"
+                               placeholder="Enter phone number"
+                               value="{{ old('phone_number', $businessOwner->phone_number) }}"
+                               {{ !$isBusinessCreator ? 'readonly' : '' }}>
+                        @error('phone_number')
+                          <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                      </div>
                     </div>
+                    <div class="col-md-6">
+                      <div class="form-group mb-3">
+                        <label class="form-label">Business Address</label>
+                        <textarea class="form-control @error('address') is-invalid @enderror"
+                                  name="address"
+                                  rows="3"
+                                  placeholder="Enter business address"
+                                  {{ !$isBusinessCreator ? 'readonly' : '' }}>{{ old('address', $businessOwner->address) }}</textarea>
+                        @error('address')
+                          <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                      </div>
+                    </div>
+                  </div>
 
-
+                  <div class="row">
+                    <div class="col-md-6">
+                      <div class="form-group mb-3">
+                        <label class="form-label">Business Registration Number (CAC)</label>
+                        <input type="text"
+                               class="form-control @error('business_cac') is-invalid @enderror"
+                               name="business_cac"
+                               placeholder="Enter CAC number"
+                               value="{{ old('business_cac', $businessOwner->business_cac) }}"
+                               {{ !$isBusinessCreator ? 'readonly' : '' }}>
+                        @error('business_cac')
+                          <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="form-group mb-3">
+                        <label class="form-label">Tax Identification Number (TIN)</label>
+                        <input type="text"
+                               class="form-control @error('business_tin') is-invalid @enderror"
+                               name="business_tin"
+                               placeholder="Enter TIN number"
+                               value="{{ old('business_tin', $businessOwner->business_tin) }}"
+                               {{ !$isBusinessCreator ? 'readonly' : '' }}>
+                        @error('business_tin')
+                          <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                      </div>
+                    </div>
+                  </div>
                 </div>
-            </div>
-
-              <div class="mt-3">
-                <button type="button" class="btn btn-primary me-2">Save Changes</button>
-                <button type="button" class="btn btn-light">Reset</button>
               </div>
+
+              @if($isBusinessCreator)
+                <div class="mt-3">
+                  <button type="submit" class="btn btn-primary me-2">
+                    <i class="bi bi-check-circle me-1"></i>Save Changes
+                  </button>
+                  <button type="reset" class="btn btn-light">
+                    <i class="bi bi-arrow-counterclockwise me-1"></i>Reset
+                  </button>
+                </div>
+              @else
+                <div class="alert alert-info">
+                  <i class="bi bi-info-circle me-2"></i>Only business owner can update business information.
+                </div>
+              @endif
+            </form>
           </div>
 
             <!-- Subscriptions -->
@@ -694,146 +797,255 @@ System Preferences
   <div class="tab-pane fade" id="receipt" role="tabpanel" aria-labelledby="receipt-tab">
     <div class="card mb-4 p-3">
       <h4 class="mb-3" style="color:#007bff;font-weight:600;">Receipt Settings</h4>
-      <div class="row">
-        <!-- Left: Settings Form Container -->
-        <div class="col-md-6" id="receiptSettingsContainer">
-          <h5 class="mb-3">Receipt Header</h5>
-          <div class="form-group mb-3">
-            <label class="form-label">Receipt Title</label>
-            <input type="text" class="form-control" id="receiptTitleInput" value="SALES RECEIPT" placeholder="Enter receipt title">
-          </div>
-          <div class="form-group mb-3">
-            <label class="form-label">Header Text</label>
-            <textarea class="form-control" id="headerTextInput" rows="3" placeholder="Additional header information">Thank you for shopping with us!</textarea>
-          </div>
-          <div class="form-group mb-3">
-            <label class="form-label">Footer Text</label>
-            <textarea class="form-control" id="footerTextInput" rows="3" placeholder="Footer message">Visit us again soon!</textarea>
+
+      <form action="{{ route('manager.receipt.settings.update') }}" method="POST" id="receiptSettingsForm">
+        @csrf
+        <div class="row">
+          <!-- Left: Settings Form Container -->
+          <div class="col-md-6" id="receiptSettingsContainer">
+            <h5 class="mb-3">Receipt Header</h5>
+            <div class="form-group mb-3">
+              <label class="form-label">Receipt Title</label>
+              <input type="text"
+                     class="form-control @error('receipt_title') is-invalid @enderror"
+                     name="receipt_title"
+                     id="receiptTitleInput"
+                     value="{{ old('receipt_title', $receiptSettings->receipt_title) }}"
+                     placeholder="Enter receipt title"
+                     {{ !$isBusinessCreator ? 'readonly' : '' }}>
+              @error('receipt_title')
+                <div class="invalid-feedback">{{ $message }}</div>
+              @enderror
+            </div>
+            <div class="form-group mb-3">
+              <label class="form-label">Header Text</label>
+              <textarea class="form-control @error('header_text') is-invalid @enderror"
+                        name="header_text"
+                        id="headerTextInput"
+                        rows="3"
+                        placeholder="Additional header information"
+                        {{ !$isBusinessCreator ? 'readonly' : '' }}>{{ old('header_text', $receiptSettings->header_text) }}</textarea>
+              @error('header_text')
+                <div class="invalid-feedback">{{ $message }}</div>
+              @enderror
+            </div>
+            <div class="form-group mb-3">
+              <label class="form-label">Footer Text</label>
+              <textarea class="form-control @error('footer_text') is-invalid @enderror"
+                        name="footer_text"
+                        id="footerTextInput"
+                        rows="3"
+                        placeholder="Footer message"
+                        {{ !$isBusinessCreator ? 'readonly' : '' }}>{{ old('footer_text', $receiptSettings->footer_text) }}</textarea>
+              @error('footer_text')
+                <div class="invalid-feedback">{{ $message }}</div>
+              @enderror
+            </div>
+
+            <h5 class="mb-3 mt-4">Receipt Format</h5>
+            <div class="form-group mb-3">
+              <label class="form-label">Paper Size</label>
+              <select class="form-control @error('paper_size') is-invalid @enderror"
+                      name="paper_size"
+                      id="paperSizeSelect"
+                      {{ !$isBusinessCreator ? 'disabled' : '' }}>
+                <option value="80mm Thermal" {{ $receiptSettings->paper_size == '80mm Thermal' ? 'selected' : '' }}>80mm Thermal</option>
+                <option value="58mm Thermal" {{ $receiptSettings->paper_size == '58mm Thermal' ? 'selected' : '' }}>58mm Thermal</option>
+                <option value="A4 Paper" {{ $receiptSettings->paper_size == 'A4 Paper' ? 'selected' : '' }}>A4 Paper</option>
+                <option value="Letter Size" {{ $receiptSettings->paper_size == 'Letter Size' ? 'selected' : '' }}>Letter Size</option>
+              </select>
+              @error('paper_size')
+                <div class="invalid-feedback">{{ $message }}</div>
+              @enderror
+            </div>
+            <div class="form-group mb-3">
+              <label class="form-label">Font Size</label>
+              <select class="form-control @error('font_size') is-invalid @enderror"
+                      name="font_size"
+                      id="fontSizeSelect"
+                      {{ !$isBusinessCreator ? 'disabled' : '' }}>
+                <option value="Small" {{ $receiptSettings->font_size == 'Small' ? 'selected' : '' }}>Small</option>
+                <option value="Medium" {{ $receiptSettings->font_size == 'Medium' ? 'selected' : '' }}>Medium</option>
+                <option value="Large" {{ $receiptSettings->font_size == 'Large' ? 'selected' : '' }}>Large</option>
+              </select>
+              @error('font_size')
+                <div class="invalid-feedback">{{ $message }}</div>
+              @enderror
+            </div>
+
+            <h5 class="mb-3 mt-4">Receipt Information</h5>
+            <div class="form-check mb-2">
+              <input class="form-check-input"
+                     type="checkbox"
+                     name="show_invoice_number"
+                     id="showInvoiceNumber"
+                     data-preview="receiptInvoiceNumberPreview"
+                     data-display="flex"
+                     {{ $receiptSettings->show_invoice_number ? 'checked' : '' }}
+                     {{ !$isBusinessCreator ? 'disabled' : '' }}>
+              <label class="form-check-label" for="showInvoiceNumber">Show invoice number</label>
+            </div>
+            <div class="form-check mb-2">
+              <input class="form-check-input"
+                     type="checkbox"
+                     name="show_date"
+                     id="showDate"
+                     data-preview="receiptDatePreview"
+                     data-display="flex"
+                     {{ $receiptSettings->show_date ? 'checked' : '' }}
+                     {{ !$isBusinessCreator ? 'disabled' : '' }}>
+              <label class="form-check-label" for="showDate">Show date</label>
+            </div>
+            <div class="form-check mb-3">
+              <input class="form-check-input"
+                     type="checkbox"
+                     name="show_cashier"
+                     id="showCashier"
+                     data-preview="receiptCashierPreview"
+                     data-display="flex"
+                     {{ $receiptSettings->show_cashier ? 'checked' : '' }}
+                     {{ !$isBusinessCreator ? 'disabled' : '' }}>
+              <label class="form-check-label" for="showCashier">Show cashier name</label>
+            </div>
+
+            <div class="form-check mb-2">
+              <input class="form-check-input"
+                     type="checkbox"
+                     name="show_logo"
+                     id="showLogo"
+                     data-preview="receiptLogoPreview"
+                     data-display="block"
+                     {{ $receiptSettings->show_logo ? 'checked' : '' }}
+                     {{ !$isBusinessCreator ? 'disabled' : '' }}>
+              <label class="form-check-label" for="showLogo">Show business logo on receipt</label>
+            </div>
+            <div class="form-check mb-3">
+              <input class="form-check-input"
+                     type="checkbox"
+                     name="show_barcode"
+                     id="showBarcode"
+                     data-preview="receiptBarcodePreview,receiptBarcodeSeparator"
+                     data-display="block"
+                     {{ $receiptSettings->show_barcode ? 'checked' : '' }}
+                     {{ !$isBusinessCreator ? 'disabled' : '' }}>
+              <label class="form-check-label" for="showBarcode">Include receipt barcode</label>
+            </div>
+
+            <div class="form-check mb-2">
+              <input class="form-check-input"
+                     type="checkbox"
+                     name="show_tax_details"
+                     id="showTaxDetails"
+                     data-preview="receiptTaxPreview"
+                     data-display="flex"
+                     {{ $receiptSettings->show_tax_details ? 'checked' : '' }}
+                     {{ !$isBusinessCreator ? 'disabled' : '' }}>
+              <label class="form-check-label" for="showTaxDetails">Show tax breakdown</label>
+            </div>
+            <div class="form-check mb-2">
+              <input class="form-check-input"
+                     type="checkbox"
+                     name="show_item_codes"
+                     id="showItemCodes"
+                     data-preview="receiptSkuPreview"
+                     data-display="block"
+                     {{ $receiptSettings->show_item_codes ? 'checked' : '' }}
+                     {{ !$isBusinessCreator ? 'disabled' : '' }}>
+              <label class="form-check-label" for="showItemCodes">Show item codes/SKUs</label>
+            </div>
+            <div class="form-check mb-3">
+              <input class="form-check-input"
+                     type="checkbox"
+                     name="show_discounts"
+                     id="showDiscounts"
+                     data-preview="receiptDiscountPreview"
+                     data-display="flex"
+                     {{ $receiptSettings->show_discounts ? 'checked' : '' }}
+                     {{ !$isBusinessCreator ? 'disabled' : '' }}>
+              <label class="form-check-label" for="showDiscounts">Show discount details</label>
+            </div>
+
+            @if($isBusinessCreator)
+              <button type="submit" class="btn btn-primary mt-2">
+                <i class="bi bi-check-circle me-1"></i>Save Receipt Settings
+              </button>
+            @else
+              <div class="alert alert-info mt-3">
+                <i class="bi bi-info-circle me-2"></i>Only business owner can update receipt settings.
+              </div>
+            @endif
           </div>
 
-          <h5 class="mb-3 mt-4">Receipt Format</h5>
-          <div class="form-group mb-3">
-            <label class="form-label">Paper Size</label>
-            <select class="form-control" id="paperSizeSelect">
-              <option value="80mm Thermal" selected>80mm Thermal</option>
-              <option value="58mm Thermal">58mm Thermal</option>
-              <option value="A4 Paper">A4 Paper</option>
-              <option value="Letter Size">Letter Size</option>
-            </select>
-          </div>
-          <div class="form-group mb-3">
-            <label class="form-label">Font Size</label>
-            <select class="form-control" id="fontSizeSelect">
-              <option>Small</option>
-              <option selected>Medium</option>
-              <option>Large</option>
-            </select>
-          </div>
+          <!-- Right: Live Preview Container -->
+          <div class="col-md-6" id="receiptPreviewContainer">
+            <h5 class="mb-3 text-center">Live Receipt Preview</h5>
+            <div id="receiptPreview" style="max-height: 550px; overflow:auto; display:flex; justify-content:center; align-items:flex-start; padding:12px;">
+              <div id="receiptPreviewInner" class="border rounded p-3 bg-light" style="width:300px; max-width:100%; box-sizing:border-box;">
+                <div class="text-center mb-2" id="receiptLogoPreview" style="display:{{ $receiptSettings->show_logo ? 'block' : 'none' }};">
+                  <small class="text-muted">[Business Logo]</small>
+                </div>
+                <h6 class="text-center mb-1" id="receiptTitlePreview">{{ $receiptSettings->receipt_title }}</h6>
+                @if($receiptSettings->header_text)
+                  <p class="text-center mb-2 small" id="headerTextPreview" style="white-space:pre-line; display:block;">{{ $receiptSettings->header_text }}</p>
+                @else
+                  <p class="text-center mb-2 small" id="headerTextPreview" style="white-space:pre-line; display:none;"></p>
+                @endif
+                <hr class="my-2">
 
-          <h5 class="mb-3 mt-4">Receipt Information</h5>
-          <div class="form-check mb-2">
-            <input class="form-check-input" type="checkbox" id="showInvoiceNumber" data-preview="receiptInvoiceNumberPreview" data-display="flex" checked>
-            <label class="form-check-label" for="showInvoiceNumber">Show invoice number</label>
-          </div>
-          <div class="form-check mb-2">
-            <input class="form-check-input" type="checkbox" id="showDate" data-preview="receiptDatePreview" data-display="flex" checked>
-            <label class="form-check-label" for="showDate">Show date</label>
-          </div>
-          <div class="form-check mb-3">
-            <input class="form-check-input" type="checkbox" id="showCashier" data-preview="receiptCashierPreview" data-display="flex" checked>
-            <label class="form-check-label" for="showCashier">Show cashier name</label>
-          </div>
+                <!-- Invoice Information -->
+                <div class="mb-2 small">
+                  <div class="d-flex justify-content-between" id="receiptInvoiceNumberPreview" style="display: {{ $receiptSettings->show_invoice_number ? 'flex' : 'none' }};">
+                    <span class="fw-bold">Invoice #:</span>
+                    <span>INV-2025-001</span>
+                  </div>
+                  <div class="d-flex justify-content-between" id="receiptDatePreview" style="display: {{ $receiptSettings->show_date ? 'flex' : 'none' }};">
+                    <span class="fw-bold">Date:</span>
+                    <span>{{ now()->format('M d, Y h:i A') }}</span>
+                  </div>
+                  <div class="d-flex justify-content-between" id="receiptCashierPreview" style="display: {{ $receiptSettings->show_cashier ? 'flex' : 'none' }};">
+                    <span class="fw-bold">Cashier:</span>
+                    <span>{{ $manager->first_name }} {{ $manager->surname }}</span>
+                  </div>
+                </div>
+                <hr class="my-2">
 
-          <div class="form-check mb-2">
-            <input class="form-check-input" type="checkbox" id="showLogo" data-preview="receiptLogoPreview" data-display="block" checked>
-            <label class="form-check-label" for="showLogo">Show business logo on receipt</label>
+                <!-- Items -->
+                <div class="mb-2">
+                  <div class="d-flex justify-content-between">
+                    <span>Item A</span>
+                    <span>₦5,000</span>
+                  </div>
+                  <div class="d-flex justify-content-between">
+                    <span>Item B</span>
+                    <span>₦3,000</span>
+                  </div>
+                  <div class="d-flex justify-content-between" id="receiptDiscountPreview" style="display: {{ $receiptSettings->show_discounts ? 'flex' : 'none' }};">
+                    <span class="text-muted">Discount</span>
+                    <span class="text-muted">-₦500</span>
+                  </div>
+                  <div class="d-flex justify-content-between" id="receiptTaxPreview" style="display: {{ $receiptSettings->show_tax_details ? 'flex' : 'none' }};">
+                    <span class="text-muted">Tax (7.5%)</span>
+                    <span class="text-muted">₦562.50</span>
+                  </div>
+                  <hr class="my-2">
+                  <div class="d-flex justify-content-between fw-bold">
+                    <span>Total</span>
+                    <span>₦7,562.50</span>
+                  </div>
+                  <div id="receiptSkuPreview" class="mt-2 small text-muted" style="display: {{ $receiptSettings->show_item_codes ? 'block' : 'none' }};">
+                    <div>SKU-001, SKU-002</div>
+                  </div>
+                </div>
+                <hr class="my-2" id="receiptBarcodeSeparator" style="display: {{ $receiptSettings->show_barcode ? 'block' : 'none' }};">
+                <div class="text-center" id="receiptBarcodePreview" style="display:{{ $receiptSettings->show_barcode ? 'block' : 'none' }};">
+                  <small class="text-muted">[Barcode]</small>
+                </div>
+                <p class="text-center mt-3 mb-0" id="footerTextPreview" style="white-space:pre-line;">{{ $receiptSettings->footer_text }}</p>
+              </div>
+            </div>
           </div>
-          <div class="form-check mb-3">
-            <input class="form-check-input" type="checkbox" id="showBarcode" data-preview="receiptBarcodePreview,receiptBarcodeSeparator" data-display="block" checked>
-            <label class="form-check-label" for="showBarcode">Include receipt barcode</label>
-          </div>
-
-          <div class="form-check mb-2">
-            <input class="form-check-input" type="checkbox" id="showTaxDetails" data-preview="receiptTaxPreview" data-display="flex" checked>
-            <label class="form-check-label" for="showTaxDetails">Show tax breakdown</label>
-          </div>
-          <div class="form-check mb-2">
-            <input class="form-check-input" type="checkbox" id="showItemCodes" data-preview="receiptSkuPreview" data-display="block" checked>
-            <label class="form-check-label" for="showItemCodes">Show item codes/SKUs</label>
-          </div>
-          <div class="form-check mb-3">
-            <input class="form-check-input" type="checkbox" id="showDiscounts" data-preview="receiptDiscountPreview" data-display="flex" checked>
-            <label class="form-check-label" for="showDiscounts">Show discount details</label>
-          </div>
-          <button type="button" class="btn btn-primary mt-2">Save Receipt Settings</button>
-          <span id="receiptSaveStatus" class="ms-3 text-success" style="display:none;font-weight:600;">Saved</span>
         </div>
-
-        <!-- Right: Live Preview Container -->
-        <div class="col-md-6" id="receiptPreviewContainer">
-          <h5 class="mb-3 text-center">Live Receipt Preview</h5>
-          <div id="receiptPreview" style="max-height: 550px; overflow:auto; display:flex; justify-content:center; align-items:flex-start; padding:12px;">
-            <div id="receiptPreviewInner" class="border rounded p-3 bg-light" style="width:300px; max-width:100%; box-sizing:border-box;">
-              <div class="text-center mb-2" id="receiptLogoPreview" style="display:block;">
-              <small class="text-muted">[Business Logo]</small>
-            </div>
-            <h6 class="text-center mb-1" id="receiptTitlePreview">SALES RECEIPT</h6>
-            <p class="text-center mb-2" id="headerTextPreview" style="white-space:pre-line;">Thank you for shopping with us!</p>
-            <hr class="my-2">
-
-            <!-- Invoice Information -->
-            <div class="mb-2 small">
-              <div class="d-flex justify-content-between" id="receiptInvoiceNumberPreview" style="display: flex;">
-                <span class="fw-bold">Invoice #:</span>
-                <span>INV-2025-001</span>
-              </div>
-              <div class="d-flex justify-content-between" id="receiptDatePreview" style="display: flex;">
-                <span class="fw-bold">Date:</span>
-                <span>Nov 22, 2025 10:30 AM</span>
-              </div>
-              <div class="d-flex justify-content-between" id="receiptCashierPreview" style="display: flex;">
-                <span class="fw-bold">Cashier:</span>
-                <span>John Doe</span>
-              </div>
-            </div>
-            <hr class="my-2">
-
-            <!-- Items -->
-            <div class="mb-2">
-              <div class="d-flex justify-content-between">
-                <span>Item A</span>
-                <span>₦5,000</span>
-              </div>
-              <div class="d-flex justify-content-between">
-                <span>Item B</span>
-                <span>₦3,000</span>
-              </div>
-              <div class="d-flex justify-content-between" id="receiptDiscountPreview" style="display: flex;">
-                <span class="text-muted">Discount</span>
-                <span class="text-muted">-₦500</span>
-              </div>
-              <div class="d-flex justify-content-between" id="receiptTaxPreview" style="display: flex;">
-                <span class="text-muted">Tax (7.5%)</span>
-                <span class="text-muted">₦562.50</span>
-              </div>
-              <hr class="my-2">
-              <div class="d-flex justify-content-between fw-bold">
-                <span>Total</span>
-                <span>₦7,562.50</span>
-              </div>
-              <div id="receiptSkuPreview" class="mt-2 small text-muted" style="display: block;">
-                <div>SKU-001, SKU-002</div>
-              </div>
-            </div>
-            <hr class="my-2" id="receiptBarcodeSeparator">
-            <div class="text-center" id="receiptBarcodePreview" style="display:block;">
-              <small class="text-muted">[Barcode]</small>
-            </div>
-            <p class="text-center mt-3 mb-0" id="footerTextPreview" style="white-space:pre-line;">Visit us again soon!</p>
-            </div>
-          </div>
-        </div>
-      </div>
+      </form>
     </div>
   </div>
 

@@ -90,7 +90,7 @@ Sell Product
                     data-name="{{ $item->item_name }} - {{ $variant->variant_name }}"
                     data-price="{{ $variant->final_price ?? $variant->selling_price ?? 0 }}"
                     data-cost-price="{{ $variant->cost_price ?? $variant->manual_cost_price ?? $variant->margin_cost_price ?? $variant->range_cost_price ?? 0 }}"
-                    data-stock="{{ $variant->stock_quantity ?? 0 }}"
+                    data-stock="{{ $variant->current_stock ?? 0 }}"
                     data-category="{{ $item->category_name }}"
                     data-primary-value="{{ $variant->primary_value ?? '' }}"
                     data-secondary-value="{{ $variant->secondary_value ?? '' }}"
@@ -109,8 +109,8 @@ Sell Product
                       </span>
                     </div>
                     <div class="item-price">₦{{ number_format($variant->final_price ?? $variant->selling_price ?? 0, 2) }}</div>
-                    <div class="item-stock">Stock: {{ $variant->stock_quantity ?? 0 }}</div>
-                    @if(($variant->stock_quantity ?? 0) == 0)
+                    <div class="item-stock">Stock: {{ $variant->current_stock ?? 0 }}</div>
+                    @if(($variant->current_stock ?? 0) == 0)
                       <div class="sold-out-badge" style="font-weight:bold; color:#fff; background:#dc3545; padding:6px 14px; border-radius:6px; margin-top:8px; font-size:10px; letter-spacing:1px;">OUT OF STOCK</div>
                     @endif
                     @if($item->category_name)

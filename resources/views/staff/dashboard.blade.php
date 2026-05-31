@@ -7,6 +7,7 @@ Staff Dashboard
 
 <!-- SweetAlert2 CSS -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+<link rel="stylesheet" href="{{ asset('staff_asset/css/styles.css') }}">
 
 <!-- SweetAlert2 JS -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -50,221 +51,115 @@ function showInfo(message) {
 <div class="home-tab">
 
 <!-- Page Content -->
-<div class="sell-container">
-<div class="pos-layout">
-<!-- Items Section -->
-<div class="items-section">
-<div class="items-container">
-    <!-- Filter Controls -->
-    <div class="filter-controls">
-    <div class="filter-left">
-        <div class="search-box">
-        <i class="bi bi-search search-icon"></i>
-        <input type="text" id="searchInput" placeholder="Search items by name..." autocomplete="off">
-        <i class="bi bi-x-circle clear-icon" id="clearSearch"></i>
-        </div>
-    </div>
-
-    <div class="filter-right" style="display: flex; align-items: center; gap: 15px;">
-        <div class="category-filter">
-        <select id="categoryFilter">
-            <option value="">All Categories</option>
-            @foreach($categories as $category)
-            <option value="{{ $category->category_name }}">{{ $category->category_name }}</option>
-            @endforeach
-        </select>
-        </div>
-
-        <div class="filter-badge">
-        <i class="bi bi-box-seam"></i>
-        <span id="itemCount">{{ $all_items->count() }} Items</span>
-        </div>
-    </div>
-    </div>
-
-    <div class="items-grid">
-    {{-- DEBUG: Total items = {{ $all_items->count() }} --}}
-    @forelse($all_items as $item)
-        @if($item->item_type == 'standard')
-        <!-- Standard Item -->
-        {{-- DEBUG: ID={{ $item->id }}, Name={{ $item->item_name }}, Image={{ $item->item_image ?? 'NULL' }} --}}
-        <div class="item-card"
-                data-id="{{ $item->id }}"
-                data-type="standard"
-                data-name="{{ $item->item_name }}"
-                data-price="{{ $item->final_price ?? $item->selling_price }}"
-                data-cost-price="{{ $item->cost_price ?? 0 }}"
-                data-stock="{{ $item->current_stock ?? 0 }}"
-                data-category="{{ $item->category_name }}"
-                data-img="{{ $item->item_image ? (str_starts_with($item->item_image, 'uploads/') ? asset($item->item_image) : asset('storage/' . $item->item_image)) : '' }}">
-
-            @if($item->item_image)
-            <img src="{{ str_starts_with($item->item_image, 'uploads/') ? asset($item->item_image) : asset('storage/' . $item->item_image) }}" alt="{{ $item->item_name }}" onerror="this.style.display='none';">
-            @endif
-            <div class="item-overlay">
-            <div class="item-name">{{ $item->item_name }}</div>
-            <div class="item-price">₦{{ number_format($item->final_price ?? $item->selling_price, 2) }}</div>
-            <div class="item-stock">Stock: {{ $item->current_stock ?? 0 }}</div>
-            @if(($item->current_stock ?? 0) == 0)
-              <div class="sold-out-badge" style="font-weight:bold; color:#fff; background:#dc3545; padding:6px 14px; border-radius:6px; margin-top:8px; font-size:10px; letter-spacing:1px;">OUT OF STOCK</div>
-            @endif
-            @if($item->category_name)
-              <div class="item-category" style="font-size: 11px; color: #999;">{{ $item->category_name }}</div>
-            @endif
+<div class="dashboard-full-page">
+    <div class="dashboard-container">
+        <div class="dashboard-header-section">
+            <div class="dashboard-title-wrapper">
+                <h1 class="dashboard-main-title">
+                    <i class="bi bi-speedometer2"></i> Staff Dashboard
+                </h1>
+                <p class="dashboard-subtitle">Welcome back, <strong>{{ $staff->fullname ?? ($staff->firstname . ' ' . $staff->surname) }}</strong> 👋</p>
+                <p class="dashboard-subtitle-secondary">Track your sales performance, customer relationships, and pending orders</p>
+            </div>
+            <div class="dashboard-date-time">
+                <span id="current-date"></span>
             </div>
         </div>
-        @else
-        <!-- Variant Item - Show parent or variants -->
-        @if($item->variants && $item->variants->count() > 0)
-            @foreach($item->variants as $variant)
-            @if($variant->sell_item)
-                <div class="item-card"
-                    data-id="{{ $variant->id }}"
-                    data-type="variant"
-                    data-parent-id="{{ $item->id }}"
-                    data-name="{{ $item->item_name }} - {{ $variant->variant_name }}"
-                    data-price="{{ $variant->final_price ?? $variant->selling_price ?? 0 }}"
-                    data-cost-price="{{ $variant->cost_price ?? $variant->manual_cost_price ?? $variant->margin_cost_price ?? $variant->range_cost_price ?? 0 }}"
-                    data-stock="{{ $variant->stock_quantity ?? 0 }}"
-                    data-category="{{ $item->category_name }}"
-                    data-primary-value="{{ $variant->primary_value ?? '' }}"
-                    data-secondary-value="{{ $variant->secondary_value ?? '' }}"
-                    data-tertiary-value="{{ $variant->tertiary_value ?? '' }}"
-                    data-img="{{ $item->item_image ? (str_starts_with($item->item_image, 'uploads/') ? asset($item->item_image) : asset('storage/' . $item->item_image)) : '' }}">
-                @if($item->item_image)
-                    <img src="{{ str_starts_with($item->item_image, 'uploads/') ? asset($item->item_image) : asset('storage/' . $item->item_image) }}" alt="{{ $item->item_name }}" onerror="this.style.display='none';">
-                @endif
-                <div class="item-overlay">
-                    <div class="item-name">{{ $item->item_name }}</div>
-                    <div class="item-variant" style="font-size: 11px; margin: 4px 0;">
-                      <span style="background: rgba(0, 0, 0, 0.7); color: #fff; padding: 3px 8px; border-radius: 12px; display: inline-block; font-weight: 500; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
-                        {{ $variant->primary_value ?? '' }}
-                        @if($variant->secondary_value) / {{ $variant->secondary_value }}@endif
-                        @if($variant->tertiary_value) / {{ $variant->tertiary_value }}@endif
-                      </span>
+
+        <div class="dashboard-grid-full">
+            <!-- Sales Today Card -->
+            <div class="dashboard-card dashboard-card-primary">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <i class="bi bi-calendar-day"></i>
                     </div>
-                    <div class="item-price">₦{{ number_format($variant->final_price ?? $variant->selling_price ?? 0, 2) }}</div>
-                    <div class="item-stock">Stock: {{ $variant->stock_quantity ?? 0 }}</div>
-                    @if(($variant->stock_quantity ?? 0) == 0)
-                      <div class="sold-out-badge" style="font-weight:bold; color:#fff; background:#dc3545; padding:6px 14px; border-radius:6px; margin-top:8px; font-size:10px; letter-spacing:1px;">OUT OF STOCK</div>
-                    @endif
-                    @if($item->category_name)
-                    <div class="item-category" style="font-size: 11px; color: #999;">{{ $item->category_name }}</div>
-                    @endif
+                    <div class="card-label">Today's Sales</div>
                 </div>
-                </div>
-            @endif
-            @endforeach
-                @else
-                    <!-- Variant item without variants configured yet -->
-                    <div class="item-card disabled" style="opacity: 0.6; cursor: not-allowed;">
-                    @if($item->item_image)
-                        <img src="{{ str_starts_with($item->item_image, 'uploads/') ? asset($item->item_image) : asset('storage/' . $item->item_image) }}" alt="{{ $item->item_name }}" onerror="this.style.display='none';">
-                    @endif
-                    <div class="item-overlay">
-                        <div class="item-name">{{ $item->item_name }}</div>
-                        <div class="item-price" style="color: #999;">No variants</div>
-                        <div class="item-stock">Configure variants</div>
+                <div class="card-value">{{ $completed_sales_today_count }}</div>
+                <div class="card-sublabel">Sales completed</div>
+                <div class="card-amount">{{ number_format($completed_sales_today_total, 2) }}</div>
+                <div class="card-currency">Currency</div>
+                <div class="card-note">Completed transactions today</div>
+            </div>
+
+            <!-- Sales This Month Card -->
+            <div class="dashboard-card dashboard-card-success">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <i class="bi bi-calendar3"></i>
                     </div>
+                    <div class="card-label">Monthly Sales</div>
+                </div>
+                <div class="card-value">{{ $completed_sales_month_count }}</div>
+                <div class="card-sublabel">Sales this month</div>
+                <div class="card-amount">{{ number_format($completed_sales_month_total, 2) }}</div>
+                <div class="card-currency">Currency</div>
+                <div class="card-note">This month's transactions</div>
+            </div>
+
+            <!-- Saved Orders Card -->
+            <div class="dashboard-card dashboard-card-info">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <i class="bi bi-bookmark-star"></i>
                     </div>
-                @endif
-                @endif
-            @empty
-                <div class="no-items-message" style="grid-column: 1/-1; text-align: center; padding: 40px;">
-                <i class="bi bi-inbox" style="font-size: 48px; color: #ccc;"></i>
-                <p style="color: #999; margin-top: 20px;">No items available</p>
-                <small style="color: #bbb;">Add items to your inventory to start selling</small>
+                    <div class="card-label">Saved Orders</div>
                 </div>
-            @endforelse
-            </div>
-        </div>
-        </div>
-
-        <!-- Cart Panel -->
-        <div class="cart-panel">
-        <div class="cart-header">
-            <i class="bi bi-cart3"></i> Cart
-        </div>
-
-        <!-- Customer Section -->
-        <div class="customer-section" id="customerSection">
-            <div class="customer-label">Customer</div>
-            <div class="customer-display">
-            <span class="customer-name" id="customerName">Walk-in Customer</span>
-            <button class="customer-change" id="addCustomerBtn">
-                <i class="bi bi-person-plus"></i> Change
-            </button>
+                <div class="card-value">{{ $saved_orders_count }}</div>
+                <div class="card-sublabel">Ready to checkout</div>
+                <div class="card-note">Pending orders awaiting finalization</div>
             </div>
 
-            <!-- Customer Dropdown -->
-            <div class="customer-dropdown" id="customerDropdown">
-            <div class="customer-dropdown-search">
-                <input type="text" id="customerSearchInput" placeholder="Search customers..." autocomplete="off">
-            </div>
-            <div class="customer-dropdown-list" id="customerDropdownList">
-                <!-- Customers will be loaded here dynamically -->
-            </div>
-            </div>
-        </div>
-
-        <div class="cart-items" id="cartItems">
-            <div class="cart-empty">
-            <i class="bi bi-cart-x cart-empty-icon"></i>
-            <p>Your cart is empty</p>
-            <small>Add items to get started</small>
-            </div>
-        </div>
-
-        <div class="cart-summary">
-            <!-- Add Discount Button -->
-
-            <button class="cart-action-btn" id="addDiscountBtn">
-                <i class="bi bi-percent"></i> Add Discount
-            </button>
-
-
-            <!-- Discount Selection Side Panel -->
-            <div class="side-panel-overlay" id="discountPanelOverlay" style="display:none;"></div>
-            <div class="side-panel" id="discountSidePanel">
-              <div class="side-panel-content">
-                <div class="side-panel-header d-flex justify-content-between align-items-center">
-                  <h5 class="side-panel-title mb-0"><i class="bi bi-percent me-2"></i>Select Discount</h5>
-                  <button type="button" class="btn-close" id="closeDiscountPanel" aria-label="Close"></button>
+            <!-- Customers Added Card -->
+            <div class="dashboard-card dashboard-card-warning">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <i class="bi bi-person-plus"></i>
+                    </div>
+                    <div class="card-label">Customers Added</div>
                 </div>
-                <div class="side-panel-body">
-                  <div class="mb-3">
-                    <label for="discountSelect" class="form-label">Choose Discount</label>
-                    <select id="discountSelect" class="form-select">
-                      <option value="" selected disabled>Loading discounts...</option>
-                    </select>
-                  </div>
-                </div>
-                <div class="side-panel-footer d-flex justify-content-end gap-2">
-                  <button type="button" class="btn btn-secondary" id="cancelDiscountBtn">Cancel</button>
-                  <button type="button" class="btn btn-primary" id="applyDiscountBtn" disabled>Apply Discount</button>
-                </div>
-              </div>
+                <div class="card-value">{{ $new_customers_count }}</div>
+                <div class="card-sublabel">Total registered</div>
+                <div class="card-note">Customers you've added to the system</div>
             </div>
-
-            <div class="cart-total">
-            <span>Total:</span>
-            <span id="cartTotal">₦0.00</span>
-            </div>
-
-            <!-- Cart Actions -->
-            <div class="cart-actions">
-            <button class="cart-action-btn" id="saveCartBtn">
-                <i class="bi bi-bookmark"></i> Save
-            </button>
-            </div>
-
-            <button class="checkout-btn" id="checkoutBtn">
-            <i class="bi bi-check-circle"></i> Checkout
-            </button>
         </div>
+
+        <div class="dashboard-actions-full">
+            <a href="{{ route('staff.sell_product') }}" class="dashboard-action-btn-full primary">
+                <i class="bi bi-bag-check"></i>
+                <span>Start Sale</span>
+                <small>Begin a new transaction</small>
+            </a>
+            <a href="{{ route('staff.view_saved_carts') }}" class="dashboard-action-btn-full secondary">
+                <i class="bi bi-bookmark-star"></i>
+                <span>Saved Orders</span>
+                <small>Manage pending orders</small>
+            </a>
+            <a href="{{ route('staff.customers') }}" class="dashboard-action-btn-full secondary">
+                <i class="bi bi-people"></i>
+                <span>Customers</span>
+                <small>View customer details</small>
+            </a>
+        </div>
+
+        <div class="dashboard-footer-full">
+            <p>Your dashboard provides real-time insights into sales activity and customer engagement. Keep an eye on your metrics to optimize performance.</p>
         </div>
     </div>
-    </div>
+</div>
+
+<script>
+// Update current date/time
+document.addEventListener('DOMContentLoaded', function() {
+    const dateEl = document.getElementById('current-date');
+    if (dateEl) {
+        const now = new Date();
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        dateEl.textContent = now.toLocaleDateString('en-US', options);
+    }
+});
+</script>
+
     <!-- End Page Content -->
 
                 </div>

@@ -38,6 +38,8 @@ class VariantItemController extends Controller
                 'variants.*.selling_price' => 'nullable|numeric|min:0',
                 'variants.*.pricing_method' => 'nullable|string|in:fixed,manual,margin,range',
                 'variants.*.stock_quantity' => 'nullable|integer|min:0',
+                'variants.*.opening_stock' => 'nullable|integer|min:0',
+                'variants.*.current_stock' => 'nullable|integer|min:0',
                 'variants.*.low_stock_threshold' => 'nullable|integer|min:0',
                 'variants.*.primary_value' => 'nullable|string',
                 'variants.*.secondary_value' => 'nullable|string',
@@ -115,6 +117,9 @@ class VariantItemController extends Controller
                 $pricingType = $variantData['pricing_method'] ?? 'fixed';
 
                 // Prepare variant data
+                $variantOpeningStock = $variantData['opening_stock'] ?? $variantData['stock_quantity'] ?? 0;
+                $variantCurrentStock = $variantData['current_stock'] ?? $variantOpeningStock;
+
                 $productVariantData = [
                     'variant_item_id' => $variantItem->id,
                     'variant_name' => $variantData['name'],
@@ -126,7 +131,8 @@ class VariantItemController extends Controller
                     'tertiary_value' => $variantData['tertiary_value'] ?? null,
                     'sell_item' => isset($variantData['is_sellable']) && $variantData['is_sellable'] ? true : false,
                     'pricing_type' => $pricingType,
-                    'stock_quantity' => $variantData['stock_quantity'] ?? 0,
+                    'opening_stock' => $variantOpeningStock,
+                    'current_stock' => $variantCurrentStock,
                 ];
 
                 // Add pricing fields based on pricing type
@@ -188,9 +194,11 @@ class VariantItemController extends Controller
                             'item_id' => $productVariant->id,
                             'item_type' => 'variant',
                             'business_name' => $manager->business_name,
-                            'allocated_quantity' => $variantData['stock_quantity'] ?? 0,
-                            'current_quantity' => $variantData['stock_quantity'] ?? 0,
+                            'allocated_quantity' => $variantOpeningStock,
+                            'current_quantity' => $variantOpeningStock,
                             'sold_quantity' => 0,
+                            'allocated_by' => $manager->id,
+                            'allocated_at' => now(),
                         ]);
                     }
                 }

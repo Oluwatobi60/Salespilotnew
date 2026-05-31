@@ -56,8 +56,11 @@
         </a>
 
         <span class="nav-group-label">System</span>
-        <a href="{{ route('superadmin.settings') }}" class="{{ request()->routeIs('superadmin.settings*') ? 'active' : '' }}">
+        <a href="{{ route('superadmin.settings') }}" class="{{ request()->routeIs('superadmin.settings') ? 'active' : '' }}">
             <i class="bi bi-gear"></i> Settings
+        </a>
+        <a href="{{ route('superadmin.system-preferences') }}" class="{{ request()->routeIs('superadmin.system-preferences*') ? 'active' : '' }}">
+            <i class="bi bi-sliders"></i> System Preferences
         </a>
     </nav>
     <div class="sidebar-footer">

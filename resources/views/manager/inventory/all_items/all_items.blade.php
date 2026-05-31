@@ -45,12 +45,12 @@ All Items
 
         if($showInventoryColumns) {
             // Premium subscription
-            $totalGenStock = $allItemsPaginated->sum('current_stock');
+            $totalGenStock = $allItemsPaginated->sum('opening_stock');
             $totalGenLeft  = $allItemsPaginated->sum('general_left');
             $lowStockCount = collect($allItemsPaginated->items())->filter(fn($i) =>
-                isset($i['current_stock'], $i['low_stock_threshold']) &&
-                $i['current_stock'] > 0 &&
-                $i['current_stock'] <= $i['low_stock_threshold']
+                isset($i['general_left'], $i['low_stock_threshold']) &&
+                $i['general_left'] > 0 &&
+                $i['general_left'] <= $i['low_stock_threshold']
             )->count();
         } else {
             // Basic/Free subscription
@@ -252,12 +252,12 @@ All Items
                 <tbody>
                     @forelse($allItemsPaginated as $index => $item)
                     @php
-                        $stock     = $item['current_stock'] ?? null;
+                        $stock     = $item['opening_stock'] ?? null;
                         $threshold = $item['low_stock_threshold'] ?? null;
                         $genLeft   = $item['general_left'] ?? 0;
 
                         // Determine stock status for filtering
-                        $filterStock = $showInventoryColumns ? $stock : ($item['actual_current_stock'] ?? 0);
+                        $filterStock = $showInventoryColumns ? $genLeft : ($item['actual_current_stock'] ?? 0);
                         if ($filterStock === null || $filterStock <= 0) {
                             $stockStatus = 'out-of-stock';
                         } elseif ($threshold !== null && $filterStock <= $threshold) {
@@ -268,9 +268,9 @@ All Items
 
                         if ($stock === null) {
                             $stockClass = 'sp-na';
-                        } elseif ($stock <= 0) {
+                        } elseif ($genLeft <= 0) {
                             $stockClass = 'sp-empty';
-                        } elseif ($threshold !== null && $stock <= $threshold) {
+                        } elseif ($threshold !== null && $genLeft <= $threshold) {
                             $stockClass = 'sp-low';
                         } else {
                             $stockClass = 'sp-good';
@@ -331,8 +331,10 @@ All Items
                         <td class="col-hide-sm text-muted">{{ $item['category'] ?? '—' }}</td>
                         {{-- Unit --}}
                         <td class="col-hide-sm text-muted">
-                            @if(isset($item['unit']) && is_object($item['unit']))
-                                {{ $item['unit']->name ?? '—' }}
+                            @if(isset($item['unit_abbreviation']) && $item['unit_abbreviation'])
+                                {{ $item['unit_abbreviation'] }}
+                            @elseif(isset($item['unit']) && is_object($item['unit']))
+                                {{ $item['unit']->abbreviation ?? $item['unit']->name ?? '—' }}
                             @elseif(isset($item['unit']))
                                 {{ $item['unit'] }}
                             @else
@@ -341,27 +343,22 @@ All Items
                         </td>
                         @if($showInventoryColumns)
                         {{-- General Stock --}}
-                        <td>
-                            @if($stock !== null)
-                                <span class="stock-pill {{ $stockClass }}">
-                                    @if($stock <= 0)
-                                        <i class="bi bi-x-circle-fill"></i>
-                                    @elseif($threshold !== null && $stock <= $threshold)
-                                        <i class="bi bi-exclamation-circle-fill"></i>
-                                    @else
-                                        <i class="bi bi-check-circle-fill"></i>
-                                    @endif
-                                    {{ number_format($stock) }}
-                                </span>
-                                @if($threshold !== null && $stock <= $threshold && $stock > 0)
-                                    <div class="mt-1" style="font-size:.68rem; color:#d97706;">
-                                        <i class="bi bi-arrow-down-circle"></i> Restock needed
-                                    </div>
+                            <td>
+                                @if($stock !== null)
+                                    <span class="stock-pill {{ $stockClass }}">
+                                        @if($genLeft <= 0)
+                                            <i class="bi bi-x-circle-fill"></i>
+                                        @elseif($threshold !== null && $genLeft <= $threshold)
+                                            <i class="bi bi-exclamation-circle-fill"></i>
+                                        @else
+                                            <i class="bi bi-check-circle-fill"></i>
+                                        @endif
+                                        {{ number_format($stock) }}
+                                    </span>
+                                @else
+                                    <span class="stock-pill sp-na">N/A</span>
                                 @endif
-                            @else
-                                <span class="stock-pill sp-na">N/A</span>
-                            @endif
-                        </td>
+                            </td>
                         {{-- General Left --}}
                         <td>
                             <span class="stock-pill {{ $leftClass }}">
@@ -401,9 +398,9 @@ All Items
                         @else
                         {{-- Total Stock (for Basic/Free) --}}
                         <td>
-                            @php
-                                $totalStock = $item['opening_stock'] ?? 0;
-                            @endphp
+                                @php
+                                    $totalStock = $item['opening_stock'] ?? 0;
+                                @endphp
                             <span class="stock-pill sp-good">
                                 <i class="bi bi-archive"></i> {{ number_format($totalStock) }}
                             </span>

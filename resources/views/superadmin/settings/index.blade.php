@@ -7,6 +7,20 @@ use App\Models\AppSetting;
 
 @section('superadmin_layout_content')
 
+@if(session('success'))
+    <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+        <i class="bi bi-check-circle me-2"></i>{{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+@endif
+
+@if(session('error'))
+    <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+        <i class="bi bi-exclamation-triangle me-2"></i>{{ session('error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+@endif
+
 <div class="mb-4">
     <p class="text-muted mb-0">
         <i class="bi bi-info-circle me-1"></i>
@@ -55,6 +69,24 @@ use App\Models\AppSetting;
         </div>
     </div>
 
+    <!-- System Preferences Quick Link -->
+    <div class="sa-card mb-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">
+        <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center">
+                <div style="width: 60px; height: 60px; background: rgba(255,255,255,0.2); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                    <i class="bi bi-sliders text-white" style="font-size: 2rem;"></i>
+                </div>
+                <div class="ms-3 text-white">
+                    <h5 class="mb-1 fw-bold">System Preferences</h5>
+                    <p class="mb-0" style="opacity: 0.9;">Manage system-wide preferences, view all branches, staff, and BRMs</p>
+                </div>
+            </div>
+            <a href="{{ route('superadmin.system-preferences') }}" class="btn btn-light btn-lg">
+                <i class="bi bi-arrow-right-circle me-1"></i> Open System Preferences
+            </a>
+        </div>
+    </div>
+
     <!-- Settings Widgets Grid -->
     <div class="row g-4">
 
@@ -79,19 +111,22 @@ use App\Models\AppSetting;
                                 <i class="bi bi-info-circle text-muted ms-1" data-bs-toggle="tooltip" title="{{ $setting->description }}"></i>
                             @endif
                         </label>
-                        
+
                         @if($setting->type === 'boolean')
                             <div class="form-check form-switch">
-                                <input type="checkbox" class="form-check-input" name="settings[{{ $setting->key }}]" 
-                                    id="{{ $setting->key }}" {{ $setting->value == '1' ? 'checked' : '' }}>
-                                <label class="form-check-label" for="{{ $setting->key }}">
-                                    {{ $setting->value == '1' ? 'Enabled' : 'Disabled' }}
+                                <input type="checkbox" class="form-check-input toggle-switch" name="settings[{{ $setting->key }}]"
+                                    id="{{ $setting->key }}" data-value="{{ $setting->value }}" {{ $setting->value == '1' ? 'checked' : '' }}
+                                    onchange="updateToggleSetting(this)">
+                                <label class="form-check-label toggle-label" for="{{ $setting->key }}">
+                                    <span class="badge {{ $setting->value == '1' ? 'bg-success' : 'bg-secondary' }}">
+                                        {{ $setting->value == '1' ? 'Enabled' : 'Disabled' }}
+                                    </span>
                                 </label>
                             </div>
                         @elseif($setting->type === 'textarea')
                             <textarea class="form-control" name="settings[{{ $setting->key }}]" rows="3">{{ $setting->value }}</textarea>
                         @else
-                            <input type="{{ $setting->type }}" class="form-control" name="settings[{{ $setting->key }}]" 
+                            <input type="{{ $setting->type }}" class="form-control" name="settings[{{ $setting->key }}]"
                                 value="{{ $setting->value }}" placeholder="{{ $setting->label }}">
                         @endif
                     </div>
@@ -120,15 +155,15 @@ use App\Models\AppSetting;
                                 <i class="bi bi-info-circle text-muted ms-1" data-bs-toggle="tooltip" title="{{ $setting->description }}"></i>
                             @endif
                         </label>
-                        
+
                         @if($setting->type === 'password')
-                            <input type="password" class="form-control" name="settings[{{ $setting->key }}]" 
+                            <input type="password" class="form-control" name="settings[{{ $setting->key }}]"
                                 value="{{ $setting->value }}" placeholder="••••••••">
                         @elseif($setting->type === 'number')
-                            <input type="number" class="form-control" name="settings[{{ $setting->key }}]" 
+                            <input type="number" class="form-control" name="settings[{{ $setting->key }}]"
                                 value="{{ $setting->value }}">
                         @else
-                            <input type="text" class="form-control" name="settings[{{ $setting->key }}]" 
+                            <input type="text" class="form-control" name="settings[{{ $setting->key }}]"
                                 value="{{ $setting->value }}" placeholder="{{ $setting->label }}">
                         @endif
                     </div>
@@ -157,20 +192,23 @@ use App\Models\AppSetting;
                                 <i class="bi bi-info-circle text-muted ms-1" data-bs-toggle="tooltip" title="{{ $setting->description }}"></i>
                             @endif
                         </label>
-                        
+
                         @if($setting->type === 'boolean')
                             <div class="form-check form-switch">
-                                <input type="checkbox" class="form-check-input" name="settings[{{ $setting->key }}]" 
-                                    id="{{ $setting->key }}" {{ $setting->value == '1' ? 'checked' : '' }}>
-                                <label class="form-check-label" for="{{ $setting->key }}">
-                                    {{ $setting->value == '1' ? 'Enabled' : 'Disabled' }}
+                                <input type="checkbox" class="form-check-input toggle-switch" name="settings[{{ $setting->key }}]"
+                                    id="{{ $setting->key }}" data-value="{{ $setting->value }}" {{ $setting->value == '1' ? 'checked' : '' }}
+                                    onchange="updateToggleSetting(this)">
+                                <label class="form-check-label toggle-label" for="{{ $setting->key }}">
+                                    <span class="badge {{ $setting->value == '1' ? 'bg-success' : 'bg-secondary' }}">
+                                        {{ $setting->value == '1' ? 'Enabled' : 'Disabled' }}
+                                    </span>
                                 </label>
                             </div>
                         @elseif($setting->type === 'password')
-                            <input type="password" class="form-control" name="settings[{{ $setting->key }}]" 
+                            <input type="password" class="form-control" name="settings[{{ $setting->key }}]"
                                 value="{{ $setting->value }}" placeholder="••••••••">
                         @else
-                            <input type="text" class="form-control" name="settings[{{ $setting->key }}]" 
+                            <input type="text" class="form-control" name="settings[{{ $setting->key }}]"
                                 value="{{ $setting->value }}" placeholder="{{ $setting->label }}">
                         @endif
                     </div>
@@ -199,20 +237,23 @@ use App\Models\AppSetting;
                                 <i class="bi bi-info-circle text-muted ms-1" data-bs-toggle="tooltip" title="{{ $setting->description }}"></i>
                             @endif
                         </label>
-                        
+
                         @if($setting->type === 'boolean')
                             <div class="form-check form-switch">
-                                <input type="checkbox" class="form-check-input" name="settings[{{ $setting->key }}]" 
-                                    id="{{ $setting->key }}" {{ $setting->value == '1' ? 'checked' : '' }}>
-                                <label class="form-check-label" for="{{ $setting->key }}">
-                                    {{ $setting->value == '1' ? 'Enabled' : 'Disabled' }}
+                                <input type="checkbox" class="form-check-input toggle-switch" name="settings[{{ $setting->key }}]"
+                                    id="{{ $setting->key }}" data-value="{{ $setting->value }}" {{ $setting->value == '1' ? 'checked' : '' }}
+                                    onchange="updateToggleSetting(this)">
+                                <label class="form-check-label toggle-label" for="{{ $setting->key }}">
+                                    <span class="badge {{ $setting->value == '1' ? 'bg-success' : 'bg-secondary' }}">
+                                        {{ $setting->value == '1' ? 'Enabled' : 'Disabled' }}
+                                    </span>
                                 </label>
                             </div>
                         @elseif($setting->type === 'number')
-                            <input type="number" class="form-control" name="settings[{{ $setting->key }}]" 
+                            <input type="number" class="form-control" name="settings[{{ $setting->key }}]"
                                 value="{{ $setting->value }}">
                         @else
-                            <input type="text" class="form-control" name="settings[{{ $setting->key }}]" 
+                            <input type="text" class="form-control" name="settings[{{ $setting->key }}]"
                                 value="{{ $setting->value }}" placeholder="{{ $setting->label }}">
                         @endif
                     </div>
@@ -241,20 +282,20 @@ use App\Models\AppSetting;
                                 <i class="bi bi-info-circle text-muted ms-1" data-bs-toggle="tooltip" title="{{ $setting->description }}"></i>
                             @endif
                         </label>
-                        
+
                         @if($setting->type === 'file')
                             @if($setting->value)
                                 <div class="mb-2">
-                                    <img src="{{ asset('storage/' . $setting->value) }}" alt="{{ $setting->label }}" 
+                                    <img src="{{ asset('storage/' . $setting->value) }}" alt="{{ $setting->label }}"
                                         style="max-height: 60px; border: 1px solid #ddd; border-radius: 4px; padding: 4px;">
                                 </div>
                             @endif
                             <input type="file" class="form-control" name="settings[{{ $setting->key }}]" accept="image/*">
                         @elseif($setting->type === 'color')
-                            <input type="color" class="form-control form-control-color" name="settings[{{ $setting->key }}]" 
+                            <input type="color" class="form-control form-control-color" name="settings[{{ $setting->key }}]"
                                 value="{{ $setting->value }}">
                         @else
-                            <input type="text" class="form-control" name="settings[{{ $setting->key }}]" 
+                            <input type="text" class="form-control" name="settings[{{ $setting->key }}]"
                                 value="{{ $setting->value }}" placeholder="{{ $setting->label }}">
                         @endif
                     </div>
@@ -283,20 +324,23 @@ use App\Models\AppSetting;
                                 <i class="bi bi-info-circle text-muted ms-1" data-bs-toggle="tooltip" title="{{ $setting->description }}"></i>
                             @endif
                         </label>
-                        
+
                         @if($setting->type === 'boolean')
                             <div class="form-check form-switch">
-                                <input type="checkbox" class="form-check-input" name="settings[{{ $setting->key }}]" 
-                                    id="{{ $setting->key }}" {{ $setting->value == '1' ? 'checked' : '' }}>
-                                <label class="form-check-label" for="{{ $setting->key }}">
-                                    {{ $setting->value == '1' ? 'Enabled' : 'Disabled' }}
+                                <input type="checkbox" class="form-check-input toggle-switch" name="settings[{{ $setting->key }}]"
+                                    id="{{ $setting->key }}" data-value="{{ $setting->value }}" {{ $setting->value == '1' ? 'checked' : '' }}
+                                    onchange="updateToggleSetting(this)">
+                                <label class="form-check-label toggle-label" for="{{ $setting->key }}">
+                                    <span class="badge {{ $setting->value == '1' ? 'bg-success' : 'bg-secondary' }}">
+                                        {{ $setting->value == '1' ? 'Enabled' : 'Disabled' }}
+                                    </span>
                                 </label>
                             </div>
                         @elseif($setting->type === 'number')
-                            <input type="number" class="form-control" name="settings[{{ $setting->key }}]" 
+                            <input type="number" class="form-control" name="settings[{{ $setting->key }}]"
                                 value="{{ $setting->value }}">
                         @else
-                            <input type="text" class="form-control" name="settings[{{ $setting->key }}]" 
+                            <input type="text" class="form-control" name="settings[{{ $setting->key }}]"
                                 value="{{ $setting->value }}" placeholder="{{ $setting->label }}">
                         @endif
                     </div>
@@ -329,7 +373,7 @@ use App\Models\AppSetting;
                     <p class="text-muted">Send a test email to verify your SMTP configuration is working correctly.</p>
                     <div class="mb-3">
                         <label class="form-label">Recipient Email</label>
-                        <input type="email" class="form-control" id="test_email" name="test_email" required 
+                        <input type="email" class="form-control" id="test_email" name="test_email" required
                             placeholder="Enter email address">
                     </div>
                 </div>
@@ -387,13 +431,126 @@ use App\Models\AppSetting;
 </style>
 
 <script>
-// Initialize tooltips
+// Initialize tooltips and ensure correct checkbox states
 document.addEventListener('DOMContentLoaded', function() {
     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl);
     });
+
+    // Force correct checkbox states on page load (prevent browser autocomplete)
+    document.querySelectorAll('.toggle-switch').forEach(function(checkbox) {
+        const actualValue = checkbox.getAttribute('data-value');
+        const shouldBeChecked = actualValue === '1';
+
+        if (checkbox.checked !== shouldBeChecked) {
+            checkbox.checked = shouldBeChecked;
+            updateToggleLabel(checkbox);
+        }
+    });
 });
+
+// Update toggle label when switch is changed
+function updateToggleLabel(checkbox) {
+    const label = checkbox.parentElement.querySelector('.toggle-label span');
+    if (checkbox.checked) {
+        label.textContent = 'Enabled';
+        label.classList.remove('bg-secondary');
+        label.classList.add('bg-success');
+    } else {
+        label.textContent = 'Disabled';
+        label.classList.remove('bg-success');
+        label.classList.add('bg-secondary');
+    }
+}
+
+// Update individual toggle setting via AJAX
+function updateToggleSetting(checkbox) {
+    const settingKey = checkbox.id;
+    const isChecked = checkbox.checked;
+
+    // Update label immediately for better UX
+    updateToggleLabel(checkbox);
+
+    // Show loading state
+    checkbox.disabled = true;
+
+    // Send AJAX request
+    fetch('{{ route('superadmin.settings.update-toggle') }}', {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+            key: settingKey,
+            value: isChecked ? '1' : '0'
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Update data-value attribute to match new state
+            checkbox.setAttribute('data-value', isChecked ? '1' : '0');
+            // Show success message
+            showToast('success', data.message || 'Setting updated successfully!');
+        } else {
+            // Revert the toggle on error
+            checkbox.checked = !isChecked;
+            updateToggleLabel(checkbox);
+            showToast('error', data.message || 'Failed to update setting');
+        }
+    })
+    .catch(error => {
+        // Revert the toggle on error
+        checkbox.checked = !isChecked;
+        updateToggleLabel(checkbox);
+        showToast('error', 'Error: ' + error.message);
+    })
+    .finally(() => {
+        // Re-enable the checkbox
+        checkbox.disabled = false;
+    });
+}
+
+// Show toast notification
+function showToast(type, message) {
+    const toastHtml = `
+        <div class="toast align-items-center text-white bg-${type === 'success' ? 'success' : 'danger'} border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="bi bi-${type === 'success' ? 'check-circle' : 'exclamation-triangle'} me-2"></i>${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+    `;
+
+    let toastContainer = document.getElementById('toast-container');
+    if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.id = 'toast-container';
+        toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
+        toastContainer.style.zIndex = '9999';
+        document.body.appendChild(toastContainer);
+    }
+
+    const toastElement = document.createElement('div');
+    toastElement.innerHTML = toastHtml;
+    toastContainer.appendChild(toastElement.firstElementChild);
+
+    const toast = new bootstrap.Toast(toastElement.firstElementChild, {
+        autohide: true,
+        delay: 3000
+    });
+    toast.show();
+
+    // Remove toast element after it's hidden
+    toastElement.firstElementChild.addEventListener('hidden.bs.toast', function() {
+        toastElement.remove();
+    });
+}
 
 // Toggle maintenance mode
 function toggleMaintenance() {
@@ -472,9 +629,9 @@ function runBackup() {
 // Send test email
 function sendTestEmail(event) {
     event.preventDefault();
-    
+
     const email = document.getElementById('test_email').value;
-    
+
     fetch('{{ route('superadmin.settings.test-email') }}', {
         method: 'POST',
         headers: {
@@ -502,7 +659,7 @@ function sendTestEmail(event) {
     .catch(error => {
         alert('Error: ' + error.message);
     });
-    
+
     return false;
 }
 </script>

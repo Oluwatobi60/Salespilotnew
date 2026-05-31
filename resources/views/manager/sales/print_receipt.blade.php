@@ -230,37 +230,60 @@
 <body>
     <div class="receipt-container">
         <div class="receipt-header">
-            <img src="{{ asset('manager_asset/images/salespilot logo1.png') }}" alt="SalesPilot Logo" class="receipt-logo">
-            <h4><i class="bi bi-receipt"></i> Sales Receipt</h4>
-            <div class="business-name">SalesPilot Inventory</div>
+            @php
+                $businessUser = \App\Models\User::where('business_name', Auth::user()->business_name)
+                                               ->where('addby', null)
+                                               ->first();
+                $receiptSettings = \App\Models\ReceiptSetting::getForBusiness(Auth::user()->business_name);
+            @endphp
+            @if($receiptSettings->show_logo && $businessUser && $businessUser->business_logo)
+                <img src="{{ asset('business_logos/' . $businessUser->business_logo) }}"
+                     alt="Business Logo"
+                     class="receipt-logo">
+            @elseif($receiptSettings->show_logo)
+                <div class="mb-2" style="height: 60px; display: flex; align-items: center; justify-content: center;">
+                    <i class="bi bi-building" style="font-size: 2.5rem; color: #6c757d;"></i>
+                </div>
+            @endif
+            <h4><i class="bi bi-receipt"></i> {{ $receiptSettings->receipt_title }}</h4>
+            <div class="business-name">{{ Auth::user()->business_name }}</div>
+            @if($receiptSettings->header_text)
+                <p class="text-center small mb-0 mt-2" style="opacity: 0.9;">{{ $receiptSettings->header_text }}</p>
+            @endif
         </div>
 
         <div class="receipt-body">
             <div class="receipt-info">
-                <div class="receipt-info-row">
-                    <span class="receipt-info-label">Receipt Number:</span>
-                    <span class="receipt-info-value">{{ $sale->receipt_number }}</span>
-                </div>
-                <div class="receipt-info-row">
-                    <span class="receipt-info-label">Date:</span>
-                    <span class="receipt-info-value">{{ \Carbon\Carbon::parse($sale->created_at)->format('M d, Y h:i A') }}</span>
-                </div>
+                @if($receiptSettings->show_invoice_number)
+                    <div class="receipt-info-row">
+                        <span class="receipt-info-label">Receipt Number:</span>
+                        <span class="receipt-info-value">{{ $sale->receipt_number }}</span>
+                    </div>
+                @endif
+                @if($receiptSettings->show_date)
+                    <div class="receipt-info-row">
+                        <span class="receipt-info-label">Date:</span>
+                        <span class="receipt-info-value">{{ \Carbon\Carbon::parse($sale->created_at)->format('M d, Y h:i A') }}</span>
+                    </div>
+                @endif
                 <div class="receipt-info-row">
                     <span class="receipt-info-label">Customer:</span>
                     <span class="receipt-info-value">{{ $sale->customer_name ?? 'Walk-in Customer' }}</span>
                 </div>
-                <div class="receipt-info-row">
-                    <span class="receipt-info-label">Sold By:</span>
-                    <span class="receipt-info-value">
-                        @if($sale->staff_id && $sale->staff)
-                            {{ $sale->staff->fullname }}
-                        @elseif($sale->user_id && $sale->user)
-                            {{ trim(($sale->user->first_name ?? '') . ' ' . ($sale->user->surname ?? '')) ?: $sale->user->email }}
-                        @else
-                            Manager
-                        @endif
-                    </span>
-                </div>
+                @if($receiptSettings->show_cashier)
+                    <div class="receipt-info-row">
+                        <span class="receipt-info-label">Sold By:</span>
+                        <span class="receipt-info-value">
+                            @if($sale->staff_id && $sale->staff)
+                                {{ $sale->staff->fullname }}
+                            @elseif($sale->user_id && $sale->user)
+                                {{ trim(($sale->user->first_name ?? '') . ' ' . ($sale->user->surname ?? '')) ?: $sale->user->email }}
+                            @else
+                                Manager
+                            @endif
+                        </span>
+                    </div>
+                @endif
             </div>
 
             <div class="receipt-items-header">Items Purchased</div>
@@ -269,10 +292,15 @@
                 <thead>
                     <tr>
                         <th>Item</th>
+                        @if($receiptSettings->show_item_codes)
+                            <th style="text-align: center;">SKU</th>
+                        @endif
                         <th style="text-align: center;">Qty</th>
                         <th style="text-align: right;">Price</th>
                         <th style="text-align: right;">Subtotal</th>
-                        <th style="text-align: right;">Discount</th>
+                        @if($receiptSettings->show_discounts)
+                            <th style="text-align: right;">Discount</th>
+                        @endif
                         <th style="text-align: right;">Total</th>
                     </tr>
                 </thead>
@@ -280,10 +308,15 @@
                     @foreach($items as $item)
                         <tr>
                             <td><strong>{{ $item->item_name }}</strong></td>
+                            @if($receiptSettings->show_item_codes)
+                                <td style="text-align: center;">{{ $item->item_code ?? '-' }}</td>
+                            @endif
                             <td style="text-align: center;">{{ $item->quantity }} {{ $item->unit_abbr ?? 'units' }}</td>
                             <td style="text-align: right;">₦{{ number_format($item->item_price, 2) }}</td>
                             <td style="text-align: right;">₦{{ number_format($item->subtotal, 2) }}</td>
-                            <td style="text-align: right;">₦{{ number_format($item->discount, 2) }}</td>
+                            @if($receiptSettings->show_discounts)
+                                <td style="text-align: right;">₦{{ number_format($item->discount, 2) }}</td>
+                            @endif
                             <td style="text-align: right;"><strong>₦{{ number_format($item->total, 2) }}</strong></td>
                         </tr>
                     @endforeach
@@ -295,15 +328,32 @@
                     <span>Subtotal:</span>
                     <span>₦{{ number_format($subtotal, 2) }}</span>
                 </div>
-                <div class="total-row">
-                    <span>Discount:</span>
-                    <span>-₦{{ number_format($discount, 2) }}</span>
-                </div>
+                @if($receiptSettings->show_discounts && $discount > 0)
+                    <div class="total-row">
+                        <span>Discount:</span>
+                        <span>-₦{{ number_format($discount, 2) }}</span>
+                    </div>
+                @endif
+                @if($receiptSettings->show_tax_details)
+                    <div class="total-row">
+                        <span>Tax (0%):</span>
+                        <span>₦0.00</span>
+                    </div>
+                @endif
                 <div class="total-row grand-total">
                     <span>Total:</span>
                     <span>₦{{ number_format($total, 2) }}</span>
                 </div>
             </div>
+
+            @if($receiptSettings->footer_text)
+                <div class="text-center mt-4 pt-3" style="border-top: 2px dashed #e0e0e0;">
+                    <p class="mb-0 text-muted">
+                        <i class="bi bi-heart-fill me-1"></i>
+                        {{ $receiptSettings->footer_text }}
+                    </p>
+                </div>
+            @endif
         </div>
 
         <div class="print-btns">

@@ -361,7 +361,7 @@ class SignupController extends Controller
         $subscription = UserSubscription::create([
             'user_id' => Auth::id(),
             'subscription_plan_id' => $plan->id,
-            'duration_months' => $duration,
+            'duration_months' => 0, // Free plans use trial_days instead of months
             'amount_paid' => 0,
             'discount_percentage' => 0,
             'start_date' => Carbon::today(),

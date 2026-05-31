@@ -32,7 +32,7 @@ Manager Profile
         <!-- Avatar & Header Info -->
         <div class="profile-avatar-container">
             @if($manager->business_logo)
-                <img src="{{ asset('storage/' . $manager->business_logo) }}" alt="Business Logo" class="profile-avatar">
+                <img src="{{ asset('business_logos/' . $manager->business_logo) }}" alt="Business Logo" class="profile-avatar">
             @else
                 <img src="{{ asset('manager_asset/assets/images/faces/face8.jpg') }}" alt="Profile" class="profile-avatar">
             @endif

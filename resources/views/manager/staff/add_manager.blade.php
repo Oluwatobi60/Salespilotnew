@@ -208,7 +208,7 @@ Add Staff Member
                             </td>
                             <td>
                               <div class="d-flex align-items-center">
-                                <img src="{{ $manager->business_logo ? (str_starts_with($manager->business_logo, 'business_logos/') ? asset($manager->business_logo) : asset('storage/' . $manager->business_logo)) : asset('manager_asset/images/faces/face1.jpg') }}" alt="Profile" class="me-2" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
+                                <img src="{{ $manager->business_logo ? asset('business_logos/' . $manager->business_logo) : asset('manager_asset/images/faces/face1.jpg') }}" alt="Profile" class="me-2" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
                                 <div>
                                   <h6 class="mb-0"> {{ $manager->fullname }}  </h6>
                                   <p class="text-muted mb-0">{{ 'Name: ' . $manager->surname. ' ' . $manager->first_name }}  </p>

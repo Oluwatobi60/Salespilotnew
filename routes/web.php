@@ -129,6 +129,7 @@ Route::middleware(['auth:superadmin', 'throttle:60,1'])->prefix('superadmin/sett
     Route::post('/test-email', 'testEmail')->name('superadmin.settings.test-email');
     Route::post('/clear-cache', 'clearCache')->name('superadmin.settings.clear-cache');
     Route::post('/run-backup', 'runBackup')->name('superadmin.settings.run-backup');
+    Route::post('/update-toggle', 'updateToggle')->name('superadmin.settings.update-toggle');
     Route::post('/toggle-maintenance', 'toggleMaintenance')->name('superadmin.settings.toggle-maintenance');
 });
 
@@ -142,6 +143,12 @@ Route::middleware(['auth:superadmin', 'throttle:60,1'])->prefix('superadmin/subs
     Route::delete('/features/{feature}', 'deleteFeature')->name('superadmin.subscription-features.delete-feature');
     Route::post('/clone', 'cloneFeatures')->name('superadmin.subscription-features.clone');
     Route::post('/sync-all', 'syncAllFeatures')->name('superadmin.subscription-features.sync-all');
+});
+
+// Superadmin System Preferences routes
+Route::middleware(['auth:superadmin', 'throttle:60,1'])->prefix('superadmin/system-preferences')->controller(\App\Http\Controllers\Superadmin\SystemPreferencesController::class)->group(function () {
+    Route::get('/', 'index')->name('superadmin.system-preferences');
+    Route::put('/', 'update')->name('superadmin.system-preferences.update');
 });
 
 
@@ -398,6 +405,7 @@ Route::middleware(['auth', 'verified', 'rolemanager:manager', 'check.subscriptio
     Route::controller(SystemPreferencesController::class)->group(function () {
         Route::get('/system/preferences', 'index')->name('manager.system.preferences');
         Route::post('/system/preferences/update', 'update')->name('manager.system.preferences.update');
+        Route::post('/system/preferences/receipt/update', 'updateReceiptSettings')->name('manager.receipt.settings.update');
     });
 
   });

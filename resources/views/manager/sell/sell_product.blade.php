@@ -63,7 +63,7 @@ Sell Product
                 data-price="{{ $item->final_price ?? $item->selling_price }}"
                 data-cost-price="{{ $item->cost_price ?? 0 }}"
                 data-stock="{{ $item->current_stock ?? 0 }}"
-                data-unit="{{ $item->unit_name }}"
+                data-unit="{{ optional($item->unit)->abbreviation ?? $item->unit_name ?? 'units' }}"
                 data-category="{{ $item->category_name }}"
                 data-description="{{ $item->description ?? 'No description available' }}"
                 data-img="{{ $item->item_image ? (str_starts_with($item->item_image, 'uploads/') ? asset($item->item_image) : asset('storage/' . $item->item_image)) : '' }}">
@@ -95,8 +95,8 @@ Sell Product
                     data-name="{{ $item->item_name }} - {{ $variant->variant_name }}"
                     data-price="{{ $variant->final_price ?? $variant->selling_price ?? 0 }}"
                     data-cost-price="{{ $variant->cost_price ?? $variant->manual_cost_price ?? $variant->margin_cost_price ?? $variant->range_cost_price ?? 0 }}"
-                    data-stock="{{ $variant->stock_quantity ?? 0 }}"
-                    data-unit="{{ $item->unit_name }}"
+                    data-stock="{{ $variant->current_stock ?? $variant->opening_stock ?? 0 }}"
+                    data-unit="{{ optional($item->unit)->abbreviation ?? $item->unit_name ?? 'units' }}"
                     data-category="{{ $item->category_name }}"
                     data-description="{{ $item->description ?? 'No description available' }}"
                     data-primary-value="{{ $variant->primary_value ?? '' }}"
@@ -116,8 +116,8 @@ Sell Product
                       </span>
                     </div>
                     <div class="item-price">₦{{ number_format($variant->final_price ?? $variant->selling_price ?? 0, 2) }}</div>
-                    <div class="item-stock">Stock: {{ $variant->stock_quantity ?? 0 }}</div>
-                    @if(($variant->stock_quantity ?? 0) == 0)
+                    <div class="item-stock">Stock: {{ $variant->current_stock ?? $variant->opening_stock ?? 0 }}</div>
+                    @if((($variant->current_stock ?? $variant->opening_stock) ?? 0) == 0)
                       <div class="sold-out-badge" style="font-weight:bold; color:#fff; background:#dc3545; padding:6px 14px; border-radius:6px; margin-top:8px; font-size:10px; letter-spacing:1px;">OUT OF STOCK</div>
                     @endif
                     @if($item->category_name)
@@ -149,6 +149,14 @@ Sell Product
                 </div>
             @endforelse
             </div>
+
+
+            <!-- Pagination Links -->
+            @if($all_items->hasPages())
+            <div style="display: flex; justify-content: center; margin-top: 30px; padding-bottom: 20px;">
+                {{ $all_items->links('pagination::bootstrap-4') }}
+            </div>
+            @endif
         </div>
         </div>
 
@@ -420,26 +428,49 @@ Sell Product
     <div class="receipt-modal" id="receiptModal">
       <div class="receipt-container">
         <div class="receipt-header">
-          <img src="{{ asset('manager_asset/images/salespilot logo1.png') }}" alt="SalesPilot Logo" class="receipt-logo">
-          <h2><i class="bi bi-receipt"></i> Receipt</h2>
-          <div class="business-name">SalesPilot Inventory</div>
-          <div class="receipt-date" id="receiptDate"></div>
+          @php
+            $businessUser = \App\Models\User::where('business_name', Auth::user()->business_name)
+                                           ->where('addby', null)
+                                           ->first();
+            $receiptSettings = \App\Models\ReceiptSetting::getForBusiness(Auth::user()->business_name);
+          @endphp
+          @if($receiptSettings->show_logo && $businessUser && $businessUser->business_logo)
+            <img src="{{ asset('business_logos/' . $businessUser->business_logo) }}"
+                 alt="Business Logo"
+                 class="receipt-logo">
+          @elseif($receiptSettings->show_logo)
+            <div class="mb-2" style="height: 60px; display: flex; align-items: center; justify-content: center;">
+              <i class="bi bi-building" style="font-size: 2.5rem; color: #6c757d;"></i>
+            </div>
+          @endif
+          <h2><i class="bi bi-receipt"></i> {{ $receiptSettings->receipt_title }}</h2>
+          <div class="business-name">{{ Auth::user()->business_name }}</div>
+          @if($receiptSettings->header_text)
+            <p class="text-center small text-muted mb-2">{{ $receiptSettings->header_text }}</p>
+          @endif
+          @if($receiptSettings->show_date)
+            <div class="receipt-date" id="receiptDate"></div>
+          @endif
         </div>
 
         <div class="receipt-body">
           <div class="receipt-info">
-            <div class="receipt-info-row">
-              <span class="receipt-info-label">Receipt No:</span>
-              <span class="receipt-info-value" id="receiptNumber"></span>
-            </div>
+            @if($receiptSettings->show_invoice_number)
+              <div class="receipt-info-row">
+                <span class="receipt-info-label">Receipt No:</span>
+                <span class="receipt-info-value" id="receiptNumber"></span>
+              </div>
+            @endif
             <div class="receipt-info-row">
               <span class="receipt-info-label">Customer:</span>
               <span class="receipt-info-value" id="receiptCustomer"></span>
             </div>
-            <div class="receipt-info-row">
-              <span class="receipt-info-label">Served By:</span>
-              <span class="receipt-info-value">{{ $manager->other_name }} {{ $manager->surname }}</span>
-            </div>
+            @if($receiptSettings->show_cashier)
+              <div class="receipt-info-row">
+                <span class="receipt-info-label">Served By:</span>
+                <span class="receipt-info-value">{{ $manager->other_name }} {{ $manager->surname }}</span>
+              </div>
+            @endif
           </div>
 
           <div class="receipt-items">
@@ -452,14 +483,18 @@ Sell Product
               <span>Subtotal:</span>
               <span id="receiptSubtotal">₦0.00</span>
             </div>
-            <div class="receipt-total-row">
-              <span>Tax (0%):</span>
-              <span>₦0.00</span>
-            </div>
-            <div class="receipt-total-row" id="receiptDiscountRow" style="display:none;">
-              <span>Discount:</span>
-              <span id="receiptDiscount"></span>
-            </div>
+            @if($receiptSettings->show_tax_details)
+              <div class="receipt-total-row">
+                <span>Tax (0%):</span>
+                <span>₦0.00</span>
+              </div>
+            @endif
+            @if($receiptSettings->show_discounts)
+              <div class="receipt-total-row" id="receiptDiscountRow" style="display:none;">
+                <span>Discount:</span>
+                <span id="receiptDiscount"></span>
+              </div>
+            @endif
             <div class="receipt-total-row grand-total">
               <span>Total:</span>
               <span id="receiptTotal">₦0.00</span>
@@ -476,9 +511,11 @@ Sell Product
               <i class="menu-icon bi bi-cart-fill"></i> Start New Sale
             </button>
           </div>
-          <div class="receipt-thank-you">
-            <i class="bi bi-heart-fill"></i> Thank you for your purchase!
-          </div>
+          @if($receiptSettings->footer_text)
+            <div class="receipt-thank-you">
+              <i class="bi bi-heart-fill"></i> {{ $receiptSettings->footer_text }}
+            </div>
+          @endif
 
 
 
