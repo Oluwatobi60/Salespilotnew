@@ -122,6 +122,9 @@ class VariantItemController extends Controller
 
                 $productVariantData = [
                     'variant_item_id' => $variantItem->id,
+                    'business_name' => $manager->business_name,
+                    'manager_name' => $managerName,
+                    'manager_email' => $manager->email,
                     'variant_name' => $variantData['name'],
                     'sku' => $variantData['sku'],
                     'barcode' => $variantData['barcode'] ?? null,

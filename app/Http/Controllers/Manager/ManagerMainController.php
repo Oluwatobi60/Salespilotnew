@@ -173,7 +173,7 @@ class ManagerMainController extends Controller
         $businessName = $user->business_name;
 
         $suppliers = Supplier::where('business_name', $businessName)->get();
-        $units = Unit::all();
+        $units = Unit::where('business_name', $businessName)->get();
         $categories = Category::where('business_name', $businessName)->get();
 
         return view('manager.standardItems.add_item_standard', compact('suppliers', 'units', 'categories'));
@@ -185,7 +185,7 @@ class ManagerMainController extends Controller
         $businessName = $user->business_name;
 
         $suppliers = Supplier::where('business_name', $businessName)->get();
-        $units = Unit::all();
+        $units = Unit::where('business_name', $businessName)->get();
         $categories = Category::where('business_name', $businessName)->get();
 
         return view('manager.variantItems.add_item_variant', compact('suppliers', 'units', 'categories'));

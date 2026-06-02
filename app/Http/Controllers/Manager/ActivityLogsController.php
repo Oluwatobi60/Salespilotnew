@@ -15,36 +15,50 @@ class ActivityLogsController extends Controller
         $currentUser = Auth::user();
         $businessName = $currentUser->business_name;
 
-        // Get all user IDs for this business (creator + all addby managers)
-        $userIds = User::where('business_name', $businessName)->pluck('id');
+        // Restrict logs to the current user, their parent manager (if any), and their staff
+        $currentUserId = $currentUser->id;
 
-        // Get all staff IDs for this business
-        $staffIds = Staffs::where('business_name', $businessName)->pluck('id');
+        // Include parent (business creator) if this user was added by someone
+        $visibleUserIds = collect([$currentUserId]);
+        if (!empty($currentUser->manager_email)) {
+            $parentUser = User::where('email', $currentUser->manager_email)->first();
+            if ($parentUser) {
+                $visibleUserIds->push($parentUser->id);
+            }
+        }
 
-        // Get all non-login activities for this business
+        // Staff IDs that belong to this manager (staff.manager_email == manager.email)
+        $staffIds = Staffs::where('manager_email', $currentUser->email)->pluck('id');
+
+        // Get all non-login activities by visible users or their staff
         $nonLoginLogs = ActivityLog::with(['user', 'staff'])
             ->where('action', '!=', 'login')
-            ->where(function ($q) use ($userIds, $staffIds) {
-                $q->whereIn('user_id', $userIds)
-                  ->orWhereIn('staff_id', $staffIds);
+            ->where(function ($q) use ($visibleUserIds, $staffIds) {
+                $q->whereIn('user_id', $visibleUserIds->toArray());
+                if ($staffIds->count() > 0) {
+                    $q->orWhereIn('staff_id', $staffIds);
+                }
             })
             ->orderByDesc('created_at');
 
-        // Get latest login per user for this business
+        // Get latest login for visible users
         $latestUserLogins = ActivityLog::with(['user'])
             ->where('action', 'login')
-            ->whereIn('user_id', $userIds)
+            ->whereIn('user_id', $visibleUserIds->toArray())
             ->orderByDesc('created_at')
             ->get()
             ->unique('user_id');
 
-        // Get latest login per staff for this business
-        $latestStaffLogins = ActivityLog::with(['staff'])
-            ->where('action', 'login')
-            ->whereIn('staff_id', $staffIds)
-            ->orderByDesc('created_at')
-            ->get()
-            ->unique('staff_id');
+        // Get latest login per staff for this manager
+        $latestStaffLogins = collect();
+        if ($staffIds->count() > 0) {
+            $latestStaffLogins = ActivityLog::with(['staff'])
+                ->where('action', 'login')
+                ->whereIn('staff_id', $staffIds)
+                ->orderByDesc('created_at')
+                ->get()
+                ->unique('staff_id');
+        }
 
         // Merge all logs and sort
         $mergedLogs = $nonLoginLogs->get()->merge($latestUserLogins)->merge($latestStaffLogins)->sortByDesc('created_at');

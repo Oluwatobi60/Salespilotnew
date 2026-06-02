@@ -107,8 +107,7 @@ Branch Inventory Allocation | {{ config('app.name') }}
                                                     data-name="{{ $item->item_name }}"
                                                     data-stock="{{ $item->current_stock }}"
                                                     data-unit="{{ $item->unit ?? '' }}">
-                                                    {{ $item->item_name }}
-                                                    (Stock: {{ $item->current_stock }} {{ $item->unit ?? '' }})
+                                                        {{ $item->item_name }}
                                                 </option>
                                             @endforeach
                                         </select>
@@ -339,9 +338,8 @@ document.addEventListener('DOMContentLoaded', function () {
     $('#standardItemSelector').on('change', function () {
         const opt = $(this).find(':selected');
         const stock = opt.data('stock');
-        const unit  = opt.data('unit') || '';
         if (stock !== undefined && $(this).val()) {
-            $('#availableStock').text(stock + ' ' + unit);
+            $('#availableStock').text(stock);
             $('#stockInfo').removeClass('d-none');
             $('#quantityInput').attr('max', stock);
         } else {
@@ -356,11 +354,12 @@ document.addEventListener('DOMContentLoaded', function () {
             const found = variantData.find(v => v.id == parentId);
             if (found && found.variants) {
                 found.variants.forEach(v => {
-                    $('#variantItemSelector').append(
-                        `<option value="${v.id}" data-stock="${v.stock_quantity}">
-                            ${v.variant_name} (Stock: ${v.stock_quantity})
-                        </option>`
-                    );
+                            const stockValue = v.current_stock ?? v.opening_stock ?? 0;
+                            $('#variantItemSelector').append(
+                                `<option value="${v.id}" data-stock="${stockValue}" data-name="${v.variant_name}">
+                                    ${v.variant_name} (Stock: ${stockValue})
+                                </option>`
+                            );
                 });
                 $('#variantItemSelector').removeClass('d-none');
             }

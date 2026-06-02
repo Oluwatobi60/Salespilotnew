@@ -46,15 +46,25 @@ class AllItemsController extends Controller
         if ($manager->addby) {
             // Get branches where this manager is the branch manager
             $managedBranchIds = Branch::where('manager_id', $manager->id)->pluck('id');
-            // Only show items that have allocations to these branches by this manager
-            $standardQuery->whereHas('branchInventory', function($q) use ($manager, $managedBranchIds) {
-                $q->whereIn('branch_id', $managedBranchIds)
-                  ->where('allocated_by', $manager->id);
+            // Only show items allocated to the branches this manager manages
+            $standardQuery->whereHas('branchInventory', function($q) use ($managedBranchIds) {
+                $q->whereIn('branch_id', $managedBranchIds);
             });
-            $variantQuery->whereHas('branchInventory', function($q) use ($manager, $managedBranchIds) {
-                $q->whereIn('branch_id', $managedBranchIds)
-                  ->where('allocated_by', $manager->id);
-            });
+            // For variant items, branch_inventory entries reference product variant IDs, not the parent VariantItem.
+            // Collect variant (product_variant) IDs allocated to the managed branches and filter by those.
+            $variantIds = BranchInventory::where('item_type', 'variant')
+                ->whereIn('branch_id', $managedBranchIds)
+                ->where('business_name', $businessName)
+                ->pluck('item_id')
+                ->unique();
+            if ($variantIds->count() > 0) {
+                $variantQuery->whereHas('variants', function($q) use ($variantIds) {
+                    $q->whereIn('id', $variantIds);
+                });
+            } else {
+                // No variant allocations for these branches — return empty
+                $variantQuery->whereRaw('1 = 0');
+            }
         }
 
         // Fetch Standard Items with related data
@@ -91,7 +101,7 @@ class AllItemsController extends Controller
 
 
         // Get all branches for this business
-        $branches = \App\Models\Branch\Branch::where('business_name', $businessName)->get();
+        $branches = Branch::where('business_name', $businessName)->get();
 
         // Combine all items into a single collection
         $allItems = collect();
@@ -103,33 +113,37 @@ class AllItemsController extends Controller
                 ->where('business_name', $businessName)
                 ->with('branch');
             if ($manager->addby) {
-                $branchInventoriesQuery->where('allocated_by', $manager->id);
+                $branchInventoriesQuery->whereIn('branch_id', $managedBranchIds);
             }
             $branchInventories = $branchInventoriesQuery->get();
             $branch_inventory_list = $branchInventories->map(function($inv) {
-                if ($inv->branch && $inv->branch->branch_name) {
-                    return $inv->branch->branch_name . ': Allocated ' . $inv->allocated_quantity . ', Current ' . $inv->current_quantity;
-                }
-                return null;
-            })->filter()->values();
+                $branchName = ($inv->branch && $inv->branch->branch_name) ? $inv->branch->branch_name : ('Branch ID ' . $inv->branch_id);
+                return $branchName . ': Allocated ' . $inv->allocated_quantity . ', Current ' . $inv->current_quantity;
+            })->values();
             $totalAllocated = $branchInventories->sum('allocated_quantity');
             $branchCurrent = $branchInventories->sum('current_quantity');
-
-            if ($isBasicOrFree) {
-                $openingStock = ($item->opening_stock ?? 0) > 0
-                    ? $item->opening_stock
-                    : (($item->current_stock ?? 0) + $totalAllocated);
-                $currentStock = $branchInventories->count() > 0
-                    ? $branchCurrent
-                    : ($item->current_stock ?? 0);
-                $generalLeft = $currentStock;
-            } else {
-                $openingStock = ($item->current_stock ?? 0) + $totalAllocated;
-                $currentStock = $openingStock;
-                $generalLeft = $item->current_stock ?? 0;
-            }
-
-            if (!$manager->addby || $branch_inventory_list->count() > 0) {
+// Determine opening stock, current stock, and general left based on plan and manager type
+                    if ($isBasicOrFree) {
+                        $openingStock = ($item->opening_stock ?? 0) > 0
+                            ? $item->opening_stock
+                            : (($item->current_stock ?? 0) + $totalAllocated);
+                        $currentStock = $branchInventories->count() > 0
+                            ? $branchCurrent
+                            : ($item->current_stock ?? 0);
+                        $generalLeft = $currentStock;
+                    } else {
+                        if ($manager->addby) {
+                            $openingStock = $totalAllocated;
+                            $currentStock = $branchCurrent;
+                            $generalLeft = $branchCurrent;
+                        } else {
+                            $openingStock = ($item->current_stock ?? 0) + $totalAllocated;
+                            $currentStock = $openingStock;
+                            $generalLeft = $item->current_stock ?? 0;
+                        }
+                    }
+// Only include items that are either not an added manager (full access) or have inventory in the branches they manage
+            if (!$manager->addby || $branchInventories->count() > 0) {
                 $unit = $item->relationLoaded('unit') ? $item->getRelation('unit') : (Unit::find($item->getAttribute('unit')) ?? null);
                 $allItems->push([
                     'id' => $item->id,
@@ -167,15 +181,13 @@ class AllItemsController extends Controller
                         ->where('business_name', $businessName)
                         ->with('branch');
                     if ($manager->addby) {
-                        $branchInventoriesQuery->where('allocated_by', $manager->id);
+                        $branchInventoriesQuery->whereIn('branch_id', $managedBranchIds);
                     }
                     $branchInventories = $branchInventoriesQuery->get();
                     $branch_inventory_list = $branchInventories->map(function($inv) {
-                        if ($inv->branch && $inv->branch->branch_name) {
-                            return $inv->branch->branch_name . ': Allocated ' . $inv->allocated_quantity . ', Current ' . $inv->current_quantity;
-                        }
-                        return null;
-                    })->filter()->values();
+                        $branchName = ($inv->branch && $inv->branch->branch_name) ? $inv->branch->branch_name : ('Branch ID ' . $inv->branch_id);
+                        return $branchName . ': Allocated ' . $inv->allocated_quantity . ', Current ' . $inv->current_quantity;
+                    })->values();
                     $totalAllocated = $branchInventories->sum('allocated_quantity');
                     $branchCurrent = $branchInventories->sum('current_quantity');
 
@@ -188,11 +200,17 @@ class AllItemsController extends Controller
                             : ($variant->current_stock ?? 0);
                         $generalLeft = $currentStock;
                     } else {
-                        $openingStock = ($variant->current_stock ?? 0) + $totalAllocated;
-                        $currentStock = $variant->current_stock ?? 0;
-                        $generalLeft = $variant->current_stock ?? 0;
+                        if ($manager->addby) {
+                            $openingStock = $totalAllocated;
+                            $currentStock = $branchCurrent;
+                            $generalLeft = $branchCurrent;
+                        } else {
+                            $openingStock = ($variant->current_stock ?? 0) + $totalAllocated;
+                            $currentStock = $variant->current_stock ?? 0;
+                            $generalLeft = $variant->current_stock ?? 0;
+                        }
                     }
-                    if (!$manager->addby || $branch_inventory_list->count() > 0) {
+                    if (!$manager->addby || $branchInventories->count() > 0) {
                         $unit = $item->relationLoaded('unit') ? $item->getRelation('unit') : (Unit::find($item->getAttribute('unit')) ?? null);
                         $allItems->push([
                             'id' => $variant->id,
@@ -282,12 +300,34 @@ class AllItemsController extends Controller
         ));
     }
 
+    /**
+     * Determine whether the current manager can edit or delete items.
+     */
+    private function canEditItems()
+    {
+        $manager = Auth::user();
+        if (!$manager) {
+            return false;
+        }
+
+        // Business creator / owner has full access
+        if (empty($manager->addby)) {
+            return true;
+        }
+
+        return user_has_feature('manager_edit_items_features', $manager);
+    }
+
 
     public function delete_item($type, $id)
     {
         /** @var \App\Models\User $manager */
         $manager = Auth::user();
         $businessName = $manager->business_name;
+
+        if (!$this->canEditItems()) {
+            return redirect()->route('all_items')->with('error', 'You do not have permission to delete items. This must be enabled by your business creator.');
+        }
 
         switch ($type) {
             case 'standard':
@@ -437,6 +477,10 @@ class AllItemsController extends Controller
             $manager = Auth::user();
             $businessName = $manager->business_name;
 
+            if (!$this->canEditItems()) {
+                return redirect()->route('all_items')->with('error', 'You do not have permission to edit items. This must be enabled by your business creator.');
+            }
+
             $suppliers = Supplier::where('business_name', $businessName)->get();
             $units = Unit::all();
             $itemType = $type; // Define itemType variable
@@ -479,6 +523,10 @@ class AllItemsController extends Controller
         try {
             $manager = Auth::user();
             $businessName = $manager->business_name;
+
+            if (!$this->canEditItems()) {
+                return redirect()->route('all_items')->with('error', 'You do not have permission to edit items. This must be enabled by your business creator.');
+            }
 
             switch ($type) {
                 case 'standard':
@@ -584,6 +632,13 @@ class AllItemsController extends Controller
         try {
             $manager = Auth::user();
             $businessName = $manager->business_name;
+
+            if (!$this->canEditItems()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You do not have permission to delete items. This must be enabled by your business creator.',
+                ], 403);
+            }
 
             // Validate input
             $items = $request->input('items');

@@ -37,9 +37,14 @@ class StaffsMainController extends Controller
 
         // Get item IDs from branch_inventory for staff's branch
         if ($branchId) {
+            // Only include items allocated by the business owner (branch user)
+            $branchOwnerId = $staffBranch->user_id ?? null;
             $branchInventory = BranchInventory::where('branch_id', $branchId)
                 ->where('business_name', $businessName)
                 ->where('current_quantity', '>', 0)
+                ->when($branchOwnerId, function($q) use ($branchOwnerId) {
+                    $q->where('allocated_by', $branchOwnerId);
+                })
                 ->get();
 
 
@@ -100,8 +105,12 @@ class StaffsMainController extends Controller
 
         // Replace stock quantities with branch inventory quantities
         if ($branchId) {
+            $branchOwnerId = $staffBranch->user_id ?? null;
             $branchInventory = BranchInventory::where('branch_id', $branchId)
                 ->where('business_name', $businessName)
+                ->when($branchOwnerId, function($q) use ($branchOwnerId) {
+                    $q->where('allocated_by', $branchOwnerId);
+                })
                 ->get();
 
             // Replace standard item stock with branch inventory stock
@@ -210,11 +219,14 @@ class StaffsMainController extends Controller
 
         // Get item IDs from branch_inventory for staff's branch
         if ($branchId) {
-            $branchInventory = BranchInventory::where('branch_id', $branchId)
-                ->where('business_name', $businessName)
-                ->where('current_quantity', '>', 0)
-                ->get();
-
+             $branchOwnerId = $staffBranch->user_id ?? null;
+             $branchInventory = BranchInventory::where('branch_id', $branchId)
+                 ->where('business_name', $businessName)
+                 ->where('current_quantity', '>', 0)
+                 ->when($branchOwnerId, function ($q) use ($branchOwnerId) {
+                     $q->where('allocated_by', $branchOwnerId);
+                 })
+                 ->get();
 
             foreach ($branchInventory as $inventory) {
                 if ($inventory->item_type === 'standard') {
@@ -274,34 +286,38 @@ class StaffsMainController extends Controller
 
         // Replace stock quantities with branch inventory quantities
         if ($branchId) {
-            $branchInventory = BranchInventory::where('branch_id', $branchId)
-                ->where('business_name', $businessName)
-                ->get();
-
-            // Replace standard item stock with branch inventory stock
-            foreach ($standard_items as $item) {
-                $branchStock = $branchInventory->where('item_type', 'standard')
-                    ->where('item_id', $item->id)
-                    ->first();
-                if ($branchStock) {
-                    $item->current_stock = $branchStock->current_quantity;
-                    $item->branch_inventory_id = $branchStock->id;
-                }
-            }
-
-            // Replace variant stock with branch inventory stock
-            foreach ($variant_items as $variantItem) {
-                foreach ($variantItem->variants as $variant) {
-                    $branchStock = $branchInventory->where('item_type', 'variant')
-                        ->where('item_id', $variant->id)
-                        ->first();
-                    if ($branchStock) {
-                        $variant->stock_quantity = $branchStock->current_quantity;
-                        $variant->branch_inventory_id = $branchStock->id;
-                    }
-                }
-            }
-        }
+             $branchOwnerId = $staffBranch->user_id ?? null;
+             $branchInventory = BranchInventory::where('branch_id', $branchId)
+                 ->where('business_name', $businessName)
+                 ->when($branchOwnerId, function ($q) use ($branchOwnerId) {
+                     $q->where('allocated_by', $branchOwnerId);
+                 })
+                 ->get();
+ 
+             // Replace standard item stock with branch inventory stock
+             foreach ($standard_items as $item) {
+                 $branchStock = $branchInventory->where('item_type', 'standard')
+                     ->where('item_id', $item->id)
+                     ->first();
+                 if ($branchStock) {
+                     $item->current_stock = $branchStock->current_quantity;
+                     $item->branch_inventory_id = $branchStock->id;
+                 }
+             }
+ 
+             // Replace variant stock with branch inventory stock
+             foreach ($variant_items as $variantItem) {
+                 foreach ($variantItem->variants as $variant) {
+                     $branchStock = $branchInventory->where('item_type', 'variant')
+                         ->where('item_id', $variant->id)
+                         ->first();
+                     if ($branchStock) {
+                         $variant->current_stock = $branchStock->current_quantity;
+                         $variant->branch_inventory_id = $branchStock->id;
+                     }
+                 }
+             }
+         }
 
         // Get all unique categories
         $categories = Category::where('business_name', $businessName)

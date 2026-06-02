@@ -31,18 +31,23 @@ class ValuationReportController extends Controller
             }
         }
 
-        // Check if user is a business creator or branch manager
-        $isBranchManager = !empty($manager->addby);
+        // Detect if this manager is assigned to a branch
+        $branchRecord = Branch::where('manager_id', $manager->id)->first();
         $managerBranchName = $manager->branch_name;
         $branchIds = [];
 
-        if ($isBranchManager && !empty($managerBranchName)) {
-            // Get branch IDs for this manager's branch
+        if ($branchRecord) {
+            $branchIds = [$branchRecord->id];
+            $managerBranchName = $branchRecord->branch_name;
+        } elseif (!empty($managerBranchName)) {
+            // Fallback for manager records that store branch_name but may not have a branch_id mapping
             $branchIds = Branch::where('business_name', $businessName)
                 ->where('branch_name', $managerBranchName)
                 ->pluck('id')
                 ->toArray();
         }
+
+        $isBranchManager = !empty($branchIds);
 
         // Fetch items based on user role
         $items = [];
@@ -125,7 +130,12 @@ class ValuationReportController extends Controller
 
             // Standard Items
             foreach ($standardItems as $item) {
-                $quantity = $item->current_stock ?? 0;
+                $mainQuantity = $item->current_stock ?? 0;
+                $branchQuantity = BranchInventory::where('item_id', $item->id)
+                    ->where('item_type', 'standard')
+                    ->where('business_name', $businessName)
+                    ->sum('current_quantity');
+                $quantity = $mainQuantity + $branchQuantity;
                 $cost = $item->cost_price ?? 0;
                 $selling = $item->selling_price ?? 0;
                 $inventoryValue = $quantity * $cost;
@@ -134,12 +144,7 @@ class ValuationReportController extends Controller
                 $margin = $sellingValue > 0 ? ($potentialProfit / $sellingValue) * 100 : 0;
                 $categoryName = $categories[$item->category] ?? 'N/A';
 
-                // Get branch info from branch_inventory
-                $branchInfo = BranchInventory::where('item_id', $item->id)
-                    ->where('item_type', 'standard')
-                    ->with('branch')
-                    ->first();
-                $branchName = $branchInfo && $branchInfo->branch ? $branchInfo->branch->branch_name : 'Main Stock';
+                $branchName = $branchQuantity > 0 ? 'Main Stock + Branch Stock' : 'Main Stock';
 
                 $items[] = [
                     'item_name' => $item->item_name,
@@ -160,7 +165,12 @@ class ValuationReportController extends Controller
             }
             // Product Variants
             foreach ($productVariants as $variant) {
-                $quantity = $variant->stock_quantity ?? 0;
+                $mainQuantity = $variant->current_stock ?? 0;
+                $branchQuantity = BranchInventory::where('item_id', $variant->id)
+                    ->where('item_type', 'variant')
+                    ->where('business_name', $businessName)
+                    ->sum('current_quantity');
+                $quantity = $mainQuantity + $branchQuantity;
                 $cost = $variant->cost_price ?? 0;
                 $selling = $variant->selling_price ?? 0;
                 $inventoryValue = $quantity * $cost;
@@ -179,15 +189,10 @@ class ValuationReportController extends Controller
                     }
                 }
 
-                // Get branch info from branch_inventory
-                $branchInfo = BranchInventory::where('item_id', $variant->id)
-                    ->where('item_type', 'variant')
-                    ->with('branch')
-                    ->first();
-                $branchName = $branchInfo && $branchInfo->branch ? $branchInfo->branch->branch_name : 'Main Stock';
+                $branchName = $branchQuantity > 0 ? 'Main Stock + Branch Stock' : 'Main Stock';
 
                 $items[] = [
-                    'item_name' => $variant->variant_name,
+                    'item_name' => ($variant->variantItem->item_name ?? '') . ' - ' . $variant->variant_name,
                     'category_name' => $categoryName,
                     'category_id' => $categoryId,
                     'quantity' => $quantity,

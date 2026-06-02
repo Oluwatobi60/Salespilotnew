@@ -353,13 +353,13 @@ Add Staff Member
               </div>
 
                <div class="row">
-                <div class="col-md-12 mb-3">
+               {{--   <div class="col-md-12 mb-3">
                   <label for="othername" class="form-label">Othername: <span class="text-danger">*</span></label>
                   <input type="text" class="form-control" id="othername" name="othername" placeholder="Enter othername" required value="{{ old('othername') }}">
                   @error('othername')
                     <small class="text-danger">{{ $message }}</small>
                   @enderror
-                </div>
+                </div>  --}}
                {{--   <div class="col-md-6 mb-3">
                   <label for="staff_id" class="form-label">Staff ID <span class="text-danger">*</span></label>
                   <input type="text" class="form-control" id="staff_id" name="staff_id" placeholder="Auto-generated" value="{{ old('staff_id') }}" readonly required>
@@ -421,7 +421,7 @@ Add Staff Member
                 <div class="col-md-6 mb-2">
                   <label for="role" class="form-label">Role <span class="text-danger">*</span></label>
                   <select class="form-select" id="role" name="role" required>
-                    <option value="">Select Role</option>
+                   {{--   <option value="">Select Role</option>  --}}
                     <option value="manager" {{ old('role') == 'manager' ? 'selected' : '' }}>Manager</option>
                   </select>
                   @error('role')

@@ -596,7 +596,7 @@ Add Item Variant
           </div>
         </div>
       </div>
-    </div>
+
 
     <!-- Variant Pricing Modal -->
     <div class="modal-overlay" id="pricingModalOverlay" style="display: none;">

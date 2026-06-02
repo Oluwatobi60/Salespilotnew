@@ -49,7 +49,7 @@ class AddManagerController extends Controller
     {
         $validatedData = $request->validate([
             'firstname' => 'required|string|max:255',
-            'othername' => 'required|string|max:255',
+           /*  'othername' => 'required|string|max:255', */
             'surname' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'phone' => 'nullable|string|max:20',
@@ -136,8 +136,8 @@ class AddManagerController extends Controller
 
         $user = User::create([
             'first_name' => $validatedData['firstname'],
-            'other_name' => $validatedData['othername'],
-            'surname' => $validatedData['surname'],
+/*             'other_name' => $validatedData['othername'],
+ */            'surname' => $validatedData['surname'],
             'email' => $validatedData['email'],
             'phone_number' => $validatedData['phone'],
             'business_name' => $sessionManager->business_name,
@@ -173,7 +173,7 @@ class AddManagerController extends Controller
     {
         $currentManager = Auth::user();
         $businessName = $currentManager->business_name;
-        
+
         // ✅ SECURITY: Verify manager belongs to same business
         $manageredit = User::where('business_name', $businessName)
             ->findOrFail($id);
@@ -186,12 +186,12 @@ class AddManagerController extends Controller
     {
         $currentManager = Auth::user();
         $businessName = $currentManager->business_name;
-        
+
         $validatedData = $request->validate([
             'first_name' => 'required|string|max:255',
             'surname' => 'required|string|max:255',
-            'other_name' => 'required|string|max:255|unique:users,other_name,' . $id,
-            'phone' => 'nullable|string|max:20',
+/*             'other_name' => 'required|string|max:255|unique:users,other_name,' . $id,
+ */            'phone' => 'nullable|string|max:20',
         ]);
 
         // ✅ SECURITY: Verify manager belongs to same business
@@ -199,8 +199,8 @@ class AddManagerController extends Controller
             ->findOrFail($id);
         $manager->surname = $validatedData['surname'];
         $manager->first_name = $validatedData['first_name'];
-        $manager->other_name = $validatedData['other_name'];
-        $manager->phone_number = $validatedData['phone'];
+/*         $manager->other_name = $validatedData['other_name'];
+ */        $manager->phone_number = $validatedData['phone'];
         $manager->save();
 
         return redirect()->route('manager.manager')->with('success', 'Manager profile updated successfully.');
@@ -212,7 +212,7 @@ class AddManagerController extends Controller
     {
         $currentManager = Auth::user();
         $businessName = $currentManager->business_name;
-        
+
         // ✅ SECURITY: Verify manager belongs to same business
         $manager = User::where('business_name', $businessName)
             ->findOrFail($id);

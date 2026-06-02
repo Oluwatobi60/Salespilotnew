@@ -158,15 +158,16 @@ class BranchInventoryController extends Controller
                     ->firstOrFail();
 
                 // Check if sufficient stock available
-                if ($item->stock_quantity < $validated['quantity']) {
+                $availableStock = $item->current_stock ?? $item->opening_stock ?? 0;
+                if ($availableStock < $validated['quantity']) {
                     return response()->json([
                         'success' => false,
-                        'message' => "Insufficient stock. Available: {$item->stock_quantity}"
+                        'message' => "Insufficient stock. Available: {$availableStock}"
                     ], 400);
                 }
 
                 // Deduct from main inventory
-                $item->stock_quantity -= $validated['quantity'];
+                $item->current_stock = $availableStock - $validated['quantity'];
                 $item->save();
             }
 

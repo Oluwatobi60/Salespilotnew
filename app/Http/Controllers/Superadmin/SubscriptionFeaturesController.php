@@ -9,8 +9,40 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
+
 class SubscriptionFeaturesController extends Controller
 {
+    /**
+     * Check if current user is authorized to edit/delete subscription features
+     * Managers need manager_edit_items_features to be enabled in their subscription
+     */
+    protected function canEditFeatures()
+    {
+        $user = auth()->user();
+        
+        // SuperAdmin always can edit
+        if (auth('superadmin')->check()) {
+            return true;
+        }
+        
+        // Business creator (no addby) can edit
+        if ($user && $user->addby === null) {
+            return true;
+        }
+        
+        // Managers need the feature enabled
+        if ($user && $user->addby !== null) {
+            try {
+                return user_has_feature('manager_edit_items_features', $user);
+            } catch (\Exception $e) {
+                Log::warning('Error checking manager_edit_items_features: ' . $e->getMessage());
+                return false;
+            }
+        }
+        
+        return false;
+    }
+
     /**
      * Display subscription plans with features management
      */
@@ -26,8 +58,11 @@ class SubscriptionFeaturesController extends Controller
         $plans = SubscriptionPlan::orderBy('monthly_price')->get();
         $features = SubscriptionFeature::getGroupedFeatures();
         $roles = SubscriptionFeature::getRoles();
+        
+        // Pass authorization info to view
+        $canEditFeatures = $this->canEditFeatures();
 
-        return view('superadmin.subscription-features.index', compact('plans', 'features', 'roles'));
+        return view('superadmin.subscription-features.index', compact('plans', 'features', 'roles', 'canEditFeatures'));
     }
 
     /**
@@ -54,6 +89,14 @@ class SubscriptionFeaturesController extends Controller
      */
     public function toggleFeature(Request $request, SubscriptionPlan $plan)
     {
+        // Check authorization
+        if (!$this->canEditFeatures()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You do not have permission to edit subscription features. This must be enabled by your business creator.',
+            ], 403);
+        }
+
         try {
             $validated = $request->validate([
                 'feature_slug' => 'required|string|exists:subscription_features,slug',
@@ -130,6 +173,14 @@ class SubscriptionFeaturesController extends Controller
      */
     public function updatePlanFeatures(Request $request, SubscriptionPlan $plan)
     {
+        // Check authorization
+        if (!$this->canEditFeatures()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You do not have permission to edit subscription features. This must be enabled by your business creator.',
+            ], 403);
+        }
+
         $validated = $request->validate([
             'features' => 'nullable|array',
             'features.*' => 'string|exists:subscription_features,slug',
@@ -153,6 +204,14 @@ class SubscriptionFeaturesController extends Controller
      */
     public function createFeature(Request $request)
     {
+        // Check authorization
+        if (!$this->canEditFeatures()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You do not have permission to create subscription features. This must be enabled by your business creator.',
+            ], 403);
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'slug' => 'required|string|max:255|unique:subscription_features,slug',
@@ -198,6 +257,14 @@ class SubscriptionFeaturesController extends Controller
      */
     public function deleteFeature(SubscriptionFeature $feature)
     {
+        // Check authorization
+        if (!$this->canEditFeatures()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You do not have permission to delete subscription features. This must be enabled by your business creator.',
+            ], 403);
+        }
+
         // Remove from all plans
         $plans = SubscriptionPlan::all();
         foreach ($plans as $plan) {

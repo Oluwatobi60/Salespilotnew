@@ -13,6 +13,7 @@ All Items
     }
   }
   $stockLabel = $showInventoryColumns ? 'General Stock' : 'In Stock';
+  $canEditItems = Auth::user()->addby === null || user_has_feature('manager_edit_items_features', Auth::user());
 @endphp
 
 
@@ -182,9 +183,11 @@ All Items
                         <button class="btn btn-sm btn-outline-secondary" id="deselectAllBtn">
                             <i class="bi bi-x-circle me-1"></i>Deselect All
                         </button>
+                        @if($canEditItems)
                         <button class="btn btn-sm btn-danger" id="deleteSelectedBtn">
                             <i class="bi bi-trash me-1"></i>Delete Selected
                         </button>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -459,6 +462,7 @@ All Items
                         {{-- Actions --}}
                         <td>
                             <div class="ai-actions">
+                                @if($canEditItems)
                                 <button class="btn btn-sm btn-outline-primary edit-btn"
                                         data-id="{{ $item['id'] }}"
                                         data-type="{{ $item['type'] }}"
@@ -477,6 +481,7 @@ All Items
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </form>
+                                @endif
                             </div>
                         </td>
                     </tr>
@@ -600,9 +605,11 @@ All Items
         </div>
         <div class="panel-footer">
             <button type="button" class="btn btn-secondary me-2" id="closePanelFooterBtn">Close</button>
+            @if($canEditItems)
             <button type="button" class="btn btn-primary" id="editItemPanelBtn">
                 <i class="bi bi-pencil me-1"></i>Edit Item
             </button>
+            @endif
         </div>
     </div>
 </div>

@@ -35,6 +35,7 @@ class BranchController extends Controller
         $managers = User::where('business_name', $user->business_name)
             ->where('role', 'manager')
             ->where('status', 1)
+            ->where('addby', $user->email)
             ->whereNotIn('id', $assignedManagerIds)
             ->get();
 
@@ -163,6 +164,7 @@ class BranchController extends Controller
         $managers = User::where('business_name', $user->business_name)
             ->where('role', 'manager')
             ->where('status', 1)
+            ->where('addby', $user->email)
             ->whereNotIn('id', $assignedManagerIds)
             ->get();
 

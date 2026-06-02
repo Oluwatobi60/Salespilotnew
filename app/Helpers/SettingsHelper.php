@@ -413,6 +413,19 @@ if (!function_exists('user_has_feature')) {
 
             // Get parent user's subscription
             $subscription = $parentUser->currentSubscription()->first();
+        } elseif ($user instanceof \App\Models\User && $user->role === 'manager' && !empty($user->addby)) {
+            // Managers created by another user inherit the creator's subscription
+            $parentUser = \App\Models\User::where('email', $user->addby)
+                ->orWhere('id', $user->addby)
+                ->first();
+
+            if ($parentUser) {
+                $subscription = $parentUser->currentSubscription()->first();
+            }
+
+            if (empty($subscription)) {
+                $subscription = $user->currentSubscription()->first();
+            }
         } else {
             // Regular user - get their own subscription
             $subscription = $user->currentSubscription()->first();
@@ -467,8 +480,21 @@ if (!function_exists('user_subscription_features')) {
             return [];
         }
 
-        // Get user's active subscription
-        $subscription = $user->currentSubscription()->first();
+        // If this is a manager created by another user, inherit the creator's subscription
+        if ($user instanceof \App\Models\User && $user->role === 'manager' && !empty($user->addby)) {
+            $parentUser = \App\Models\User::where('email', $user->addby)
+                ->orWhere('id', $user->addby)
+                ->first();
+
+            if ($parentUser) {
+                $subscription = $parentUser->currentSubscription()->first();
+            }
+        }
+
+        // Get user's active subscription if not inherited from creator
+        if (empty($subscription)) {
+            $subscription = $user->currentSubscription()->first();
+        }
 
         if (!$subscription || !$subscription->subscriptionPlan) {
             return [];
