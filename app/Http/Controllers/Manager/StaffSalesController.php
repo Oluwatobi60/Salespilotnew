@@ -127,7 +127,7 @@ class StaffSalesController extends Controller
             ->selectRaw('MAX(cart_items.created_at) as last_transaction_date')
             ->groupBy('cart_items.manager_name', 'cart_items.staff_id', 'cart_items.user_id', 'staffs.fullname', 'staffs.email', 'staffs.role')
             ->orderBy('total_sales', 'desc')
-            ->paginate(15);
+            ->paginate(10);
 
         // Calculate totals with same filters
         $totalsQuery = CartItem::where('cart_items.status', 'completed')

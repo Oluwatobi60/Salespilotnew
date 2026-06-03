@@ -31,7 +31,7 @@ class CustomerController extends Controller
             });
         }
 
-        $customers = $query->latest()->paginate(4);
+        $customers = $query->latest()->paginate(10);
         return view('manager.customer.customerinfo', compact('customers'));
     }
 

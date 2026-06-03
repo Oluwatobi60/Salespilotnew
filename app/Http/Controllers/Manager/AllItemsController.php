@@ -276,7 +276,7 @@ class AllItemsController extends Controller
         $allItems = $allItems->sortByDesc('created_at');
 
         // Paginate the combined collection
-        $perPage = 8;
+        $perPage = 10;
         $currentPage = request()->get('page', 1);
         $allItemsPaginated = new LengthAwarePaginator(
             $allItems->forPage($currentPage, $perPage),

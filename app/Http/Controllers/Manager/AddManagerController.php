@@ -22,7 +22,7 @@ class AddManagerController extends Controller
         // All managers for the business (for main table)
         $managerdata = User::where('business_name', $businessName)
             ->latest()
-            ->paginate(4);
+            ->paginate(10);
 
         // Only managers where 'addby' is set (not null/empty)
         $delegatedManagers = User::where('business_name', $businessName)

@@ -81,7 +81,7 @@ class SalesReportController extends Controller
             ->selectRaw('COUNT(*) as items_count')
             ->groupBy('cart_items.receipt_number', 'cart_items.customer_name', 'cart_items.customer_id', 'cart_items.created_at', 'cart_items.user_id', 'cart_items.staff_id', 'cart_items.manager_name', 'cart_items.branch_name', 'staffs.fullname')
             ->orderBy('cart_items.created_at', 'desc')
-            ->paginate(15);
+            ->paginate(10);
 
         // Get current subscription plan
         $currentSubscription = $manager->currentSubscription()->with('subscriptionPlan')->first();
@@ -274,7 +274,7 @@ class SalesReportController extends Controller
         });
 
         // Convert collection to paginator manually
-        $perPage = 15;
+        $perPage = 10;
         $currentPage = \Illuminate\Pagination\Paginator::resolveCurrentPage('page');
         $currentItems = $salesSummary->slice(($currentPage - 1) * $perPage, $perPage)->values();
 

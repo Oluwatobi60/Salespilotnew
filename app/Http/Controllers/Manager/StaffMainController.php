@@ -171,7 +171,7 @@ class StaffMainController extends Controller
         $staffdata = Staffs::where('business_name', $businessName)
             ->with('branches')
             ->latest()
-            ->paginate(4);
+            ->paginate(10);
 
         // Get branches for the dropdown - with staff count to limit per branch
         $branches = Branch::where('user_id', $manager->id)
@@ -354,7 +354,7 @@ class StaffMainController extends Controller
     {
         $manager = Auth::user();
         $businessName = $manager->business_name;
-        
+
         // ✅ SECURITY: Verify staff belongs to manager's business
         $staff = Staffs::where('business_name', $businessName)
             ->findOrFail($id);

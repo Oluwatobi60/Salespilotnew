@@ -293,7 +293,7 @@ class StaffsMainController extends Controller
                      $q->where('allocated_by', $branchOwnerId);
                  })
                  ->get();
- 
+
              // Replace standard item stock with branch inventory stock
              foreach ($standard_items as $item) {
                  $branchStock = $branchInventory->where('item_type', 'standard')
@@ -304,7 +304,7 @@ class StaffsMainController extends Controller
                      $item->branch_inventory_id = $branchStock->id;
                  }
              }
- 
+
              // Replace variant stock with branch inventory stock
              foreach ($variant_items as $variantItem) {
                  foreach ($variantItem->variants as $variant) {
@@ -340,7 +340,7 @@ class StaffsMainController extends Controller
         }
 
         // Paginate the items (12 per page)
-        $perPage = 12;
+        $perPage = 10;
         $page = Paginator::resolveCurrentPage();
         $items = $all_items->forPage($page, $perPage);
         $all_items = new \Illuminate\Pagination\LengthAwarePaginator(
@@ -770,7 +770,7 @@ class StaffsMainController extends Controller
             ->selectRaw('COUNT(*) as items_count')
             ->groupBy('cart_items.session_id', 'cart_items.cart_name', 'cart_items.customer_name', 'cart_items.customer_id', 'cart_items.created_at', 'cart_items.staff_id', 'staffs.fullname')
             ->orderBy('cart_items.created_at', 'desc')
-            ->paginate(15);
+            ->paginate(10);
 
         return view('staff.sales.saved_carts', compact('savedCarts'));
     }
@@ -790,7 +790,7 @@ class StaffsMainController extends Controller
             ->selectRaw('COUNT(*) as items_count')
             ->groupBy('receipt_number', 'customer_name', 'customer_id', 'created_at', 'staff_id')
             ->orderBy('created_at', 'desc')
-            ->paginate(15);
+            ->paginate(10);
 
         return view('staff.sales.completed_sales', compact('completedSales'));
     }
@@ -830,7 +830,7 @@ class StaffsMainController extends Controller
         $customers = AddCustomer::where('business_name', $businessName)
             ->where('staff_id', $staff->id)
             ->latest()
-            ->paginate(4);
+            ->paginate(10);
         return view('staff.customer.customerinfo', compact('customers'));
     }
 

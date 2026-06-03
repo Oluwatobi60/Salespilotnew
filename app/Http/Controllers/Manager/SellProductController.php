@@ -147,7 +147,7 @@ class SellProductController extends Controller
         }
 
         // Paginate the items (12 per page)
-        $perPage = 12;
+        $perPage = 10;
         $page = Paginator::resolveCurrentPage();
         $items = $all_items->forPage($page, $perPage);
         $all_items = new \Illuminate\Pagination\LengthAwarePaginator(

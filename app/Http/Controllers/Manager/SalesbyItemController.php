@@ -213,7 +213,7 @@ class SalesbyItemController extends Controller
         ];
 
         // Paginate manually
-        $perPage = 15;
+        $perPage = 10;
         $currentPage = \Illuminate\Pagination\Paginator::resolveCurrentPage('page');
         $currentItems = $salesbyitem->slice(($currentPage - 1) * $perPage, $perPage)->values();
         $salesbyitemPaginated = new \Illuminate\Pagination\LengthAwarePaginator(

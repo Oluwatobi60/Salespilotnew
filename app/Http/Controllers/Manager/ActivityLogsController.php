@@ -65,7 +65,7 @@ class ActivityLogsController extends Controller
 
         // Paginate using LengthAwarePaginator
         $page = request()->input('page', 1);
-        $perPage = 20;
+        $perPage = 10;
         $total = $mergedLogs->count();
         $currentPageLogs = $mergedLogs->slice(($page - 1) * $perPage, $perPage)->values();
         $logs = new \Illuminate\Pagination\LengthAwarePaginator(
