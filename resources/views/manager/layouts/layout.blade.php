@@ -119,7 +119,7 @@
     <li class="nav-item">
       <a class="nav-link" data-bs-toggle="collapse" href="#form-elements" aria-expanded="false" aria-controls="form-elements">
         <i class="menu-icon mdi mdi-card-text-outline"></i>
-        <span class="menu-title">Reports</span>
+        <span class="menu-title">Reports Center</span>
         <i class="menu-arrow"></i>
       </a>
      <div class="collapse" id="form-elements">
@@ -177,7 +177,7 @@
     <li class="nav-item">
       <a class="nav-link" data-bs-toggle="collapse" href="#add-staff" aria-expanded="false" aria-controls="add-staff">
         <i class="menu-icon bi bi-person-workspace"></i>
-        <span class="menu-title">Add Staff</span>
+        <span class="menu-title">Users Management</span>
         <i class="menu-arrow"></i>
       </a>
       <div class="collapse" id="add-staff">
@@ -207,7 +207,7 @@
   <li class="nav-item">
       <a class="nav-link" data-bs-toggle="collapse" href="#add-branches" aria-expanded="false" aria-controls="add-branches">
         <i class="menu-icon bi bi-building"></i>
-        <span class="menu-title">{{ $isBusinessCreator ? 'Add Branches' : 'View Branches' }}</span>
+        <span class="menu-title">{{ $isBusinessCreator ? 'Branches Management' : 'View Branches' }}</span>
         <i class="menu-arrow"></i>
       </a>
       <div class="collapse" id="add-branches">

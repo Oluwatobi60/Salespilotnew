@@ -13,10 +13,10 @@ Get Started - SalesPilot
     <!-- Left Side - Branding -->
     <div class="signup-left">
         <div class="signup-branding">
-            <div class="brand-logo">
-                <i class="uil uil-rocket"></i>
+            <div class="form-logo">
+                    <img src="{{ asset('manager_asset/images/salespilot logo1.png') }}" alt="SalesPilot Logo">
             </div>
-            <h1>SalesPilot</h1>
+            <{{-- h1>SalesPilot</h1> --}}
             <p>Join thousands of businesses transforming their inventory management and sales operations.</p>
 
             <div class="features-list">
