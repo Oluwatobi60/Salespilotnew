@@ -142,6 +142,16 @@
         .feature-icon {
             font-size: 2rem;
             margin-bottom: 0.5rem;
+            color: #fff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .feature-icon .fa-solid,
+        .feature-icon .fa-brands {
+            color: #fff;
+            font-size: 1.8rem;
         }
 
         .feature-box h4 {

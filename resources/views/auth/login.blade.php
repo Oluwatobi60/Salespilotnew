@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="https://unicons.iconscout.com/release/v4.0.0/css/line.css">
     <link rel="stylesheet" href="{{ asset('welcome_asset/login.css') }}">
     <link rel="stylesheet" href="{{ asset('welcome_asset/css/loading-button.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
 </head>
 <body>
     <div class="login-container">
@@ -24,22 +25,26 @@
 
                 <div class="features-grid">
                     <div class="feature-box">
-                        <div class="feature-icon">📊</div>
+                        <div class="feature-icon">
+                            <i class="fa-solid fa-chart-line"></i></div>
                         <h4>Real-time Analytics</h4>
                         <p>Track performance instantly</p>
                     </div>
                     <div class="feature-box">
-                        <div class="feature-icon">🔐</div>
+                        <div class="feature-icon">
+                            <i class="fa-solid fa-shield-halved"></i></div>
                         <h4>Secure Access</h4>
                         <p>Bank-level security</p>
                     </div>
                     <div class="feature-box">
-                        <div class="feature-icon">📦</div>
+                        <div class="feature-icon">
+                            <i class="fa-solid fa-boxes-stacked"></i></div>
                         <h4>Inventory Control</h4>
                         <p>Manage stock efficiently</p>
                     </div>
                     <div class="feature-box">
-                        <div class="feature-icon">💼</div>
+                        <div class="feature-icon">
+                            <i class="fa-solid fa-briefcase"></i></div>
                         <h4>Business Growth</h4>
                         <p>Scale with confidence</p>
                     </div>

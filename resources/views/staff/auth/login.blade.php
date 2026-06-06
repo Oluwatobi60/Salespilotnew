@@ -6,6 +6,7 @@
     <title>Staff Login - SalesPilot</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://unicons.iconscout.com/release/v4.0.0/css/line.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet" href="{{ asset('welcome_asset/staff_login.css') }}">
     <link rel="stylesheet" href="{{ asset('welcome_asset/css/loading-button.css') }}">
 </head>
@@ -22,22 +23,28 @@
 
                 <div class="features-grid">
                     <div class="feature-box">
-                        <div class="feature-icon">🛒</div>
+                        <div class="feature-icon">
+                            <i class="fa-solid fa-cart-shopping"></i></div>
                         <h4>Quick Sales</h4>
                         <p>Process transactions fast</p>
                     </div>
                     <div class="feature-box">
-                        <div class="feature-icon">📋</div>
+                        <div class="feature-icon">
+                            <i class="fa-solid fa-list-check"></i></div>
                         <h4>Task Management</h4>
                         <p>Track daily activities</p>
                     </div>
                     <div class="feature-box">
-                        <div class="feature-icon">👥</div>
+                        <div class="feature-icon">
+                            <i class="fa-solid fa-users"></i>
+                        </div>
                         <h4>Customer Service</h4>
                         <p>Support excellence</p>
                     </div>
                     <div class="feature-box">
-                        <div class="feature-icon">📊</div>
+                        <div class="feature-icon">
+                            <i class="fa-solid fa-chart-line"></i>
+                        </div>
                         <h4>Performance Tracking</h4>
                         <p>Monitor your metrics</p>
                     </div>
