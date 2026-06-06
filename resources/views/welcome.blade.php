@@ -5,6 +5,7 @@ Welcome to {{ app_name() }}
 @section('welcome_page_content')
 <link rel="stylesheet" href="{{ asset('welcome_asset/style.css') }}">
 <link rel="stylesheet" href="{{ asset('welcome_asset/pricing-responsive.css') }}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
 
 <!-- Hero Section -->
 <section class="hero" id="home">
@@ -35,7 +36,7 @@ Welcome to {{ app_name() }}
             <div class="stat-card">
                 <div class="shine"></div>
                 <div class="stat-icon-wrapper">
-                    <span class="stat-icon">🏢</span>
+                    <i class="fa-solid fa-business-time"></i>
                 </div>
                 <div class="stat-value" data-target="{{ $stats['active_businesses'] ?? 0 }}">
                     {{ number_format($stats['active_businesses'] ?? 0) }}+
@@ -51,7 +52,7 @@ Welcome to {{ app_name() }}
             <div class="stat-card">
                 <div class="shine"></div>
                 <div class="stat-icon-wrapper">
-                    <span class="stat-icon">⚡</span>
+                    <i class="fa-solid fa-bolt"></i>
                 </div>
                 <div class="stat-value">
                     {{ $stats['uptime'] ?? '99.9' }}%
@@ -64,7 +65,7 @@ Welcome to {{ app_name() }}
             <div class="stat-card">
                 <div class="shine"></div>
                 <div class="stat-icon-wrapper">
-                    <span class="stat-icon">🎧</span>
+                    <i class="fa-solid fa-headset"></i>
                 </div>
                 <div class="stat-value">
                     {{ $stats['support'] ?? '24/7' }}
@@ -77,7 +78,7 @@ Welcome to {{ app_name() }}
             <div class="stat-card">
                 <div class="shine"></div>
                 <div class="stat-icon-wrapper">
-                    <span class="stat-icon">💰</span>
+                    <i class="fa-solid fa-money-bill-wave"></i>
                 </div>
                 <div class="stat-value" data-target="{{ $stats['total_transactions'] ?? 0 }}">
                     @if(($stats['total_transactions'] ?? 0) >= 1000000)
@@ -167,33 +168,39 @@ Welcome to {{ app_name() }}
 			</div>
 			<div class="features">
 				<div class="feature">
-					<div class="feature-icon">📦</div>
+					<div class="feature-icon">
+                        <i class="fa-solid fa-boxes-stacked"></i></div>
 					<h3>Inventory Management</h3>
 					<p>Track stock levels in real-time, manage variants, SKUs, barcodes, and receive low-stock alerts. Never run out of your best-selling products again.</p>
 				</div>
 
 				<div class="feature">
-					<div class="feature-icon">👥</div>
+					<div class="feature-icon">
+                        <i class="fa-solid fa-users"></i></div>
 					<h3>Customer Relationship Management</h3>
 					<p>Build lasting relationships with integrated CRM tools. Store customer data, track purchase history, and create targeted marketing campaigns.</p>
 				</div>
 				<div class="feature">
-					<div class="feature-icon">📊</div>
+					<div class="feature-icon">
+                        <i class="fa-solid fa-chart-line"></i></div>
 					<h3>Advanced Analytics</h3>
 					<p>Make data-driven decisions with comprehensive reports on sales, inventory, staff performance, and customer behavior. Visualize trends with beautiful charts.</p>
 				</div>
 				<div class="feature">
-					<div class="feature-icon">🔄</div>
+					<div class="feature-icon">
+                        <i class="fa-solid fa-arrows-rotate"></i></div>
 					<h3>Multi-Location Support</h3>
 					<p>Manage multiple stores from a single dashboard. Transfer inventory between locations and get unified reports across all your business outlets.</p>
 				</div>
 				<div class="feature">
-					<div class="feature-icon">🔐</div>
+					<div class="feature-icon">
+                        <i class="fa-solid fa-shield-halved"></i></div>
 					<h3>Secure & Reliable</h3>
 					<p>Bank-level security with encrypted data, automated backups, and role-based access control to keep your business information safe and secure.</p>
 				</div>
 				<div class="feature">
-					<div class="feature-icon">💳</div>
+					<div class="feature-icon">
+                        <i class="fa-solid fa-credit-card"></i></div>
 					<h3> Point of Sale (POS)<sub style="color: red; font-size: 0.6em;">(In view)</sub></h3>
 					<p>Lightning-fast checkout experience with support for multiple payment methods, receipt printing, and seamless cart management for busy retail environments.</p>
 				</div>
@@ -371,7 +378,7 @@ Welcome to {{ app_name() }}
 					<a href="{{ route('get_started') }}" class="btn btn-primary btn-large">Start Your Free Trial</a>
 				</div>
 				<div class="about-image">
-					📈
+					<i class="fa-solid fa-chart-line"></i>
 				</div>
 			</div>
 		</section>
@@ -386,14 +393,15 @@ Welcome to {{ app_name() }}
 				<div class="contact-grid">
 					<div class="contact-info">
 						<div class="contact-item">
-							<div class="contact-icon">📧</div>
+							<div class="contact-icon"><i class="fa-solid fa-envelope"></i></div>
 							<div>
 								<h3>Email Us</h3>
 							<a href="mailto:{{ support_email() }}">{{ support_email() }}</a>
 							</div>
 						</div>
 						<div class="contact-item">
-							<div class="contact-icon">📞</div>
+							<div class="contact-icon">
+                                <i class="fa-solid fa-phone"></i></div>
 							<div>
 								<h3>Call Us</h3>
 							<p>{{ support_phone() }}</p>
@@ -401,21 +409,23 @@ Welcome to {{ app_name() }}
 							</div>
 						</div>
 						<div class="contact-item">
-							<div class="contact-icon">📍</div>
+							<div class="contact-icon">
+                                <i class="fa-solid fa-location-dot"></i></div>
 							<div>
 								<h3>Visit Us</h3>
 								<p>123 Business District<br>Lagos, Nigeria</p>
 							</div>
 						</div>
 						<div class="contact-item">
-							<div class="contact-icon">🌐</div>
+							<div class="contact-icon">
+                                <i class="fa-solid fa-globe"></i></div>
 							<div>
 								<h3>Follow Us</h3>
 									<div class="social-links">
-									<a href="#" title="Facebook">FB</a>
-									<a href="#" title="Twitter">X</a>
-									<a href="#" title="LinkedIn">in</a>
-									<a href="#" title="Instagram">IG</a>
+									<a href="#"><i class="fa-brands fa-facebook-f"></i></a>
+                                    <a href="#"><i class="fa-brands fa-x-twitter"></i></a>
+                                    <a href="#"><i class="fa-brands fa-linkedin-in"></i></a>
+                                    <a href="#"><i class="fa-brands fa-instagram"></i></a>
 									</div>
 							</div>
 						</div>
@@ -453,10 +463,10 @@ Welcome to {{ app_name() }}
 					<h3>{{ app_name() }}</h3>
 					<p>{{ setting('app_tagline', 'Empowering businesses with modern inventory and POS solutions.') }}</p>
 					<div class="social-links">
-						<a href="#">f</a>
-						<a href="#">𝕏</a>
-						<a href="#">in</a>
-						<a href="#">📷</a>
+						<a href="#"><i class="fa-brands fa-facebook-f"></i></a>
+						<a href="#"><i class="fa-brands fa-x-twitter"></i></a>
+						<a href="#"><i class="fa-brands fa-linkedin-in"></i></a>
+						<a href="#"><i class="fa-brands fa-instagram"></i></a>
 					</div>
 				</div>
 				<div class="footer-section">

@@ -1,14 +1,18 @@
 
 			:root {
 				--primary: #667eea;
-				--primary-dark: #5568d3;
-				--secondary: #764ba2;
+				--primary-dark: #7c8dee;
+				--secondary: #9741ed;
 				--accent: #f093fb;
-				--dark: #1a202c;
+				--dark: #616e89;
 				--muted: #718096;
 				--light: #f7fafc;
 				--success: #48bb78;
 				--warning: #ed8936;
+				--icon-color: #667eea;
+				--icon-bg-start: rgba(102, 126, 234, 0.12);
+				--icon-bg-end: rgba(99, 16, 183, 0.12);
+				--icon-border: rgba(102, 126, 234, 0.12);
 			}
 
 			* {
@@ -18,7 +22,7 @@
 			}
 
 			body {
-				font-family: 'Inter', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+				font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
 				margin: 0;
 				background: #fff;
 				color: var(--dark);
@@ -323,14 +327,15 @@
 			.feature-icon {
 				width: 60px;
 				height: 60px;
-				background: linear-gradient(135deg, var(--primary), var(--secondary));
+				background: linear-gradient(135deg, var(--icon-bg-start), var(--icon-bg-end));
 				border-radius: 12px;
 				display: flex;
 				align-items: center;
 				justify-content: center;
 				font-size: 1.8rem;
 				margin-bottom: 1.5rem;
-				color: #fff;
+				color: var(--icon-color);
+				box-shadow: inset 0 0 0 1px var(--icon-border);
 			}
 
 			.feature h3 {
@@ -645,6 +650,12 @@
 				color: rgba(255, 255, 255, 0.3);
 			}
 
+			.about-image .fa-solid {
+				font-size: 8rem;
+				font-weight: 900;
+				color: rgba(255, 255, 255, 0.85);
+			}
+
 			/* Contact Section */
 			.contact {
 				background: var(--light);
@@ -671,14 +682,15 @@
 			.contact-icon {
 				width: 50px;
 				height: 50px;
-				background: linear-gradient(135deg, var(--primary), var(--secondary));
+				background: linear-gradient(135deg, var(--icon-bg-start), var(--icon-bg-end));
 				border-radius: 12px;
 				display: flex;
 				align-items: center;
 				justify-content: center;
-				color: #fff;
+				color: var(--icon-color);
 				font-size: 1.5rem;
 				flex-shrink: 0;
+				box-shadow: inset 0 0 0 1px var(--icon-border);
 			}
 
 			.contact-item h3 {
@@ -931,3 +943,10 @@
 					font-size: 1.5rem;
 				}
 			}
+
+            .fa-solid {
+                font-family: "Font Awesome 6 Free";
+                font-weight: 900;
+                color: var(--icon-color);
+                font-size: 2rem;
+            }
