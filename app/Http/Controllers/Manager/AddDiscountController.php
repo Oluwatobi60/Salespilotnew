@@ -7,14 +7,37 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\AddDiscount;
 use App\Models\CartItem;
-use App\Models\Welcome\SignupRequest;
-use App\Models\UserSubscription;
-use App\Models\User;
 use Carbon\Carbon;
 
 class AddDiscountController extends Controller
 {
-       public function discount_report(Request $request)
+    /**
+     * Determine whether the current manager can manage discounts.
+     */
+    private function canManageDiscounts(): bool
+    {
+        $manager = Auth::user();
+
+        if (!$manager) {
+            return false;
+        }
+
+        // Business creator / owner has full access.
+        if (empty($manager->addby)) {
+            return true;
+        }
+
+        return user_has_feature('manager_edit_items_features', $manager);
+    }
+
+    private function wantsJson(Request $request): bool
+    {
+        return $request->expectsJson()
+            || $request->ajax()
+            || $request->header('X-Requested-With') === 'XMLHttpRequest';
+    }
+
+    public function discount_report(Request $request)
     {
         // Get all discounts
         $discounnts = AddDiscount::all();
@@ -120,6 +143,17 @@ class AddDiscountController extends Controller
 
     public function create_discount(Request $request)
     {
+        if (!$this->canManageDiscounts()) {
+            if ($this->wantsJson($request)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You do not have permission to create discounts. This must be enabled by your business creator.'
+                ], 403);
+            }
+
+            return redirect()->route('manager.add_discount')->with('error', 'You do not have permission to create discounts. This must be enabled by your business creator.');
+        }
+
         // Validate the incoming request data
         $validatedData = $request->validate([
             'discount_name' => 'required|string|max:255',
@@ -169,6 +203,17 @@ class AddDiscountController extends Controller
 
     public function update_discount(Request $request, $id)
     {
+        if (!$this->canManageDiscounts()) {
+            if ($this->wantsJson($request)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You do not have permission to update discounts. This must be enabled by your business creator.'
+                ], 403);
+            }
+
+            return redirect()->route('manager.add_discount')->with('error', 'You do not have permission to update discounts. This must be enabled by your business creator.');
+        }
+
         $manager = Auth::user();
         $businessName = $manager->business_name;
         
@@ -200,8 +245,19 @@ class AddDiscountController extends Controller
         return redirect()->route('manager.add_discount')->with('success', 'Discount updated successfully.');
     }
 
-    public function delete_discount($id)
+    public function delete_discount(Request $request, $id)
     {
+        if (!$this->canManageDiscounts()) {
+            if ($this->wantsJson($request)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You do not have permission to delete discounts. This must be enabled by your business creator.'
+                ], 403);
+            }
+
+            return redirect()->route('manager.add_discount')->with('error', 'You do not have permission to delete discounts. This must be enabled by your business creator.');
+        }
+
         $manager = Auth::user();
         $businessName = $manager->business_name;
         

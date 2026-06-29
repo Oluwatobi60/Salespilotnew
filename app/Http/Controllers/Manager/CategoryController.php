@@ -11,6 +11,28 @@ use App\Models\VariantItem;
 
 class CategoryController extends Controller
 {
+    private function canManageCategories(): bool
+    {
+        $manager = Auth::user();
+
+        if (!$manager) {
+            return false;
+        }
+
+        if (empty($manager->addby)) {
+            return true;
+        }
+
+        return user_has_feature('manager_edit_items_features', $manager);
+    }
+
+    private function wantsJson(Request $request): bool
+    {
+        return $request->expectsJson()
+            || $request->ajax()
+            || $request->header('X-Requested-With') === 'XMLHttpRequest';
+    }
+
     public function all_category()
     {
         $manager = Auth::user();
@@ -32,6 +54,17 @@ class CategoryController extends Controller
 
     public function create_category(Request $request)
     {
+        if (!$this->canManageCategories()) {
+            if ($this->wantsJson($request)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You do not have permission to create categories. This must be enabled by your business creator.'
+                ], 403);
+            }
+
+            return redirect()->route('all_categories')->with('error', 'You do not have permission to create categories. This must be enabled by your business creator.');
+        }
+
         // Get manager information
         $manager = Auth::user();
 
@@ -93,6 +126,17 @@ class CategoryController extends Controller
 
     public function update_category(Request $request, $id)
     {
+        if (!$this->canManageCategories()) {
+            if ($this->wantsJson($request)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You do not have permission to update categories. This must be enabled by your business creator.'
+                ], 403);
+            }
+
+            return redirect()->route('all_categories')->with('error', 'You do not have permission to update categories. This must be enabled by your business creator.');
+        }
+
         $manager = Auth::user();
         $businessName = $manager->business_name;
         
@@ -114,8 +158,19 @@ class CategoryController extends Controller
     }
 
 
-    public function delete_category($id)
+    public function delete_category(Request $request, $id)
     {
+        if (!$this->canManageCategories()) {
+            if ($this->wantsJson($request)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You do not have permission to delete categories. This must be enabled by your business creator.'
+                ], 403);
+            }
+
+            return redirect()->route('all_categories')->with('error', 'You do not have permission to delete categories. This must be enabled by your business creator.');
+        }
+
         $manager = Auth::user();
         $businessName = $manager->business_name;
         

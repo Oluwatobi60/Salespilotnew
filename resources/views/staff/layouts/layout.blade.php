@@ -62,7 +62,7 @@
       <li class="nav-item">
         <a class="nav-link" href="{{ route('staff.sell_product') }}">
           <i class="menu-icon bi bi-house-door-fill"></i>
-          <span class="menu-title">Sell</span>
+          <span class="menu-title">Point of Sale (POS)</span>
         </a>
       </li>
     @endif

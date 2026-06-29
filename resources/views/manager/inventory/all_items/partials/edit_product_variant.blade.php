@@ -82,9 +82,9 @@
 <div class="row">
     <div class="col-md-6">
         <div class="form-group mb-3">
-            <label for="stock_quantity" class="form-label">Stock Quantity</label>
-            <input type="number" class="form-control" id="stock_quantity" name="stock_quantity" value="{{ old('stock_quantity', $item->stock_quantity) }}">
-            @error('stock_quantity')
+            <label for="add_stock" class="form-label">Add Stock</label>
+            <input type="number" class="form-control" id="add_stock" name="add_stock" value="0" min="0">
+            @error('add_stock')
                 <div class="text-danger small">{{ $message }}</div>
             @enderror
         </div>

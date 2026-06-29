@@ -135,9 +135,10 @@
             <tbody>
             @forelse($subscriptions as $sub)
                 @php
+                    $effectiveStatus = $sub->effectiveStatus();
                     $daysLeft  = $sub->end_date ? now()->startOfDay()->diffInDays($sub->end_date, false) : null;
                     $rowClass  = '';
-                    if ($sub->status === 'active') {
+                    if ($effectiveStatus === 'active') {
                         if ($daysLeft !== null && $daysLeft === 0) $rowClass = 'exp-today';
                         elseif ($daysLeft !== null && $daysLeft <= 7) $rowClass = 'exp-soon';
                     }
@@ -168,7 +169,7 @@
                     <td>{{ $sub->start_date?->format('d M Y') }}</td>
                     <td>
                         {{ $sub->end_date?->format('d M Y') }}
-                        @if($sub->status === 'active' && $daysLeft !== null)
+                        @if($effectiveStatus === 'active' && $daysLeft !== null)
                             @if($daysLeft === 0)
                                 <span class="badge bg-danger ms-1">Today</span>
                             @elseif($daysLeft <= 7)
@@ -178,9 +179,9 @@
                     </td>
                     <td>₦{{ number_format($sub->amount_paid, 0) }}</td>
                     <td>
-                        @if($sub->status === 'active')
+                        @if($effectiveStatus === 'active')
                             <span class="badge bg-success">Active</span>
-                        @elseif($sub->status === 'expired')
+                        @elseif($effectiveStatus === 'expired')
                             <span class="badge bg-secondary">Expired</span>
                         @else
                             <span class="badge bg-danger">Cancelled</span>

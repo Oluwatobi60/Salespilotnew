@@ -22,6 +22,7 @@
    <link rel="stylesheet" href="{{ asset('manager_asset/css/sidebar_style.css') }}">
     <link rel="stylesheet" href="{{ asset('manager_asset/css/sell_product.css') }}">
     <link rel="stylesheet" href="{{ asset('manager_asset/css/all_items_style.css') }}">
+    <link rel="stylesheet" href="{{ asset('manager_asset/css/ajax-navigation.css') }}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 
     <!-- endinject -->
@@ -83,7 +84,7 @@
   <li class="nav-item">
       <a class="nav-link" href="{{ route('manager.sell_product') }}">
         <i class="menu-icon bi bi-cart-fill"></i>
-        <span class="menu-title">Sell</span>
+        <span class="menu-title">Point of Sale (POS)</span>
       </a>
     </li>
 @endif
@@ -141,7 +142,7 @@
           @endif
 
           @if(user_has_feature($inventoryValuationFeature, $manager))
-            <li class="nav-item"><a class="nav-link" href="{{ route('manager.valuation_report') }}">Inventory Valuation</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ route('manager.valuation_report') }}">Inventory Evaluation</a></li>
           @endif
 
           @if(user_has_feature($discountReportFeature, $manager))
@@ -332,6 +333,9 @@
 
     <script src="{{ asset('manager_asset/js/sidebar1.js') }}"></script>
 
+    <!-- AJAX Navigation Script - Load pages without full refresh -->
+    <script src="{{ asset('manager_asset/js/ajax-navigation.js') }}"></script>
+
     <!-- Page-specific scripts -->
     @yield('page_scripts')
 
@@ -348,6 +352,16 @@
         });
       });
     </script>
+
+    <!-- AJAX Loading Spinner -->
+    <div id="ajaxLoadingSpinner" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.3); z-index: 9999; justify-content: center; align-items: center;">
+      <div style="background-color: white; border-radius: ; padding: 2rem; text-align: center; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);">
+        <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="text-muted">Loading content...</p>
+      </div>
+    </div>
 
     <!-- Modal for selecting item type - Properly positioned at body level -->
     <div class="modal fade" id="itemTypeModal" tabindex="-1" aria-labelledby="itemTypeModalLabel" aria-hidden="true" style="z-index: 1055;">

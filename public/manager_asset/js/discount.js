@@ -149,7 +149,19 @@ document.addEventListener('DOMContentLoaded', function() {
           'Accept': 'application/json'
         }
       })
-      .then(response => response.json())
+      .then(async response => {
+        const text = await response.text();
+
+        if (!text) {
+          throw new Error('Unauthorized access.');
+        }
+
+        try {
+          return JSON.parse(text);
+        } catch (error) {
+          throw new Error('Unauthorized access.');
+        }
+      })
       .then(data => {
         if (data.success) {
           closeEditPanel();

@@ -111,9 +111,9 @@
 <div class="row">
     <div class="col-md-4">
         <div class="form-group mb-3">
-            <label for="current_stock" class="form-label">Current Stock</label>
-            <input type="number" class="form-control" id="current_stock" name="current_stock" value="{{ old('current_stock', $item->current_stock) }}">
-            @error('current_stock')
+            <label for="add_stock" class="form-label">Add Stock</label>
+            <input type="number" class="form-control" id="add_stock" name="add_stock" value="0" min="0">
+            @error('add_stock')
                 <div class="text-danger small">{{ $message }}</div>
             @enderror
         </div>

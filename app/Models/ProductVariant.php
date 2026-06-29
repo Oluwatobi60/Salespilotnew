@@ -48,6 +48,7 @@ class ProductVariant extends Model
         //'stock_quantity',
         'opening_stock',
         'current_stock',
+        'stock_added',
         'low_stock_threshold',
         'expiry_date',
         'location',
@@ -72,6 +73,7 @@ class ProductVariant extends Model
         'tax_rate' => 'decimal:2',
         'opening_stock' => 'integer',
         'current_stock' => 'integer',
+        'stock_added' => 'integer',
       /* /* 'discount' => 'decimal:2', */
         'final_price' => 'decimal:2',
         'expiry_date' => 'date',

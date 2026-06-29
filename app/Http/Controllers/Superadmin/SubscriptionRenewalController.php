@@ -5,8 +5,6 @@ namespace App\Http\Controllers\Superadmin;
 use App\Http\Controllers\Controller;
 use App\Mail\SubscriptionRenewed;
 use App\Models\UserSubscription;
-use App\Models\SubscriptionPlan;
-use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -27,6 +25,7 @@ class SubscriptionRenewalController extends Controller
         $bestActiveDates = DB::table('user_subscriptions')
             ->selectRaw('user_id, MAX(end_date) as best_end_date')
             ->where('status', 'active')
+            ->where('end_date', '>=', Carbon::today())
             ->groupBy('user_id');
 
         $activeIds = DB::table('user_subscriptions as us')
@@ -34,6 +33,7 @@ class SubscriptionRenewalController extends Controller
                 $j->on('us.user_id', '=', 'ba.user_id')
                   ->on('us.end_date', '=', 'ba.best_end_date'))
             ->where('us.status', 'active')
+            ->where('us.end_date', '>=', Carbon::today())
             ->selectRaw('MAX(us.id) as id')
             ->groupBy('us.user_id')
             ->pluck('id');
@@ -41,6 +41,7 @@ class SubscriptionRenewalController extends Controller
         // Fallback for users with no active subscription
         $usersWithActive = DB::table('user_subscriptions')
             ->where('status', 'active')
+            ->where('end_date', '>=', Carbon::today())
             ->distinct()
             ->pluck('user_id');
 
@@ -68,7 +69,20 @@ class SubscriptionRenewalController extends Controller
         }
 
         if ($request->filled('status')) {
-            $query->where('status', $request->status);
+            if ($request->status === 'active') {
+                $query->where('status', 'active')
+                      ->where('end_date', '>=', Carbon::today());
+            } elseif ($request->status === 'expired') {
+                $query->where(function ($q) {
+                    $q->where('status', 'expired')
+                      ->orWhere(function ($q2) {
+                          $q2->where('status', 'active')
+                             ->where('end_date', '<', Carbon::today());
+                      });
+                });
+            } else {
+                $query->where('status', $request->status);
+            }
         }
 
         if ($request->filled('auto_renew')) {
@@ -79,9 +93,18 @@ class SubscriptionRenewalController extends Controller
 
         $stats = [
             'total'       => $currentIds->count(),
-            'active'      => UserSubscription::whereIn('id', $currentIds)->where('status', 'active')->count(),
-            'auto_renew'  => UserSubscription::whereIn('id', $currentIds)->where('auto_renew', true)->where('status', 'active')->count(),
-            'expiring_7d' => UserSubscription::whereIn('id', $currentIds)->where('status', 'active')
+            'active'      => UserSubscription::whereIn('id', $currentIds)
+                                ->where('status', 'active')
+                                ->where('end_date', '>=', Carbon::today())
+                                ->count(),
+            'auto_renew'  => UserSubscription::whereIn('id', $currentIds)
+                                ->where('auto_renew', true)
+                                ->where('status', 'active')
+                                ->where('end_date', '>=', Carbon::today())
+                                ->count(),
+            'expiring_7d' => UserSubscription::whereIn('id', $currentIds)
+                                ->where('status', 'active')
+                                ->where('end_date', '>=', Carbon::today())
                                 ->whereBetween('end_date', [Carbon::today(), Carbon::today()->addDays(7)])
                                 ->count(),
         ];

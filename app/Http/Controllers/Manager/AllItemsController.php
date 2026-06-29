@@ -162,6 +162,7 @@ class AllItemsController extends Controller
                     'current_stock' => $currentStock,
                     'general_left' => $generalLeft,
                     'opening_stock' => $openingStock,
+                    'stock_added' => (int) ($item->stock_added ?? 0),
                     'actual_current_stock' => $branchInventories->count() > 0 ? $branchCurrent : ($item->current_stock ?? 0),
                     'low_stock_threshold' => $item->low_stock_threshold,
                     'pricing_tiers' => $item->pricingTiers,
@@ -230,6 +231,7 @@ class AllItemsController extends Controller
                             'current_stock' => $currentStock,
                             'general_left' => $generalLeft,
                             'opening_stock' => $openingStock,
+                            'stock_added' => (int) ($variant->stock_added ?? 0),
                             'actual_current_stock' => $currentStock,
                             'low_stock_threshold' => $variant->low_stock_threshold,
                             'variant_name' => $variant->variant_name,
@@ -542,7 +544,7 @@ class AllItemsController extends Controller
                         'description' => 'nullable|string',
                         'cost_price' => 'required|numeric|min:0',
                         'selling_price' => 'required|numeric|min:0',
-                        'current_stock' => 'nullable|integer|min:0',
+                        'add_stock' => 'nullable|integer|min:0',
                         'low_stock_threshold' => 'nullable|integer|min:0',
                         'item_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
                     ]);
@@ -556,6 +558,21 @@ class AllItemsController extends Controller
                     // Calculate profit margin
                     if ($validatedData['cost_price'] > 0) {
                         $validatedData['profit_margin'] = (($validatedData['selling_price'] - $validatedData['cost_price']) / $validatedData['cost_price']) * 100;
+                    }
+
+                    if ($request->has('add_stock')) {
+                        $stockIncrease = (int) ($validatedData['add_stock'] ?? 0);
+
+                        if ($stockIncrease > 0) {
+                            $validatedData['current_stock'] = (int) $item->current_stock + $stockIncrease;
+                            $validatedData['stock_added'] = $stockIncrease;
+
+                            foreach ($item->branchInventory as $branchInventory) {
+                                $branchInventory->allocated_quantity += $stockIncrease;
+                                $branchInventory->current_quantity += $stockIncrease;
+                                $branchInventory->save();
+                            }
+                        }
                     }
 
                     $item->update($validatedData);
@@ -601,7 +618,7 @@ class AllItemsController extends Controller
                         'barcode' => 'nullable|string|max:255',
                         'cost_price' => 'nullable|numeric|min:0',
                         'selling_price' => 'nullable|numeric|min:0',
-                        'stock_quantity' => 'nullable|integer|min:0',
+                        'add_stock' => 'nullable|integer|min:0',
                         'low_stock_threshold' => 'nullable|integer|min:0',
                         'variant_options' => 'nullable|string',
                     ]);
@@ -609,6 +626,23 @@ class AllItemsController extends Controller
                     // Calculate profit margin if cost and selling prices are provided
                     if (isset($validatedData['cost_price']) && isset($validatedData['selling_price']) && $validatedData['cost_price'] > 0) {
                         $validatedData['profit_margin'] = (($validatedData['selling_price'] - $validatedData['cost_price']) / $validatedData['cost_price']) * 100;
+                    }
+
+                    if ($request->has('add_stock')) {
+                        $stockIncrease = (int) ($validatedData['add_stock'] ?? 0);
+
+                        if ($stockIncrease > 0) {
+                            $validatedData['current_stock'] = (int) ($item->current_stock ?? 0) + $stockIncrease;
+                            $validatedData['stock_added'] = $stockIncrease;
+
+                            foreach (BranchInventory::where('item_id', $item->id)
+                                ->where('item_type', 'variant')
+                                ->get() as $branchInventory) {
+                                $branchInventory->allocated_quantity += $stockIncrease;
+                                $branchInventory->current_quantity += $stockIncrease;
+                                $branchInventory->save();
+                            }
+                        }
                     }
 
                     $item->update($validatedData);

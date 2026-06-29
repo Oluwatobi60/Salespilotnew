@@ -13,7 +13,10 @@ All Items
     }
   }
   $stockLabel = $showInventoryColumns ? 'General Stock' : 'In Stock';
-  $canEditItems = Auth::user()->addby === null || user_has_feature('manager_edit_items_features', Auth::user());
+  // Keep the action buttons visible for added managers so they can attempt the action,
+  // but the controller still blocks unauthorized edit/delete requests with an error flash.
+  $canEditItems = true;
+  $canDeleteItems = Auth::user()->addby === null || user_has_feature('manager_edit_items_features', Auth::user());
 @endphp
 
 
@@ -183,11 +186,9 @@ All Items
                         <button class="btn btn-sm btn-outline-secondary" id="deselectAllBtn">
                             <i class="bi bi-x-circle me-1"></i>Deselect All
                         </button>
-                        @if($canEditItems)
                         <button class="btn btn-sm btn-danger" id="deleteSelectedBtn">
                             <i class="bi bi-trash me-1"></i>Delete Selected
                         </button>
-                        @endif
                     </div>
                 </div>
             </div>
@@ -358,6 +359,11 @@ All Items
                                         @endif
                                         {{ number_format($stock) }}
                                     </span>
+                                    @if(!empty($item['stock_added']))
+                                        <div class="mt-1 text-muted" style="font-size:.72rem;">
+                                            <i class="bi bi-plus-circle"></i> Added: {{ number_format($item['stock_added']) }}
+                                        </div>
+                                    @endif
                                 @else
                                     <span class="stock-pill sp-na">N/A</span>
                                 @endif
@@ -432,6 +438,11 @@ All Items
                                 @endif
                                 {{ number_format($currentStock) }}
                             </span>
+                            @if(!empty($item['stock_added']))
+                                <div class="mt-1 text-muted" style="font-size:.72rem;">
+                                    <i class="bi bi-plus-circle"></i> Added: {{ number_format($item['stock_added']) }}
+                                </div>
+                            @endif
                             @if($threshold !== null && $currentStock <= $threshold && $currentStock > 0)
                                 <div class="mt-1" style="font-size:.68rem; color:#d97706;">
                                     <i class="bi bi-arrow-down-circle"></i> Restock needed
@@ -462,7 +473,6 @@ All Items
                         {{-- Actions --}}
                         <td>
                             <div class="ai-actions">
-                                @if($canEditItems)
                                 <button class="btn btn-sm btn-outline-primary edit-btn"
                                         data-id="{{ $item['id'] }}"
                                         data-type="{{ $item['type'] }}"
@@ -481,7 +491,6 @@ All Items
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </form>
-                                @endif
                             </div>
                         </td>
                     </tr>
@@ -605,11 +614,9 @@ All Items
         </div>
         <div class="panel-footer">
             <button type="button" class="btn btn-secondary me-2" id="closePanelFooterBtn">Close</button>
-            @if($canEditItems)
             <button type="button" class="btn btn-primary" id="editItemPanelBtn">
                 <i class="bi bi-pencil me-1"></i>Edit Item
             </button>
-            @endif
         </div>
     </div>
 </div>

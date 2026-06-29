@@ -91,7 +91,7 @@ Create Customer Discount
                                         data-rate="{{ $discount->discount_rate }}">
                                   <i class="bi bi-pencil me-2"></i>Edit
                                 </button>
-                                <form action="#" method="POST" style="display:inline-block;" class="delete-discount-form">
+                                <form action="{{ route('discount.delete', $discount->id) }}" method="POST" style="display:inline-block;" class="delete-discount-form">
                                   @csrf
                                   @method('DELETE')
                                   <button type="button" class="btn btn-sm btn-danger delete-discount-btn"

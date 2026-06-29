@@ -49,6 +49,7 @@ class StandardItem extends Model
         'track_stock',
         'opening_stock',
         'current_stock',
+        'stock_added',
         'low_stock_threshold',
         'expiry_date',
         'location',
@@ -73,6 +74,7 @@ class StandardItem extends Model
         'expiry_date' => 'date',
         'opening_stock' => 'integer',
         'current_stock' => 'integer',
+        'stock_added' => 'integer',
         'low_stock_threshold' => 'integer',
     ];
 

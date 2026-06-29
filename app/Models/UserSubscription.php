@@ -53,11 +53,35 @@ class UserSubscription extends Model
     }
 
     /**
+     * Get the effective status for display and business logic.
+     */
+    public function effectiveStatus(): string
+    {
+        if ($this->status === 'cancelled') {
+            return 'cancelled';
+        }
+
+        if ($this->status === 'expired') {
+            return 'expired';
+        }
+
+        if ($this->end_date && $this->end_date->lt(Carbon::today())) {
+            return 'expired';
+        }
+
+        if ($this->status === 'active' && $this->end_date >= Carbon::today()) {
+            return 'active';
+        }
+
+        return $this->status ?? 'inactive';
+    }
+
+    /**
      * Check if subscription is active
      */
     public function isActive(): bool
     {
-        return $this->status === 'active' && $this->end_date >= Carbon::today();
+        return $this->effectiveStatus() === 'active';
     }
 
     /**
@@ -65,7 +89,7 @@ class UserSubscription extends Model
      */
     public function isExpired(): bool
     {
-        return $this->end_date < Carbon::today();
+        return $this->effectiveStatus() === 'expired';
     }
 
     /**
@@ -93,7 +117,12 @@ class UserSubscription extends Model
      */
     public function scopeExpired($query)
     {
-        return $query->where('end_date', '<', Carbon::today())
-                    ->orWhere('status', 'expired');
+        return $query->where(function ($q) {
+            $q->where('status', 'expired')
+              ->orWhere(function ($subQ) {
+                  $subQ->where('status', 'active')
+                       ->where('end_date', '<', Carbon::today());
+              });
+        });
     }
 }

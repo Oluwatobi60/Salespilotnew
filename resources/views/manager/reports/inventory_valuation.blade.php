@@ -17,10 +17,10 @@ Inventory Valuation
                         <div class="d-flex align-items-center">
                           <i class="bi bi-info-circle me-3" style="font-size: 1.5rem;"></i>
                           <div>
-                            <h5 class="mb-2">Inventory Valuation Report Not Available</h5>
+                            <h5 class="mb-2">Inventory Evaluation Report Not Available</h5>
                             <p class="mb-0">
                               This advanced feature is not included in your current <strong>Basic Plan</strong>. 
-                              Please upgrade to <strong>Standard</strong> or <strong>Premium</strong> plan to access detailed inventory valuation reports.
+                              Please upgrade to <strong>Standard</strong> or <strong>Premium</strong> plan to access detailed inventory evaluation reports.
                             </p>
                             <a href="{{ route('plan_pricing') }}" class="btn btn-primary btn-sm mt-3">
                               <i class="bi bi-arrow-up-right me-1"></i> Upgrade Your Plan
@@ -29,7 +29,7 @@ Inventory Valuation
                         </div>
                       </div>
                     @else
-                      <h4 class="card-title">Inventory Valuation Report</h4>
+                      <h4 class="card-title">Inventory Evaluation Report</h4>
                       <p class="card-description">Current inventory value and stock levels.</p>
                       <form class="row g-2 align-items-center mb-4" id="inventoryFilterForm" style="margin-bottom: 1.5rem !important;">
                         <div class="col-md-4 col-12">

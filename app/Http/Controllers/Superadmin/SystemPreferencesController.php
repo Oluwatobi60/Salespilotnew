@@ -17,7 +17,9 @@ class SystemPreferencesController extends Controller
     public function index()
     {
         // Get system-wide statistics
-        $totalBusinesses = User::where('role', 'manager')->count();
+        $totalBusinesses = User::where('role', 'manager')
+            ->whereNull('addby')
+            ->count();
         $totalBranches = Branch::count();
         $totalStaff = Staffs::count();
         $totalBrms = Brm::count();

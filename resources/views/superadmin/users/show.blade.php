@@ -20,6 +20,7 @@
     $fullName = trim(($user->first_name ?? '') . ' ' . ($user->surname ?? '')) ?: $user->email;
     $sub      = $user->currentSubscription;
     $plan     = $sub?->subscriptionPlan;
+    $effectiveStatus = $sub?->effectiveStatus() ?? 'inactive';
     $daysLeft = ($sub && $sub->end_date) ? (int) now()->startOfDay()->diffInDays($sub->end_date, false) : null;
 @endphp
 
@@ -87,7 +88,18 @@
             {{-- Current Subscription --}}
             <div class="sa-card">
                 <div class="d-flex align-items-center justify-content-between mb-3">
-                    <h6 class="fw-bold mb-0">Current Subscription</h6>
+                    <div class="d-flex align-items-center gap-2">
+                        <h6 class="fw-bold mb-0">Current Subscription</h6>
+                        @if($sub)
+                            @if($effectiveStatus === 'active')
+                                <span class="badge text-bg-success">Active</span>
+                            @elseif($effectiveStatus === 'expired')
+                                <span class="badge text-bg-danger">Expired</span>
+                            @else
+                                <span class="badge text-bg-secondary">{{ ucfirst($effectiveStatus) }}</span>
+                            @endif
+                        @endif
+                    </div>
                     <form method="POST" action="{{ route('superadmin.customers.reminder', $user->id) }}"
                           onsubmit="return confirm('Send subscription reminder to {{ $user->email }}?')">
                         @csrf
@@ -183,12 +195,13 @@
                                     <td class="px-3 col-hide-xs">{{ $s->start_date?->format('M d, Y') ?? '—' }}</td>
                                     <td class="px-3 col-hide-xs">{{ $s->end_date?->format('M d, Y') ?? '—' }}</td>
                                     <td class="px-3">
-                                        @if($s->status === 'active')
+                                        @php $historyStatus = $s->effectiveStatus(); @endphp
+                                        @if($historyStatus === 'active')
                                             <span class="badge text-bg-success">Active</span>
-                                        @elseif($s->status === 'expired')
+                                        @elseif($historyStatus === 'expired')
                                             <span class="badge text-bg-danger">Expired</span>
                                         @else
-                                            <span class="badge text-bg-secondary">{{ ucfirst($s->status) }}</span>
+                                            <span class="badge text-bg-secondary">{{ ucfirst($historyStatus) }}</span>
                                         @endif
                                     </td>
                                 </tr>
