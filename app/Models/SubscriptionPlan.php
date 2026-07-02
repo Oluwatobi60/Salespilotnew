@@ -13,6 +13,7 @@ class SubscriptionPlan extends Model
         'monthly_price',
         'description',
         'features',
+        'display_features',
         'max_managers',
         'max_staff',
         'max_branches',
@@ -23,6 +24,7 @@ class SubscriptionPlan extends Model
 
     protected $casts = [
         'features' => 'array',
+        'display_features' => 'array',
         'monthly_price' => 'decimal:2',
         'is_active' => 'boolean',
         'is_popular' => 'boolean',

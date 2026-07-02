@@ -199,7 +199,9 @@ Route::get('/', function () {
         'support' => '24/7' // Static value
     ];
 
-    return view('welcome', compact('stats'));
+    $plans = \App\Models\SubscriptionPlan::active()->orderBy('monthly_price')->get();
+
+    return view('welcome', compact('stats', 'plans'));
 });
 
 // Signup routes

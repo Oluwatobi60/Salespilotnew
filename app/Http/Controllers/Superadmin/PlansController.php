@@ -37,7 +37,8 @@ class PlansController extends Controller
             'is_active'     => 'boolean',
         ]);
 
-        $validated['features']   = $this->parseFeatures($request->input('features'));
+        $validated['display_features'] = $this->parseFeatures($request->input('features'));
+        unset($validated['features']);
         $validated['is_active']  = $request->has('is_active');
         $validated['is_popular'] = $request->has('is_popular');
 
@@ -66,7 +67,8 @@ class PlansController extends Controller
             'is_active'     => 'boolean',
         ]);
 
-        $validated['features']   = $this->parseFeatures($request->input('features'));
+        $validated['display_features'] = $this->parseFeatures($request->input('features'));
+        unset($validated['features']);
         $validated['is_active']  = $request->has('is_active');
         $validated['is_popular'] = $request->has('is_popular');
 

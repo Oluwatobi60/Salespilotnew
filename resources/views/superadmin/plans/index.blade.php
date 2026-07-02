@@ -62,9 +62,9 @@
                 </div>
 
                 <!-- Features -->
-                @if(is_array($plan->features) && count($plan->features) > 0)
+                @if(is_array($plan->display_features) && count($plan->display_features) > 0)
                     <ul class="list-unstyled mb-3" style="font-size:0.8rem;">
-                        @foreach($plan->features as $feature)
+                        @foreach($plan->display_features as $feature)
                             <li class="py-1" style="border-bottom:1px solid #f3f4f6;">
                                 <i class="bi bi-check-circle-fill me-2" style="color:#16a34a;font-size:0.75rem;"></i>{{ $feature }}
                             </li>

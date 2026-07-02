@@ -227,7 +227,7 @@ class SignupController extends Controller
 
     public function plan_pricing()
     {
-        $plans = SubscriptionPlan::active()->get();
+        $plans = SubscriptionPlan::active()->orderBy('monthly_price')->get();
 
         // Check if user has an active subscription
         $activeSubscription = null;

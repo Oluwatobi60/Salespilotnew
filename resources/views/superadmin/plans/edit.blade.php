@@ -53,7 +53,7 @@
                         <label class="form-label fw-semibold">Features</label>
                         <textarea name="features" rows="6"
                                   class="form-control @error('features') is-invalid @enderror"
-                                  placeholder="One feature per line…">{{ old('features', is_array($plan->features) ? implode("\n", $plan->features) : '') }}</textarea>
+                                  placeholder="One feature per line…">{{ old('features', is_array($plan->display_features) ? implode("\n", $plan->display_features) : '') }}</textarea>
                         <div class="form-text">Enter one feature per line.</div>
                         @error('features')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>

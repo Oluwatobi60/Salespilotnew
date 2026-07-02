@@ -239,125 +239,63 @@ Welcome to {{ app_name() }}
         </div>
 
 		<div class="pricing-grid mb-4">
-            <!-- Free Plan -->
-			<div class="pricing-card">
-                <h3 style="font-size: 24px; color: #333; margin-bottom: 10px;">Free</h3>
-                <div class="price" style="margin: 20px 0;">
-                    <span style="font-size: 48px; font-weight: bold; color: #4CAF50;">₦0</span>
-                    <span style="font-size: 18px; color: #666;">/7-Days</span>
-                    <span style="font-size: 18px; color: #666;">Test all features risk-free</span>
-                </div>
-                <ul style="list-style: none; padding: 0; margin: 30px 0; text-align: left;">
-                    <li style="padding: 10px 0; color: #666; border-bottom: 1px solid #f0f0f0;">✓ 1 Manager/Administrator Account</li>
-                    <li style="padding: 10px 0; color: #666; border-bottom: 1px solid #f0f0f0;">✓ 1 Staff Account</li>
-                    <li style="padding: 10px 0; color: #666; border-bottom: 1px solid #f0f0f0;">✓ Basic Inventory Management</li>
-                    <li style="padding: 10px 0; color: #666; border-bottom: 1px solid #f0f0f0;">✓ Sales Tracking</li>
-                    <li style="padding: 10px 0; color: #666; border-bottom: 1px solid #f0f0f0;">✓ Email Support</li>
-                </ul>
-                {{--  <form action="{{ route('select.plan') }}" method="POST">
-                    @csrf
-                    <input type="hidden" name="plan" value="free">
-                    <input type="hidden" name="duration" value="1">
-                    <button type="submit" style="width: 100%; padding: 15px; background: #4CAF50; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: background 0.3s ease;">
-                        Get Started
-                    </button>
-                </form>  --}}
-            </div>
+            @foreach($plans as $plan)
+                <div class="pricing-card {{ $plan->is_popular ? 'popular' : '' }}">
+                    @if($plan->is_popular)
+                        <div class="popular-badge">
+                            Most Popular
+                        </div>
+                    @endif
+                    <h3 class="pricing-plan-title text-capitalize" style="font-size: 24px; color: #333; margin-bottom: 10px;">{{ $plan->name }}</h3>
+                    
+                    @if($plan->monthly_price == 0)
+                        <div class="price" style="margin: 20px 0;">
+                            <span class="calculated-price" style="font-size: 48px; font-weight: bold; color: #4CAF50;">₦0</span>
+                            <span style="font-size: 18px; color: #666;">/{{ $plan->trial_days }}-Days</span>
+                            <span style="font-size: 14px; color: #666; display: block; margin-top: 5px;">{{ $plan->description ?? 'Test all features risk-free' }}</span>
+                        </div>
+                    @else
+                        <div class="price" style="margin: 20px 0;" data-monthly-price="{{ (int)$plan->monthly_price }}">
+                            <div class="mb-2">
+                                <span class="calculated-price" style="font-size: 48px; font-weight: bold; color: #4CAF50;">₦{{ number_format($plan->monthly_price) }}</span>
+                            </div>
+                            <div class="original-price" style="display: none;">₦{{ number_format($plan->monthly_price) }}</div>
+                            <div class="duration-text" style="font-size: 16px; color: #666; margin-top: 5px;">per month</div>
+                        </div>
+                    @endif
 
+                    <ul class="pricing-features" style="list-style: none; padding: 0; margin: 30px 0; text-align: left;">
+                        @if(is_array($plan->display_features))
+                            @foreach($plan->display_features as $feature)
+                                @if(!empty(trim($feature)))
+                                    <li style="padding: 10px 0; color: #666; border-bottom: 1px solid #f0f0f0;">
+                                        @if(strpos(trim($feature), '✓') === 0 || strpos(trim($feature), '✗') === 0)
+                                            {{ $feature }}
+                                        @else
+                                            ✓ {{ $feature }}
+                                        @endif
+                                    </li>
+                                @endif
+                            @endforeach
+                        @endif
+                    </ul>
 
-
-              <!-- Basic Plan -->
-			<div class="pricing-card popular">
-				<div class="popular-badge">
-                    Most Popular
+                    @auth
+                        <form action="{{ route('select.plan') }}" method="POST">
+                            @csrf
+                            <input type="hidden" name="plan" value="{{ strtolower($plan->name) }}">
+                            <input type="hidden" name="duration" class="duration-input" value="1">
+                            <button type="submit" style="width: 100%; padding: 15px; background: #4CAF50; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: background 0.3s ease;">
+                                Choose Plan
+                            </button>
+                        </form>
+                    @else
+                        <a href="{{ route('get_started') }}" class="btn btn-primary w-100 text-center text-white d-block" style="padding: 15px; background: #4CAF50; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; text-decoration: none; transition: background 0.3s ease;">
+                            Get Started
+                        </a>
+                    @endauth
                 </div>
-				<h3 class="pricing-plan-title">Basic</h3>
-				<div class="price" data-monthly-price="5000">
-					<div class="mb-2">
-						<span class="calculated-price">₦14,250</span>
-					</div>
-					<div class="original-price">₦15,000</div>
-					<div class="duration-text">for 3 months</div>
-                </div>
-				<ul class="pricing-features">
-                    <li style="padding: 10px 0; color: #666; border-bottom: 1px solid #f0f0f0;">✓ 1 Manager/Administrator Account</li>
-                     <li style="padding: 10px 0; color: #666; border-bottom: 1px solid #f0f0f0;">✓ 2 Staff Accounts</li>
-                    <li style="padding: 10px 0; color: #666; border-bottom: 1px solid #f0f0f0;">✓ Advanced Inventory Management</li>
-                    <li style="padding: 10px 0; color: #666; border-bottom: 1px solid #f0f0f0;">✓ Sales & Purchase Tracking</li>
-                    <li style="padding: 10px 0; color: #666; border-bottom: 1px solid #f0f0f0;">✓ Basic Reports & Analytics</li>
-                    <li style="padding: 10px 0; color: #666; border-bottom: 1px solid #f0f0f0;">✓ Priority Email Support</li>
-                </ul>
-               {{--   <form action="{{ route('select.plan') }}" method="POST">
-                    @csrf
-                    <input type="hidden" name="plan" value="basic">
-                    <input type="hidden" name="duration" class="duration-input" value="1">
-                    <button type="submit" style="width: 100%; padding: 15px; background: #4CAF50; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: background 0.3s ease;">
-                        Choose Plan
-                    </button>
-                </form>  --}}
-            </div>
-
-
-            <!-- Standard Plan -->
-			<div class="pricing-card popular">
-				<div class="popular-badge">
-                    Most Popular
-                </div>
-				<h3 class="pricing-plan-title">Standard</h3>
-				<div class="price" data-monthly-price="10000">
-					<div class="mb-2">
-						<span class="calculated-price">₦28,500</span>
-					</div>
-					<div class="original-price">₦30,000</div>
-					<div class="duration-text">for 3 months</div>
-                </div>
-				<ul class="pricing-features">
-                     <li style="padding: 10px 0; color: #666; border-bottom: 1px solid #f0f0f0;">✓ 2 Manager/Administrator Accounts</li>
-                    <li style="padding: 10px 0; color: #666; border-bottom: 1px solid #f0f0f0;">✓ Up to 4 Staff Accounts</li>
-                     <li style="padding: 10px 0; color: #666; border-bottom: 1px solid #f0f0f0;">✓ Allows 2 branches</li>
-                    <li style="padding: 10px 0; color: #666; border-bottom: 1px solid #f0f0f0;">✓ Advanced Inventory Management</li>
-                    <li style="padding: 10px 0; color: #666; border-bottom: 1px solid #f0f0f0;">✓ Sales & Purchase Tracking</li>
-                    <li style="padding: 10px 0; color: #666; border-bottom: 1px solid #f0f0f0;">✓ Basic Reports & Analytics</li>
-                    <li style="padding: 10px 0; color: #666; border-bottom: 1px solid #f0f0f0;">✓ Priority Email Support</li>
-                </ul>
-               {{--   <form action="{{ route('select.plan') }}" method="POST">
-                    @csrf
-                    <input type="hidden" name="plan" value="standard">
-                    <input type="hidden" name="duration" class="duration-input" value="1">
-                    <button type="submit" style="width: 100%; padding: 15px; background: #4CAF50; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: background 0.3s ease;">
-                        Choose Plan
-                    </button>
-                </form>  --}}
-            </div>
-
-            <!-- Premium Plan -->
-			<div class="pricing-card">
-                <h3 style="font-size: 24px; color: #333; margin-bottom: 10px;">Premium</h3>
-                <div class="price" style="margin: 20px 0;" data-monthly-price="20000">
-                    <div style="margin-bottom: 10px;">
-                        <span class="calculated-price" style="font-size: 48px; font-weight: bold; color: #4CAF50;">₦57,000</span>
-                    </div>
-                    <div style="font-size: 14px; color: #999; text-decoration: line-through;" class="original-price">₦60,000</div>
-                    <div style="font-size: 16px; color: #4CAF50; font-weight: 600; margin-top: 5px;" class="duration-text">for 3 months</div>
-                </div>
-                <ul style="list-style: none; padding: 0; margin: 30px 0; text-align: left;">
-                    <li style="padding: 10px 0; color: #666; border-bottom: 1px solid #f0f0f0;">✓ 3 Manager/Administrator Accounts</li>
-                    <li style="padding: 10px 0; color: #666; border-bottom: 1px solid #f0f0f0;">✓ Unlimited Staff Accounts</li>
-                    <li style="padding: 10px 0; color: #666; border-bottom: 1px solid #f0f0f0;">✓ Full Inventory Management</li>
-                    <li style="padding: 10px 0; color: #666; border-bottom: 1px solid #f0f0f0;">✓ Advanced Reports & Analytics</li>
-                    <li style="padding: 10px 0; color: #666; border-bottom: 1px solid #f0f0f0;">✓ Multi-branch Support</li>
-                    <li style="padding: 10px 0; color: #666; border-bottom: 1px solid #f0f0f0;">✓ 24/7 Priority Support</li>
-                    <li style="padding: 10px 0; color: #666; border-bottom: 1px solid #f0f0f0;">✓ Custom Integrations</li>
-                </ul>
-                {{--  <form action="{{ route('select.plan') }}" method="POST">
-                    @csrf
-                    <input type="hidden" name="plan" value="premium">
-                    <input type="hidden" name="duration" class="duration-input" value="1">
-                    <button type="submit" style="width: 100%; padding: 15px; background: #4CAF50; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: background 0.3s ease;">
-                        Choose Plan
-                    </button>
-                </form>  --}}
-            </div>
+            @endforeach
         </div>
 
         <div style="text-align: center; margin-top: 40px;">
