@@ -52,8 +52,12 @@ class ManagerMainController extends Controller
                       $subQuery->select('id')
                           ->from('staffs')
                           ->where('manager_email', $user->email);
-                  })
-                  ->orWhere('branch_name', $branchName);
+                  });
+                  
+                // Only include branch sales if the manager has a branch assigned
+                if (!empty($branchName)) {
+                    $q->orWhere('branch_name', $branchName);
+                }
             });
         }
 

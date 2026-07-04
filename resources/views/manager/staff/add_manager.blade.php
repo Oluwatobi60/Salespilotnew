@@ -59,13 +59,6 @@ Add Staff Member
                 <div class="card card-rounded">
                   <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-4">
-                      <div>
-                        <h4 class="card-title mb-2">
-                          <i class="bi bi-person-workspace me-2"></i>Manage Managers
-                        </h4>
-                        <p class="card-description mb-0">Manage your manager members and their roles</p>
-                      </div>
-
                       @if($isBusinessCreator ?? true)
                         @php
                           $canAddManager = false;
@@ -74,7 +67,7 @@ Add Staff Member
                           $maxManagers = null;
                           $maxBranches = null;
                           $currentBranchCount = $branchCount ?? 0;
-                          $currentManagerCount = $delegatedManagers ? count($delegatedManagers) : 0;
+                          $currentManagerCount = isset($delegatedManagers) ? count($delegatedManagers) : 0;
 
                           if(isset($activeSubscription) && $activeSubscription && $activeSubscription->subscriptionPlan) {
                             $planName = strtolower(trim($activeSubscription->subscriptionPlan->name ?? ''));
@@ -127,8 +120,37 @@ Add Staff Member
                             $canAddManager = false;
                             $limitMessage = 'No active subscription found. Please subscribe to a plan.';
                           }
+                          
+                          // Calculate display values for the UI
+                          $displayMaxManagers = 'Unlimited';
+                          if ($maxManagers !== null) {
+                              $displayMaxManagers = $maxManagers;
+                          } elseif (!empty($planName)) {
+                              if ($planName === 'free') $displayMaxManagers = 1;
+                              elseif ($planName === 'basic') $displayMaxManagers = 1;
+                              elseif ($planName === 'standard') $displayMaxManagers = 2;
+                              elseif ($planName === 'premium') $displayMaxManagers = 3;
+                          }
+                          $managersRemaining = $displayMaxManagers === 'Unlimited' ? 'Unlimited' : max(0, $displayMaxManagers - $currentManagerCount);
                         @endphp
+                      @endif
 
+                      <div>
+                        <h4 class="card-title mb-2">
+                          <i class="bi bi-person-workspace me-2"></i>Manage Managers
+                        </h4>
+                        <p class="card-description mb-0">
+                          Total: <strong>{{ $currentManagerCount ?? 0 }}</strong> managers
+                          @if(isset($activeSubscription) && $activeSubscription && $activeSubscription->subscriptionPlan)
+                            ({{ $currentManagerCount ?? 0 }}/{{ $displayMaxManagers }} used)
+                            <br><small class="text-muted">Plan: {{ $activeSubscription->subscriptionPlan->name ?? 'N/A' }}</small>
+                          @else
+                            <br><small class="text-danger">No active subscription</small>
+                          @endif
+                        </p>
+                      </div>
+
+                      @if($isBusinessCreator ?? true)
                         @if($canAddManager)
                           <button type="button" class="btn btn-primary" style="min-width: 150px;" id="openAddStaffBtn"><strong>+ Add Manager</strong></button>
                         @else
@@ -319,9 +341,32 @@ Add Staff Member
                 </div>
               </div>
               <!-- Business Logo -->
+              @php
+                $creatorLogo = Auth::user()->business_logo ?? null;
+                if ($creatorLogo) {
+                    $creatorLogoUrl = str_starts_with($creatorLogo, 'business_logos/') || str_starts_with($creatorLogo, 'uploads/')
+                        ? asset($creatorLogo)
+                        : asset('storage/' . $creatorLogo);
+                } else {
+                    $creatorLogoUrl = null;
+                }
+              @endphp
               <div class="row">
                 <div class="col-md-12 mb-3">
                   <label for="business_logo" class="form-label">Business Logo</label>
+
+                  @if($creatorLogoUrl)
+                  <div class="d-flex align-items-center gap-3 mb-2 p-2 rounded border bg-light">
+                    <img src="{{ $creatorLogoUrl }}" alt="Current Business Logo"
+                         style="width:56px;height:56px;object-fit:contain;border-radius:6px;background:#fff;border:1px solid #dee2e6;"
+                         onerror="this.style.display='none'">
+                    <div>
+                      <div class="fw-semibold" style="font-size:.85rem;">Current Business Logo</div>
+                      <div class="text-muted" style="font-size:.78rem;">This logo will be used automatically. Upload a new image below only if you want to change it.</div>
+                    </div>
+                  </div>
+                  @endif
+
                   <input type="file" class="form-control" id="business_logo" name="business_logo" accept="image/*">
                   @error('business_logo')
                     <small class="text-danger">{{ $message }}</small>

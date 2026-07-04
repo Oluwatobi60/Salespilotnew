@@ -339,20 +339,8 @@ class StaffsMainController extends Controller
             $all_items->push($item);
         }
 
-        // Paginate the items (12 per page)
-        $perPage = 10;
-        $page = Paginator::resolveCurrentPage();
-        $items = $all_items->forPage($page, $perPage);
-        $all_items = new \Illuminate\Pagination\LengthAwarePaginator(
-            $items,
-            $all_items->count(),
-            $perPage,
-            $page,
-            [
-                'path' => route('staff.sell_product'),
-                'query' => request()->query(),
-            ]
-        );
+        // Pass the entire collection without pagination
+        $all_items = $all_items;
 
         return view('staff.sell.sell_product', compact('all_items', 'standard_items', 'variant_items', 'categories', 'staff'));
     }
@@ -453,10 +441,21 @@ class StaffsMainController extends Controller
                 'discount' => 'nullable|numeric'
             ]);
 
-// Validate selling price is not below or equal to cost price for manual entry
+            $staff = Auth::guard('staff')->user();
+            $managerName = trim(($staff->firstname ?? '') . ' ' . ($staff->othername ?? '') . ' ' . ($staff->surname ?? ''));
+
+            // Get staff's assigned branch (use the same logic as sell_product)
+            $staffBranch = $staff->branches->first();
+            $branchId = $staffBranch ? $staffBranch->id : null;
+            $branchName = $staffBranch ? $staffBranch->branch_name : null;
+            $managerId = $staffBranch ? $staffBranch->user_id : null;
+
+            // Validate selling price and stock availability for all items first
             foreach ($validated['items'] as $item) {
-                if (isset($item['price']) && isset($item['type'])) {
-                    if ($item['type'] === 'standard') {
+                $itemType = isset($item['type']) ? $item['type'] : 'standard';
+
+                if (isset($item['price'])) {
+                    if ($itemType === 'standard') {
                         $standardItem = StandardItem::find($item['id']);
                         if ($standardItem && $item['price'] <= $standardItem->cost_price) {
                             return response()->json([
@@ -464,7 +463,7 @@ class StaffsMainController extends Controller
                                 'message' => "Selling price for '{$item['name']}' must be greater than cost price (" . number_format((float)$standardItem->cost_price, 2) . ")"
                             ], 400);
                         }
-                    } elseif ($item['type'] === 'variant') {
+                    } elseif ($itemType === 'variant') {
                         $productVariant = ProductVariant::find($item['id']);
                         if ($productVariant && $item['price'] <= $productVariant->cost_price) {
                             return response()->json([
@@ -474,20 +473,83 @@ class StaffsMainController extends Controller
                         }
                     }
                 }
+
+                // Stock validation
+                if ($branchId) {
+                    $branchInventory = BranchInventory::where('branch_id', $branchId)
+                        ->where('item_id', $item['id'])
+                        ->where('item_type', $itemType)
+                        ->first();
+
+                    if ($branchInventory) {
+                        if ($branchInventory->current_quantity < $item['quantity']) {
+                            return response()->json([
+                                'success' => false,
+                                'message' => "Insufficient stock in branch inventory for item: {$item['name']}"
+                            ], 400);
+                        }
+                    } else {
+                        $manager = $managerId ? User::find($managerId) : null;
+                        if ($itemType === 'standard') {
+                            $standardItem = null;
+                            if ($manager) {
+                                $standardItem = StandardItem::where('id', $item['id'])
+                                    ->where('business_name', $staff->business_name)
+                                    ->where('manager_email', $manager->email)
+                                    ->first();
+                            }
+
+                            if (!$standardItem || $standardItem->current_stock < $item['quantity']) {
+                                return response()->json([
+                                    'success' => false,
+                                    'message' => "Insufficient stock for item: {$item['name']}"
+                                ], 400);
+                            }
+                        } elseif ($itemType === 'variant') {
+                            $productVariant = null;
+                            if ($manager) {
+                                $productVariant = ProductVariant::whereHas('variantItem', function($query) use ($manager, $staff) {
+                                    $query->where('business_name', $staff->business_name)
+                                          ->where('manager_email', $manager->email);
+                                })->find($item['id']);
+                            }
+
+                            if (!$productVariant || $productVariant->current_stock < $item['quantity']) {
+                                return response()->json([
+                                    'success' => false,
+                                    'message' => "Insufficient stock for variant: {$item['name']}"
+                                ], 400);
+                            }
+                        }
+                    }
+                } else {
+                    if ($itemType === 'standard') {
+                        $standardItem = StandardItem::where('id', $item['id'])
+                            ->where('business_name', $staff->business_name)
+                            ->first();
+                        if (!$standardItem || $standardItem->current_stock < $item['quantity']) {
+                            return response()->json([
+                                'success' => false,
+                                'message' => "Insufficient stock for item: {$item['name']}"
+                            ], 400);
+                        }
+                    } elseif ($itemType === 'variant') {
+                        $productVariant = ProductVariant::whereHas('variantItem', function($query) use ($staff) {
+                            $query->where('business_name', $staff->business_name);
+                        })->find($item['id']);
+                        if (!$productVariant || $productVariant->current_stock < $item['quantity']) {
+                            return response()->json([
+                                'success' => false,
+                                'message' => "Insufficient stock for variant: {$item['name']}"
+                            ], 400);
+                        }
+                    }
+                }
             }
 
             $sessionId = Str::uuid();
             $receiptNumber = 'RCPT-' . strtoupper(substr($sessionId, 0, 8));
             $discount = $validated['discount'] ?? 0;
-
-            $staff = Auth::guard('staff')->user();
-            $managerName = trim(($staff->firstname ?? '') . ' ' . ($staff->othername ?? '') . ' ' . ($staff->surname ?? ''));
-
-            // Get staff's assigned branch (use the same logic as sell_product)
-            $staffBranch = $staff->branches->first();
-            $branchId = $staffBranch ? $staffBranch->id : null;
-            $branchName = $staffBranch ? $staffBranch->branch_name : null;
-            $managerId = $staffBranch ? $staffBranch->user_id : null;
 
             // Log checkout activity for staff
             $details = [
@@ -541,19 +603,10 @@ class StaffsMainController extends Controller
                         ->first();
 
                     if ($branchInventory) {
-                        // Item is in branch inventory - use branch stock
-                        if ($branchInventory->current_quantity < $item['quantity']) {
-                            return response()->json([
-                                'success' => false,
-                                'message' => 'Insufficient stock in branch inventory for item: ' . $item['name']
-                            ], 400);
-                        }
-
                         // Deduct from branch inventory
                         $branchInventory->deductStock($item['quantity']);
                     } else {
-                        // Item not in branch inventory - check if it was added by the branch manager
-                        // If so, deduct from main inventory instead
+                        // Deduct from main inventory instead
                         $manager = $managerId ? User::find($managerId) : null;
 
                         if ($itemType === 'standard') {
@@ -565,25 +618,10 @@ class StaffsMainController extends Controller
                                     ->first();
                             }
 
-                            if (!$standardItem) {
-                                return response()->json([
-                                    'success' => false,
-                                    'message' => 'Item not found in branch inventory: ' . $item['name']
-                                ], 400);
+                            if ($standardItem) {
+                                $standardItem->current_stock -= $item['quantity'];
+                                $standardItem->save();
                             }
-
-                            if ($standardItem->current_stock < $item['quantity']) {
-                                return response()->json([
-                                    'success' => false,
-                                    'message' => 'Insufficient stock for item: ' . $item['name']
-                                ], 400);
-                            }
-
-                            $standardItem->current_stock -= $item['quantity'];
-                            if ($standardItem->current_stock < 0) {
-                                $standardItem->current_stock = 0;
-                            }
-                            $standardItem->save();
 
                         } elseif ($itemType === 'variant') {
                             $productVariant = null;
@@ -594,25 +632,10 @@ class StaffsMainController extends Controller
                                 })->find($item['id']);
                             }
 
-                            if (!$productVariant) {
-                                return response()->json([
-                                    'success' => false,
-                                    'message' => 'Variant not found in branch inventory: ' . $item['name']
-                                ], 400);
+                            if ($productVariant) {
+                                $productVariant->current_stock -= $item['quantity'];
+                                $productVariant->save();
                             }
-
-                            if ($productVariant->stock_quantity < $item['quantity']) {
-                                return response()->json([
-                                    'success' => false,
-                                    'message' => 'Insufficient stock for variant: ' . $item['name']
-                                ], 400);
-                            }
-
-                            $productVariant->stock_quantity -= $item['quantity'];
-                            if ($productVariant->stock_quantity < 0) {
-                                $productVariant->stock_quantity = 0;
-                            }
-                            $productVariant->save();
                         }
                     }
                 } else {
@@ -623,9 +646,6 @@ class StaffsMainController extends Controller
                             ->first();
                         if ($standardItem) {
                             $standardItem->current_stock -= $item['quantity'];
-                            if ($standardItem->current_stock < 0) {
-                                $standardItem->current_stock = 0;
-                            }
                             $standardItem->save();
                         }
                     } elseif ($itemType === 'variant') {
@@ -633,10 +653,7 @@ class StaffsMainController extends Controller
                             $query->where('business_name', $staff->business_name);
                         })->find($item['id']);
                         if ($productVariant) {
-                            $productVariant->stock_quantity -= $item['quantity'];
-                            if ($productVariant->stock_quantity < 0) {
-                                $productVariant->stock_quantity = 0;
-                            }
+                            $productVariant->current_stock -= $item['quantity'];
                             $productVariant->save();
                         }
                     }

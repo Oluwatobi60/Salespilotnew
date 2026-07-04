@@ -565,8 +565,9 @@ document.addEventListener('DOMContentLoaded', function () {
                             <div class="text-end">
                                 <div class="small">
                                     <span class="text-muted">Allocated:</span> ${item.allocated_quantity}
+                                    ${item.stock_added > 0 ? `<br><span class="text-muted" style="font-size:0.8em"><i class="bi bi-plus-circle"></i> Added: ${item.stock_added}</span>` : ''}
                                 </div>
-                                <div class="small">
+                                <div class="small mt-1">
                                     <span class="text-muted">Remaining:</span>
                                     <strong>${item.current_quantity}</strong>${warn}
                                 </div>

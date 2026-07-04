@@ -95,6 +95,9 @@ class StaffMainController extends Controller
                 $validatedData['passport_photo'] = $path;
             }
 
+            // Always default new staff to active so they can log in immediately
+            $validatedData['status'] = 'active';
+
             // Create a new staff member
             $staff = Staffs::create($validatedData);
 
@@ -358,12 +361,12 @@ class StaffMainController extends Controller
         // ✅ SECURITY: Verify staff belongs to manager's business
         $staff = Staffs::where('business_name', $businessName)
             ->findOrFail($id);
-        // Toggle the status
-        $staff->status = !$staff->status;
+        // Toggle the status between 'active' and 'inactive'
+        $staff->status = ($staff->status === 'active') ? 'inactive' : 'active';
         $staff->save();
 
         // Prepare status text for the flash message
-        $statusText = $staff->status ? 'activated' : 'deactivated';
+        $statusText = ($staff->status === 'active') ? 'activated' : 'deactivated';
         return redirect()->back()->with('success', "Staff has been {$statusText} successfully.");
     }
 }

@@ -12,11 +12,12 @@ All Items
       $showInventoryColumns = false;
     }
   }
-  $stockLabel = $showInventoryColumns ? 'General Stock' : 'In Stock';
   // Keep the action buttons visible for added managers so they can attempt the action,
   // but the controller still blocks unauthorized edit/delete requests with an error flash.
   $canEditItems = true;
   $canDeleteItems = Auth::user()->addby === null || user_has_feature('manager_edit_items_features', Auth::user());
+  $isDelegatedManager = Auth::user()->addby !== null;
+  $stockLabel = $showInventoryColumns ? ($isDelegatedManager ? 'Branch Stock' : 'General Stock') : 'In Stock';
 @endphp
 
 
@@ -85,12 +86,13 @@ All Items
                 <div class="d-flex align-items-center gap-3">
                     <div class="stat-icon bg-info bg-opacity-10 text-info"><i class="bi bi-archive"></i></div>
                     <div>
-                        <div class="stat-label">General Stock</div>
+                        <div class="stat-label">{{ $stockLabel }}</div>
                         <div class="stat-value">{{ number_format($totalGenStock) }}</div>
                     </div>
                 </div>
             </div>
         </div>
+        @if(!$isDelegatedManager)
         <div class="col-6 col-md-3">
             <div class="ai-stat card shadow-sm">
                 <div class="d-flex align-items-center gap-3">
@@ -102,6 +104,7 @@ All Items
                 </div>
             </div>
         </div>
+        @endif
         @else
         <div class="col-6 col-md-3">
             <div class="ai-stat card shadow-sm">
@@ -222,22 +225,24 @@ All Items
                         @if($showInventoryColumns)
                         <th>
                             <span data-bs-toggle="tooltip"
-                                  title="Total stock added (constant) = warehouse left + all branch allocations">
+                                  title="{{ $isDelegatedManager ? 'Total stock allocated to branches' : 'Total stock added (constant) = warehouse left + all branch allocations' }}">
                                 {{ $stockLabel }}
                             </span>
                         </th>
+                        @if(!$isDelegatedManager)
                         <th>
                             <span data-bs-toggle="tooltip"
                                   title="Warehouse stock remaining after allocations. Decreases each time you allocate to a branch.">
                                 General Left
                             </span>
                         </th>
+                        @endif
                         <th class="col-hide-md">Branch Inventory</th>
                         @else
                         <th>
                             <span data-bs-toggle="tooltip"
                                   title="Initial total stock quantity (never changes after first entry)">
-                                Total Stock
+                                Initial Stock
                             </span>
                         </th>
                         <th>
@@ -346,10 +351,10 @@ All Items
                             @endif
                         </td>
                         @if($showInventoryColumns)
-                        {{-- General Stock --}}
+                        {{-- General/Branch Stock --}}
                             <td>
                                 @if($stock !== null)
-                                    <span class="stock-pill {{ $stockClass }}">
+                                    <span class="stock-pill {{ $stockClass }}" data-bs-toggle="tooltip" title="{{ $isDelegatedManager ? 'Branch Stock' : 'Initial Stock' }}">
                                         @if($genLeft <= 0)
                                             <i class="bi bi-x-circle-fill"></i>
                                         @elseif($threshold !== null && $genLeft <= $threshold)
@@ -359,9 +364,13 @@ All Items
                                         @endif
                                         {{ number_format($stock) }}
                                     </span>
-                                    @if(!empty($item['stock_added']))
+                                    @if(isset($item['stock_added']) && $item['stock_added'] > 0 && !$isDelegatedManager)
                                         <div class="mt-1 text-muted" style="font-size:.72rem;">
                                             <i class="bi bi-plus-circle"></i> Added: {{ number_format($item['stock_added']) }}
+                                        </div>
+                                    @elseif(isset($item['branch_stock_added']) && $item['branch_stock_added'] > 0 && $isDelegatedManager)
+                                        <div class="mt-1 text-muted" style="font-size:.72rem;">
+                                            <i class="bi bi-plus-circle"></i> Added: {{ number_format($item['branch_stock_added']) }}
                                         </div>
                                     @endif
                                 @else
@@ -369,11 +378,13 @@ All Items
                                 @endif
                             </td>
                         {{-- General Left --}}
+                        @if(!$isDelegatedManager)
                         <td>
                             <span class="stock-pill {{ $leftClass }}">
                                 <i class="bi bi-box-seam"></i> {{ number_format($genLeft) }}
                             </span>
                         </td>
+                        @endif
                         {{-- Branch Inventory --}}
                         <td class="col-hide-md">
                             @if(isset($item['branch_inventory_list']) && count($item['branch_inventory_list']) > 0)
@@ -410,9 +421,14 @@ All Items
                                 @php
                                     $totalStock = $item['opening_stock'] ?? 0;
                                 @endphp
-                            <span class="stock-pill sp-good">
+                            <span class="stock-pill sp-good" data-bs-toggle="tooltip" title="Initial Stock">
                                 <i class="bi bi-archive"></i> {{ number_format($totalStock) }}
                             </span>
+                            @if(isset($item['stock_added']) && $item['stock_added'] > 0)
+                                <div class="mt-1 text-muted" style="font-size:.72rem;">
+                                    <i class="bi bi-plus-circle"></i> Added: {{ number_format($item['stock_added']) }}
+                                </div>
+                            @endif
                         </td>
                         {{-- Current Stock (for Basic/Free) --}}
                         <td>
@@ -438,11 +454,6 @@ All Items
                                 @endif
                                 {{ number_format($currentStock) }}
                             </span>
-                            @if(!empty($item['stock_added']))
-                                <div class="mt-1 text-muted" style="font-size:.72rem;">
-                                    <i class="bi bi-plus-circle"></i> Added: {{ number_format($item['stock_added']) }}
-                                </div>
-                            @endif
                             @if($threshold !== null && $currentStock <= $threshold && $currentStock > 0)
                                 <div class="mt-1" style="font-size:.68rem; color:#d97706;">
                                     <i class="bi bi-arrow-down-circle"></i> Restock needed

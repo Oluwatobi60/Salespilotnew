@@ -22,32 +22,40 @@ class CheckSubscriptionStatus
         if (Auth::check()) {
             $user = Auth::user();
 
-            // Get user's active subscription
-            $subscription = UserSubscription::where('user_id', $user->id)
+            // Get the most recent active subscription (latest end_date first)
+            $activeSubscription = UserSubscription::where('user_id', $user->id)
                 ->where('status', 'active')
+                ->orderByDesc('end_date')
                 ->first();
 
-            // If subscription exists and has expired, update status
-            if ($subscription && $subscription->end_date < Carbon::today()) {
-                $subscription->update(['status' => 'expired']);
+            // If there's a valid active subscription that hasn't expired, allow through
+            if ($activeSubscription && $activeSubscription->end_date >= Carbon::today()) {
+                return $next($request);
+            }
 
-                // Logout user and redirect to login with message
+            // If there's an active-status record that has expired, mark it expired
+            if ($activeSubscription && $activeSubscription->end_date < Carbon::today()) {
+                $activeSubscription->update(['status' => 'expired']);
+            }
+
+            // Check if any non-expired active subscription exists (could be the renewed one)
+            $validSubscription = UserSubscription::where('user_id', $user->id)
+                ->where('status', 'active')
+                ->where('end_date', '>=', Carbon::today())
+                ->exists();
+
+            if ($validSubscription) {
+                return $next($request);
+            }
+
+            // No valid subscription — check if they have ever had one (not brand-new signups)
+            $hasAnySubscription = UserSubscription::where('user_id', $user->id)->exists();
+
+            if ($hasAnySubscription) {
                 Auth::logout();
                 return redirect()->route('login')->withErrors([
                     'email' => 'Your subscription has expired. Please renew to continue using SalesPilot.',
                 ])->with('redirect_to_plans', true);
-            }
-
-            // If no active subscription exists (already expired or cancelled)
-            if (!$subscription) {
-                $hasAnySubscription = UserSubscription::where('user_id', $user->id)->exists();
-
-                if ($hasAnySubscription) {
-                    Auth::logout();
-                    return redirect()->route('login')->withErrors([
-                        'email' => 'Your subscription has expired. Please renew to continue using SalesPilot.',
-                    ])->with('redirect_to_plans', true);
-                }
             }
         }
 

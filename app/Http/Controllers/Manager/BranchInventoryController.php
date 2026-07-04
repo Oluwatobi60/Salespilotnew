@@ -85,6 +85,7 @@ class BranchInventoryController extends Controller
                     'item_name' => $itemDetails->item_name ?? $itemDetails->variant_name ?? 'Unknown',
                     'item_type' => $item->item_type,
                     'allocated_quantity' => $item->allocated_quantity,
+                    'stock_added' => $item->stock_added,
                     'current_quantity' => $item->current_quantity,
                     'sold_quantity' => $item->sold_quantity,
                     'low_stock' => $item->isLowStock(),

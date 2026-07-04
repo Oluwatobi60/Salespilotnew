@@ -50,7 +50,7 @@ Sell Product
     </div>
     </div>
 
-    <div class="items-grid">
+    <div class="items-grid" style="max-height: calc(100vh - 220px); overflow-y: auto; padding-right: 5px;">
     {{-- DEBUG: Total items = {{ $all_items->count() }} --}}
     @forelse($all_items as $item)
         @if($item->item_type == 'standard')
@@ -151,12 +151,7 @@ Sell Product
             </div>
 
 
-            <!-- Pagination Links -->
-            @if($all_items->hasPages())
-            <div style="display: flex; justify-content: center; margin-top: 30px; padding-bottom: 20px;">
-                {{ $all_items->links('pagination::bootstrap-4') }}
-            </div>
-            @endif
+            <!-- Pagination Links Removed -->
         </div>
         </div>
 

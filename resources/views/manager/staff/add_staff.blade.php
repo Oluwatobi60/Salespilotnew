@@ -60,13 +60,6 @@ Add Staff Member
                 <div class="card card-rounded">
                   <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-4">
-                      <div>
-                        <h4 class="card-title mb-2">
-                          <i class="bi bi-person-workspace me-2"></i>Staff Members
-                        </h4>
-                        <p class="card-description mb-0">Manage your staff members and their roles</p>
-                      </div>
-
                       @if($isBusinessCreator ?? true)
                         @php
                           $canAddStaff = false;
@@ -120,8 +113,37 @@ Add Staff Member
                             $canAddStaff = false;
                             $limitMessage = 'No active subscription found. Please subscribe to a plan.';
                           }
+                          
+                          // Calculate display values for the UI
+                          $displayMaxStaff = 'Unlimited';
+                          if ($maxStaff !== null) {
+                              $displayMaxStaff = $maxStaff;
+                          } elseif (!empty($planName)) {
+                              if ($planName === 'free') $displayMaxStaff = 0;
+                              elseif ($planName === 'basic') $displayMaxStaff = 2;
+                              elseif ($planName === 'standard') $displayMaxStaff = 4;
+                              elseif ($planName === 'premium') $displayMaxStaff = 'Unlimited';
+                          }
+                          $staffRemaining = $displayMaxStaff === 'Unlimited' ? 'Unlimited' : max(0, $displayMaxStaff - $currentStaffCount);
                         @endphp
+                      @endif
 
+                      <div>
+                        <h4 class="card-title mb-2">
+                          <i class="bi bi-person-workspace me-2"></i>Staff Members
+                        </h4>
+                        <p class="card-description mb-0">
+                          Total: <strong>{{ $currentStaffCount ?? 0 }}</strong> staff
+                          @if(isset($activeSubscription) && $activeSubscription && $activeSubscription->subscriptionPlan)
+                            ({{ $currentStaffCount ?? 0 }}/{{ $displayMaxStaff }} used)
+                            <br><small class="text-muted">Plan: {{ $activeSubscription->subscriptionPlan->name ?? 'N/A' }}</small>
+                          @else
+                            <br><small class="text-danger">No active subscription</small>
+                          @endif
+                        </p>
+                      </div>
+
+                      @if($isBusinessCreator ?? true)
                         @if($canAddStaff)
                           <button type="button" class="btn btn-primary" style="min-width: 150px;" id="openAddStaffBtn"><strong>+ Add Staff</strong></button>
                         @else
@@ -234,7 +256,7 @@ Add Staff Member
                             </td>
                             @endif
                              <td>
-                              <span class="badge bg-success">{{ $staff->status  ? 'Active' : 'Inactive'}}</span>
+                              <span class="badge {{ $staff->status === 'active' ? 'bg-success' : 'bg-secondary' }}">{{ $staff->status === 'active' ? 'Active' : 'Inactive' }}</span>
                             </td>
                             <td>
                               <p class="mb-0">{{ $staff->created_at->format('M d, Y') }}</p>
@@ -253,9 +275,9 @@ Add Staff Member
                                   @method('PATCH')
                                   <div class="form-check form-switch d-flex align-items-center m-0">
                                     <input class="form-check-input" type="checkbox" id="statusSwitch{{ $staff->id }}" name="status"
-                                      onchange="this.form.submit()" {{ ($staff->status == '1' || $staff->status == '1') ? 'checked' : '' }}>
+                                      onchange="this.form.submit()" {{ $staff->status === 'active' ? 'checked' : '' }}>
                                     <label class="form-check-label ms-1 mb-0" for="statusSwitch{{ $staff->id }}">
-                                      {{ ($staff->status == '1' || $staff->status == '1') ? 'Enabled' : 'Disabled' }}
+                                      {{ $staff->status === 'active' ? 'Enabled' : 'Disabled' }}
                                     </label>
                                   </div>
                                 </form>

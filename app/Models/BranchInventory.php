@@ -21,6 +21,7 @@ class BranchInventory extends Model
         'allocated_quantity',
         'current_quantity',
         'sold_quantity',
+        'stock_added',
         'low_stock_threshold',
         'allocated_by',
         'allocated_at',
@@ -92,6 +93,7 @@ class BranchInventory extends Model
     {
         $this->allocated_quantity += $quantity;
         $this->current_quantity += $quantity;
+        $this->stock_added += $quantity;
         $this->save();
     }
 

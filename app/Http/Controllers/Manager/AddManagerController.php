@@ -224,6 +224,26 @@ class AddManagerController extends Controller
         $statusText = $manager->status ? 'activated' : 'deactivated';
         return redirect()->back()->with('success', "Manager has been {$statusText} successfully.");
     }
+
+
+    public function deletemanager($id)
+    {
+        $currentManager = Auth::user();
+        $businessName   = $currentManager->business_name;
+
+        // ✅ SECURITY: Verify manager belongs to same business
+        $manager = User::where('business_name', $businessName)
+            ->findOrFail($id);
+
+        // Prevent self-deletion
+        if ($manager->id === $currentManager->id) {
+            return redirect()->back()->with('error', 'You cannot delete your own account.');
+        }
+
+        $manager->delete();
+
+        return redirect()->route('manager.manager')->with('success', 'Manager account deleted successfully.');
+    }
 }
 
 

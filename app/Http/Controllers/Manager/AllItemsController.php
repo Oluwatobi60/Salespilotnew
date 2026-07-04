@@ -133,15 +133,23 @@ class AllItemsController extends Controller
                         $generalLeft = $currentStock;
                     } else {
                         if ($manager->addby) {
-                            $openingStock = $totalAllocated;
+                            $branchStockAdded = clone $branchInventories;
+                            $totalBranchStockAdded = $branchStockAdded->sum('stock_added');
+                            $openingStock = $totalAllocated - $totalBranchStockAdded;
                             $currentStock = $branchCurrent;
                             $generalLeft = $branchCurrent;
                         } else {
-                            $openingStock = ($item->current_stock ?? 0) + $totalAllocated;
-                            $currentStock = $openingStock;
+                            $openingStock = ($item->opening_stock ?? 0) > 0 
+                                ? $item->opening_stock 
+                                : (($item->current_stock ?? 0) + $totalAllocated);
+                            $currentStock = ($item->current_stock ?? 0) + $branchCurrent;
                             $generalLeft = $item->current_stock ?? 0;
                         }
                     }
+
+            $branchStockAdded = clone $branchInventories;
+            $totalBranchStockAdded = $branchStockAdded->sum('stock_added');
+
 // Only include items that are either not an added manager (full access) or have inventory in the branches they manage
             if (!$manager->addby || $branchInventories->count() > 0) {
                 $unit = $item->relationLoaded('unit') ? $item->getRelation('unit') : (Unit::find($item->getAttribute('unit')) ?? null);
@@ -163,6 +171,7 @@ class AllItemsController extends Controller
                     'general_left' => $generalLeft,
                     'opening_stock' => $openingStock,
                     'stock_added' => (int) ($item->stock_added ?? 0),
+                    'branch_stock_added' => (int) $totalBranchStockAdded,
                     'actual_current_stock' => $branchInventories->count() > 0 ? $branchCurrent : ($item->current_stock ?? 0),
                     'low_stock_threshold' => $item->low_stock_threshold,
                     'pricing_tiers' => $item->pricingTiers,
@@ -202,15 +211,23 @@ class AllItemsController extends Controller
                         $generalLeft = $currentStock;
                     } else {
                         if ($manager->addby) {
-                            $openingStock = $totalAllocated;
+                            $branchStockAdded = clone $branchInventories;
+                            $totalBranchStockAdded = $branchStockAdded->sum('stock_added');
+                            $openingStock = $totalAllocated - $totalBranchStockAdded;
                             $currentStock = $branchCurrent;
                             $generalLeft = $branchCurrent;
                         } else {
-                            $openingStock = ($variant->current_stock ?? 0) + $totalAllocated;
-                            $currentStock = $variant->current_stock ?? 0;
+                            $openingStock = ($variant->opening_stock ?? 0) > 0 
+                                ? $variant->opening_stock 
+                                : (($variant->current_stock ?? 0) + $totalAllocated);
+                            $currentStock = ($variant->current_stock ?? 0) + $branchCurrent;
                             $generalLeft = $variant->current_stock ?? 0;
                         }
                     }
+
+                    $branchStockAdded = clone $branchInventories;
+                    $totalBranchStockAdded = $branchStockAdded->sum('stock_added');
+
                     if (!$manager->addby || $branchInventories->count() > 0) {
                         $unit = $item->relationLoaded('unit') ? $item->getRelation('unit') : (Unit::find($item->getAttribute('unit')) ?? null);
                         $allItems->push([
@@ -565,13 +582,7 @@ class AllItemsController extends Controller
 
                         if ($stockIncrease > 0) {
                             $validatedData['current_stock'] = (int) $item->current_stock + $stockIncrease;
-                            $validatedData['stock_added'] = $stockIncrease;
-
-                            foreach ($item->branchInventory as $branchInventory) {
-                                $branchInventory->allocated_quantity += $stockIncrease;
-                                $branchInventory->current_quantity += $stockIncrease;
-                                $branchInventory->save();
-                            }
+                            $validatedData['stock_added'] = (int) ($item->stock_added ?? 0) + $stockIncrease;
                         }
                     }
 
@@ -633,15 +644,7 @@ class AllItemsController extends Controller
 
                         if ($stockIncrease > 0) {
                             $validatedData['current_stock'] = (int) ($item->current_stock ?? 0) + $stockIncrease;
-                            $validatedData['stock_added'] = $stockIncrease;
-
-                            foreach (BranchInventory::where('item_id', $item->id)
-                                ->where('item_type', 'variant')
-                                ->get() as $branchInventory) {
-                                $branchInventory->allocated_quantity += $stockIncrease;
-                                $branchInventory->current_quantity += $stockIncrease;
-                                $branchInventory->save();
-                            }
+                            $validatedData['stock_added'] = (int) ($item->stock_added ?? 0) + $stockIncrease;
                         }
                     }
 

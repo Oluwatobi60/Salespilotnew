@@ -147,9 +147,24 @@
     @endif
 
    <!-- Welcome Section -->
-            <div class="welcome-section">
-              <h1 class="welcome-title">Welcome to {{ app_name() }}</h1>
-              <p class="welcome-subtitle">Your comprehensive inventory management solution</p>
+            @php
+                $managerFirstName = trim(Auth::user()->firstname ?? Auth::user()->first_name ?? '');
+                $managerSurname   = trim(Auth::user()->surname ?? '');
+                $managerDisplay   = $managerFirstName ?: trim(($managerFirstName . ' ' . $managerSurname) ?: (Auth::user()->business_name ?? 'Manager'));
+                $hour = now()->hour;
+                $greeting = $hour < 12 ? 'Good Morning' : ($hour < 17 ? 'Good Afternoon' : 'Good Evening');
+                $currentDate = now()->format('l, F j, Y');
+            @endphp
+            <div class="welcome-section d-flex align-items-center justify-content-between flex-wrap gap-2">
+              <div>
+                <h1 class="welcome-title mb-1">{{ $greeting }}, {{ $managerDisplay }}! 👋</h1>
+                <p class="welcome-subtitle mb-0">Your comprehensive inventory management solution</p>
+              </div>
+              <div class="text-end">
+                <span class="badge rounded-pill px-3 py-2" style="background: linear-gradient(135deg, {{ primary_color() }}, {{ secondary_color() }}); font-size: 0.85rem; font-weight: 500; letter-spacing: 0.3px; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">
+                  <i class="bi bi-calendar3 me-1"></i>{{ $currentDate }}
+                </span>
+              </div>
             </div>
 
 
