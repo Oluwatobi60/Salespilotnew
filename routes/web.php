@@ -129,6 +129,7 @@ Route::middleware(['auth:superadmin', 'throttle:60,1'])->prefix('superadmin/sett
     Route::post('/test-email', 'testEmail')->name('superadmin.settings.test-email');
     Route::post('/clear-cache', 'clearCache')->name('superadmin.settings.clear-cache');
     Route::post('/run-backup', 'runBackup')->name('superadmin.settings.run-backup');
+    Route::get('/download-backup/{filename}', 'downloadBackup')->name('superadmin.settings.download-backup');
     Route::post('/update-toggle', 'updateToggle')->name('superadmin.settings.update-toggle');
     Route::post('/toggle-maintenance', 'toggleMaintenance')->name('superadmin.settings.toggle-maintenance');
 });

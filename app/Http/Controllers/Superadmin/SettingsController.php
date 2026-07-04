@@ -256,9 +256,17 @@ class SettingsController extends Controller
 
             // Check if backup was successful
             if (str_contains($output, 'successfully')) {
+                // Try to find the location in the output
+                $filename = null;
+                if (preg_match('/Location:\s*(.*)/', $output, $matches)) {
+                    $filepath = trim($matches[1]);
+                    $filename = basename($filepath);
+                }
+
                 return response()->json([
                     'success' => true,
-                    'message' => 'Database backup completed successfully!'
+                    'message' => 'Database backup completed successfully!',
+                    'download_url' => $filename ? route('superadmin.settings.download-backup', ['filename' => $filename]) : null
                 ]);
             } else {
                 return response()->json([
@@ -272,6 +280,18 @@ class SettingsController extends Controller
                 'message' => 'Backup failed: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Download a database backup file
+     */
+    public function downloadBackup($filename)
+    {
+        $path = storage_path('app/backups/' . $filename);
+        if (!file_exists($path)) {
+            abort(404, 'Backup file not found.');
+        }
+        return response()->download($path);
     }
 
     /**
