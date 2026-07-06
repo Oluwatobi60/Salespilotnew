@@ -206,7 +206,7 @@ Route::get('/', function () {
 });
 
 // Signup routes
-Route::prefix('signup')->controller(SignupController::class)->group(function () {
+Route::prefix('signup')->middleware('throttle:5,1')->controller(SignupController::class)->group(function () {
     Route::get('/get_started', 'index')->name('get_started');
     Route::post('/get_started_store', 'store')->name('get_started.store');
     Route::post('/resend_verification', 'resend')->name('get_started.resend');
