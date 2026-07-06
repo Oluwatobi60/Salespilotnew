@@ -16,9 +16,9 @@
         <div class="login-left">
             <div class="login-branding">
                 <div class="brand-logo-wrapper">
-
-                    <img src="{{ asset('manager_asset/images/salespilot logo1.png') }}" alt="{{ app_name() }} Logo" class="brand-logo-img">
-
+                    <a href="{{ url('/') }}">
+                        <img src="{{ asset('manager_asset/images/salespilot logo1.png') }}" alt="{{ app_name() }} Logo" class="brand-logo-img">
+                    </a>
                 </div>
                 <h1>Welcome Back!</h1>
                 <p>Sign in to manage your inventory, track sales, and grow your business with powerful analytics.</p>
@@ -56,7 +56,9 @@
         <div class="login-right">
             <div class="form-wrapper">
                 <div class="form-logo">
-                    <img src="{{ asset('manager_asset/images/salespilot logo1.png') }}" alt="{{ app_name() }} Logo">
+                    <a href="{{ url('/') }}">
+                        <img src="{{ asset('manager_asset/images/salespilot logo1.png') }}" alt="{{ app_name() }} Logo">
+                    </a>
                 </div>
                 <div class="form-header">
                     <h2>Manager Login</h2>

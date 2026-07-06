@@ -16,7 +16,9 @@
         <div class="login-left">
             <div class="login-branding">
                 <div class="brand-logo-wrapper">
-                    <img src="{{ asset('manager_asset/images/salespilot logo1.png') }}" alt="SalesPilot Logo" class="brand-logo-img">
+                    <a href="{{ url('/') }}">
+                        <img src="{{ asset('manager_asset/images/salespilot logo1.png') }}" alt="SalesPilot Logo" class="brand-logo-img">
+                    </a>
                 </div>
                 <h1>Staff Portal</h1>
                 <p>Access your work dashboard, manage daily tasks, and help customers with seamless service.</p>
@@ -56,7 +58,9 @@
         <div class="login-right">
             <div class="form-wrapper">
                 <div class="form-logo">
-                    <img src="{{ asset('manager_asset/images/salespilot logo1.png') }}" alt="SalesPilot Logo">
+                    <a href="{{ url('/') }}">
+                        <img src="{{ asset('manager_asset/images/salespilot logo1.png') }}" alt="SalesPilot Logo">
+                    </a>
                 </div>
                 <div class="form-header">
                     <h2>Staff Login</h2>

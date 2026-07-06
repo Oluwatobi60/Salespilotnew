@@ -2,6 +2,7 @@
 @section('welcome_page_title')
 Get Started - SalesPilot
 @endsection
+@section('hide_nav_links', true)
 @section('welcome_page_content')
 <link rel="stylesheet" href="{{ asset('welcome_asset/signup.css') }}">
 <link rel="stylesheet" href="https://unicons.iconscout.com/release/v4.0.0/css/line.css">

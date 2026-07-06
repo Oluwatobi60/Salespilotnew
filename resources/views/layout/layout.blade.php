@@ -102,7 +102,7 @@
 </style>
 <div class="sp-brand-bar">
     <div class="sp-brand-inner">
-        <a href="{{ route('get_started') }}" class="sp-brand-logo">
+        <a href="{{ url('/') }}" class="sp-brand-logo">
             <div class="sp-brand-icon">📊</div>
             <div class="sp-brand-text">
                 <div class="sp-brand-name">{{ app_name() }}</div>
