@@ -85,10 +85,10 @@ Add Staff Member
                                 // No branches allowed (Free/Basic)
                                 $canAddManager = false;
                                 $limitMessage = 'Manager creation requires branches. Upgrade to Standard or Premium to create branches and add managers.';
-                              } elseif($currentBranchCount >= $maxBranches) {
-                                // Limit reached - can't add more managers without branches
+                              } elseif($currentBranchCount == 0) {
+                                // Must have at least one branch
                                 $canAddManager = false;
-                                $limitMessage = "You have reached your branch limit ({$maxBranches} branches). Upgrade to add more branches and managers.";
+                                $limitMessage = "You must create at least one branch before adding a manager.";
                               } else {
                                 // Can still add more managers
                                 $canAddManager = true;
@@ -642,18 +642,13 @@ document.addEventListener('DOMContentLoaded', function() {
                         return;
                     }
 
-                    if(currentBranchCount >= maxBranches) {
+                    if(currentBranchCount === 0) {
                         Swal.fire({
-                            title: 'Branch Limit Reached',
-                            text: `You have reached your branch limit (${maxBranches} branches). Each manager requires a branch. Upgrade to Premium for unlimited branches and managers.`,
+                            title: 'No Branches Available',
+                            text: 'You must create at least one branch before adding a manager.',
                             icon: 'warning',
-                            showCancelButton: true,
-                            confirmButtonText: 'Upgrade to Premium',
-                            cancelButtonText: 'Cancel'
-                        }).then((result) => {
-                            if (result.isConfirmed) {
-                                window.location.href = '{{ route('plan_pricing') }}';
-                            }
+                            showCancelButton: false,
+                            confirmButtonText: 'OK'
                         });
                         return;
                     }
@@ -674,18 +669,13 @@ document.addEventListener('DOMContentLoaded', function() {
                         return;
                     }
 
-                    if(planName === 'standard' && currentBranchCount >= 2) {
+                    if(planName === 'standard' && currentBranchCount === 0) {
                         Swal.fire({
-                            title: 'Branch Limit Reached',
-                            text: 'You have reached your branch limit (2 branches). Each manager requires a branch. Upgrade to Premium for unlimited branches and managers.',
+                            title: 'No Branches Available',
+                            text: 'You must create at least one branch before adding a manager.',
                             icon: 'warning',
-                            showCancelButton: true,
-                            confirmButtonText: 'Upgrade to Premium',
-                            cancelButtonText: 'Cancel'
-                        }).then((result) => {
-                            if (result.isConfirmed) {
-                                window.location.href = '{{ route('plan_pricing') }}';
-                            }
+                            showCancelButton: false,
+                            confirmButtonText: 'OK'
                         });
                         return;
                     }

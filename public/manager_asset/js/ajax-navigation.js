@@ -108,6 +108,7 @@ class AjaxNavigationHandler {
             '/manager/branches',
             '/manager/add_branch',
             '/manager/edit_branch',
+            '/manager/inventory/branch-allocation',
             
             // Units (has add/edit/delete)
             '/manager/units',
