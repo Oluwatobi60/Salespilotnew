@@ -3,7 +3,8 @@
   Applied when body has .dark-mode class 
 */
 
-html.dark-mode {
+html.dark-mode, 
+html.dark-mode body {
     background-color: #121212 !important;
     color: #ffffff !important;
 }
