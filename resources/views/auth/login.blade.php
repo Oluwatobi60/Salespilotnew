@@ -9,8 +9,17 @@
     <link rel="stylesheet" href="{{ asset('welcome_asset/login.css') }}">
     <link rel="stylesheet" href="{{ asset('welcome_asset/css/loading-button.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <!-- Dark Mode CSS -->
+    <link rel="stylesheet" href="{{ asset('css/dark-mode.css') }}">
 </head>
 <body>
+    <!-- Dark Mode Initialization -->
+    <script>
+        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark-mode');
+            document.body.classList.add('dark-mode');
+        }
+    </script>
     <div class="login-container">
         <!-- Left Side - Branding -->
         <div class="login-left">

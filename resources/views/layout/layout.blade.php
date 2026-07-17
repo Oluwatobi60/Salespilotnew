@@ -22,6 +22,14 @@
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 
+    <!-- Dark Mode CSS -->
+    <link rel="stylesheet" href="{{ asset('css/dark-mode.css') }}">
+    <!-- Prevent FOUC -->
+    <script>
+        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark-mode');
+        }
+    </script>
     <!-- endinject -->
     <link rel="shortcut icon" href="{{ app_favicon() }}" />
   </head>
@@ -109,7 +117,12 @@
                 <div class="sp-brand-tagline">{{ setting('app_tagline', 'Business Management Suite') }}</div>
             </div>
         </a>
-        @yield('brand_bar_step')
+        <div class="d-flex align-items-center gap-3">
+            <button type="button" class="theme-toggle-btn" title="Toggle theme">
+                <i class="bi bi-moon-stars-fill"></i>
+            </button>
+            @yield('brand_bar_step')
+        </div>
     </div>
 </div>
 @else
@@ -134,6 +147,11 @@
                     @endif
                 </li>
             @endif
+            <li>
+                <button type="button" class="theme-toggle-btn ms-2" title="Toggle theme">
+                    <i class="bi bi-moon-stars-fill"></i>
+                </button>
+            </li>
         </ul>
     </div>
 </nav>
@@ -185,6 +203,6 @@
             }
         });
     </script>
-
+    <script src="{{ asset('js/theme-toggle.js') }}"></script>
   </body>
 </html>

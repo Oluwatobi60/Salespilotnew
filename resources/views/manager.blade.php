@@ -346,6 +346,10 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+  const isDarkMode = document.documentElement.classList.contains('dark-mode');
+  const chartTextColor = isDarkMode ? '#ffffff' : '#6c757d';
+  const chartGridColor = isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)';
+
   // Sales Overview Chart (Bar) - Modern Gradient Design
   var salesLabels = @json(array_column($salesOverview ?? [], 'date'));
   var salesData = @json(array_column($salesOverview ?? [], 'gross_sales'));
@@ -407,20 +411,20 @@ document.addEventListener('DOMContentLoaded', function() {
               size: 11,
               weight: '500'
             },
-            color: '#6c757d'
+            color: chartTextColor
           }
         },
         y: {
           beginAtZero: true,
           grid: {
-            color: 'rgba(0, 0, 0, 0.05)',
+            color: chartGridColor,
             drawBorder: false
           },
           ticks: {
             font: {
               size: 11
             },
-            color: '#6c757d',
+            color: chartTextColor,
             callback: function(value) {
               return '₦' + value.toLocaleString('en-NG');
             }
@@ -496,14 +500,14 @@ document.addEventListener('DOMContentLoaded', function() {
         x: {
           beginAtZero: true,
           grid: {
-            color: 'rgba(0, 0, 0, 0.05)',
+            color: chartGridColor,
             drawBorder: false
           },
           ticks: {
             font: {
               size: 11
             },
-            color: '#6c757d',
+            color: chartTextColor,
             callback: function(value) {
               return value.toLocaleString();
             }
@@ -519,7 +523,7 @@ document.addEventListener('DOMContentLoaded', function() {
               size: 11,
               weight: '500'
             },
-            color: '#495057',
+            color: chartTextColor,
             callback: function(value, index) {
               var label = this.getLabelForValue(value);
               return label.length > 20 ? label.substring(0, 20) + '...' : label;

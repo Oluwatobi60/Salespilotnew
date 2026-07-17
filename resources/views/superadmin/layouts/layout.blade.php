@@ -10,6 +10,15 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="shortcut icon" href="{{ app_favicon() }}" />
     <link rel="stylesheet" href="{{ asset('superadmin_asset/css/superadmin_layout.css') }}">
+
+    <!-- Dark Mode CSS -->
+    <link rel="stylesheet" href="{{ asset('css/dark-mode.css') }}">
+    <!-- Prevent FOUC -->
+    <script>
+        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark-mode');
+        }
+    </script>
 </head>
 <body>
 @php $superadmin = Auth::guard('superadmin')->user(); @endphp
@@ -86,6 +95,9 @@
             <h1 class="page-title">@yield('superadmin_page_title')</h1>
         </div>
         <div class="d-flex align-items-center gap-2 flex-shrink-0">
+            <button type="button" class="theme-toggle-btn" title="Toggle theme" style="border: none; background: transparent; padding: 0.25rem 0.5rem;">
+                <i class="bi bi-moon-stars-fill fs-5"></i>
+            </button>
             <span class="admin-badge"><i class="bi bi-shield-lock-fill me-1"></i>Superadmin</span>
             <i class="bi bi-person-circle fs-5 text-secondary"></i>
             <span class="fw-semibold text-dark d-none d-md-inline" style="font-size:0.88rem;">{{ $superadmin->name }}</span>
@@ -143,5 +155,8 @@
 }());
 </script>
 @yield('superadmin_page_scripts')
+
+<!-- Theme Toggle JS -->
+<script src="{{ asset('js/theme-toggle.js') }}"></script>
 </body>
 </html>

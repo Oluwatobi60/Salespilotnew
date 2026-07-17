@@ -10,6 +10,15 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="shortcut icon" href="{{ app_favicon() }}" />
     <link rel="stylesheet" href="{{ asset('brm_asset/css/brm_layout.css') }}">
+    
+    <!-- Dark Mode CSS -->
+    <link rel="stylesheet" href="{{ asset('css/dark-mode.css') }}">
+    <!-- Prevent FOUC -->
+    <script>
+        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark-mode');
+        }
+    </script>
 </head>
 <body>
 @php $brm = Auth::guard('brms')->user(); @endphp
@@ -67,6 +76,12 @@
         <i class="menu-icon bi bi-graph-up"></i>
         <span class="menu-title">Performance</span>
       </a>
+    </li>
+
+    <li class="nav-item">
+      <button type="button" class="theme-toggle-btn nav-link" title="Toggle theme" style="border: none; background: transparent;">
+          <i class="bi bi-moon-stars-fill fs-5"></i>
+      </button>
     </li>
 
     <li class="nav-item dropdown user-dropdown">
@@ -149,5 +164,8 @@
 }());
 </script>
 @yield('brms_page_scripts')
+
+<!-- Theme Toggle JS -->
+<script src="{{ asset('js/theme-toggle.js') }}"></script>
 </body>
 </html>

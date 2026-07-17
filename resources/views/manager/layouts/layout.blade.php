@@ -25,6 +25,14 @@
     <link rel="stylesheet" href="{{ asset('manager_asset/css/ajax-navigation.css') }}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 
+    <!-- Dark Mode CSS -->
+    <link rel="stylesheet" href="{{ asset('css/dark-mode.css') }}">
+    <!-- Prevent FOUC -->
+    <script>
+        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark-mode');
+        }
+    </script>
     <!-- endinject -->
     <link rel="shortcut icon" href="{{ app_favicon() }}" />
   </head>
@@ -263,6 +271,12 @@
 
 
 
+   <li class="nav-item">
+      <button type="button" class="theme-toggle-btn nav-link" title="Toggle theme" style="border: none; background: transparent;">
+          <i class="bi bi-moon-stars-fill fs-5"></i>
+      </button>
+   </li>
+
    <li class="nav-item dropdown user-dropdown">
       <a class="nav-link dropdown-toggle" id="UserDropdown" href="#" data-bs-toggle="dropdown" aria-expanded="false" role="button" style="cursor: pointer; display: flex; align-items: center; padding: 15px 20px;">
         <img class="img-xs rounded-circle" src="{{ $manager && $manager->business_logo ? asset('business_logos/' . $manager->business_logo) : asset('manager_asset/assets/images/faces/face8.jpg') }}" alt="Profile image" style="width: 40px; height: 40px; object-fit: cover;">
@@ -338,6 +352,9 @@
 
     <!-- Page-specific scripts -->
     @yield('page_scripts')
+
+    <!-- Theme Toggle JS -->
+    <script src="{{ asset('js/theme-toggle.js') }}"></script>
 
     <script>
       // Force all sidebar dropdowns to stay closed on page load

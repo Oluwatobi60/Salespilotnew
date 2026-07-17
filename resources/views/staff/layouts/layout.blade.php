@@ -24,6 +24,14 @@
     <link rel="stylesheet" href="{{ asset('manager_asset/css/all_items_style.css') }}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 
+    <!-- Dark Mode CSS -->
+    <link rel="stylesheet" href="{{ asset('css/dark-mode.css') }}">
+    <!-- Prevent FOUC -->
+    <script>
+        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark-mode');
+        }
+    </script>
     <!-- endinject -->
     <link rel="shortcut icon" href="{{ app_favicon() }}" />
   </head>
@@ -115,6 +123,12 @@
 
 
 
+   <li class="nav-item">
+      <button type="button" class="theme-toggle-btn nav-link" title="Toggle theme" style="border: none; background: transparent;">
+          <i class="bi bi-moon-stars-fill fs-5"></i>
+      </button>
+   </li>
+
     <li class="nav-item dropdown user-dropdown">
       @php
         $staffUser = Auth::guard('staff')->user();
@@ -186,6 +200,9 @@
     <!-- Minimal Bootstrap Collapse Test Script and Add Item Modal Fallback -->
 
     <script src="{{ asset('manager_asset/js/sidebar1.js') }}"></script>
+
+    <!-- Theme Toggle JS -->
+    <script src="{{ asset('js/theme-toggle.js') }}"></script>
     <!-- Modal for selecting item type - Properly positioned at body level -->
     <div class="modal fade" id="itemTypeModal" tabindex="-1" aria-labelledby="itemTypeModalLabel" aria-hidden="true" style="z-index: 1055;">
       <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" style="max-width: 900px; max-height: 90vh;">
