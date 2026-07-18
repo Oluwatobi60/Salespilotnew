@@ -19,11 +19,7 @@ class CategoryController extends Controller
             return false;
         }
 
-        if (empty($manager->addby)) {
-            return true;
-        }
-
-        return user_has_feature('manager_edit_items_features', $manager);
+        return true; // Allow all managers (including branch managers) to manage categories
     }
 
     private function wantsJson(Request $request): bool

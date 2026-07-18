@@ -616,11 +616,22 @@ class SellProductController extends Controller
             $manager = Auth::user();
             $businessName = $manager->business_name;
 
-            $staff = \App\Models\Staffs::select('staffsid', 'fullname', 'email', 'role')
-                ->where('business_name', $businessName)
-                ->where('status', 'active')
-                ->orderBy('fullname')
-                ->get();
+            $query = \App\Models\Staffs::select('staffs.staffsid', 'staffs.fullname', 'staffs.email', 'staffs.role')
+                ->where('staffs.business_name', $businessName)
+                ->where('staffs.status', 'active');
+
+            if (!$manager->isBusinessCreator()) {
+                $managedBranchIds = \App\Models\Branch\Branch::where('manager_id', $manager->id)->pluck('id');
+                if ($managedBranchIds->isNotEmpty()) {
+                    $query->whereHas('branches', function($q) use ($managedBranchIds) {
+                        $q->whereIn('branches.id', $managedBranchIds);
+                    });
+                } else {
+                    $query->where('staffs.id', '<', 0);
+                }
+            }
+
+            $staff = $query->orderBy('staffs.fullname')->get();
 
             return response()->json([
                 'success' => true,

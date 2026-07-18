@@ -213,9 +213,16 @@ class StaffSalesController extends Controller
         // Get staff members from manager's business for the filter dropdown
         $staffQuery = Staffs::where('business_name', $businessName);
 
-        // If the user was added by another manager, show only staff they manage
-        if ($manager->addby) {
-            $staffQuery->where('manager_email', $manager->email);
+        // If the user was added by another manager (is not business creator), show only staff from their assigned branches
+        if (!$manager->isBusinessCreator()) {
+            $managedBranchIds = \App\Models\Branch\Branch::where('manager_id', $manager->id)->pluck('id');
+            if ($managedBranchIds->isNotEmpty()) {
+                $staffQuery->whereHas('branches', function($q) use ($managedBranchIds) {
+                    $q->whereIn('branches.id', $managedBranchIds);
+                });
+            } else {
+                $staffQuery->where('id', '<', 0);
+            }
         }
 
         $staffList = $staffQuery->select('id', 'fullname', 'staffsid')

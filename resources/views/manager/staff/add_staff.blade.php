@@ -133,12 +133,14 @@ Add Staff Member
                           <i class="bi bi-person-workspace me-2"></i>Staff Members
                         </h4>
                         <p class="card-description mb-0">
-                          Total: <strong>{{ $currentStaffCount ?? 0 }}</strong> staff
-                          @if(isset($activeSubscription) && $activeSubscription && $activeSubscription->subscriptionPlan)
-                            ({{ $currentStaffCount ?? 0 }}/{{ $displayMaxStaff }} used)
-                            <br><small class="text-muted">Plan: {{ $activeSubscription->subscriptionPlan->name ?? 'N/A' }}</small>
-                          @else
-                            <br><small class="text-danger">No active subscription</small>
+                          Total: <strong>{{ (!($isBusinessCreator ?? true)) ? ($staffCount ?? 0) : ($currentStaffCount ?? 0) }}</strong> staff
+                          @if($isBusinessCreator ?? true)
+                            @if(isset($activeSubscription) && $activeSubscription && $activeSubscription->subscriptionPlan)
+                              ({{ $currentStaffCount ?? 0 }}/{{ $displayMaxStaff }} used)
+                              <br><small class="text-muted">Plan: {{ $activeSubscription->subscriptionPlan->name ?? 'N/A' }}</small>
+                            @else
+                              <br><small class="text-danger">No active subscription</small>
+                            @endif
                           @endif
                         </p>
                       </div>
@@ -161,10 +163,6 @@ Add Staff Member
                             @endif
                           </div>
                         @endif
-                      @else
-                        <div class="alert alert-info mb-0" style="padding: 0.5rem 1rem;">
-                          <i class="bi bi-info-circle me-1"></i>Only the business owner can add staff
-                        </div>
                       @endif
 
                 </div>
@@ -265,10 +263,12 @@ Add Staff Member
 
 
                                  <div class="d-flex justify-content-center align-items-center flex-nowrap mx-auto" style="gap: 3rem;">
+                                @if($isBusinessCreator ?? true)
                                 <!-- Edit Button -->
                                 <a href="{{ route('staff.edit', $staff->id) }}" class="btn btn-sm btn-info text-white d-flex align-items-center" title="Edit Details">
                                   <i class="bi bi-pencil"></i>
                                 </a>
+                                @endif
                                 <!-- Enable/Disable Switch -->
                                 <form action="{{ route('staff.toggle_status', $staff->id) }}" method="POST" class="d-flex align-items-center m-0 p-0">
                                   @csrf
@@ -281,6 +281,7 @@ Add Staff Member
                                     </label>
                                   </div>
                                 </form>
+                                @if($isBusinessCreator ?? true)
                                 <!-- Delete Button -->
                                 <form action="{{ route('staff.delete', $staff->id) }}" method="POST" class="delete-staff-form d-flex align-items-center m-0 p-0">
                                   @csrf
@@ -290,6 +291,7 @@ Add Staff Member
                                       <i class="bi bi-trash"></i>
                                   </button>
                                 </form>
+                                @endif
                               </div>
 
 

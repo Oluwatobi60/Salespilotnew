@@ -31,17 +31,18 @@ class SalesReportController extends Controller
             ->where('cart_items.business_name', $businessName);
 
         // Check if user is a business creator or branch manager
-        if ($manager->addby) {
+        if (!$manager->isBusinessCreator()) {
             // This is a branch manager (added by another manager)
             // Show only sales from staff assigned to their branch
             $managerBranchName = $manager->branch_name;
             $managerStaffIds = [];
 
-            // Find staff assigned to the manager's branch via branch_staff pivot
-            if (!empty($managerBranchName)) {
+            $managedBranchIds = \App\Models\Branch\Branch::where('manager_id', $manager->id)->pluck('id');
+
+            // Find staff assigned to the manager's branches via branch_staff pivot
+            if ($managedBranchIds->isNotEmpty()) {
                 $managerStaffIds = Staffs::join('branch_staff', 'staffs.id', '=', 'branch_staff.staff_id')
-                    ->join('branches', 'branch_staff.branch_id', '=', 'branches.id')
-                    ->where('branches.branch_name', $managerBranchName)
+                    ->whereIn('branch_staff.branch_id', $managedBranchIds)
                     ->where('staffs.business_name', $businessName)
                     ->pluck('staffs.id')
                     ->toArray();
@@ -556,16 +557,23 @@ class SalesReportController extends Controller
         $query = CartItem::where('status', 'completed')
             ->where('business_name', $businessName);
 
-        // If the user was added by another manager, filter by user_id, staff_id, or branch_name
-        if ($manager->addby) {
-            $query->where(function($q) use ($manager, $branchName) {
-                $q->where('user_id', $manager->id)
-                  ->orWhereIn('staff_id', function($subQuery) use ($manager) {
-                      $subQuery->select('id')
-                          ->from('staffs')
-                          ->where('manager_email', $manager->email);
-                  })
-                  ->orWhere('branch_name', $branchName);
+        // If the user was added by another manager (is not business creator), filter by user_id or staff in their branch
+        if (!$manager->isBusinessCreator()) {
+            $managedBranchIds = \App\Models\Branch\Branch::where('manager_id', $manager->id)->pluck('id');
+            $query->where(function($q) use ($manager, $managedBranchIds, $branchName) {
+                $q->where('user_id', $manager->id);
+                
+                if ($managedBranchIds->isNotEmpty()) {
+                    $q->orWhereIn('staff_id', function($subQuery) use ($managedBranchIds) {
+                        $subQuery->select('staff_id')
+                            ->from('branch_staff')
+                            ->whereIn('branch_id', $managedBranchIds);
+                    });
+                }
+                
+                if (!empty($branchName)) {
+                    $q->orWhere('branch_name', $branchName);
+                }
             });
         }
 

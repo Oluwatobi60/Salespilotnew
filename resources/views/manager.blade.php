@@ -191,51 +191,104 @@
 
 
               <!-- Stats Cards -->
-                   <div class="row">
-              <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
-                <div class="dashboard-card stat-card">
-                  <div class="stat-icon">
-                    <i class="bi bi-box-seam-fill"></i>
+              @if(!auth()->user()->addby)
+              <div class="row">
+                <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
+                  <div class="dashboard-card stat-card">
+                    <div class="stat-icon">
+                      <i class="bi bi-box-seam-fill"></i>
+                    </div>
+                    <div class="stat-number">{{ number_format($totalItemsSold ?? 0) }}</div>
+                    <div class="stat-label">Items Sold</div>
                   </div>
-                  <div class="stat-number">{{ number_format($totalItemsSold ?? 0) }}</div>
-                  <div class="stat-label">Items Sold</div>
                 </div>
-              </div>
 
-              <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
-                <div class="dashboard-card stat-card">
-                  <div class="stat-icon">
-                    <i class="bi bi-receipt"></i>
+                <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
+                  <div class="dashboard-card stat-card">
+                    <div class="stat-icon">
+                      <i class="bi bi-receipt"></i>
+                    </div>
+                    <div class="stat-number">{{ number_format($numberOfSales ?? 0) }}</div>
+                    <div class="stat-label">Number of Sales</div>
                   </div>
-                  <div class="stat-number">{{ number_format($numberOfSales ?? 0) }}</div>
-                  <div class="stat-label">Number of Sales</div>
                 </div>
-              </div>
 
-              <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
-                <div class="dashboard-card stat-card">
-                  <div class="stat-icon">
-                    <i class="bi bi-cash-stack"></i>
+                <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
+                  <div class="dashboard-card stat-card">
+                    <div class="stat-icon">
+                      <i class="bi bi-cash-stack"></i>
+                    </div>
+                    <div class="stat-number">₦{{ number_format($grossSales ?? 0, 2) }}</div>
+                    <div class="stat-label">Gross Sales</div>
                   </div>
-                  <div class="stat-number">₦{{ number_format($grossSales ?? 0, 2) }}</div>
-                  <div class="stat-label">Gross Sales</div>
                 </div>
-              </div>
 
-              <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
-                <div class="dashboard-card stat-card">
-                  <div class="stat-icon">
-                    <i class="bi bi-graph-up-arrow"></i>
+                <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
+                  <div class="dashboard-card stat-card">
+                    <div class="stat-icon">
+                      <i class="bi bi-graph-up-arrow"></i>
+                    </div>
+                    <div class="stat-number">₦{{ number_format($grossProfit ?? 0, 2) }}</div>
+                    <div class="stat-label">Gross Profit</div>
                   </div>
-                  <div class="stat-number">₦{{ number_format($grossProfit ?? 0, 2) }}</div>
-                  <div class="stat-label">Gross Profit</div>
                 </div>
               </div>
-            </div>
+              @else
+              <!-- Branch Manager Dashboard UI -->
+              <div class="row">
+                <div class="col-xl-4 col-lg-6 col-md-6 col-sm-12">
+                  <div class="dashboard-card stat-card" style="background: #ffffff; border-left: 4px solid #17a2b8;">
+                    <div class="stat-icon" style="background: rgba(23, 162, 184, 0.1); color: #17a2b8;">
+                      <i class="bi bi-box-seam-fill"></i>
+                    </div>
+                    <div class="stat-number text-info">{{ number_format($totalItemsSold ?? 0) }}</div>
+                    <div class="stat-label">Branch Items Sold</div>
+                  </div>
+                </div>
+
+                <div class="col-xl-4 col-lg-6 col-md-6 col-sm-12">
+                  <div class="dashboard-card stat-card" style="background: #ffffff; border-left: 4px solid #ffc107;">
+                    <div class="stat-icon" style="background: rgba(255, 193, 7, 0.1); color: #ffc107;">
+                      <i class="bi bi-receipt"></i>
+                    </div>
+                    <div class="stat-number text-warning">{{ number_format($numberOfSales ?? 0) }}</div>
+                    <div class="stat-label">Branch Transactions</div>
+                  </div>
+                </div>
+
+                <div class="col-xl-4 col-lg-12 col-md-12 col-sm-12">
+                   <div class="dashboard-card stat-card" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); color: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(56, 239, 125, 0.3);">
+                     <h5 style="font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; opacity: 0.9;">
+                       <i class="bi bi-bullseye me-1"></i> Branch Daily Target
+                     </h5>
+                     @php
+                        // Calculate a dynamic target for demonstration
+                        $target = 100000;
+                        $sales = $grossSalesAfterDiscount ?? 0;
+                        if($sales > $target) {
+                           $target = ceil($sales / 50000) * 50000;
+                        }
+                        $progress = min(100, $target > 0 ? ($sales / $target) * 100 : 0);
+                     @endphp
+                     <div class="d-flex justify-content-between align-items-end mb-2">
+                       <div style="font-size: 26px; font-weight: bold;">₦{{ number_format($sales, 2) }}</div>
+                       <div style="font-size: 13px; font-weight: 500;">Target: ₦{{ number_format($target, 0) }}</div>
+                     </div>
+                     <div class="progress" style="height: 8px; background-color: rgba(255,255,255,0.2); border-radius: 4px;">
+                       <div class="progress-bar bg-white progress-bar-striped progress-bar-animated" role="progressbar" style="width: {{ $progress }}%; border-radius: 4px;" aria-valuenow="{{ $progress }}" aria-valuemin="0" aria-valuemax="100"></div>
+                     </div>
+                     <div style="font-size: 12px; margin-top: 8px; font-weight: 500;">
+                       <i class="bi bi-graph-up me-1"></i>{{ number_format($progress, 1) }}% completed
+                     </div>
+                   </div>
+                </div>
+              </div>
+              @endif
 
 
               <!-- Quick Actions and Recent Activity Row -->
             <div class="row">
+              @if(!auth()->user()->addby)
               <div class="col-lg-2">
                 <div class="dashboard-card">
                   <h5 class="mb-3">Quick Actions</h5>
@@ -305,6 +358,89 @@
                   </div>
                 </div>
               </div>
+              @else
+              <!-- Branch Manager Actions & Table -->
+              <div class="col-lg-12 mb-4">
+                 <div class="dashboard-card" style="background: linear-gradient(to right, #ffffff, #f8f9fa); border: 1px solid #e9ecef; box-shadow: 0 4px 15px rgba(0,0,0,0.02);">
+                    <h5 class="mb-3" style="color: #495057; font-weight: 600;"><i class="bi bi-lightning-charge-fill text-warning me-2"></i>Branch Shortcuts</h5>
+                    <div class="d-flex gap-3 flex-wrap">
+                      <a href="{{ route('manager.sell_product') }}" class="btn btn-primary px-4 py-2" style="border-radius: 8px; font-weight: 500;">
+                        <i class="bi bi-cart-plus me-2"></i>Start New Sale
+                      </a>
+                      <a href="{{ route('all_items') }}" class="btn btn-outline-info px-4 py-2" style="border-radius: 8px; font-weight: 500;">
+                        <i class="bi bi-box-seam me-2"></i>Check Inventory
+                      </a>
+                      <a href="{{ route('manager.completed_sales') }}" class="btn btn-outline-success px-4 py-2" style="border-radius: 8px; font-weight: 500;">
+                        <i class="bi bi-journal-text me-2"></i>Daily Reports
+                      </a>
+                    </div>
+                 </div>
+              </div>
+
+              <div class="col-lg-12">
+                <div class="dashboard-card" style="box-shadow: 0 4px 20px rgba(0,0,0,0.06); border-radius: 12px; overflow: hidden; border: none; padding: 0;">
+                  <div style="background: linear-gradient(135deg, #f6d365 0%, #fda085 100%); padding: 18px 25px; color: white;">
+                    <h5 class="mb-0" style="font-weight: 600; letter-spacing: 0.5px;"><i class="bi bi-clock-history me-2"></i>Branch Recent Activity</h5>
+                  </div>
+                  <div class="table-responsive p-4" style="background: #ffffff;">
+                    <table class="table table-hover table-borderless align-middle mb-0">
+                      <thead style="border-bottom: 2px solid #f0f2f5;">
+                        <tr>
+                          <th class="text-muted pb-3" style="font-weight: 600; text-transform: uppercase; font-size: 12px;">Receipt ID</th>
+                          <th class="text-muted pb-3" style="font-weight: 600; text-transform: uppercase; font-size: 12px;">Customer</th>
+                          <th class="text-muted pb-3" style="font-weight: 600; text-transform: uppercase; font-size: 12px;">Amount</th>
+                          <th class="text-muted pb-3" style="font-weight: 600; text-transform: uppercase; font-size: 12px;">Date</th>
+                          <th class="text-muted pb-3" style="font-weight: 600; text-transform: uppercase; font-size: 12px;">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        @forelse($recentSales as $sale)
+                        <tr style="border-bottom: 1px solid #f8f9fa; transition: background 0.3s;" onmouseover="this.style.backgroundColor='#f8f9fa'" onmouseout="this.style.backgroundColor='transparent'">
+                          <td class="py-3"><span style="font-family: monospace; font-weight: 600; color: #495057;">#{{ $sale->receipt_number }}</span></td>
+                          <td class="py-3">
+                            <div class="d-flex align-items-center">
+                               <div class="bg-light rounded-circle d-flex justify-content-center align-items-center me-3" style="width: 36px; height: 36px; border: 1px solid #e9ecef;">
+                                 <i class="bi bi-person text-secondary"></i>
+                               </div>
+                               <span style="font-weight: 500; color: #343a40;">{{ $sale->customer_name ?? 'Walk-in' }}</span>
+                            </div>
+                          </td>
+                          <td class="py-3" style="font-weight: 700; color: #198754;">₦{{ number_format($sale->total, 2) }}</td>
+                          <td class="py-3"><span class="text-muted" style="font-size: 0.9em;"><i class="bi bi-calendar-event me-2 text-primary opacity-50"></i>{{ $sale->created_at->diffForHumans() }}</span></td>
+                          <td class="py-3">
+                            @if($sale->status === 'completed')
+                              <span class="badge" style="background: rgba(40,167,69,0.1); color: #28a745; border: 1px solid rgba(40,167,69,0.2); padding: 8px 12px; border-radius: 6px; font-weight: 600;">Completed</span>
+                            @else
+                              <span class="badge" style="background: rgba(255,193,7,0.1); color: #ffc107; border: 1px solid rgba(255,193,7,0.2); padding: 8px 12px; border-radius: 6px; font-weight: 600;">{{ ucfirst($sale->status) }}</span>
+                            @endif
+                          </td>
+                        </tr>
+                        @empty
+                        <tr>
+                          <td colspan="5" class="text-center py-5">
+                            <i class="bi bi-inbox text-muted mb-3 d-block" style="font-size: 40px;"></i>
+                            <span class="text-muted" style="font-weight: 500;">No recent sales found for this branch.</span>
+                          </td>
+                        </tr>
+                        @endforelse
+                      </tbody>
+                    </table>
+
+                      <!-- Pagination and Stats -->
+                    <div class="row mt-4 align-items-center">
+                        <div class="col-md-6">
+                            <span class="text-muted" style="font-size: 0.9em; font-weight: 500;">
+                                Showing {{  $recentSales->firstItem() ?? 0 }} to {{ $recentSales->lastItem() ?? 0 }} of {{ $recentSales->total() }} entries
+                            </span>
+                        </div>
+                        <div class="col-md-6 d-flex justify-content-end">
+                            {{ $recentSales->links('pagination::bootstrap-5') }}
+                        </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              @endif
             </div>
 
 

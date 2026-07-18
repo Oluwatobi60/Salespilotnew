@@ -171,10 +171,24 @@ class StaffMainController extends Controller
         $manager = Auth::user();
         $businessName = $manager->business_name;
 
-        $staffdata = Staffs::where('business_name', $businessName)
+        $query = Staffs::where('business_name', $businessName)
             ->with('branches')
-            ->latest()
-            ->paginate(10);
+            ->latest();
+
+        // If user is not the business creator, only show staff from their assigned branches
+        if (!$manager->isBusinessCreator()) {
+            $managedBranchIds = \App\Models\Branch\Branch::where('manager_id', $manager->id)->pluck('id');
+            if ($managedBranchIds->isNotEmpty()) {
+                $query->whereHas('branches', function($q) use ($managedBranchIds) {
+                    $q->whereIn('branches.id', $managedBranchIds);
+                });
+            } else {
+                // If the manager has no branches, they shouldn't see any staff
+                $query->where('id', '<', 0); // impossible condition to return empty
+            }
+        }
+
+        $staffdata = $query->paginate(10);
 
         // Get branches for the dropdown - with staff count to limit per branch
         $branches = Branch::where('user_id', $manager->id)
@@ -196,11 +210,16 @@ class StaffMainController extends Controller
         // Get active subscription with plan details
         $activeSubscription = $manager->currentSubscription()->with('subscriptionPlan')->first();
 
-        // Get staff count
-        $staffCount = Staffs::where('business_name', $businessName)->count();
-
         // Check if user is business creator
         $isBusinessCreator = $manager->isBusinessCreator();
+
+        // Get staff count
+        if ($isBusinessCreator) {
+            $staffCount = Staffs::where('business_name', $businessName)->count();
+        } else {
+            // $staffdata is paginated, we can get total items
+            $staffCount = $staffdata->total();
+        }
 
         return view('manager.staff.add_staff', compact('staffdata', 'branches', 'activeSubscription', 'staffCount', 'isBusinessCreator'));
     }

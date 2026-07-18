@@ -175,9 +175,11 @@ All Items
                         @endforeach
                     </select>
                     <div class="d-flex gap-1 flex-shrink-0">
+                        @if(!$isDelegatedManager)
                         <button class="btn btn-primary" id="addItemQuickAction">
                             <i class="bi bi-plus-lg me-1"></i><span class="d-none d-sm-inline">Add Item</span>
                         </button>
+                        @endif
                         <button class="btn btn-outline-primary" id="applyFilters" title="Apply Filters"><i class="bi bi-funnel"></i></button>
                         <button class="btn btn-outline-secondary" id="clearFilters" title="Clear"><i class="bi bi-x-circle"></i></button>
                         <button class="btn btn-outline-success" id="exportItems" title="Export"><i class="bi bi-download"></i></button>
