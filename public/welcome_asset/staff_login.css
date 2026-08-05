@@ -14,12 +14,12 @@
             min-height: 100vh;
             display: grid;
             grid-template-columns: 1fr 1fr;
-            background: #ffffff;
+            background: url('images/pos_system_background.png') center/cover no-repeat fixed;
         }
 
         /* Left Side - Branding */
         .login-left {
-            background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 50%, #0369a1 100%);
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.85) 0%, rgba(2, 132, 199, 0.80) 50%, rgba(3, 105, 161, 0.85) 100%), url('images/pos_system_background.png') center/cover no-repeat;
             padding: 4rem;
             display: flex;
             flex-direction: column;
@@ -173,7 +173,14 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: #fafafa;
+            background: rgba(250, 250, 250, 0.85);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+        }
+
+        html.dark-mode .login-right,
+        body.dark-mode .login-right {
+            background: rgba(18, 18, 18, 0.85) !important;
         }
 
         .form-wrapper {
@@ -221,16 +228,26 @@
         }
 
         .form-card {
-            background: white;
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             padding: 2.5rem;
             border-radius: 20px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.6);
             transition: all 0.3s ease;
             animation: fadeInRight 1s ease-out 0.2s both;
         }
 
+        html.dark-mode .form-card,
+        body.dark-mode .form-card {
+            background: rgba(30, 30, 30, 0.92) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.4);
+        }
+
         .form-card:hover {
-            box-shadow: 0 20px 60px rgba(14, 165, 233, 0.15);
+            box-shadow: 0 20px 60px rgba(14, 165, 233, 0.25);
         }
 
         /* Alert Styling */
@@ -412,6 +429,7 @@
         @media (max-width: 1024px) {
             .login-container {
                 grid-template-columns: 1fr;
+                background: url('images/pos_system_background.png') center/cover no-repeat fixed;
             }
 
             .login-left {
@@ -420,6 +438,17 @@
 
             .login-right {
                 padding: 2rem;
+                background: transparent !important;
+            }
+
+            .form-card {
+                background: rgba(255, 255, 255, 0.95);
+                backdrop-filter: blur(15px);
+            }
+
+            html.dark-mode .form-card,
+            body.dark-mode .form-card {
+                background: rgba(20, 20, 20, 0.95) !important;
             }
         }
 

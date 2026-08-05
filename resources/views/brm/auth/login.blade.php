@@ -7,17 +7,39 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap" rel="stylesheet">
     <style>
-        body { background: #f0f2f5; }
+        body {
+            background: linear-gradient(135deg, rgba(30, 27, 75, 0.82) 0%, rgba(88, 28, 135, 0.80) 50%, rgba(76, 29, 149, 0.85) 100%), url('{{ asset('welcome_asset/images/pos_system_background.png') }}') center/cover no-repeat fixed;
+            min-height: 100vh;
+        }
         .brand-title {
             font-family: 'Montserrat', Arial, sans-serif;
             font-size: 2rem;
-            color: #6f42c1;
+            color: #ffffff;
             font-weight: 700;
             letter-spacing: 1px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
         }
-        .card { border: none; border-radius: 14px; }
-        .btn-brm { background: #6f42c1; color: #fff; border: none; }
-        .btn-brm:hover { background: #5a32a3; color: #fff; }
+        .card {
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+        }
+        .btn-brm {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            transition: all 0.3s ease;
+        }
+        .btn-brm:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+            color: #fff;
+        }
     </style>
 </head>
 <body>
