@@ -50,7 +50,7 @@
       <i class="bi bi-list"></i>
     </button>
     <a class="navbar-brand brand-logo" href="{{ route('manager') }}">
-      <img src="{{ asset('manager_asset/images/salespilot logo1.png') }}" alt="logo" />
+      <img src="{{ app_logo() }}" alt="logo" />
     </a>
   </div>
 </div>

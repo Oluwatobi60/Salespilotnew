@@ -29,7 +29,7 @@
 <!-- Sidebar -->
 <div class="sa-sidebar" id="saSidebar">
     <div class="brand">
-        <img src="{{ asset('manager_asset/images/salespilot logo1.png') }}" alt="{{ app_name() }}">
+        <img src="{{ app_logo() }}" alt="{{ app_name() }}">
         <span>Admin Panel</span>
     </div>
     <nav>

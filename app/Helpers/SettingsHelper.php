@@ -70,12 +70,12 @@ if (!function_exists('app_logo')) {
     /**
      * Get the application logo URL
      *
-     * @return string|null
+     * @return string
      */
-    function app_logo(): ?string
+    function app_logo(): string
     {
         $logo = setting('logo_url');
-        return $logo ? asset('storage/' . $logo) : null;
+        return $logo ? asset('storage/' . $logo) : asset('manager_asset/images/salespilot logo1.png');
     }
 }
 

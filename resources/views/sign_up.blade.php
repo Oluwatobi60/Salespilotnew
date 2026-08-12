@@ -15,7 +15,7 @@ Get Started - SalesPilot
     <div class="signup-left">
         <div class="signup-branding">
             <div class="form-logo">
-                    <img src="{{ asset('manager_asset/images/salespilot logo1.png') }}" alt="SalesPilot Logo">
+                    <img src="{{ app_logo() }}" alt="SalesPilot Logo">
             </div>
             <{{-- h1>SalesPilot</h1> --}}
             <p>Join thousands of businesses transforming their inventory management and sales operations.</p>

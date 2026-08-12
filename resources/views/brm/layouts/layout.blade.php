@@ -33,7 +33,7 @@
       <i class="bi bi-list"></i>
     </button>
     <a class="navbar-brand brand-logo" href="{{ route('brm.dashboard') }}">
-      <img src="{{ asset('manager_asset/images/salespilot logo1.png') }}" alt="SalesPilot">
+      <img src="{{ app_logo() }}" alt="SalesPilot">
     </a>
   </div>
 </div>

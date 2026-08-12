@@ -18,7 +18,7 @@
         <div class="register-left">
             <div class="register-branding">
                 <div class="brand-logo-wrapper">
-                    <img src="{{ asset('manager_asset/images/salespilot logo1.png') }}" alt="{{ app_name() }} Logo" class="brand-logo-img">
+                    <img src="{{ app_logo() }}" alt="{{ app_name() }} Logo" class="brand-logo-img">
                 </div>
                 <h1>Join {{ app_name() }} Today</h1>
                 <p>Start managing your business with powerful tools designed for growth and success.</p>

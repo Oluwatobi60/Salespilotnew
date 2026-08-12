@@ -249,9 +249,25 @@
                     <div class="tab-pane-content">
                         <h5 class="mb-4" style="color:#007bff;font-weight:600;">Global System Preferences</h5>
 
-                        <form action="{{ route('superadmin.system-preferences.update') }}" method="POST">
+                        <form action="{{ route('superadmin.system-preferences.update') }}" method="POST" enctype="multipart/form-data">
                             @csrf
                             @method('PUT')
+
+                            <div class="card mb-4 p-3">
+                                <h6 class="mb-3" style="font-weight:600;">Application Settings</h6>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label class="form-label">Application Logo</label>
+                                            <div class="mb-2">
+                                                <img src="{{ app_logo() }}" alt="Current Logo" style="max-height: 50px; border: 1px solid #ddd; padding: 5px; border-radius: 4px; background: #fff;">
+                                            </div>
+                                            <input type="file" class="form-control" name="app_logo" accept="image/*">
+                                            <small class="text-muted">Upload a new logo to replace the current one across the application.</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
 
                             <div class="card mb-4 p-3">
                                 <h6 class="mb-3" style="font-weight:600;">Regional Settings</h6>

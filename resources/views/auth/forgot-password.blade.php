@@ -15,7 +15,7 @@
         <div class="login-left">
             <div class="login-branding">
                 <div class="brand-logo-wrapper">
-                    <img src="{{ asset('manager_asset/images/salespilot logo1.png') }}" alt="{{ app_name() }} Logo" class="brand-logo-img">
+                    <img src="{{ app_logo() }}" alt="{{ app_name() }} Logo" class="brand-logo-img">
                 </div>
                 <h1>Password Recovery</h1>
                 <p>Don't worry! Recovering your password is easy. Just enter your email address and we'll send you a reset link.</p>
@@ -49,7 +49,7 @@
         <div class="login-right">
             <div class="form-wrapper">
                 <div class="form-logo">
-                    <img src="{{ asset('manager_asset/images/salespilot logo1.png') }}" alt="{{ app_name() }} Logo">
+                    <img src="{{ app_logo() }}" alt="{{ app_name() }} Logo">
                 </div>
                 <div class="form-header">
                     <h2>Forgot Password?</h2>

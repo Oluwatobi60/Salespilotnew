@@ -26,7 +26,7 @@
             <div class="login-branding">
                 <div class="brand-logo-wrapper">
                     <a href="{{ url('/') }}">
-                        <img src="{{ asset('manager_asset/images/salespilot logo1.png') }}" alt="SalesPilot Logo" class="brand-logo-img">
+                        <img src="{{ app_logo() }}" alt="SalesPilot Logo" class="brand-logo-img">
                     </a>
                 </div>
                 <h1>Staff Portal</h1>
@@ -68,7 +68,7 @@
             <div class="form-wrapper">
                 <div class="form-logo">
                     <a href="{{ url('/') }}">
-                        <img src="{{ asset('manager_asset/images/salespilot logo1.png') }}" alt="SalesPilot Logo">
+                        <img src="{{ app_logo() }}" alt="SalesPilot Logo">
                     </a>
                 </div>
                 <div class="form-header">

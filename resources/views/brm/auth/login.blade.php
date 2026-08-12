@@ -47,7 +47,7 @@
     <div class="row w-100 justify-content-center">
         <div class="col-md-6 col-lg-5">
             <div class="text-center mb-4">
-                <img src="{{ asset('manager_asset/images/salespilot logo1.png') }}" alt="SalesPilot Logo" style="max-width: 160px;">
+                <img src="{{ app_logo() }}" alt="SalesPilot Logo" style="max-width: 160px;">
                 <h3 class="brand-title mt-3">BRMS Login</h3>
             </div>
 

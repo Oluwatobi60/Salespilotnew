@@ -230,7 +230,7 @@
 <body>
     <div class="receipt-container">
         <div class="receipt-header">
-            <img src="{{ asset('manager_asset/images/salespilot logo1.png') }}" alt="SalesPilot Logo" class="receipt-logo">
+            <img src="{{ app_logo() }}" alt="SalesPilot Logo" class="receipt-logo">
             <h4><i class="bi bi-receipt"></i> Sales Receipt</h4>
             <div class="business-name">SalesPilot Inventory</div>
         </div>

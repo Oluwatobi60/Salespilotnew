@@ -12,8 +12,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Add missing User Management features that layout.blade.php checks for
-        DB::table('subscription_features')->insert([
+        // Add missing User Management features (skip if already exist)
+        $features = [
             [
                 'name' => 'Manage Staff',
                 'slug' => 'manage_staff',
@@ -47,7 +47,15 @@ return new class extends Migration
                 'created_at' => now(),
                 'updated_at' => now(),
             ]
-        ]);
+        ];
+
+        foreach ($features as $feature) {
+            DB::table('subscription_features')
+                ->updateOrInsert(
+                    ['slug' => $feature['slug']],
+                    $feature
+                );
+        }
 
         // Now, append these to the appropriate plans
         $plans = DB::table('subscription_plans')->get();

@@ -79,7 +79,7 @@ class SystemPreferencesController extends Controller
 
     public function update(Request $request)
     {
-        $validatedData = $request->validate([
+        $request->validate([
             'default_currency' => 'required|string|max:10',
             'default_timezone' => 'required|string|max:255',
             'date_format' => 'required|string|max:50',
@@ -88,11 +88,26 @@ class SystemPreferencesController extends Controller
             'session_timeout' => 'required|integer|min:5|max:1440',
             'max_upload_size' => 'required|integer|min:1024|max:10240',
             'allowed_file_types' => 'required|string',
+            'app_logo' => 'nullable|file|mimes:jpeg,png,jpg,gif,svg,webp|max:10240',
         ]);
 
         try {
+            // Settings to save (excludes file fields)
+            $settingsToSave = [
+                'default_currency',
+                'default_timezone',
+                'date_format',
+                'time_format',
+                'items_per_page',
+                'session_timeout',
+                'max_upload_size',
+                'allowed_file_types',
+            ];
+
             // Update or create system preferences
-            foreach ($validatedData as $key => $value) {
+            foreach ($settingsToSave as $key) {
+                $value = $request->input($key);
+
                 // Try to update existing setting
                 $setting = AppSetting::where('key', $key)->first();
 
@@ -114,6 +129,28 @@ class SystemPreferencesController extends Controller
 
                 // Clear cache for this setting
                 \Illuminate\Support\Facades\Cache::forget("app_setting_{$key}");
+            }
+
+            // Handle logo upload separately using $request->hasFile()
+            if ($request->hasFile('app_logo')) {
+                $file = $request->file('app_logo');
+                $path = $file->store('settings', 'public');
+
+                $logoSetting = AppSetting::where('key', 'logo_url')->first();
+                if ($logoSetting) {
+                    $logoSetting->value = $path;
+                    $logoSetting->save();
+                } else {
+                    AppSetting::create([
+                        'key' => 'logo_url',
+                        'value' => $path,
+                        'type' => 'file',
+                        'group' => 'appearance',
+                        'label' => 'Application Logo',
+                        'description' => 'Main application logo',
+                    ]);
+                }
+                \Illuminate\Support\Facades\Cache::forget("app_setting_logo_url");
             }
 
             return redirect()
