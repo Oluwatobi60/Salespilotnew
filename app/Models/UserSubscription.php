@@ -57,6 +57,10 @@ class UserSubscription extends Model
      */
     public function effectiveStatus(): string
     {
+        if ($this->status === 'pending') {
+            return 'pending';
+        }
+
         if ($this->status === 'cancelled') {
             return 'cancelled';
         }

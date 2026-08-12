@@ -2,10 +2,12 @@
 @section('welcome_page_title')
 Choose Your Plan - {{ app_name() }}
 @endsection
-@if(auth()->check() && (!auth()->user()->password_set || isset($activeSubscription)))
+@if(auth()->check() && (!auth()->user()->password_set || isset($activeSubscription) || isset($pendingSubscription)))
     @section('hide_nav_links') 1 @endsection
     @if(!auth()->user()->password_set)
         @section('brand_bar_step')<span class="sp-brand-step">Step 2 of 3 &mdash; Choose a Plan</span>@endsection
+    @elseif(isset($pendingSubscription))
+        @section('brand_bar_step')<span class="sp-brand-step">Waiting for Confirmation</span>@endsection
     @else
         @section('brand_bar_step')<span class="sp-brand-step">Upgrade Your Plan</span>@endsection
     @endif
@@ -23,6 +25,32 @@ Choose Your Plan - {{ app_name() }}
 <section class="pricing-section">
     <div class="pricing-container">
     <div class="pricing-container">
+        @if(isset($pendingSubscription))
+            <div class="text-center" style="padding: 4rem 1rem;">
+                <i class="uil uil-hourglass" style="font-size: 5rem; color: #f59e0b; display: block; margin-bottom: 1rem;"></i>
+                <h2 style="font-weight: 700; color: #1e293b; margin-bottom: 1rem;">Waiting for Payment Confirmation</h2>
+                <p style="color: #64748b; font-size: 1.1rem; max-width: 500px; margin: 0 auto 2.5rem;">
+                    We have received your bank transfer request for the <strong>{{ ucfirst($pendingSubscription->subscriptionPlan->name ?? 'selected') }}</strong> plan. 
+                    Please hold on while our team verifies your payment.
+                </p>
+                
+                <div class="progress" style="height: 12px; max-width: 400px; margin: 0 auto 2rem; border-radius: 10px; background-color: #f1f5f9;">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated bg-warning" role="progressbar" style="width: 100%; border-radius: 10px;" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+
+                @php
+                    $dashboardRoute = url('/');
+                    if(auth()->check()) {
+                        $role = auth()->user()->role;
+                        if($role === 'superadmin') $dashboardRoute = route('superadmin');
+                        elseif($role === 'manager') $dashboardRoute = route('manager');
+                        elseif($role === 'businessowner') $dashboardRoute = route('businessdashboard');
+                        elseif($role === 'staff') $dashboardRoute = route('staff.main');
+                    }
+                @endphp
+                <a href="{{ $dashboardRoute }}" class="btn-plan" style="display: inline-block; width: auto; padding: 0.75rem 2rem; background: #e2e8f0; color: #475569; text-decoration: none;">Refresh Status</a>
+            </div>
+        @else
         <div class="section-header">
             <h2>Choose Your Perfect Plan</h2>
             <p>Select a plan that fits your business needs and start growing today</p>
@@ -204,6 +232,7 @@ Choose Your Plan - {{ app_name() }}
                 <i class="uil uil-arrow-right"></i>
             </a>
         </div>
+        @endif
     </div>
 </section>
 

@@ -48,6 +48,15 @@ class CheckSubscriptionStatus
                 return $next($request);
             }
 
+            // Check if they have a pending subscription
+            $pendingSubscription = UserSubscription::where('user_id', $user->id)
+                ->where('status', 'pending')
+                ->exists();
+
+            if ($pendingSubscription) {
+                return redirect()->route('plan_pricing')->with('redirect_to_plans', true);
+            }
+
             // No valid subscription — check if they have ever had one (not brand-new signups)
             $hasAnySubscription = UserSubscription::where('user_id', $user->id)->exists();
 

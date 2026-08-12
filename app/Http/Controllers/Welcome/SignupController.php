@@ -229,17 +229,23 @@ class SignupController extends Controller
     {
         $plans = SubscriptionPlan::active()->orderBy('monthly_price')->get();
 
-        // Check if user has an active subscription
+        // Check if user has an active or pending subscription
         $activeSubscription = null;
+        $pendingSubscription = null;
         if (Auth::check()) {
             $activeSubscription = UserSubscription::where('user_id', Auth::id())
                 ->where('status', 'active')
                 ->where('end_date', '>=', now())
                 ->with('subscriptionPlan')
                 ->first();
+                
+            $pendingSubscription = UserSubscription::where('user_id', Auth::id())
+                ->where('status', 'pending')
+                ->with('subscriptionPlan')
+                ->first();
         }
 
-        return view('plan_pricing', compact('plans', 'activeSubscription'));
+        return view('plan_pricing', compact('plans', 'activeSubscription', 'pendingSubscription'));
     }
 
     /**
@@ -325,8 +331,8 @@ class SignupController extends Controller
             'discount_percentage' => $pricing['discount_percentage'],
             'start_date' => Carbon::today(),
             'end_date' => Carbon::today()->addMonths($duration),
-            'status' => 'active',
-            'payment_reference' => $validated['payment_reference'] ?? 'FREE-' . Str::random(10),
+            'status' => 'pending', // Pending admin verification for bank transfers
+            'payment_reference' => $validated['payment_reference'] ?? 'BANK-' . Str::random(10),
         ]);
 
         // Generate commission for BRM if customer has one and paid amount is > 0
@@ -460,6 +466,11 @@ class SignupController extends Controller
 
         if (!$result->status || $result->data->status !== 'success') {
             return redirect()->route('payment.show')->with('error', 'Payment verification failed. Please try again.');
+        }
+
+        // Prevent Replay Attacks
+        if (UserSubscription::where('payment_reference', $reference)->exists()) {
+            return redirect()->route('payment.show')->with('error', 'This payment reference has already been used.');
         }
 
         if (!session('selected_plan')) {

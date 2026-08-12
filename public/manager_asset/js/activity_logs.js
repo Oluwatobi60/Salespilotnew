@@ -35,38 +35,18 @@
 
 
 		document.addEventListener('DOMContentLoaded', function() {
-			// Get DOM elements
-			const searchInput = document.getElementById('searchActivities');
-			const accessTypeFilter = document.getElementById('accessTypeFilter');
-			const staffFilter = document.getElementById('staffFilter');
 			const dateFilter = document.getElementById('dateFilter');
 			const customDateInputs = document.getElementById('customDateInputs');
 			const startDateInput = document.getElementById('startDate');
 			const endDateInput = document.getElementById('endDate');
-			const applyFiltersBtn = document.getElementById('applyFilters');
-			const clearFiltersBtn = document.getElementById('clearFilters');
 			const table = document.getElementById('table');
 			const tableBody = table.querySelector('tbody');
 			const tableRows = Array.from(tableBody.querySelectorAll('tr'));
-
-			// Set default dates for custom range
-			const today = new Date();
-			const todayStr = today.toISOString().split('T')[0];
-			const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
-			const weekAgoStr = weekAgo.toISOString().split('T')[0];
-
-			startDateInput.value = weekAgoStr;
-			endDateInput.value = todayStr;
 
 			// Show/hide custom date overlay based on date filter selection
 			function showCustomDateOverlay() {
 				const customDateInputs = document.getElementById('customDateInputs');
 				customDateInputs.classList.add('show');
-
-				// Focus on start date for better UX
-				setTimeout(() => {
-					startDateInput.focus();
-				}, 200);
 			}
 
 			function hideCustomDateOverlay() {
@@ -74,26 +54,31 @@
 				customDateInputs.classList.remove('show');
 			}
 
+            // Initialize custom date overlay if custom is selected on load
+            if (dateFilter && dateFilter.value === 'custom') {
+                showCustomDateOverlay();
+            }
+
 			// Date filter change handler
-			dateFilter.addEventListener('change', function() {
-				if (this.value === 'custom') {
-					showCustomDateOverlay();
-				} else {
-					hideCustomDateOverlay();
-				}
-				// Trigger search when date filter changes
-				performSearch();
-			});
+			if (dateFilter) {
+				dateFilter.addEventListener('change', function() {
+					if (this.value === 'custom') {
+						showCustomDateOverlay();
+					} else {
+						hideCustomDateOverlay();
+					}
+					// Auto submit form when date filter changes (except for custom, which requires start/end inputs)
+					if (this.value !== 'custom') {
+						document.getElementById('filterForm').submit();
+					}
+				});
+			}
 
 			// ESC key handler for closing custom date overlay
 			document.addEventListener('keydown', function(e) {
 				if (e.key === 'Escape' || e.keyCode === 27) {
-					if (customDateInputs.classList.contains('show')) {
-						// Reset date filter to empty and hide overlay
-						dateFilter.value = '';
+					if (customDateInputs && customDateInputs.classList.contains('show')) {
 						hideCustomDateOverlay();
-						performSearch();
-						e.preventDefault();
 					}
 				}
 			});
@@ -101,194 +86,38 @@
 			// Click outside overlay to close
 			document.addEventListener('click', function(e) {
 				const isClickInsideFilter = e.target.closest('.date-filter-wrapper');
-				if (!isClickInsideFilter && customDateInputs.classList.contains('show')) {
-					dateFilter.value = '';
+				if (customDateInputs && !isClickInsideFilter && customDateInputs.classList.contains('show')) {
 					hideCustomDateOverlay();
-					performSearch();
 				}
 			});
 
-			// Store original table data
-			const originalData = tableRows.map(row => {
-				const cells = row.querySelectorAll('td');
-				return {
-					element: row,
-					sn: cells[0]?.textContent.trim() || '',
-					date: cells[1]?.textContent.trim() || '',
-					activity: cells[2]?.textContent.trim() || '',
-					staffName: cells[3]?.textContent.trim() || '',
-					accessType: cells[4]?.textContent.trim() || ''
-				};
-			});
+            // Make custom dates auto submit when both are filled
+            if (startDateInput && endDateInput) {
+                const autoSubmitCustomDates = function() {
+                    if (startDateInput.value && endDateInput.value) {
+                        document.getElementById('filterForm').submit();
+                    }
+                };
+                startDateInput.addEventListener('change', autoSubmitCustomDates);
+                endDateInput.addEventListener('change', autoSubmitCustomDates);
+            }
 
-			// Search functionality
-			function performSearch() {
-				const searchTerm = searchInput.value.toLowerCase();
-				const accessType = accessTypeFilter.value;
-				const staff = staffFilter.value;
-				const dateRange = dateFilter.value;
+            // Auto submit when dropdowns change
+            const accessTypeFilter = document.getElementById('accessTypeFilter');
+            const staffFilter = document.getElementById('staffFilter');
+            
+            if (accessTypeFilter) {
+                accessTypeFilter.addEventListener('change', function() {
+                    document.getElementById('filterForm').submit();
+                });
+            }
+            if (staffFilter) {
+                staffFilter.addEventListener('change', function() {
+                    document.getElementById('filterForm').submit();
+                });
+            }
 
-				const filteredData = originalData.filter(item => {
-					// Text search across activity and staff name
-					const matchesSearch = searchTerm === '' ||
-						item.activity.toLowerCase().includes(searchTerm) ||
-						item.staffName.toLowerCase().includes(searchTerm);
 
-					// Access type filter
-					const matchesAccessType = accessType === '' || item.accessType === accessType;
-
-					// Staff filter
-					const matchesStaff = staff === '' || item.staffName === staff;
-
-					// Date filter with enhanced logic
-					let matchesDate = true;
-					if (dateRange && dateRange !== '') {
-						const itemDate = new Date(item.date.split(' ')[0]); // Extract date part only
-						const currentDate = new Date();
-
-						switch (dateRange) {
-							case 'today':
-								const today = new Date();
-								today.setHours(0, 0, 0, 0);
-								const tomorrow = new Date(today);
-								tomorrow.setDate(tomorrow.getDate() + 1);
-								matchesDate = itemDate >= today && itemDate < tomorrow;
-								break;
-
-							case 'yesterday':
-								const yesterday = new Date();
-								yesterday.setDate(yesterday.getDate() - 1);
-								yesterday.setHours(0, 0, 0, 0);
-								const todayStart = new Date(yesterday);
-								todayStart.setDate(todayStart.getDate() + 1);
-								matchesDate = itemDate >= yesterday && itemDate < todayStart;
-								break;
-
-							case 'last7days':
-								const sevenDaysAgo = new Date();
-								sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-								sevenDaysAgo.setHours(0, 0, 0, 0);
-								matchesDate = itemDate >= sevenDaysAgo;
-								break;
-
-							case 'last30days':
-								const thirtyDaysAgo = new Date();
-								thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-								thirtyDaysAgo.setHours(0, 0, 0, 0);
-								matchesDate = itemDate >= thirtyDaysAgo;
-								break;
-
-							case 'custom':
-								const startDate = new Date(startDateInput.value);
-								const endDate = new Date(endDateInput.value);
-
-								if (startDateInput.value && endDateInput.value) {
-									startDate.setHours(0, 0, 0, 0);
-									endDate.setHours(23, 59, 59, 999);
-									matchesDate = itemDate >= startDate && itemDate <= endDate;
-								} else if (startDateInput.value) {
-									startDate.setHours(0, 0, 0, 0);
-									matchesDate = itemDate >= startDate;
-								} else if (endDateInput.value) {
-									endDate.setHours(23, 59, 59, 999);
-									matchesDate = itemDate <= endDate;
-								}
-								break;
-
-							default:
-								matchesDate = true;
-						}
-					}
-
-					return matchesSearch && matchesAccessType && matchesStaff && matchesDate;
-				});
-
-				// Clear table body
-				tableBody.innerHTML = '';
-
-				// Add filtered rows
-				if (filteredData.length === 0) {
-					const noResultsRow = document.createElement('tr');
-					noResultsRow.innerHTML = `
-						<td colspan="5" class="text-center text-muted py-4">
-							<i class="bi bi-search"></i><br>
-							No activities found matching your criteria
-						</td>
-					`;
-					tableBody.appendChild(noResultsRow);
-				} else {
-					filteredData.forEach((item, index) => {
-						// Update serial number for filtered results
-						const cells = item.element.querySelectorAll('td');
-						cells[0].textContent = index + 1;
-						tableBody.appendChild(item.element);
-					});
-				}
-
-				// Update results count
-				updateResultsCount(filteredData.length);
-			}
-
-			// Update results count
-			function updateResultsCount(count) {
-				let countElement = document.getElementById('resultsCount');
-				if (!countElement) {
-					countElement = document.createElement('small');
-					countElement.id = 'resultsCount';
-					countElement.className = 'text-muted';
-					const cardDescription = document.querySelector('.card-description');
-					cardDescription.appendChild(document.createElement('br'));
-					cardDescription.appendChild(countElement);
-				}
-
-				if (count === originalData.length) {
-					countElement.textContent = `Showing all ${count} activities`;
-				} else {
-					countElement.textContent = `Showing ${count} of ${originalData.length} activities`;
-				}
-			}
-
-			// Clear all filters
-			function clearAllFilters() {
-				searchInput.value = '';
-				accessTypeFilter.value = '';
-				staffFilter.value = '';
-				dateFilter.value = '';
-				startDateInput.value = weekAgoStr;
-				endDateInput.value = todayStr;
-
-				// Hide custom date overlay properly
-				hideCustomDateOverlay();
-
-				// Restore original table
-				tableBody.innerHTML = '';
-				originalData.forEach(item => {
-					tableBody.appendChild(item.element);
-				});
-
-				updateResultsCount(originalData.length);
-			}
-
-			// Event listeners
-			searchInput.addEventListener('input', performSearch);
-			accessTypeFilter.addEventListener('change', performSearch);
-			staffFilter.addEventListener('change', performSearch);
-			// dateFilter change listener is already added above
-			startDateInput.addEventListener('change', performSearch);
-			endDateInput.addEventListener('change', performSearch);
-			applyFiltersBtn.addEventListener('click', performSearch);
-			clearFiltersBtn.addEventListener('click', clearAllFilters);
-
-			// Enter key support for search
-			searchInput.addEventListener('keypress', function(e) {
-				if (e.key === 'Enter') {
-					e.preventDefault();
-					performSearch();
-				}
-			});
-
-			// Initialize results count
-			updateResultsCount(originalData.length);
 
 			// Table row click functionality for activity details
 			const activityDetailsPanel = document.getElementById('activityDetailsPanel');

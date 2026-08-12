@@ -133,12 +133,28 @@ class AuthenticatedSessionController extends Controller
             if ($creatorActiveSub) {
                 // Allow login, skip this check
             } else {
+                $creatorPendingSub = $creator ? UserSubscription::where('user_id', $creator->id)
+                    ->where('status', 'pending')
+                    ->first() : null;
+
+                if ($creatorPendingSub) {
+                    return redirect()->route('plan_pricing')->with('redirect_to_plans', true);
+                }
+
                 // Keep user logged in to allow plan selection and payment
                 return redirect()->route('plan_pricing')->withErrors([
                     'email' => 'You do not have an active subscription. Please subscribe to a plan to continue.',
                 ])->with('redirect_to_plans', true);
             }
         } elseif (!$activeSubscription) {
+            $pendingSubscription = UserSubscription::where('user_id', $user->id)
+                ->where('status', 'pending')
+                ->first();
+
+            if ($pendingSubscription) {
+                return redirect()->route('plan_pricing')->with('redirect_to_plans', true);
+            }
+
             // Keep user logged in to allow plan selection and payment
             return redirect()->route('plan_pricing')->withErrors([
                 'email' => 'You do not have an active subscription. Please subscribe to a plan to continue.',

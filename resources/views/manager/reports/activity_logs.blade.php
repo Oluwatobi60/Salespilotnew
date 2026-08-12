@@ -16,80 +16,87 @@ Activity Logs
                             <p class="card-description">Track all system activities and user access logs.</p>
 
                             <!-- Search and Filter Options -->
-                            <div class="row mb-3 filter-container">
-                                <div class="col-md-4">
-                                    <div class="input-group">
-                                        <input type="text" class="form-control" placeholder="Search activities..." id="searchActivities">
-                                        <button class="btn btn-outline-secondary" type="button">
-                                            <i class="bi bi-search"></i>
-                                        </button>
+                            <form method="GET" action="{{ route('manager.activity_logs') }}" id="filterForm">
+                                <div class="row mb-3 filter-container">
+                                    <div class="col-md-4">
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" name="search" placeholder="Search activities..." id="searchActivities" value="{{ request('search') }}">
+                                            <button class="btn btn-outline-secondary" type="submit">
+                                                <i class="bi bi-search"></i>
+                                            </button>
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="col-md-8 d-flex justify-content-end align-items-center gap-2">
-                                    <!-- Access Type Filter -->
-                                    <select class="form-select" id="accessTypeFilter" style="max-width: 140px;">
-                                        <option value="">All Access Types</option>
-                                        <option value="Login">Manager</option>
-                                        <option value="Logout">Staff</option>
-                                    </select>
-
-                                    <!-- Staff Filter -->
-                                    <select class="form-select" id="staffFilter" style="max-width: 140px;">
-                                        <option value="">All Staff</option>
-                                        <option value="John Smith">John Smith</option>
-                                        <option value="Sarah Johnson">Sarah Johnson</option>
-                                        <option value="Michael Brown">Michael Brown</option>
-                                        <option value="Emily Davis">Emily Davis</option>
-                                        <option value="David Wilson">David Wilson</option>
-                                        <option value="Lisa Anderson">Lisa Anderson</option>
-                                        <option value="Robert Taylor">Robert Taylor</option>
-                                        <option value="Jennifer Garcia">Jennifer Garcia</option>
-                                        <option value="System Admin">System Admin</option>
-                                    </select>
-
-                                    <!-- Date Range Filter -->
-                                    <div class="date-filter-wrapper">
-                                        <select class="form-select" id="dateFilter" style="max-width: 140px;">
-                                            <option value="">All Dates</option>
-                                            <option value="today">Today</option>
-                                            <option value="yesterday">Yesterday</option>
-                                            <option value="last7days">Last 7 Days</option>
-                                            <option value="last30days">Last 30 Days</option>
-                                            <option value="custom">Custom Range</option>
+                                    <div class="col-md-8 d-flex justify-content-end align-items-center gap-2">
+                                        <!-- Access Type Filter -->
+                                        <select class="form-select" name="access_type" id="accessTypeFilter" style="max-width: 140px;">
+                                            <option value="">All Access Types</option>
+                                            <option value="Manager" {{ request('access_type') == 'Manager' ? 'selected' : '' }}>Manager</option>
+                                            <option value="Staff" {{ request('access_type') == 'Staff' ? 'selected' : '' }}>Staff</option>
                                         </select>
 
-                                        <!-- Custom Date Inputs -->
+                                        <!-- Staff Filter -->
+                                        <select class="form-select" name="staff_id" id="staffFilter" style="max-width: 140px;">
+                                            <option value="">All Staff</option>
+                                            @if(isset($businessUsers) && $businessUsers->count() > 0)
+                                            <optgroup label="Managers">
+                                                @foreach($businessUsers as $u)
+                                                    <option value="user_{{ $u->id }}" {{ request('staff_id') == 'user_'.$u->id ? 'selected' : '' }}>{{ trim($u->first_name . ' ' . $u->surname) ?: $u->email }}</option>
+                                                @endforeach
+                                            </optgroup>
+                                            @endif
+                                            @if(isset($businessStaffs) && $businessStaffs->count() > 0)
+                                            <optgroup label="Staff">
+                                                @foreach($businessStaffs as $s)
+                                                    <option value="staff_{{ $s->id }}" {{ request('staff_id') == 'staff_'.$s->id ? 'selected' : '' }}>{{ $s->fullname ?: $s->email }}</option>
+                                                @endforeach
+                                            </optgroup>
+                                            @endif
+                                        </select>
+
+                                        <!-- Date Range Filter -->
+                                        <div class="date-filter-wrapper">
+                                            <select class="form-select" name="date_range" id="dateFilter" style="max-width: 140px;">
+                                                <option value="">All Dates</option>
+                                                <option value="today" {{ request('date_range') == 'today' ? 'selected' : '' }}>Today</option>
+                                                <option value="yesterday" {{ request('date_range') == 'yesterday' ? 'selected' : '' }}>Yesterday</option>
+                                                <option value="last7days" {{ request('date_range') == 'last7days' ? 'selected' : '' }}>Last 7 Days</option>
+                                                <option value="last30days" {{ request('date_range') == 'last30days' ? 'selected' : '' }}>Last 30 Days</option>
+                                                <option value="custom" {{ request('date_range') == 'custom' ? 'selected' : '' }}>Custom Range</option>
+                                            </select>
+
+                                            <!-- Custom Date Inputs -->
                                         <div id="customDateInputs" class="custom-date-container">
                                             <div class="row g-3">
                                                 <div class="col-md-6">
-                                                    <label for="startDate" class="form-label text-muted">From Date</label>
-                                                    <input type="date" class="form-control" id="startDate" onchange="performSearch()">
+                                                        <label for="startDate" class="form-label text-muted">From Date</label>
+                                                        <input type="date" class="form-control" name="start_date" id="startDate" value="{{ request('start_date') }}">
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label for="endDate" class="form-label text-muted">To Date</label>
+                                                        <input type="date" class="form-control" name="end_date" id="endDate" value="{{ request('end_date') }}">
+                                                    </div>
                                                 </div>
-                                                <div class="col-md-6">
-                                                    <label for="endDate" class="form-label text-muted">To Date</label>
-                                                    <input type="date" class="form-control" id="endDate" onchange="performSearch()">
+                                                <div class="text-center mt-3">
+                                                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="hideCustomDateOverlay()">
+                                                        <i class="fas fa-times"></i> Close
+                                                    </button>
                                                 </div>
-                                            </div>
-                                            <div class="text-center mt-3">
-                                                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="hideCustomDateOverlay()">
-                                                    <i class="fas fa-times"></i> Close
-                                                </button>
                                             </div>
                                         </div>
-                                    </div>
 
-                                    <!-- Action Buttons -->
-                                    <button class="btn btn-outline-primary" id="applyFilters">
-                                        <i class="bi bi-funnel"></i> Apply
-                                    </button>
-                                    <button class="btn btn-outline-secondary" id="clearFilters">
-                                        <i class="bi bi-x-circle"></i> Clear
-                                    </button>
-                                    <button class="btn btn-outline-success">
-                                        <i class="bi bi-download"></i> Export
-                                    </button>
+                                        <!-- Action Buttons -->
+                                        <button type="submit" class="btn btn-outline-primary" id="applyFilters">
+                                            <i class="bi bi-funnel"></i> Apply
+                                        </button>
+                                        <a href="{{ route('manager.activity_logs') }}" class="btn btn-outline-secondary" id="clearFilters">
+                                            <i class="bi bi-x-circle"></i> Clear
+                                        </a>
+                                        <button type="button" class="btn btn-outline-success">
+                                            <i class="bi bi-download"></i> Export
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
+                            </form>
                             <br>
 
                             <div class="table-responsive">

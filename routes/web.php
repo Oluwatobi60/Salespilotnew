@@ -93,6 +93,8 @@ Route::middleware(['auth:superadmin', 'throttle:60,1'])->prefix('superadmin/reve
 // Superadmin Subscription Renewal routes
 Route::middleware(['auth:superadmin', 'throttle:60,1'])->prefix('superadmin/subscriptions')->controller(SubscriptionRenewalController::class)->group(function () {
     Route::get('/', 'index')->name('superadmin.subscriptions');
+    Route::post('/{subscription}/approve', 'approvePending')->name('superadmin.subscriptions.approve');
+    Route::post('/{subscription}/reject', 'rejectPending')->name('superadmin.subscriptions.reject');
     Route::post('/{subscription}/toggle-renewal', 'toggle')->name('superadmin.subscriptions.toggle');
     Route::post('/bulk-toggle', 'bulkToggle')->name('superadmin.subscriptions.bulk-toggle');
     Route::post('/send-reminders', 'sendReminders')->name('superadmin.subscriptions.send-reminders');

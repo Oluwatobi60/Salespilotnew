@@ -10,72 +10,90 @@ use Illuminate\Support\Facades\Auth;
 
 class ActivityLogsController extends Controller
 {
-    public function activity_logs()
+    public function activity_logs(\Illuminate\Http\Request $request)
     {
         $currentUser = Auth::user();
         $businessName = $currentUser->business_name;
 
-        // Restrict logs to the current user, their parent manager (if any), and their staff
-        $currentUserId = $currentUser->id;
+        // Get filter inputs
+        $search = $request->input('search');
+        $accessType = $request->input('access_type');
+        $staffIdParam = $request->input('staff_id');
+        $dateRange = $request->input('date_range');
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
 
-        // Include parent (business creator) if this user was added by someone
-        $visibleUserIds = collect([$currentUserId]);
-        if (!empty($currentUser->manager_email)) {
-            $parentUser = User::where('email', $currentUser->manager_email)->first();
-            if ($parentUser) {
-                $visibleUserIds->push($parentUser->id);
+        // Get users and staff for dropdowns
+        $businessUsers = User::where('business_name', $businessName)->get();
+        $businessStaffs = Staffs::where('business_name', $businessName)->get();
+
+        // Query builder for all logs
+        $query = ActivityLog::with(['user', 'staff'])
+            ->where('business_name', $businessName);
+
+        // Access Type Filter
+        if ($accessType === 'Manager') {
+            $query->whereNotNull('user_id');
+        } elseif ($accessType === 'Staff') {
+            $query->whereNotNull('staff_id');
+        }
+
+        // Staff Filter
+        if ($staffIdParam) {
+            if (str_starts_with($staffIdParam, 'user_')) {
+                $query->where('user_id', str_replace('user_', '', $staffIdParam));
+            } elseif (str_starts_with($staffIdParam, 'staff_')) {
+                $query->where('staff_id', str_replace('staff_', '', $staffIdParam));
             }
         }
 
-        // Staff IDs that belong to this manager (staff.manager_email == manager.email)
-        $staffIds = Staffs::where('manager_email', $currentUser->email)->pluck('id');
-
-        // Get all non-login activities by visible users or their staff
-        $nonLoginLogs = ActivityLog::with(['user', 'staff'])
-            ->where('action', '!=', 'login')
-            ->where(function ($q) use ($visibleUserIds, $staffIds) {
-                $q->whereIn('user_id', $visibleUserIds->toArray());
-                if ($staffIds->count() > 0) {
-                    $q->orWhereIn('staff_id', $staffIds);
-                }
-            })
-            ->orderByDesc('created_at');
-
-        // Get latest login for visible users
-        $latestUserLogins = ActivityLog::with(['user'])
-            ->where('action', 'login')
-            ->whereIn('user_id', $visibleUserIds->toArray())
-            ->orderByDesc('created_at')
-            ->get()
-            ->unique('user_id');
-
-        // Get latest login per staff for this manager
-        $latestStaffLogins = collect();
-        if ($staffIds->count() > 0) {
-            $latestStaffLogins = ActivityLog::with(['staff'])
-                ->where('action', 'login')
-                ->whereIn('staff_id', $staffIds)
-                ->orderByDesc('created_at')
-                ->get()
-                ->unique('staff_id');
+        // Date Filter
+        if ($dateRange) {
+            $now = \Carbon\Carbon::now();
+            switch ($dateRange) {
+                case 'today':
+                    $query->whereDate('created_at', $now->toDateString());
+                    break;
+                case 'yesterday':
+                    $query->whereDate('created_at', $now->subDay()->toDateString());
+                    break;
+                case 'last7days':
+                    $query->where('created_at', '>=', $now->subDays(7));
+                    break;
+                case 'last30days':
+                    $query->where('created_at', '>=', $now->subDays(30));
+                    break;
+                case 'custom':
+                    if ($startDate) {
+                        $query->whereDate('created_at', '>=', $startDate);
+                    }
+                    if ($endDate) {
+                        $query->whereDate('created_at', '<=', $endDate);
+                    }
+                    break;
+            }
         }
 
-        // Merge all logs and sort
-        $mergedLogs = $nonLoginLogs->get()->merge($latestUserLogins)->merge($latestStaffLogins)->sortByDesc('created_at');
+        // Search Filter
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('action', 'like', "%{$search}%")
+                  ->orWhere('details', 'like', "%{$search}%")
+                  ->orWhereHas('user', function ($uq) use ($search) {
+                      $uq->where('first_name', 'like', "%{$search}%")
+                         ->orWhere('surname', 'like', "%{$search}%")
+                         ->orWhere('email', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('staff', function ($sq) use ($search) {
+                      $sq->where('fullname', 'like', "%{$search}%")
+                         ->orWhere('email', 'like', "%{$search}%");
+                  });
+            });
+        }
 
-        // Paginate using LengthAwarePaginator
-        $page = request()->input('page', 1);
-        $perPage = 10;
-        $total = $mergedLogs->count();
-        $currentPageLogs = $mergedLogs->slice(($page - 1) * $perPage, $perPage)->values();
-        $logs = new \Illuminate\Pagination\LengthAwarePaginator(
-            $currentPageLogs,
-            $total,
-            $perPage,
-            $page,
-            ['path' => request()->url(), 'query' => request()->query()]
-        );
+        // Order and paginate
+        $logs = $query->orderByDesc('created_at')->paginate(10)->withQueryString();
 
-        return view('manager.reports.activity_logs', compact('logs'));
+        return view('manager.reports.activity_logs', compact('logs', 'businessUsers', 'businessStaffs'));
     }
 }

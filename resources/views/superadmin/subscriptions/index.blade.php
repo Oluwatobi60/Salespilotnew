@@ -57,13 +57,19 @@
             <div class="fw-bold text-success" style="font-size:1.6rem;">{{ $stats['active'] }}</div>
         </div>
     </div>
-    <div class="col-6 col-xl-3">
+    <div class="col-6 col-xl-2">
+        <div class="sa-card text-center">
+            <div class="text-muted mb-1" style="font-size:.75rem;">Pending</div>
+            <div class="fw-bold text-warning" style="font-size:1.6rem;">{{ $stats['pending'] ?? 0 }}</div>
+        </div>
+    </div>
+    <div class="col-6 col-xl-2">
         <div class="sa-card text-center">
             <div class="text-muted mb-1" style="font-size:.75rem;">Auto-Renew On</div>
             <div class="fw-bold text-primary" style="font-size:1.6rem;">{{ $stats['auto_renew'] }}</div>
         </div>
     </div>
-    <div class="col-6 col-xl-3">
+    <div class="col-6 col-xl-2">
         <div class="sa-card text-center">
             <div class="text-muted mb-1" style="font-size:.75rem;">Expiring ≤ 7 Days</div>
             <div class="fw-bold text-warning" style="font-size:1.6rem;">{{ $stats['expiring_7d'] }}</div>
@@ -80,6 +86,7 @@
                value="{{ request('search') }}" style="min-width:200px; flex:1 1 200px; max-width:300px;">
         <select name="status" class="form-select form-select-sm" style="width:auto;">
             <option value="">All Statuses</option>
+            <option value="pending"   {{ request('status') === 'pending'   ? 'selected' : '' }}>Pending</option>
             <option value="active"    {{ request('status') === 'active'    ? 'selected' : '' }}>Active</option>
             <option value="expired"   {{ request('status') === 'expired'   ? 'selected' : '' }}>Expired</option>
             <option value="cancelled" {{ request('status') === 'cancelled' ? 'selected' : '' }}>Cancelled</option>
@@ -181,6 +188,8 @@
                     <td>
                         @if($effectiveStatus === 'active')
                             <span class="badge bg-success">Active</span>
+                        @elseif($effectiveStatus === 'pending')
+                            <span class="badge bg-warning text-dark">Pending</span>
                         @elseif($effectiveStatus === 'expired')
                             <span class="badge bg-secondary">Expired</span>
                         @else
@@ -196,16 +205,33 @@
                         {{ $sub->last_renewed_at?->format('d M Y') ?? '—' }}
                     </td>
                     <td class="pe-3">
-                        <form method="POST"
-                              action="{{ route('superadmin.subscriptions.toggle', $sub) }}"
-                              class="toggle-form">
-                            @csrf
-                            <button type="submit"
-                                    class="btn btn-sm {{ $sub->auto_renew ? 'btn-outline-secondary' : 'btn-outline-primary' }}"
-                                    title="{{ $sub->auto_renew ? 'Disable auto-renew' : 'Enable auto-renew' }}">
-                                <i class="bi {{ $sub->auto_renew ? 'bi-toggle2-on' : 'bi-toggle2-off' }}"></i>
-                            </button>
-                        </form>
+                        @if($effectiveStatus === 'pending')
+                            <div class="d-flex gap-1">
+                                <form method="POST" action="{{ route('superadmin.subscriptions.approve', $sub) }}" class="toggle-form">
+                                    @csrf
+                                    <button type="submit" class="btn btn-sm btn-outline-success" title="Approve pending subscription">
+                                        <i class="bi bi-check-lg"></i>
+                                    </button>
+                                </form>
+                                <form method="POST" action="{{ route('superadmin.subscriptions.reject', $sub) }}" class="toggle-form" onsubmit="return confirm('Are you sure you want to reject this bank transfer?');">
+                                    @csrf
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Reject pending subscription">
+                                        <i class="bi bi-x-lg"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        @else
+                            <form method="POST"
+                                  action="{{ route('superadmin.subscriptions.toggle', $sub) }}"
+                                  class="toggle-form">
+                                @csrf
+                                <button type="submit"
+                                        class="btn btn-sm {{ $sub->auto_renew ? 'btn-outline-secondary' : 'btn-outline-primary' }}"
+                                        title="{{ $sub->auto_renew ? 'Disable auto-renew' : 'Enable auto-renew' }}">
+                                    <i class="bi {{ $sub->auto_renew ? 'bi-toggle2-on' : 'bi-toggle2-off' }}"></i>
+                                </button>
+                            </form>
+                        @endif
                     </td>
                 </tr>
             @empty

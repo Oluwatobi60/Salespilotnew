@@ -51,11 +51,15 @@ class SubscriptionRenewalController extends Controller
             ->groupBy('user_id')
             ->pluck('id');
 
-        $currentIds = $activeIds->merge($fallbackIds);
+        $pendingIds = DB::table('user_subscriptions')
+            ->where('status', 'pending')
+            ->pluck('id');
+
+        $currentIds = $activeIds->merge($fallbackIds)->merge($pendingIds)->unique();
 
         $query = UserSubscription::with(['user', 'subscriptionPlan'])
             ->whereIn('id', $currentIds)
-            ->orderByRaw("FIELD(status, 'active', 'expired', 'cancelled')")
+            ->orderByRaw("FIELD(status, 'pending', 'active', 'expired', 'cancelled')")
             ->orderBy('end_date', 'asc');
 
         if ($request->filled('search')) {
@@ -93,6 +97,9 @@ class SubscriptionRenewalController extends Controller
 
         $stats = [
             'total'       => $currentIds->count(),
+            'pending'     => UserSubscription::whereIn('id', $currentIds)
+                                ->where('status', 'pending')
+                                ->count(),
             'active'      => UserSubscription::whereIn('id', $currentIds)
                                 ->where('status', 'active')
                                 ->where('end_date', '>=', Carbon::today())
@@ -238,5 +245,53 @@ class SubscriptionRenewalController extends Controller
         }
 
         return back()->with($errors ? 'error' : 'success', $msg);
+    }
+
+    /**
+     * Approve a pending bank transfer subscription.
+     */
+    public function approvePending(UserSubscription $subscription)
+    {
+        if ($subscription->status !== 'pending') {
+            return back()->with('error', 'Only pending subscriptions can be approved.');
+        }
+
+        $subscription->status = 'active';
+        // Adjust start date to today, since approval might happen days after submission
+        $subscription->start_date = Carbon::today();
+        if ($subscription->duration_months > 0) {
+            $subscription->end_date = Carbon::today()->addMonths($subscription->duration_months);
+        } elseif ($subscription->subscriptionPlan && $subscription->subscriptionPlan->trial_days > 0) {
+            $subscription->end_date = Carbon::today()->addDays($subscription->subscriptionPlan->trial_days);
+        }
+        $subscription->save();
+
+        if ($subscription->user && $subscription->user->email) {
+            try {
+                Mail::to($subscription->user->email)->send(new \App\Mail\SubscriptionActivated($subscription->user, $subscription));
+            } catch (\Exception $e) {
+                // Email failure shouldn't rollback approval, just log it
+                \Illuminate\Support\Facades\Log::error("Failed to send activation email: " . $e->getMessage());
+            }
+        }
+
+        return back()->with('success', "Subscription approved and activated for {$subscription->user->business_name}.");
+    }
+
+    /**
+     * Reject a pending bank transfer subscription.
+     */
+    public function rejectPending(UserSubscription $subscription)
+    {
+        if ($subscription->status !== 'pending') {
+            return back()->with('error', 'Only pending subscriptions can be rejected.');
+        }
+
+        $subscription->status = 'cancelled';
+        $subscription->cancellation_reason = 'Bank transfer rejected by admin.';
+        $subscription->cancelled_at = Carbon::now();
+        $subscription->save();
+
+        return back()->with('success', "Subscription rejected for {$subscription->user->business_name}.");
     }
 }
