@@ -42,7 +42,10 @@ return new class extends Migration
         foreach ($featuresToAdd as $feature) {
             $feature['created_at'] = now();
             $feature['updated_at'] = now();
-            DB::table('subscription_features')->insert($feature);
+            DB::table('subscription_features')->updateOrInsert(
+                ['slug' => $feature['slug']],
+                $feature
+            );
         }
 
         $allNewSlugs = array_column($featuresToAdd, 'slug');
