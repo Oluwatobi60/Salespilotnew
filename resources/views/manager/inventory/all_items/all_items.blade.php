@@ -176,13 +176,17 @@ All Items
                     </select>
                     <div class="d-flex gap-1 flex-shrink-0">
                         @if(!$isDelegatedManager)
+                        <button class="btn btn-outline-primary" type="button" onclick="showImportPanel()">
+                            <i class="bi bi-upload me-1"></i><span class="d-none d-sm-inline">Import</span>
+                        </button>
                         <button class="btn btn-primary" id="addItemQuickAction">
                             <i class="bi bi-plus-lg me-1"></i><span class="d-none d-sm-inline">Add Item</span>
                         </button>
                         @endif
                         <button class="btn btn-outline-primary" id="applyFilters" title="Apply Filters"><i class="bi bi-funnel"></i></button>
                         <button class="btn btn-outline-secondary" id="clearFilters" title="Clear"><i class="bi bi-x-circle"></i></button>
-                        <button class="btn btn-outline-success" id="exportItems" title="Export"><i class="bi bi-download"></i></button>
+                        <a href="{{ route('manager.all_items.export', 'excel') }}" class="btn btn-outline-success" title="Export Excel"><i class="bi bi-file-earmark-excel"></i></a>
+                        <a href="{{ route('manager.all_items.export', 'pdf') }}" class="btn btn-outline-danger" title="Export PDF"><i class="bi bi-file-earmark-pdf"></i></a>
                     </div>
                 </div>
                 <div id="bulkActions" class="mt-2" style="display:none;">
@@ -634,6 +638,55 @@ All Items
     </div>
 </div>
 
+{{-- Import Items Side Panel --}}
+<div class="item-details-panel" id="importItemsPanel">
+    <div class="panel-overlay" id="importPanelOverlay"></div>
+    <div class="panel-content" style="max-width: 450px;">
+        <div class="panel-header">
+            <h5 class="panel-title"><i class="bi bi-upload me-2"></i>Import Items</h5>
+            <button type="button" class="btn-close-panel" id="closeImportPanelBtn"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="panel-body">
+            <!-- Standard Import -->
+            <div class="mb-5">
+                <h6 class="text-primary mb-2"><i class="bi bi-box-seam me-2"></i>Standard Items</h6>
+                <p class="text-muted small mb-3">Download the template and fill in your standard items.</p>
+                <div class="d-flex mb-3">
+                    <a href="{{ route('items.import.standard.template') }}" class="btn btn-sm btn-outline-primary w-100"><i class="bi bi-download me-1"></i>Download Template</a>
+                </div>
+                <form action="{{ route('items.import.standard') }}" method="POST" enctype="multipart/form-data">
+                    @csrf
+                    <div class="mb-2">
+                        <input class="form-control" type="file" name="import_file" required accept=".xlsx,.xls,.csv">
+                    </div>
+                    <button class="btn btn-primary w-100" type="submit">Upload Standard Items</button>
+                </form>
+            </div>
+
+            <hr class="mb-4">
+
+            <!-- Variant Import -->
+            <div>
+                <h6 class="text-success mb-2"><i class="bi bi-grid-3x3 me-2"></i>Variant Items</h6>
+                <p class="text-muted small mb-3">Download the template and fill in your variant items.</p>
+                <div class="d-flex mb-3">
+                    <a href="{{ route('items.import.variant.template') }}" class="btn btn-sm btn-outline-success w-100"><i class="bi bi-download me-1"></i>Download Template</a>
+                </div>
+                <form action="{{ route('items.import.variant') }}" method="POST" enctype="multipart/form-data">
+                    @csrf
+                    <div class="mb-2">
+                        <input class="form-control" type="file" name="import_file" required accept=".xlsx,.xls,.csv">
+                    </div>
+                    <button class="btn btn-success w-100" type="submit">Upload Variant Items</button>
+                </form>
+            </div>
+        </div>
+        <div class="panel-footer">
+            <button type="button" class="btn btn-secondary w-100" id="closeImportPanelFooterBtn">Close</button>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="{{ asset('manager_asset/js/all_items.js') }}"></script>
 <script>
@@ -664,6 +717,30 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         });
     });
+
+    // Import Panel Logic
+    const importItemsPanel = document.getElementById('importItemsPanel');
+    const importPanelOverlay = document.getElementById('importPanelOverlay');
+    const closeImportPanelBtn = document.getElementById('closeImportPanelBtn');
+    const closeImportPanelFooterBtn = document.getElementById('closeImportPanelFooterBtn');
+
+    window.showImportPanel = function() {
+        if (importItemsPanel) {
+            importItemsPanel.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+    };
+
+    function hideImportPanel() {
+        if (importItemsPanel) {
+            importItemsPanel.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+    }
+
+    if (closeImportPanelBtn) closeImportPanelBtn.addEventListener('click', hideImportPanel);
+    if (closeImportPanelFooterBtn) closeImportPanelFooterBtn.addEventListener('click', hideImportPanel);
+    if (importPanelOverlay) importPanelOverlay.addEventListener('click', hideImportPanel);
 });
 </script>
 

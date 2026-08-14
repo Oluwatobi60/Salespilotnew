@@ -50,6 +50,12 @@ Sales Summary
                         </select>
                         <small class="form-text text-muted">Filter by specific staff member.</small>
                       </div>
+                      <div class="col-md-4 text-end">
+                        <div class="mt-4">
+                            <a href="{{ route('manager.staff_sales.export', 'excel') }}" class="btn btn-outline-success"><i class="bi bi-file-earmark-excel"></i> Excel</a>
+                            <a href="{{ route('manager.staff_sales.export', 'pdf') }}" class="btn btn-outline-danger"><i class="bi bi-file-earmark-pdf"></i> PDF</a>
+                        </div>
+                      </div>
                     </div>
 
                     <div class="table-responsive">

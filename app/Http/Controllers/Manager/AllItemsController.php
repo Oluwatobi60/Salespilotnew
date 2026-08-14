@@ -13,6 +13,9 @@ use App\Models\Unit;
 use Illuminate\Pagination\LengthAwarePaginator;
 use App\Models\BranchInventory;
 use App\Models\Branch\Branch;
+use App\Exports\ReportExport;
+use Maatwebsite\Excel\Facades\Excel;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class AllItemsController extends Controller
 {
@@ -319,6 +322,179 @@ class AllItemsController extends Controller
         ));
     }
 
+    public function exportAllItems($format)
+    {
+        $manager = Auth::user();
+        $businessName = $manager->business_name;
+
+        $activeSubscription = $manager->currentSubscription()->with('subscriptionPlan')->first();
+        $planName = strtolower(trim($activeSubscription->subscriptionPlan->name ?? ''));
+        $isBasicOrFree = in_array($planName, ['basic', 'free']);
+
+        $standardQuery = StandardItem::with(['supplier', 'unit', 'pricingTiers'])->where('business_name', $businessName);
+        $variantQuery = VariantItem::with(['supplier', 'unit', 'variants.pricingTiers'])->where('business_name', $businessName);
+
+        if ($manager->addby) {
+            $managedBranchIds = Branch::where('manager_id', $manager->id)->pluck('id');
+            $standardQuery->whereHas('branchInventory', function($q) use ($managedBranchIds) {
+                $q->whereIn('branch_id', $managedBranchIds);
+            });
+            $variantIds = BranchInventory::where('item_type', 'variant')
+                ->whereIn('branch_id', $managedBranchIds)
+                ->where('business_name', $businessName)
+                ->pluck('item_id')
+                ->unique();
+            if ($variantIds->count() > 0) {
+                $variantQuery->whereHas('variants', function($q) use ($variantIds) {
+                    $q->whereIn('id', $variantIds);
+                });
+            } else {
+                $variantQuery->whereRaw('1 = 0');
+            }
+        }
+
+        $standardItems = $standardQuery->latest()->get();
+        $variantItems = $variantQuery->latest()->get();
+
+        $allItems = collect();
+
+        foreach ($standardItems as $item) {
+            $branchInventoriesQuery = BranchInventory::where('item_id', $item->id)
+                ->where('item_type', 'standard')
+                ->where('business_name', $businessName)
+                ->with('branch');
+            if ($manager->addby) {
+                $branchInventoriesQuery->whereIn('branch_id', $managedBranchIds);
+            }
+            $branchInventories = $branchInventoriesQuery->get();
+            $totalAllocated = $branchInventories->sum('allocated_quantity');
+            $branchCurrent = $branchInventories->sum('current_quantity');
+
+            if ($isBasicOrFree) {
+                $openingStock = ($item->opening_stock ?? 0) > 0 ? $item->opening_stock : (($item->current_stock ?? 0) + $totalAllocated);
+                $currentStock = $branchInventories->count() > 0 ? $branchCurrent : ($item->current_stock ?? 0);
+            } else {
+                if ($manager->addby) {
+                    $branchStockAdded = clone $branchInventories;
+                    $totalBranchStockAdded = $branchStockAdded->sum('stock_added');
+                    $openingStock = $totalAllocated - $totalBranchStockAdded;
+                    $currentStock = $branchCurrent;
+                } else {
+                    $openingStock = ($item->opening_stock ?? 0) > 0 ? $item->opening_stock : (($item->current_stock ?? 0) + $totalAllocated);
+                    $currentStock = ($item->current_stock ?? 0) + $branchCurrent;
+                }
+            }
+
+            if (!$manager->addby || $branchInventories->count() > 0) {
+                $unit = $item->relationLoaded('unit') ? $item->getRelation('unit') : (Unit::find($item->getAttribute('unit')) ?? null);
+                $allItems->push([
+                    'id' => $item->id,
+                    'type' => 'standard',
+                    'name' => $item->item_name,
+                    'code' => $item->item_code,
+                    'barcode' => $item->barcode,
+                    'category' => $item->category_name,
+                    'supplier' => $item->supplier,
+                    'unit_abbreviation' => $unit?->abbreviation ?? $item->unit ?? null,
+                    'cost_price' => $item->cost_price,
+                    'selling_price' => $item->selling_price,
+                    'profit_margin' => $item->profit_margin,
+                    'current_stock' => $currentStock,
+                    'opening_stock' => $openingStock,
+                    'low_stock_threshold' => $item->low_stock_threshold,
+                    'created_at' => $item->created_at,
+                ]);
+            }
+        }
+
+        foreach ($variantItems as $item) {
+            if ($item->variants && $item->variants->count() > 0) {
+                foreach ($item->variants as $variant) {
+                    $branchInventoriesQuery = BranchInventory::where('item_id', $variant->id)
+                        ->where('item_type', 'variant')
+                        ->where('business_name', $businessName)
+                        ->with('branch');
+                    if ($manager->addby) {
+                        $branchInventoriesQuery->whereIn('branch_id', $managedBranchIds);
+                    }
+                    $branchInventories = $branchInventoriesQuery->get();
+                    $totalAllocated = $branchInventories->sum('allocated_quantity');
+                    $branchCurrent = $branchInventories->sum('current_quantity');
+
+                    if ($isBasicOrFree) {
+                        $openingStock = ($variant->opening_stock ?? 0) > 0 ? $variant->opening_stock : (($variant->current_stock ?? 0) + $totalAllocated);
+                        $currentStock = $branchInventories->count() > 0 ? $branchCurrent : ($variant->current_stock ?? 0);
+                    } else {
+                        if ($manager->addby) {
+                            $branchStockAdded = clone $branchInventories;
+                            $totalBranchStockAdded = $branchStockAdded->sum('stock_added');
+                            $openingStock = $totalAllocated - $totalBranchStockAdded;
+                            $currentStock = $branchCurrent;
+                        } else {
+                            $openingStock = ($variant->opening_stock ?? 0) > 0 ? $variant->opening_stock : (($variant->current_stock ?? 0) + $totalAllocated);
+                            $currentStock = ($variant->current_stock ?? 0) + $branchCurrent;
+                        }
+                    }
+
+                    if (!$manager->addby || $branchInventories->count() > 0) {
+                        $unit = $item->relationLoaded('unit') ? $item->getRelation('unit') : (Unit::find($item->getAttribute('unit')) ?? null);
+                        $allItems->push([
+                            'id' => $variant->id,
+                            'type' => 'product_variant',
+                            'name' => $item->item_name . ' - ' . $variant->variant_name,
+                            'code' => $variant->sku ?? $item->item_code,
+                            'barcode' => $variant->barcode ?? $item->barcode,
+                            'category' => $item->category_name,
+                            'supplier' => $item->supplier,
+                            'unit_abbreviation' => $unit?->abbreviation ?? $item->unit ?? null,
+                            'cost_price' => $variant->cost_price ?? $variant->manual_cost_price ?? $variant->margin_cost_price ?? $variant->range_cost_price,
+                            'selling_price' => $variant->selling_price ?? $variant->calculated_price ?? $variant->final_price,
+                            'profit_margin' => $variant->profit_margin ?? $variant->target_margin,
+                            'current_stock' => $currentStock,
+                            'opening_stock' => $openingStock,
+                            'low_stock_threshold' => $variant->low_stock_threshold,
+                            'created_at' => $variant->created_at ?? $item->created_at,
+                        ]);
+                    }
+                }
+            } else {
+                if (!$manager->addby) {
+                    $unit = $item->relationLoaded('unit') ? $item->getRelation('unit') : (Unit::find($item->getAttribute('unit')) ?? null);
+                    $allItems->push([
+                        'id' => $item->id,
+                        'type' => 'variant',
+                        'name' => $item->item_name,
+                        'code' => $item->item_code,
+                        'barcode' => $item->barcode,
+                        'category' => $item->category_name,
+                        'supplier' => $item->supplier,
+                        'unit_abbreviation' => $unit?->abbreviation ?? $item->unit ?? null,
+                        'cost_price' => null,
+                        'selling_price' => null,
+                        'profit_margin' => null,
+                        'current_stock' => $item->variants->sum(function ($variant) {
+                            return $variant->current_stock ?? $variant->opening_stock ?? 0;
+                        }),
+                        'opening_stock' => 0,
+                        'low_stock_threshold' => null,
+                        'created_at' => $item->created_at,
+                    ]);
+                }
+            }
+        }
+
+        $allItems = $allItems->sortByDesc('created_at');
+
+        $data = ['allItems' => $allItems];
+        $viewName = 'manager.exports.all_items';
+
+        if ($format === 'pdf') {
+            $pdf = Pdf::loadView($viewName, $data)->setPaper('a4', 'landscape');
+            return $pdf->download('all_items.pdf');
+        }
+        return Excel::download(new ReportExport($viewName, $data), 'all_items.xlsx');
+    }
+
     /**
      * Determine whether the current manager can edit or delete items.
      */
@@ -570,6 +746,8 @@ class AllItemsController extends Controller
                     if ($request->hasFile('item_image')) {
                         $path = $request->file('item_image')->store('item_images', 'public');
                         $validatedData['item_image'] = $path;
+                    } else {
+                        unset($validatedData['item_image']);
                     }
 
                     // Calculate profit margin
@@ -610,6 +788,8 @@ class AllItemsController extends Controller
                     if ($request->hasFile('item_image')) {
                         $path = $request->file('item_image')->store('item_images', 'public');
                         $validatedData['item_image'] = $path;
+                    } else {
+                        unset($validatedData['item_image']);
                     }
 
                     $item->update($validatedData);
@@ -632,7 +812,15 @@ class AllItemsController extends Controller
                         'add_stock' => 'nullable|integer|min:0',
                         'low_stock_threshold' => 'nullable|integer|min:0',
                         'variant_options' => 'nullable|string',
+                        'item_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
                     ]);
+
+                    // Handle image upload for parent VariantItem
+                    if ($request->hasFile('item_image')) {
+                        $path = $request->file('item_image')->store('item_images', 'public');
+                        $item->variantItem->update(['item_image' => $path]);
+                    }
+                    unset($validatedData['item_image']); // Don't save this to ProductVariant table
 
                     // Calculate profit margin if cost and selling prices are provided
                     if (isset($validatedData['cost_price']) && isset($validatedData['selling_price']) && $validatedData['cost_price'] > 0) {

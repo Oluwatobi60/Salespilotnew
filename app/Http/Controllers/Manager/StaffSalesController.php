@@ -9,6 +9,9 @@ use App\Models\CartItem;
 use App\Models\Staffs;
 use App\Models\User;
 use Carbon\Carbon;
+use App\Exports\ReportExport;
+use Maatwebsite\Excel\Facades\Excel;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class StaffSalesController extends Controller
 {
@@ -230,5 +233,153 @@ class StaffSalesController extends Controller
             ->get();
 
         return view('manager.reports.sales_by_staff', compact('salesbystaff', 'totals', 'staffList'));
+    }
+
+    public function exportStaffSales($format, Request $request)
+    {
+        $manager = Auth::user();
+        $branchName = $manager->branch_name;
+
+        if ($manager->addby) {
+            $creator = User::where('email', $manager->addby)->first();
+            $businessName = $creator ? $creator->business_name : $manager->business_name;
+        } else {
+            $businessName = $manager->business_name;
+        }
+
+        $query = CartItem::where('cart_items.status', 'completed')
+            ->where('cart_items.business_name', $businessName);
+
+        if ($manager->addby) {
+            $query->where(function($q) use ($manager, $branchName) {
+                $q->where('cart_items.user_id', $manager->id)
+                  ->orWhereIn('cart_items.staff_id', function($subQuery) use ($manager) {
+                      $subQuery->select('id')
+                          ->from('staffs')
+                          ->where('manager_email', $manager->email);
+                  })
+                  ->orWhere('cart_items.branch_name', $branchName);
+            });
+        }
+
+        if ($request->filled('staff_id')) {
+            $staffId = $request->staff_id;
+            $query->where(function($q) use ($staffId) {
+                $q->where('cart_items.staff_id', $staffId)
+                  ->orWhere('cart_items.user_id', $staffId);
+            });
+        }
+
+        if ($request->filled('date_range')) {
+            $dateRange = $request->date_range;
+            $startDate = null;
+            $endDate = null;
+            switch ($dateRange) {
+                case 'today': $startDate = Carbon::today(); $endDate = Carbon::today()->endOfDay(); break;
+                case 'yesterday': $startDate = Carbon::yesterday(); $endDate = Carbon::yesterday()->endOfDay(); break;
+                case 'last7': $startDate = Carbon::today()->subDays(6); $endDate = Carbon::today()->endOfDay(); break;
+                case 'last30': $startDate = Carbon::today()->subDays(29); $endDate = Carbon::today()->endOfDay(); break;
+                case 'thisMonth': $startDate = Carbon::now()->startOfMonth(); $endDate = Carbon::now()->endOfMonth(); break;
+                case 'lastMonth': $startDate = Carbon::now()->subMonth()->startOfMonth(); $endDate = Carbon::now()->subMonth()->endOfMonth(); break;
+                case 'custom':
+                    if ($request->filled('start_date')) $startDate = Carbon::parse($request->start_date)->startOfDay();
+                    if ($request->filled('end_date')) $endDate = Carbon::parse($request->end_date)->endOfDay();
+                    break;
+            }
+            if ($startDate) $query->where('cart_items.created_at', '>=', $startDate);
+            if ($endDate) $query->where('cart_items.created_at', '<=', $endDate);
+        }
+
+        $salesbystaff = $query
+            ->leftJoin('staffs', 'cart_items.staff_id', '=', 'staffs.id')
+            ->selectRaw("
+                CASE
+                    WHEN cart_items.staff_id IS NULL THEN CONCAT('Manager: ', cart_items.manager_name)
+                    ELSE cart_items.manager_name
+                END as seller_name
+            ")
+            ->selectRaw("
+                CASE
+                    WHEN cart_items.staff_id IS NULL THEN 'Manager'
+                    ELSE staffs.role
+                END as seller_role
+            ")
+            ->select(
+                'cart_items.staff_id',
+                'cart_items.user_id',
+                'cart_items.manager_name',
+                'staffs.fullname as staff_name',
+                'staffs.email as staff_email'
+            )
+            ->selectRaw('SUM(cart_items.total) as total_sales')
+            ->selectRaw('COUNT(DISTINCT cart_items.receipt_number) as transactions_count')
+            ->selectRaw('SUM(cart_items.quantity) as items_sold')
+            ->selectRaw('MAX(cart_items.created_at) as last_transaction_date')
+            ->groupBy('cart_items.manager_name', 'cart_items.staff_id', 'cart_items.user_id', 'staffs.fullname', 'staffs.email', 'staffs.role')
+            ->orderBy('total_sales', 'desc')
+            ->get();
+
+        $totalsQuery = clone $query;
+        // The clone of $query already has all filters applied!
+        // But wait! The clone above has joins and selects added, so we clone before doing that? 
+        // No, $query doesn't have the joins yet because we didn't mutate $query for the select!
+        
+        // Let me re-create $totalsQuery safely to match the original logic
+        $totalsQuery = CartItem::where('cart_items.status', 'completed')
+            ->where('cart_items.business_name', $businessName);
+
+        if ($manager->addby) {
+            $totalsQuery->where(function($q) use ($manager, $branchName) {
+                $q->where('cart_items.user_id', $manager->id)
+                  ->orWhereIn('cart_items.staff_id', function($subQuery) use ($manager) {
+                      $subQuery->select('id')
+                          ->from('staffs')
+                          ->where('manager_email', $manager->email);
+                  })
+                  ->orWhere('cart_items.branch_name', $branchName);
+            });
+        }
+
+        if ($request->filled('staff_id')) {
+            $staffId = $request->staff_id;
+            $totalsQuery->where(function($q) use ($staffId) {
+                $q->where('cart_items.staff_id', $staffId)
+                  ->orWhere('cart_items.user_id', $staffId);
+            });
+        }
+
+        if ($request->filled('date_range')) {
+            $dateRange = $request->date_range;
+            $startDate = null;
+            $endDate = null;
+            switch ($dateRange) {
+                case 'today': $startDate = Carbon::today(); $endDate = Carbon::today()->endOfDay(); break;
+                case 'yesterday': $startDate = Carbon::yesterday(); $endDate = Carbon::yesterday()->endOfDay(); break;
+                case 'last7': $startDate = Carbon::today()->subDays(6); $endDate = Carbon::today()->endOfDay(); break;
+                case 'last30': $startDate = Carbon::today()->subDays(29); $endDate = Carbon::today()->endOfDay(); break;
+                case 'thisMonth': $startDate = Carbon::now()->startOfMonth(); $endDate = Carbon::now()->endOfMonth(); break;
+                case 'lastMonth': $startDate = Carbon::now()->subMonth()->startOfMonth(); $endDate = Carbon::now()->subMonth()->endOfMonth(); break;
+                case 'custom':
+                    if ($request->filled('start_date')) $startDate = Carbon::parse($request->start_date)->startOfDay();
+                    if ($request->filled('end_date')) $endDate = Carbon::parse($request->end_date)->endOfDay();
+                    break;
+            }
+            if ($startDate) $totalsQuery->where('cart_items.created_at', '>=', $startDate);
+            if ($endDate) $totalsQuery->where('cart_items.created_at', '<=', $endDate);
+        }
+
+        $totals = $totalsQuery
+            ->selectRaw('SUM(total) as total_sales')
+            ->selectRaw('COUNT(DISTINCT receipt_number) as transactions_count')
+            ->selectRaw('SUM(quantity) as items_sold')
+            ->first();
+
+        $data = compact('salesbystaff', 'totals');
+        $viewName = 'manager.exports.staff_sales';
+
+        if ($format === 'pdf') {
+            return Pdf::loadView($viewName, $data)->download('staff_sales.pdf');
+        }
+        return Excel::download(new ReportExport($viewName, $data), 'staff_sales.xlsx');
     }
 }

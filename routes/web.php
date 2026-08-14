@@ -5,6 +5,7 @@ use App\Http\Controllers\Manager\AddDiscountController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Manager\AllItemsController;
+use App\Http\Controllers\Manager\ItemImportController;
 use App\Http\Controllers\Manager\CategoryController;
 use App\Http\Controllers\Manager\CustomerController;
 use App\Http\Controllers\Manager\SupplierController;
@@ -290,10 +291,13 @@ Route::middleware(['auth', 'verified', 'rolemanager:manager', 'check.subscriptio
 
     Route::controller(SalesReportController::class)->group(function () {
     Route::get('/completed_sales', 'completed_sales')->name('manager.completed_sales');
+    Route::get('/completed_sales/export/{format}', 'exportCompletedSales')->name('manager.completed_sales.export');
     Route::get('/get_sale_items/{receiptNumber}', 'get_sale_items')->name('manager.get_sale_items');
     Route::get('/print_receipt/{receiptNumber}', 'print_receipt')->name('manager.print_receipt');
     Route::get('/sales_summary', 'sales_summary')->name('manager.sales_summary');
+    Route::get('/sales_summary/export/{format}', 'exportSalesSummary')->name('manager.sales_summary.export');
     Route::get('/sales_by_category', 'sales_by_category')->name('manager.sales_by_category');
+    Route::get('/sales_by_category/export/{format}', 'exportSalesByCategory')->name('manager.sales_by_category.export');
     Route::get('/get-staff-user-list', 'getStaffUserList')->name('manager.getStaffUserList');
   });
 
@@ -312,6 +316,7 @@ Route::middleware(['auth', 'verified', 'rolemanager:manager', 'check.subscriptio
 
    Route::controller(StaffSalesController::class)->group(function () {
          Route::get('/staff_sales', 'staff_sales')->name('manager.staff_sales');
+         Route::get('/staff_sales/export/{format}', 'exportStaffSales')->name('manager.staff_sales.export');
    });
 
    Route::controller(ActivityLogsController::class)->group(function () {
@@ -320,6 +325,7 @@ Route::middleware(['auth', 'verified', 'rolemanager:manager', 'check.subscriptio
 
    Route::controller(SalesbyItemController::class)->group(function () {
        Route::get('/sales_by_item', 'sales_by_item')->name('manager.sales_by_item');
+       Route::get('/sales_by_item/export/{format}', 'exportSalesByItem')->name('manager.sales_by_item.export');
        Route::get('/get-categories-list', 'getCategoriesList')->name('manager.getCategoriesList');
        Route::get('/get-items-list', 'getItemsList')->name('manager.getItemsList');
    });
@@ -332,6 +338,7 @@ Route::middleware(['auth', 'verified', 'rolemanager:manager', 'check.subscriptio
 
     Route::controller(AllItemsController::class)->group(function () {
        Route::get('/all_items', 'all_items')->name('all_items');
+       Route::get('/all_items/export/{format}', 'exportAllItems')->name('manager.all_items.export');
         Route::delete('/all_items/delete/{type}/{id}', 'delete_item')->name('all_items.delete');
         Route::post('/all_items/delete_multiple', 'delete_multiple')->name('all_items.delete_multiple');
         Route::get('/Show_Item_Details/{type}/{id}', 'show_item_details')->name('all_items.show_item_details');
@@ -341,6 +348,13 @@ Route::middleware(['auth', 'verified', 'rolemanager:manager', 'check.subscriptio
         Route::get('/all_items/update/{type}/{id}', function($type, $id) {
             return redirect()->route('all_items.edit_item', ['type' => $type, 'id' => $id]);
         });
+    });
+
+    Route::controller(ItemImportController::class)->group(function () {
+        Route::get('/items/import/standard/template', 'downloadStandardTemplate')->name('items.import.standard.template');
+        Route::post('/items/import/standard', 'importStandard')->name('items.import.standard');
+        Route::get('/items/import/variant/template', 'downloadVariantTemplate')->name('items.import.variant.template');
+        Route::post('/items/import/variant', 'importVariant')->name('items.import.variant');
     });
 
     Route::controller(CategoryController::class)->group(function () {

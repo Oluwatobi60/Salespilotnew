@@ -57,6 +57,10 @@ Sales by item
                           <option value="">All Items</option>
                         </select>
                       </div>
+                      <div class="col-sm-3 text-end">
+                        <a href="{{ route('manager.sales_by_item.export', 'excel') }}" class="btn btn-outline-success btn-sm"><i class="bi bi-file-earmark-excel"></i> Excel</a>
+                        <a href="{{ route('manager.sales_by_item.export', 'pdf') }}" class="btn btn-outline-danger btn-sm"><i class="bi bi-file-earmark-pdf"></i> PDF</a>
+                      </div>
                     </div>
 
                     <div class="table-responsive">

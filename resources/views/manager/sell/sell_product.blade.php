@@ -59,13 +59,14 @@ Sell Product
         <div class="item-card"
                 data-id="{{ $item->id }}"
                 data-type="standard"
+                data-barcode="{{ $item->barcode ?? $item->item_code ?? '' }}"
                 data-name="{{ $item->item_name }}"
                 data-price="{{ $item->final_price ?? $item->selling_price }}"
                 data-cost-price="{{ $item->cost_price ?? 0 }}"
                 data-stock="{{ $item->current_stock ?? 0 }}"
                 data-unit="{{ optional($item->unit)->abbreviation ?? $item->unit_name ?? 'units' }}"
                 data-category="{{ $item->category_name }}"
-                data-description="{{ $item->description ?? 'No description available' }}"
+                data-bs-toggle="tooltip" data-bs-placement="top" title="{{ Str::limit($item->description ?? 'No description available', 150) }}"
                 data-img="{{ $item->item_image ? (str_starts_with($item->item_image, 'uploads/') ? asset($item->item_image) : asset('storage/' . $item->item_image)) : '' }}">
 
             @if($item->item_image)
@@ -92,13 +93,14 @@ Sell Product
                     data-id="{{ $variant->id }}"
                     data-type="variant"
                     data-parent-id="{{ $item->id }}"
+                    data-barcode="{{ $variant->barcode ?? $variant->sku ?? $item->barcode ?? $item->item_code ?? '' }}"
                     data-name="{{ $item->item_name }} - {{ $variant->variant_name }}"
                     data-price="{{ $variant->final_price ?? $variant->selling_price ?? 0 }}"
                     data-cost-price="{{ $variant->cost_price ?? $variant->manual_cost_price ?? $variant->margin_cost_price ?? $variant->range_cost_price ?? 0 }}"
                     data-stock="{{ $variant->current_stock ?? $variant->opening_stock ?? 0 }}"
                     data-unit="{{ optional($item->unit)->abbreviation ?? $item->unit_name ?? 'units' }}"
                     data-category="{{ $item->category_name }}"
-                    data-description="{{ $item->description ?? 'No description available' }}"
+                    data-bs-toggle="tooltip" data-bs-placement="top" title="{{ Str::limit($item->description ?? 'No description available', 150) }}"
                     data-primary-value="{{ $variant->primary_value ?? '' }}"
                     data-secondary-value="{{ $variant->secondary_value ?? '' }}"
                     data-tertiary-value="{{ $variant->tertiary_value ?? '' }}"
@@ -516,6 +518,13 @@ Sell Product
 
 
 
-<script src="{{ asset('manager_asset/js/sell_product.js') }}"></script>
-
+  <script src="{{ asset('manager_asset/js/sell_product.js') }}"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    });
+  </script>
 @endsection

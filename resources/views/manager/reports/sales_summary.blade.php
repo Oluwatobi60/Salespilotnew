@@ -63,9 +63,8 @@ Sales Summary
                         <button class="btn btn-outline-secondary" id="clearFilters">
                           <i class="bi bi-x-circle"></i> Clear
                         </button>
-                        <button class="btn btn-outline-success" id="exportReport">
-                          <i class="bi bi-download"></i> Export
-                        </button>
+                        <a href="{{ route('manager.sales_summary.export', 'excel') }}" class="btn btn-outline-success"><i class="bi bi-file-earmark-excel"></i> Excel</a>
+                        <a href="{{ route('manager.sales_summary.export', 'pdf') }}" class="btn btn-outline-danger"><i class="bi bi-file-earmark-pdf"></i> PDF</a>
                       </div>
 
                     <br>

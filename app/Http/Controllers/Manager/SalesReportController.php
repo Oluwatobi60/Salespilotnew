@@ -15,7 +15,9 @@ use App\Models\Category;
 use App\Models\Unit;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
-
+use App\Exports\ReportExport;
+use Maatwebsite\Excel\Facades\Excel;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class SalesReportController extends Controller
 {
@@ -95,6 +97,62 @@ class SalesReportController extends Controller
         }
 
         return view('manager.sales.completed_sales', compact('completedSales', 'hideBranchColumn'));
+    }
+
+    public function exportCompletedSales($format)
+    {
+        $manager = Auth::user();
+        $businessName = $manager->business_name;
+        $query = CartItem::where('cart_items.status', 'completed')
+            ->where('cart_items.business_name', $businessName);
+
+        if (!$manager->isBusinessCreator()) {
+            $managerBranchName = $manager->branch_name;
+            $managerStaffIds = [];
+            $managedBranchIds = \App\Models\Branch\Branch::where('manager_id', $manager->id)->pluck('id');
+            if ($managedBranchIds->isNotEmpty()) {
+                $managerStaffIds = Staffs::join('branch_staff', 'staffs.id', '=', 'branch_staff.staff_id')
+                    ->whereIn('branch_staff.branch_id', $managedBranchIds)
+                    ->where('staffs.business_name', $businessName)
+                    ->pluck('staffs.id')
+                    ->toArray();
+            }
+            $query->where(function($q) use ($manager, $managerStaffIds, $managerBranchName) {
+                $q->where('cart_items.user_id', $manager->id);
+                if (!empty($managerStaffIds)) {
+                    $q->orWhereIn('cart_items.staff_id', $managerStaffIds);
+                }
+                if (!empty($managerBranchName)) {
+                    $q->orWhere('cart_items.branch_name', $managerBranchName);
+                }
+            });
+        }
+
+        $completedSales = $query->leftJoin('staffs', 'cart_items.staff_id', '=', 'staffs.id')
+            ->select('cart_items.receipt_number', 'cart_items.customer_name', 'cart_items.customer_id', 'cart_items.created_at', 'cart_items.user_id', 'cart_items.staff_id', 'cart_items.manager_name', 'cart_items.branch_name', 'staffs.fullname as staff_name')
+            ->selectRaw('SUM(cart_items.total) as total')
+            ->selectRaw('SUM(cart_items.discount) as discount')
+            ->selectRaw('COUNT(*) as items_count')
+            ->groupBy('cart_items.receipt_number', 'cart_items.customer_name', 'cart_items.customer_id', 'cart_items.created_at', 'cart_items.user_id', 'cart_items.staff_id', 'cart_items.manager_name', 'cart_items.branch_name', 'staffs.fullname')
+            ->orderBy('cart_items.created_at', 'desc')
+            ->get();
+
+        $currentSubscription = $manager->currentSubscription()->with('subscriptionPlan')->first();
+        $hideBranchColumn = false;
+        if ($currentSubscription && $currentSubscription->subscriptionPlan) {
+            $planName = strtolower(trim($currentSubscription->subscriptionPlan->name));
+            if ($planName === 'basic') {
+                $hideBranchColumn = true;
+            }
+        }
+
+        $data = compact('completedSales', 'hideBranchColumn');
+        $viewName = 'manager.exports.completed_sales';
+
+        if ($format === 'pdf') {
+            return Pdf::loadView($viewName, $data)->download('completed_sales.pdf');
+        }
+        return Excel::download(new ReportExport($viewName, $data), 'completed_sales.xlsx');
     }
 
     public function sales_summary()
@@ -293,6 +351,94 @@ class SalesReportController extends Controller
         ]);
     }
 
+    public function exportSalesSummary($format)
+    {
+        $manager = Auth::user();
+        $branchName = $manager->branch_name;
+
+        if ($manager->addby) {
+            $creator = User::where('email', $manager->addby)->first();
+            $businessName = $creator ? $creator->business_name : $manager->business_name;
+        } else {
+            $businessName = $manager->business_name;
+        }
+
+        $query = CartItem::where('status', 'completed')
+            ->where('business_name', $businessName);
+
+        if ($manager->addby) {
+            $query->where(function($q) use ($manager, $branchName) {
+                $q->where('user_id', $manager->id)
+                  ->orWhereIn('staff_id', function($subQuery) use ($manager) {
+                      $subQuery->select('id')
+                          ->from('staffs')
+                          ->where('manager_email', $manager->email);
+                  })
+                  ->orWhere('branch_name', $branchName);
+            });
+        }
+
+        $salesData = (clone $query)
+            ->selectRaw('DATE(created_at) as sale_date')
+            ->selectRaw('SUM(subtotal) as gross_sales')
+            ->selectRaw('SUM(discount) as total_discount')
+            ->selectRaw('SUM(total) as net_sales')
+            ->selectRaw('COUNT(DISTINCT receipt_number) as transaction_count')
+            ->selectRaw('SUM(quantity) as items_sold')
+            ->groupBy('sale_date')
+            ->orderBy('sale_date', 'desc')
+            ->get();
+
+        $salesSummary = $salesData->map(function ($sale) use ($query) {
+            $items = (clone $query)->whereDate('created_at', $sale->sale_date)->get();
+            $costOfItems = 0;
+            $totalTaxes = 0;
+            $totalDiscount = 0;
+            foreach ($items as $item) {
+                $totalDiscount += $item->discount;
+                if ($item->item_type === 'standard') {
+                    $standardItem = !empty($item->item_code) ? StandardItem::where('item_code', $item->item_code)->first() : null;
+                    if (!$standardItem) $standardItem = StandardItem::find($item->item_id);
+                    if ($standardItem) {
+                        $costOfItems += ($standardItem->cost_price ?? 0) * $item->quantity;
+                        $totalTaxes += $item->subtotal * (($standardItem->tax_rate ?? 0) / 100);
+                    }
+                } elseif ($item->item_type === 'variant') {
+                    $productVariant = !empty($item->item_code) ? ProductVariant::where('variant_code', $item->item_code)->first() : null;
+                    if (!$productVariant) $productVariant = ProductVariant::find($item->item_id);
+                    if ($productVariant) {
+                        $costOfItems += ($productVariant->cost_price ?? 0) * $item->quantity;
+                        $totalTaxes += $item->subtotal * (($productVariant->tax_rate ?? 0) / 100);
+                    } else {
+                        $variantItem = !empty($item->item_code) ? VariantItem::where('variant_code', $item->item_code)->first() : null;
+                        if (!$variantItem) $variantItem = VariantItem::find($item->item_id);
+                        if ($variantItem) {
+                            $costOfItems += ($variantItem->cost_price ?? 0) * $item->quantity;
+                            $totalTaxes += $item->subtotal * (($variantItem->tax_rate ?? 0) / 100);
+                        }
+                    }
+                }
+            }
+            $grossProfit = ($sale->gross_sales - $totalDiscount) - $costOfItems;
+            $marginBase = $sale->gross_sales - $totalDiscount;
+            $margin = $marginBase > 0 ? ($grossProfit / $marginBase) * 100 : 0;
+            $sale->cost_of_items = round($costOfItems, 2);
+            $sale->gross_profit = round($grossProfit, 2);
+            $sale->margin = round($margin, 1);
+            $sale->taxes = round($totalTaxes, 2);
+            $sale->total_discount = round($totalDiscount, 2);
+            return $sale;
+        });
+
+        $data = ['salesSummary' => $salesSummary];
+        $viewName = 'manager.exports.sales_summary';
+
+        if ($format === 'pdf') {
+            return Pdf::loadView($viewName, $data)->download('sales_summary.pdf');
+        }
+        return Excel::download(new ReportExport($viewName, $data), 'sales_summary.xlsx');
+    }
+
 
 
 
@@ -480,6 +626,149 @@ class SalesReportController extends Controller
             'salesByCategory' => $salesByCategory,
             'totals' => $totals
         ]);
+    }
+
+    public function exportSalesByCategory($format, Request $request)
+    {
+        $manager = Auth::user();
+        $branchName = $manager->branch_name;
+
+        if ($manager->addby) {
+            $creator = User::where('email', $manager->addby)->first();
+            $businessName = $creator ? $creator->business_name : $manager->business_name;
+        } else {
+            $businessName = $manager->business_name;
+        }
+
+        $query = CartItem::where('status', 'completed')
+            ->where('business_name', $businessName);
+
+        if ($manager->addby) {
+            $query->where(function($q) use ($manager, $branchName) {
+                $q->where('user_id', $manager->id)
+                  ->orWhereIn('staff_id', function($subQuery) use ($manager) {
+                      $subQuery->select('id')
+                          ->from('staffs')
+                          ->where('manager_email', $manager->email);
+                  })
+                  ->orWhere('branch_name', $branchName);
+            });
+        }
+
+        if ($request->filled('date_range')) {
+            $dateRange = $request->date_range;
+            $startDate = null;
+            $endDate = null;
+            switch ($dateRange) {
+                case 'today':
+                    $startDate = Carbon::today(); $endDate = Carbon::today()->endOfDay(); break;
+                case 'yesterday':
+                    $startDate = Carbon::yesterday(); $endDate = Carbon::yesterday()->endOfDay(); break;
+                case 'last7':
+                    $startDate = Carbon::today()->subDays(6); $endDate = Carbon::today()->endOfDay(); break;
+                case 'last30':
+                    $startDate = Carbon::today()->subDays(29); $endDate = Carbon::today()->endOfDay(); break;
+                case 'thisMonth':
+                    $startDate = Carbon::now()->startOfMonth(); $endDate = Carbon::now()->endOfMonth(); break;
+                case 'lastMonth':
+                    $startDate = Carbon::now()->subMonth()->startOfMonth(); $endDate = Carbon::now()->subMonth()->endOfMonth(); break;
+                case 'custom':
+                    if ($request->filled('start_date')) $startDate = Carbon::parse($request->start_date)->startOfDay();
+                    if ($request->filled('end_date')) $endDate = Carbon::parse($request->end_date)->endOfDay();
+                    break;
+            }
+            if ($startDate) $query->where('created_at', '>=', $startDate);
+            if ($endDate) $query->where('created_at', '<=', $endDate);
+        }
+
+        $cartItems = $query->get();
+        $categoryData = [];
+        foreach ($cartItems as $item) {
+            $categoryId = null;
+            $categoryName = '';
+            $costPrice = 0;
+            $taxRate = 0;
+            if ($item->item_type === 'standard') {
+                $std = StandardItem::find($item->item_id);
+                if ($std) {
+                    $categoryId = $std->category;
+                    $catModel = Category::find($categoryId);
+                    $categoryName = $catModel ? $catModel->category_name : ($categoryId ?? 'Unknown');
+                    $costPrice = $std->cost_price ?? 0;
+                    $taxRate = $std->tax_rate ?? 0;
+                }
+            } elseif ($item->item_type === 'variant') {
+                $prodVar = ProductVariant::find($item->item_id);
+                $variantItem = $prodVar ? $prodVar->variantItem : null;
+                if ($prodVar) {
+                    $costPrice = $prodVar->cost_price ?? 0;
+                    $taxRate = $prodVar->tax_rate ?? 0;
+                }
+                if ($variantItem) {
+                    $categoryId = $variantItem->category;
+                    $catModel = Category::find($categoryId);
+                    $categoryName = $catModel ? $catModel->category_name : ($categoryId ?? 'Unknown');
+                } else {
+                    $var = VariantItem::find($item->item_id);
+                    if ($var) {
+                        $categoryId = $var->category;
+                        $catModel = Category::find($categoryId);
+                        $categoryName = $catModel ? $catModel->category_name : ($categoryId ?? 'Unknown');
+                    }
+                }
+            }
+            if ($categoryId === null) {
+                $categoryId = 'uncategorized';
+                $categoryName = 'Uncategorized';
+            }
+            if (!isset($categoryData[$categoryId])) {
+                $categoryData[$categoryId] = [
+                    'category_id' => $categoryId, 'category_name' => $categoryName,
+                    'total_quantity_sold' => 0, 'gross_sales' => 0, 'total_discount' => 0,
+                    'total_sales' => 0, 'transactions_count' => 0, 'total_cost' => 0, 'tax' => 0,
+                ];
+            }
+            $itemCost = $costPrice * $item->quantity;
+            $itemTax = ($taxRate / 100) * $item->subtotal;
+            $categoryData[$categoryId]['total_quantity_sold'] += $item->quantity;
+            $categoryData[$categoryId]['gross_sales'] += $item->subtotal;
+            $categoryData[$categoryId]['total_discount'] += $item->discount;
+            $categoryData[$categoryId]['total_sales'] += $item->total;
+            $categoryData[$categoryId]['transactions_count'] += 1;
+            $categoryData[$categoryId]['total_cost'] += $itemCost;
+            $categoryData[$categoryId]['tax'] += $itemTax;
+        }
+
+        foreach ($categoryData as &$cat) {
+            $grossSalesAfterDiscount = $cat['gross_sales'] - $cat['total_discount'];
+            $cat['gross_profit'] = $grossSalesAfterDiscount - $cat['total_cost'];
+            $cat['margin'] = $grossSalesAfterDiscount > 0 ? ($cat['gross_profit'] / $grossSalesAfterDiscount) * 100 : 0;
+        }
+        unset($cat);
+
+        $salesByCategory = collect($categoryData)->sortByDesc('gross_sales')->values();
+        if ($request->filled('category_id')) {
+            $salesByCategory = $salesByCategory->filter(function($category) use ($request) {
+                return $category['category_id'] == $request->category_id;
+            })->values();
+        }
+
+        $totals = [
+            'gross_sales' => $salesByCategory->sum('gross_sales'),
+            'total_discount' => $salesByCategory->sum('total_discount'),
+            'net_sales' => $salesByCategory->sum('total_sales'),
+            'items_cost' => $salesByCategory->sum('total_cost'),
+            'gross_profit' => $salesByCategory->sum('gross_profit'),
+            'tax' => $salesByCategory->sum('tax'),
+        ];
+
+        $data = ['salesByCategory' => $salesByCategory, 'totals' => $totals];
+        $viewName = 'manager.exports.sales_by_category';
+
+        if ($format === 'pdf') {
+            return Pdf::loadView($viewName, $data)->download('sales_by_category.pdf');
+        }
+        return Excel::download(new ReportExport($viewName, $data), 'sales_by_category.xlsx');
     }
 
 

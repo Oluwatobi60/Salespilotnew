@@ -1620,4 +1620,164 @@ document.addEventListener('DOMContentLoaded', function() {
           });
         });
       }
+      // Barcode Scanner Integration
+      let barcodeBuffer = '';
+      let barcodeTimer = null;
+      
+      document.addEventListener('keypress', function(e) {
+        // Ignore if user is typing in a textarea (like note)
+        if (e.target.tagName === 'TEXTAREA') return;
+        
+        if (e.key === 'Enter') {
+            if (barcodeBuffer.length > 2) {
+                // Trigger barcode search
+                handleBarcodeScan(barcodeBuffer);
+            }
+            barcodeBuffer = '';
+            clearTimeout(barcodeTimer);
+            return;
+        }
+        
+        // Only accept printable characters
+        if (e.key.length === 1) {
+            barcodeBuffer += e.key;
+            
+            // Clear buffer if it's been too long (e.g. human typing, typical scanners take < 20ms per char)
+            clearTimeout(barcodeTimer);
+            barcodeTimer = setTimeout(() => {
+                barcodeBuffer = '';
+            }, 50); // 50ms timeout
+        }
+      });
+      
+      function handleBarcodeScan(barcode) {
+          console.log('Scanned barcode:', barcode);
+          
+          // Find the item card with this barcode
+          const itemCard = Array.from(itemCards).find(card => card.dataset.barcode && card.dataset.barcode.toLowerCase() === barcode.toLowerCase());
+          
+          if (itemCard) {
+              if (itemCard.classList.contains('disabled')) {
+                  Swal.fire({
+                      icon: 'warning',
+                      title: 'Item Disabled',
+                      text: 'This item cannot be sold.',
+                      toast: true,
+                      position: 'top-end',
+                      showConfirmButton: false,
+                      timer: 2000
+                  });
+                  return;
+              }
+              
+              const stock = parseInt(itemCard.dataset.stock || '0');
+              if (stock === 0) {
+                  Swal.fire({
+                      icon: 'warning',
+                      title: 'Out of Stock',
+                      text: 'This item is currently out of stock.',
+                      toast: true,
+                      position: 'top-end',
+                      showConfirmButton: false,
+                      timer: 2000
+                  });
+                  return;
+              }
+
+              // Set currentItem details
+              let itemType = 'standard';
+              let itemId = itemCard.dataset.id;
+              if (itemCard.dataset.type === 'variant' || itemCard.dataset.productVariant === 'true') {
+                  itemType = 'variant';
+              }
+              
+              currentItem = {
+                  id: itemId,
+                  type: itemType,
+                  name: itemCard.dataset.name,
+                  price: parseFloat(itemCard.dataset.price),
+                  stock: stock,
+                  unit: itemCard.dataset.unit || 'units',
+                  img: itemCard.dataset.img,
+                  costPrice: parseFloat(itemCard.dataset.costPrice || 0)
+              };
+
+              // If item needs manual price, we have to open the modal
+              if (needsManualPrice(itemCard)) {
+                  // Simulate click to open modal
+                  itemCard.click();
+                  
+                  Swal.fire({
+                      icon: 'info',
+                      title: 'Price Required',
+                      text: 'Please enter the selling price for this scanned item.',
+                      toast: true,
+                      position: 'top-end',
+                      showConfirmButton: false,
+                      timer: 2000
+                  });
+              } else {
+                  // Directly add to cart!
+                  const existingIndex = cartItems.findIndex(item => item.id === currentItem.id && item.type === currentItem.type);
+                  if (existingIndex >= 0) {
+                      if (cartItems[existingIndex].quantity >= stock) {
+                          Swal.fire({
+                              icon: 'warning',
+                              title: 'Stock Limit Reached',
+                              text: 'Cannot add more. Stock limit reached.',
+                              toast: true,
+                              position: 'top-end',
+                              showConfirmButton: false,
+                              timer: 2000
+                          });
+                          return;
+                      }
+                      cartItems[existingIndex].quantity += 1;
+                  } else {
+                      cartItems.push({
+                          id: currentItem.id,
+                          type: currentItem.type,
+                          name: currentItem.name,
+                          price: currentItem.price,
+                          quantity: 1,
+                          note: '',
+                          img: currentItem.img
+                      });
+                  }
+                  
+                  updateCartUI();
+                  
+                  // Clear search input if the scanner typed into it
+                  searchInput.value = '';
+                  clearSearch.style.display = 'none';
+                  filterItems();
+                  
+                  Swal.fire({
+                      icon: 'success',
+                      title: 'Scanned & Added!',
+                      text: currentItem.name,
+                      toast: true,
+                      position: 'top-end',
+                      showConfirmButton: false,
+                      timer: 1500
+                  });
+              }
+          } else {
+              // Barcode not found
+              Swal.fire({
+                  icon: 'error',
+                  title: 'Not Found',
+                  text: 'No item found with barcode: ' + barcode,
+                  toast: true,
+                  position: 'top-end',
+                  showConfirmButton: false,
+                  timer: 2500
+              });
+              
+              // Clear search input if scanner typed into it
+              searchInput.value = '';
+              clearSearch.style.display = 'none';
+              filterItems();
+          }
+      }
     });

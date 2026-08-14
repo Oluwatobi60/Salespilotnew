@@ -118,14 +118,23 @@
                     </div>
                 </div>
                 @if($item->variantItem->item_image)
-                    <div class="mt-2">
-                        <strong>Item Image:</strong><br>
+                    <div class="mt-2 mb-3">
+                        <strong>Current Item Image:</strong><br>
                         <img src="{{ str_starts_with($item->variantItem->item_image, 'uploads/') ? asset($item->variantItem->item_image) : asset('storage/' . $item->variantItem->item_image) }}" 
-                             alt="Item Image" class="mt-2" 
-                             style="max-width: 150px; max-height: 150px;"
+                             alt="Item Image" class="mt-2 border rounded" 
+                             style="max-width: 150px; max-height: 150px; object-fit: cover;"
                              onerror="this.style.display='none'">
                     </div>
                 @endif
+                
+                <div class="form-group mt-3">
+                    <label for="item_image" class="form-label">Update Parent Item Image</label>
+                    <input type="file" class="form-control" id="item_image" name="item_image" accept="image/*">
+                    <small class="text-muted">This will update the image for all variants of this product.</small>
+                    @error('item_image')
+                        <div class="text-danger small">{{ $message }}</div>
+                    @enderror
+                </div>
             </div>
         </div>
     </div>
