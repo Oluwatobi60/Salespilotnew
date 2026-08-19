@@ -54,6 +54,11 @@ Route::prefix('superadmin')->controller(SuperAdminController::class)->group(func
     Route::get('/login', 'showLogin')->name('superadmin.login');
     Route::post('/login', 'login')->name('superadmin.login.submit');
     Route::post('/logout', 'logout')->name('superadmin.logout');
+
+    Route::get('/forgot-password', 'showForgotPassword')->name('superadmin.password.request');
+    Route::post('/forgot-password', 'sendResetLinkEmail')->name('superadmin.password.email');
+    Route::get('/reset-password/{token}', 'showResetPassword')->name('superadmin.password.reset');
+    Route::post('/reset-password', 'resetPassword')->name('superadmin.password.update');
 });
 
 // Superadmin protected routes

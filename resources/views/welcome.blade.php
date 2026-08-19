@@ -201,7 +201,7 @@ Welcome to {{ app_name() }}
 				<div class="feature">
 					<div class="feature-icon">
                         <i class="fa-solid fa-credit-card"></i></div>
-					<h3> Point of Sale (POS)<sub style="color: red; font-size: 0.6em;">(In view)</sub></h3>
+					<h3> Point of Sale (POS)<sub style="color: red; font-size: 0.6em;"></sub></h3>
 					<p>Lightning-fast checkout experience with support for multiple payment methods, receipt printing, and seamless cart management for busy retail environments.</p>
 				</div>
 			</div>

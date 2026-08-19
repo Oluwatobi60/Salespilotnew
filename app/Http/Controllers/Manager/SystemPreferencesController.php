@@ -89,7 +89,7 @@ class SystemPreferencesController extends Controller
         // Handle logo upload
         if ($request->hasFile('business_logo')) {
             $logo = $request->file('business_logo');
-            $logoName = time() . '_' . $manager->id . '.' . $logo->getClientOriginalExtension();
+            $logoName = time() . '_' . $manager->id . '.' . $logo->extension();
             $logo->move(public_path('business_logos'), $logoName);
 
             // Delete old logo if exists

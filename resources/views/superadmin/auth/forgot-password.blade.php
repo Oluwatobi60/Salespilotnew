@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Superadmin Login - SalesPilot</title>
+    <title>Forgot Password - Superadmin - SalesPilot</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap" rel="stylesheet">
     <style>
@@ -48,21 +48,21 @@
         <div class="col-md-6 col-lg-5">
             <div class="text-center mb-4">
                 <img src="{{ app_logo() }}" alt="SalesPilot Logo" style="max-width: 160px;">
-                <h3 class="brand-title mt-3">Superadmin Login</h3>
+                <h3 class="brand-title mt-3">Superadmin Password Reset</h3>
             </div>
 
             <div class="card shadow-lg">
                 <div class="card-body p-4">
 
-                    @if(session('success'))
-                        <div class="alert alert-success">{{ session('success') }}</div>
-                    @endif
+                    <div class="mb-4 text-sm text-muted">
+                        Forgot your password? No problem. Just let us know your email address and we will email you a password reset link that will allow you to choose a new one.
+                    </div>
 
                     @if(session('status'))
-                        <div class="alert alert-info">{{ session('status') }}</div>
+                        <div class="alert alert-success mb-4">{{ session('status') }}</div>
                     @endif
 
-                    <form method="POST" action="{{ route('superadmin.login.submit') }}">
+                    <form method="POST" action="{{ route('superadmin.password.email') }}">
                         @csrf
 
                         <div class="mb-3">
@@ -75,34 +75,14 @@
                             @enderror
                         </div>
 
-                        <div class="mb-3">
-                            <label for="password" class="form-label">Password</label>
-                            <input id="password" type="password" name="password"
-                                class="form-control @error('password') is-invalid @enderror"
-                                required autocomplete="current-password">
-                            @error('password')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        <div class="mb-3 d-flex justify-content-between align-items-center">
-                            <div class="form-check mb-0">
-                                <input type="checkbox" class="form-check-input" id="remember" name="remember">
-                                <label class="form-check-label" for="remember">Remember me</label>
-                            </div>
-                            @if (Route::has('superadmin.password.request'))
-                                <a href="{{ route('superadmin.password.request') }}" class="text-decoration-none small fw-semibold">
-                                    Forgot password?
-                                </a>
-                            @endif
-                        </div>
-
-                        <button type="submit" class="btn btn-superadmin w-100 py-2 fw-semibold">Log In</button>
+                        <button type="submit" class="btn btn-superadmin w-100 py-2 fw-semibold mb-3">
+                            Email Password Reset Link
+                        </button>
                     </form>
 
-                    <div class="text-center mt-3">
-                        <small class="text-muted">Don't have an account?
-                            <a href="{{ route('superadmin.signup') }}" class="text-decoration-none fw-semibold">Sign up</a>
+                    <div class="text-center">
+                        <small class="text-muted">
+                            <a href="{{ route('superadmin.login') }}" class="text-decoration-none fw-semibold">Back to Login</a>
                         </small>
                     </div>
 
@@ -112,6 +92,5 @@
     </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script src="{{ asset('js/show-password.js') }}"></script>
 </body>
 </html>

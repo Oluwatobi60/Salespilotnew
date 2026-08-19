@@ -15,6 +15,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Auth\Events\PasswordReset;
+use Illuminate\Support\Str;
 
 class SuperAdminController extends Controller
 {
@@ -331,5 +334,62 @@ class SuperAdminController extends Controller
             ->get();
         $activeBrms = Brm::where('status', 1)->orderBy('name')->get(['id', 'name', 'region']);
         return view('superadmin.users.show', compact('user', 'subscriptions', 'activeBrms'));
+    }
+
+    public function showForgotPassword()
+    {
+        return view('superadmin.auth.forgot-password');
+    }
+
+    public function sendResetLinkEmail(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+        ]);
+
+        $status = Password::broker('superadmins')->sendResetLink(
+            $request->only('email')
+        );
+
+        return $status === Password::RESET_LINK_SENT
+            ? back()->with('status', __($status))
+            : back()->withErrors(['email' => __($status)]);
+    }
+
+    public function showResetPassword(Request $request, $token)
+    {
+        return view('superadmin.auth.reset-password', [
+            'token' => $token,
+            'email' => $request->email
+        ]);
+    }
+
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'token' => 'required',
+            'email' => 'required|email',
+            'password' => ['required', 'confirmed', \Illuminate\Validation\Rules\Password::defaults()],
+        ]);
+
+        $status = Password::broker('superadmins')->reset(
+            $request->only('email', 'password', 'password_confirmation', 'token'),
+            function (SuperAdmin $user) use ($request) {
+                $user->forceFill([
+                    'password' => Hash::make($request->password),
+                    'remember_token' => Str::random(60),
+                ])->save();
+
+                if (method_exists($user, 'resetLoginAttempts')) {
+                    $user->resetLoginAttempts();
+                }
+
+                event(new PasswordReset($user));
+            }
+        );
+
+        return $status === Password::PASSWORD_RESET
+            ? redirect()->route('superadmin.login')->with('success', __($status))
+            : back()->withErrors(['email' => __($status)]);
     }
 }
