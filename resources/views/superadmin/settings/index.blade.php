@@ -219,6 +219,9 @@ use App\Models\AppSetting;
                 <h5 class="fw-bold mb-4">Appearance</h5>
                 
                 @foreach($groups['appearance'] as $setting)
+                    @if($setting->key === 'logo_url')
+                        @continue
+                    @endif
                     <div class="mb-4">
                         <label class="form-label fw-semibold text-dark">
                             {{ $setting->label }}
