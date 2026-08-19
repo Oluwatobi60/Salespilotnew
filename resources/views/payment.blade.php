@@ -41,25 +41,25 @@ Payment - SalesPilot
 
                 <div class="summary-row">
                     <span class="summary-label">Monthly Price:</span>
-                    <span class="summary-value price">₦{{ number_format($plan->monthly_price, 2) }}</span>
+                    <span class="summary-value price">{{ currency_symbol() }}{{ number_format($plan->monthly_price, 2) }}</span>
                 </div>
 
                 @if($pricing['discount_percentage'] > 0)
                 <div class="summary-row">
                     <span class="summary-label">Subtotal:</span>
-                    <span class="summary-value strikethrough">₦{{ number_format($pricing['original_price'], 2) }}</span>
+                    <span class="summary-value strikethrough">{{ currency_symbol() }}{{ number_format($pricing['original_price'], 2) }}</span>
                 </div>
 
                 <div class="summary-row">
                     <span class="summary-label">Discount ({{ $pricing['discount_percentage'] }}%):</span>
-                    <span class="summary-value discount">-₦{{ number_format($pricing['savings'], 2) }}</span>
+                    <span class="summary-value discount">-{{ currency_symbol() }}{{ number_format($pricing['savings'], 2) }}</span>
                 </div>
                 @endif
 
                 <div class="total-row">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <span class="summary-label">Total Amount:</span>
-                        <span class="total-amount">₦{{ number_format($pricing['discounted_price'], 2) }}</span>
+                        <span class="total-amount">{{ currency_symbol() }}{{ number_format($pricing['discounted_price'], 2) }}</span>
                     </div>
                 </div>
 
@@ -85,6 +85,7 @@ Payment - SalesPilot
 
                     <div class="payment-method">
                         <!-- Paystack Option -->
+                        @if(setting('paystack_enabled', '1') == '1')
                         <div class="payment-option active" id="paystackOption">
                             <label>
                                 <input type="radio" name="payment_method" value="paystack" checked>
@@ -103,11 +104,13 @@ Payment - SalesPilot
                                 </div>
                             </div>
                         </div>
+                        @endif
 
                         <!-- Bank Transfer Option -->
-                        <div class="payment-option" id="bankOption">
+                        @if(setting('bank_transfer_enabled', '1') == '1')
+                        <div class="payment-option @if(setting('paystack_enabled', '1') == '0') active @endif" id="bankOption">
                             <label>
-                                <input type="radio" name="payment_method" value="bank_transfer">
+                                <input type="radio" name="payment_method" value="bank_transfer" @if(setting('paystack_enabled', '1') == '0') checked @endif>
                                 <div class="payment-icon">
                                     <i class="uil uil-university"></i>
                                 </div>
@@ -116,19 +119,19 @@ Payment - SalesPilot
                                     <div style="font-size: 0.85rem; color: #666; font-weight: 400;">Direct transfer to our account</div>
                                 </div>
                             </label>
-                            <div class="payment-details" id="bankDetails">
+                            <div class="payment-details @if(setting('paystack_enabled', '1') == '0') show @endif" id="bankDetails">
                                 <div class="bank-details">
                                     <div class="bank-detail-row">
                                         <span class="bank-detail-label">Bank:</span>
-                                        <span class="bank-detail-value">GTBank</span>
+                                        <span class="bank-detail-value">{{ setting('bank_name', 'GTBank') }}</span>
                                     </div>
                                     <div class="bank-detail-row">
                                         <span class="bank-detail-label">Account Name:</span>
-                                        <span class="bank-detail-value">SalesPilot Technologies</span>
+                                        <span class="bank-detail-value">{{ setting('bank_account_name', 'SalesPilot Technologies') }}</span>
                                     </div>
                                     <div class="bank-detail-row">
                                         <span class="bank-detail-label">Account Number:</span>
-                                        <span class="bank-detail-value" style="font-weight: 700; color: #667eea;">0123456789</span>
+                                        <span class="bank-detail-value" style="font-weight: 700; color: #667eea;">{{ setting('bank_account_number', '0123456789') }}</span>
                                     </div>
                                 </div>
                                 <div style="margin-top: 1rem; padding: 0.75rem; background: #fff3cd; border-radius: 8px; font-size: 0.85rem; color: #856404;">
@@ -136,6 +139,7 @@ Payment - SalesPilot
                                 </div>
                             </div>
                         </div>
+                        @endif
                     </div>
 
                     <div class="form-group" id="referenceField" style="display: none;">
@@ -152,7 +156,7 @@ Payment - SalesPilot
                     </div>
 
                     <button type="submit" id="paymentBtn" class="btn-payment btn-loading" data-loading-text="Processing payment...">
-                        <span id="btnText" class="btn-text">Pay Now - ₦{{ number_format($pricing['discounted_price'], 2) }}</span>
+                        <span id="btnText" class="btn-text">Pay Now - {{ currency_symbol() }}{{ number_format($pricing['discounted_price'], 2) }}</span>
                         <span class="btn-spinner"></span>
                     </button>
 
@@ -191,31 +195,35 @@ document.addEventListener('DOMContentLoaded', function() {
     const bankRadio = document.querySelector('input[value="bank_transfer"]');
 
     // Handle payment option click
-    paystackOption.addEventListener('click', function() {
-        paystackRadio.checked = true;
-        paystackOption.classList.add('active');
-        bankOption.classList.remove('active');
-        paystackInfo.classList.add('show');
-        bankDetails.classList.remove('show');
-        referenceField.style.display = 'none';
-        btnText.textContent = 'Pay Now - ₦{{ number_format($pricing["discounted_price"], 2) }}';
-    });
+    if (paystackOption) {
+        paystackOption.addEventListener('click', function() {
+            if (paystackRadio) paystackRadio.checked = true;
+            paystackOption.classList.add('active');
+            if (bankOption) bankOption.classList.remove('active');
+            if (paystackInfo) paystackInfo.classList.add('show');
+            if (bankDetails) bankDetails.classList.remove('show');
+            if (referenceField) referenceField.style.display = 'none';
+            btnText.textContent = 'Pay Now - {{ currency_symbol() }}{{ number_format($pricing["discounted_price"], 2) }}';
+        });
+    }
 
-    bankOption.addEventListener('click', function() {
-        bankRadio.checked = true;
-        bankOption.classList.add('active');
-        paystackOption.classList.remove('active');
-        bankDetails.classList.add('show');
-        paystackInfo.classList.remove('show');
-        referenceField.style.display = 'block';
-        btnText.textContent = 'Confirm Payment';
-    });
+    if (bankOption) {
+        bankOption.addEventListener('click', function() {
+            if (bankRadio) bankRadio.checked = true;
+            bankOption.classList.add('active');
+            if (paystackOption) paystackOption.classList.remove('active');
+            if (bankDetails) bankDetails.classList.add('show');
+            if (paystackInfo) paystackInfo.classList.remove('show');
+            if (referenceField) referenceField.style.display = 'block';
+            btnText.textContent = 'Confirm Payment';
+        });
+    }
 
     // Handle form submission
     paymentForm.addEventListener('submit', function(e) {
         e.preventDefault();
 
-        if (paystackRadio.checked) {
+        if (paystackRadio && paystackRadio.checked) {
             // Process with Paystack
             payWithPaystack();
         } else {

@@ -40,6 +40,8 @@ use App\Http\Controllers\Superadmin\SubscriptionFeaturesController;
 use App\Http\Controllers\Brm\BrmController;
 use App\Http\Controllers\Brm\BrmCommissionController;
 use App\Http\Controllers\Brm\PerformanceController;
+use App\Http\Controllers\Manager\AIInventoryController;
+use App\Http\Controllers\Manager\AICopilotController;
 
 
 /* Route::get('/dashboard', function () {
@@ -290,6 +292,14 @@ Route::middleware(['auth', 'verified', 'rolemanager:manager', 'check.subscriptio
        Route::post('/variant_item/create', 'createvariant')->name('variant.create');
     });
 
+    Route::controller(AIInventoryController::class)->prefix('ai')->group(function () {
+        Route::post('/suggest-category', 'suggestCategory')->name('manager.ai.suggest-category');
+        Route::post('/generate-description', 'generateDescription')->name('manager.ai.generate-description');
+        Route::post('/recommend-price', 'recommendPrice')->name('manager.ai.recommend-price');
+    });
+
+    Route::post('/ai/copilot', [AICopilotController::class, 'query'])->name('manager.ai.copilot');
+
     Route::controller(TaxController::class)->group(function () {
          Route::get('/taxes', 'taxes')->name('manager.taxes');
     });
@@ -486,7 +496,9 @@ Route::middleware(['auth:staff', 'throttle:60,1'])->prefix('staff')->group(funct
 
      Route::controller(StaffAddDiscountController::class)->group(function () {
         Route::get('/get_discounts', 'get_discounts')->name('staff.get_discounts');
-   });
+    });
+
+    Route::post('/ai/copilot', [AICopilotController::class, 'query'])->name('staff.ai.copilot');
 
 
 

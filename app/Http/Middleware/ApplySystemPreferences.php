@@ -25,7 +25,21 @@ class ApplySystemPreferences
         // Apply upload limits
         $maxUpload = max_upload_size_mb();
         if ($maxUpload) {
-            Config::set('app.max_upload_size', $maxUpload);
+            config(['app.max_upload_size' => $maxUpload]);
+        }
+
+        // Enforce Force HTTPS policy
+        if (setting('force_https') == '1' && !$request->secure() && app()->environment('production')) {
+            return redirect()->secure($request->getRequestUri());
+        }
+
+        // Enforce IP Whitelist policy
+        $whitelist = setting('ip_whitelist');
+        if ($whitelist && !app()->environment('local')) {
+            $ips = array_map('trim', explode(',', $whitelist));
+            if (!in_array($request->ip(), $ips)) {
+                abort(403, 'Access denied. Your IP address (' . $request->ip() . ') is not whitelisted.');
+            }
         }
 
         return $next($request);

@@ -101,6 +101,28 @@ class StaffMainController extends Controller
             // Create a new staff member
             $staff = Staffs::create($validatedData);
 
+            // Ensure all staff role features are automatically enabled on the manager's current subscription plan if created by business creator
+            if ($manager->isBusinessCreator() && $subscription && $subscription->subscriptionPlan) {
+                $plan = $subscription->subscriptionPlan;
+                $staffFeatures = \App\Models\SubscriptionFeature::where('role', 'staff')
+                    ->where('is_active', true)
+                    ->pluck('slug')
+                    ->toArray();
+
+                $currentFeatures = is_array($plan->features) ? $plan->features : [];
+                $missingFeatures = array_diff($staffFeatures, $currentFeatures);
+
+                if (!empty($missingFeatures)) {
+                    $newFeatures = array_merge($currentFeatures, $missingFeatures);
+                    $plan->features = array_values(array_unique($newFeatures));
+                    $plan->save();
+                    
+                    // Clear plan cache
+                    \Illuminate\Support\Facades\Cache::forget("subscription_plan_{$plan->id}");
+                    \Illuminate\Support\Facades\Cache::forget('active_subscription_plans');
+                }
+            }
+
             // If branch_id is provided, assign staff to the branch using pivot table
             if ($request->filled('branch_id')) {
                 $selectedBranch = Branch::find($request->input('branch_id'));

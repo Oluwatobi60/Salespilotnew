@@ -66,6 +66,31 @@ class AppServiceProvider extends ServiceProvider
                 Config::set('app.currency', $currency);
             }
 
+            // Apply Paystack keys dynamically
+            $paystackPublicKey = AppSetting::get('paystack_public_key');
+            if ($paystackPublicKey) {
+                Config::set('services.paystack.public_key', $paystackPublicKey);
+            }
+            $paystackSecretKey = AppSetting::get('paystack_secret_key');
+            if ($paystackSecretKey) {
+                Config::set('services.paystack.secret_key', $paystackSecretKey);
+            }
+
+            // Apply password validation rules dynamically
+            $minL = (int) AppSetting::get('password_min_length', 8);
+            $requireStrong = AppSetting::get('require_strong_password');
+            
+            \Illuminate\Validation\Rules\Password::defaults(function () use ($minL, $requireStrong) {
+                $rule = \Illuminate\Validation\Rules\Password::min($minL);
+                if ($requireStrong == '1' || $requireStrong === true) {
+                    $rule->letters()
+                         ->mixedCase()
+                         ->numbers()
+                         ->symbols();
+                }
+                return $rule;
+            });
+
         } catch (\Exception $e) {
             // Silently fail to avoid breaking the application
             // This can happen during initial setup or migrations

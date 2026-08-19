@@ -201,6 +201,9 @@ use App\Models\AppSetting;
                                     {{ $setting->value == '1' ? 'Active' : 'Inactive' }}
                                 </span>
                             </div>
+                        @elseif($setting->type === 'password')
+                            <input type="password" class="form-control premium-input" name="settings[{{ $setting->key }}]"
+                                value="{{ $setting->value }}" placeholder="••••••••">
                         @else
                             <input type="text" class="form-control premium-input" name="settings[{{ $setting->key }}]"
                                 value="{{ $setting->value }}" placeholder="{{ $setting->label }}">

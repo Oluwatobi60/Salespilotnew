@@ -66,7 +66,7 @@
 
 <nav class="sidebar sidebar-offcanvas" id="sidebar">
   <ul class="nav">
-    @if(user_has_feature('staff_pos', $staff))
+    @if(user_has_feature('pos_system', $staff))
       <li class="nav-item">
         <a class="nav-link" href="{{ route('staff.sell_product') }}">
           <i class="menu-icon bi bi-house-door-fill"></i>
@@ -79,8 +79,7 @@
 
     @php
       // Check if staff has any report features
-      $hasAnySalesReport = user_has_feature('staff_sales_summary', $staff) 
-        || user_has_feature('staff_sales_by_item', $staff);
+      $hasAnySalesReport = user_has_feature('basic_reports', $staff);
     @endphp
     
     @if($hasAnySalesReport)
@@ -92,7 +91,7 @@
         </a>
         <div class="collapse" id="sales-menu">
           <ul class="nav flex-column sub-menu">
-            @if(user_has_feature('staff_sales_summary', $staff))
+            @if(user_has_feature('basic_reports', $staff))
               <li class="nav-item"> <a class="nav-link" href="{{ route('staff.completed_sales') }}">Completed Sales</a></li>
             @endif
           </ul>
@@ -100,7 +99,7 @@
       </li>
     @endif
 
-    @if(user_has_feature('staff_pos', $staff))
+    @if(user_has_feature('pos_system', $staff))
       <li class="nav-item">
         <a class="nav-link" href="{{ route('staff.view_saved_carts') }}">
           <i class="menu-icon bi bi-bookmark-fill"></i>
@@ -109,7 +108,7 @@
       </li>
     @endif
 
-    @if(user_has_feature('staff_customers', $staff))
+    @if(user_has_feature('customer_management', $staff))
       <li class="nav-item">
         <a class="nav-link" href="{{ route('staff.customers') }}">
           <i class="menu-icon bi bi-people-fill"></i>
@@ -380,6 +379,9 @@
       </div>
     </div>
     <!-- end of item type selection modal -->
+
+    {{-- AI POS Copilot Chat Interface --}}
+   {{--  <x-copilot-modal /> --}}
 
   </body>
 </html>

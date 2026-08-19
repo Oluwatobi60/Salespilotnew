@@ -74,7 +74,12 @@ Add Item Standard
                           <div class="row">
                             <div class="col-md-6">
                               <div class="form-group">
-                                <label for="category" class="form-label required-field">Category</label>
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                  <label for="category" class="form-label required-field mb-0">Category</label>
+                                  <button type="button" class="btn btn-xs btn-outline-info py-0 px-2 rounded-pill" style="font-size: 0.75rem;" onclick="suggestCategoryWithAI()">
+                                    <i class="mdi mdi-robot"></i> ✨ Auto Suggest
+                                  </button>
+                                </div>
                                 <select class="form-select" id="category" name="category" required>
                                   <option value="">Select Category</option>
                                    @foreach($categories as $category)
@@ -150,7 +155,12 @@ Add Item Standard
                           <div class="row">
                             <div class="col-md-12">
                               <div class="form-group">
-                                <label for="description" class="form-label">Description</label>
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                  <label for="description" class="form-label mb-0">Description</label>
+                                  <button type="button" class="btn btn-xs btn-outline-info py-0 px-2 rounded-pill" style="font-size: 0.75rem;" onclick="generateDescriptionWithAI()">
+                                    <i class="mdi mdi-robot"></i> ✨ Write with AI
+                                  </button>
+                                </div>
                                 <textarea class="form-control" id="description" name="description" rows="4" placeholder="Enter item description"></textarea>
                               </div>
                             </div>
@@ -264,7 +274,12 @@ Add Item Standard
                           <div id="fixedFields" class="pricing-fields row" style="display: flex;">
                             <div class="col-md-3">
                               <div class="form-group">
-                                <label for="costPrice" class="form-label required-field">Cost Price</label>
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                  <label for="costPrice" class="form-label required-field mb-0">Cost Price</label>
+                                  <button type="button" class="btn btn-xs btn-outline-info py-0 px-2 rounded-pill" style="font-size: 0.75rem;" onclick="recommendPriceWithAI()">
+                                    <i class="mdi mdi-robot"></i> ✨ AI Suggest
+                                  </button>
+                                </div>
                                 <div class="input-group">
                                   <span class="input-group-text">₦</span>
                                   <input type="number" class="form-control" id="costPrice" name="cost_price" placeholder="0.00" step="0.01" min="0" required>
@@ -558,6 +573,258 @@ Add Item Standard
        <script src="{{ asset('manager_asset/js/components/supplier-panel.js') }}"></script>
        <script src="{{ asset('manager_asset/js/components/unit-panel.js') }}"></script>
        <script src="{{ asset('manager_asset/js/add_item_standard.js') }}"></script>
+        <script>
+        // AI Category Tagging
+        function suggestCategoryWithAI() {
+            const itemName = document.getElementById('itemName').value;
+            const description = document.getElementById('description').value;
+
+            if (!itemName) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Item Name Required',
+                    text: 'Please fill in the item name before asking for category suggestions.',
+                    confirmButtonColor: '#007bff'
+                });
+                return;
+            }
+
+            const btn = event.currentTarget || document.activeElement;
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Tagging...';
+
+            fetch('{{ route("manager.ai.suggest-category") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    item_name: itemName,
+                    description: description
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success && data.category_id) {
+                    document.getElementById('category').value = data.category_id;
+                    document.getElementById('category').dispatchEvent(new Event('change'));
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Category Suggested!',
+                        text: 'Category successfully suggested and selected based on your item details.',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'No Confidence Match',
+                        text: data.message || 'AI could not confidently match this item to any existing category.',
+                        confirmButtonColor: '#007bff'
+                    });
+                }
+            })
+            .catch(err => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'AI Request Failed',
+                    text: err.message || 'Failed to communicate with AI service.',
+                    confirmButtonColor: '#007bff'
+                });
+            })
+            .finally(() => {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            });
+        }
+
+        // AI Description Copywriter
+        function generateDescriptionWithAI() {
+            const itemName = document.getElementById('itemName').value;
+            const categoryId = document.getElementById('category').value;
+
+            if (!itemName) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Item Name Required',
+                    text: 'Please enter the item name so the AI copywriter knows what to describe.',
+                    confirmButtonColor: '#007bff'
+                });
+                return;
+            }
+
+            const btn = event.currentTarget || document.activeElement;
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Writing...';
+
+            fetch('{{ route("manager.ai.generate-description") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    item_name: itemName,
+                    category_id: categoryId ? parseInt(categoryId) : null
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success && data.description) {
+                    document.getElementById('description').value = data.description;
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Description Generated!',
+                        text: 'Engaging description has been copied to the textarea.',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Generation Failed',
+                        text: data.message || 'AI copywriter failed to write a description.',
+                        confirmButtonColor: '#007bff'
+                    });
+                }
+            })
+            .catch(err => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'AI Request Failed',
+                    text: err.message || 'Failed to communicate with AI copywriter service.',
+                    confirmButtonColor: '#007bff'
+                });
+            })
+            .finally(() => {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            });
+        }
+
+        // AI Pricing Recommendation
+        function recommendPriceWithAI() {
+            const itemName = document.getElementById('itemName').value;
+            const categoryId = document.getElementById('category').value;
+            
+            // Get cost price depending on which field is currently active
+            let costPrice = null;
+            const pricingType = document.querySelector('input[name="pricing_type"]:checked').value;
+            
+            if (pricingType === 'fixed') {
+                costPrice = document.getElementById('costPrice').value;
+            } else if (pricingType === 'margin') {
+                costPrice = document.getElementById('marginCostPrice').value;
+            } else if (pricingType === 'range') {
+                costPrice = document.getElementById('rangeCostPrice').value;
+            } else {
+                costPrice = document.getElementById('costPrice').value; // fallback
+            }
+
+            if (!itemName) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Item Name Required',
+                    text: 'Please enter the item name first.',
+                    confirmButtonColor: '#007bff'
+                });
+                return;
+            }
+
+            if (!costPrice || isNaN(parseFloat(costPrice))) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Cost Price Required',
+                    text: 'Please fill in a valid cost price first so the AI can suggest retail pricing.',
+                    confirmButtonColor: '#007bff'
+                });
+                return;
+            }
+
+            const btn = event.currentTarget || document.activeElement;
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Analyzing...';
+
+            fetch('{{ route("manager.ai.recommend-price") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    item_name: itemName,
+                    cost_price: parseFloat(costPrice),
+                    category_id: categoryId ? parseInt(categoryId) : null
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        title: 'AI Price Recommendations',
+                        html: `<div class="text-start">
+                                <p><strong>Suggested Retail Price:</strong> ₦${parseFloat(data.recommended_price).toLocaleString('en-US', {minimumFractionDigits: 2})}</p>
+                                <p><strong>Estimated Profit Margin:</strong> ${data.margin_percentage}%</p>
+                                <hr>
+                                <p class="text-muted" style="font-size: 0.9rem;">${data.justification}</p>
+                               </div>`,
+                        icon: 'info',
+                        showCancelButton: true,
+                        confirmButtonText: 'Apply Recommendation',
+                        cancelButtonText: 'Dismiss',
+                        confirmButtonColor: '#007bff',
+                        cancelButtonColor: '#6c757d'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            if (pricingType === 'fixed') {
+                                document.getElementById('sellingPrice').value = data.recommended_price;
+                                document.getElementById('sellingPrice').dispatchEvent(new Event('input'));
+                            } else if (pricingType === 'margin') {
+                                document.getElementById('targetMargin').value = data.margin_percentage;
+                                document.getElementById('targetMargin').dispatchEvent(new Event('input'));
+                            } else if (pricingType === 'range') {
+                                document.getElementById('minPrice').value = data.recommended_price;
+                                document.getElementById('maxPrice').value = (data.recommended_price * 1.15).toFixed(2);
+                                document.getElementById('minPrice').dispatchEvent(new Event('input'));
+                            }
+                            
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Pricing Applied!',
+                                text: 'Pricing details have been set based on the AI recommendation.',
+                                timer: 1500,
+                                showConfirmButton: false
+                            });
+                        }
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Recommendation Failed',
+                        text: data.message || 'AI was unable to generate price recommendations.',
+                        confirmButtonColor: '#007bff'
+                    });
+                }
+            })
+            .catch(err => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'AI Request Failed',
+                    text: err.message || 'Failed to communicate with pricing assistant service.',
+                    confirmButtonColor: '#007bff'
+                });
+            })
+            .finally(() => {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            });
+        }
+        </script>
 @endsection
-
-

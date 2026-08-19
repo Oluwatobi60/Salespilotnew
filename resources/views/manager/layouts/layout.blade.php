@@ -548,5 +548,8 @@
     </div>
     <!-- end of item type selection modal -->
 
+    {{-- AI POS Copilot Chat Interface --}}
+   {{--  <x-copilot-modal /> --}}
+
   </body>
 </html>
