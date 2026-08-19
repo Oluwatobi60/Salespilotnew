@@ -107,7 +107,7 @@
         <div class="col-md-3 d-flex flex-column align-items-stretch tab-section-fixed">
             <div class="nav flex-column nav-pills nav-tabs-line" id="settingsTabs" role="tablist" aria-orientation="vertical">
                 <button class="nav-link active" id="overview-tab" data-bs-toggle="pill" data-bs-target="#overview" type="button" role="tab" aria-controls="overview" aria-selected="true">System Overview</button>
-                <button class="nav-link" id="stack-tab" data-bs-toggle="pill" data-bs-target="#stack" type="button" role="tab" aria-controls="stack" aria-selected="false">Stack Version</button>
+              {{--   <button class="nav-link" id="stack-tab" data-bs-toggle="pill" data-bs-target="#stack" type="button" role="tab" aria-controls="stack" aria-selected="false">Stack Version</button> --}}
                 <button class="nav-link" id="preferences-tab" data-bs-toggle="pill" data-bs-target="#preferences" type="button" role="tab" aria-controls="preferences" aria-selected="false">Global Preferences</button>
                 <button class="nav-link" id="branches-tab" data-bs-toggle="pill" data-bs-target="#branches" type="button" role="tab" aria-controls="branches" aria-selected="false">All Branches</button>
                 <button class="nav-link" id="staffs-tab" data-bs-toggle="pill" data-bs-target="#staffs" type="button" role="tab" aria-controls="staffs" aria-selected="false">All Staff</button>
@@ -159,7 +159,7 @@
                 </div>
 
                 <!-- Stack Version -->
-                <div class="tab-pane fade" id="stack" role="tabpanel" aria-labelledby="stack-tab">
+                {{-- <div class="tab-pane fade" id="stack" role="tabpanel" aria-labelledby="stack-tab">
                     <div class="tab-pane-content">
                         <h5 class="mb-4" style="color:#007bff;font-weight:600;">Technology Stack Version</h5>
 
@@ -236,13 +236,13 @@
                             <div class="alert alert-info mt-3" role="alert">
                                 <i class="bi bi-info-circle me-2"></i>
                                 <strong>Debug Mode:</strong> {{ $stackVersions['debug_mode'] }}
-                                @if($stackVersions['debug_mode'] === 'Enabled')
+                                @if($stackVersions['debug_mode'] === 'Enable')
                                     <span class="badge bg-warning text-dark ms-2">Warning: Disable in production!</span>
                                 @endif
                             </div>
                         </div>
                     </div>
-                </div>
+                </div> --}}
 
                 <!-- Global Preferences -->
                 <div class="tab-pane fade" id="preferences" role="tabpanel" aria-labelledby="preferences-tab">
