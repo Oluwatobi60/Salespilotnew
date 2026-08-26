@@ -51,18 +51,41 @@ sleep 15
 
 echo ""
 echo "6. Running Laravel commands..."
-docker-compose exec -T php php artisan storage:link 2>/dev/null || echo "Storage link already exists"
-docker-compose exec -T php php artisan migrate --force
-docker-compose exec -T php php artisan config:clear
-docker-compose exec -T php php artisan cache:clear
-docker-compose exec -T php php artisan route:clear
-docker-compose exec -T php php artisan view:clear
-docker-compose exec -T php php artisan optimize
+echo "Installing Composer dependencies..."
+docker-compose exec -T php composer install --no-interaction --optimize-autoloader || \
+docker-compose exec -T app composer install --no-interaction --optimize-autoloader || \
+echo "⚠️  Composer install failed or service not found"
+
+docker-compose exec -T php php artisan storage:link 2>/dev/null || \
+docker-compose exec -T app php artisan storage:link 2>/dev/null || \
+echo "Storage link already exists or setup completed"
+
+docker-compose exec -T php php artisan migrate --force || \
+docker-compose exec -T app php artisan migrate --force
+
+docker-compose exec -T php php artisan config:clear || \
+docker-compose exec -T app php artisan config:clear
+
+docker-compose exec -T php php artisan cache:clear || \
+docker-compose exec -T app php artisan cache:clear
+
+docker-compose exec -T php php artisan route:clear || \
+docker-compose exec -T app php artisan route:clear
+
+docker-compose exec -T php php artisan view:clear || \
+docker-compose exec -T app php artisan view:clear
+
+docker-compose exec -T php php artisan optimize || \
+docker-compose exec -T app php artisan optimize
 
 echo ""
 echo "7. Setting permissions..."
-docker-compose exec -T php chmod -R 775 storage bootstrap/cache
-docker-compose exec -T php chmod -R 775 public/uploads/item_images public/uploads/staff_photos public/uploads/business_logos public/business_logos 2>/dev/null || echo "Upload folders already writable"
+docker-compose exec -T php chmod -R 775 storage bootstrap/cache || \
+docker-compose exec -T app chmod -R 775 storage bootstrap/cache
+
+docker-compose exec -T php chmod -R 775 public/uploads/item_images public/uploads/staff_photos public/uploads/business_logos public/business_logos 2>/dev/null || \
+docker-compose exec -T app chmod -R 775 public/uploads/item_images public/uploads/staff_photos public/uploads/business_logos public/business_logos 2>/dev/null || \
+echo "Upload folders already writable"
 
 echo ""
 echo "6. Verifying deployment..."

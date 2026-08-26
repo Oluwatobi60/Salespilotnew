@@ -20,10 +20,24 @@ docker-compose restart
 
 echo ""
 echo "4. Laravel setup..."
-docker-compose exec -T php php artisan storage:link 2>/dev/null || echo "Storage link exists"
-docker-compose exec -T php php artisan migrate --force
-docker-compose exec -T php php artisan optimize
-docker-compose exec -T php chmod -R 775 storage bootstrap/cache public/uploads/item_images public/uploads/staff_photos public/uploads/business_logos public/business_logos 2>/dev/null
+echo "Installing Composer dependencies..."
+docker-compose exec -T php composer install --no-interaction --optimize-autoloader || \
+docker-compose exec -T app composer install --no-interaction --optimize-autoloader || \
+echo "⚠️  Composer install failed or service not found"
+
+docker-compose exec -T php php artisan storage:link 2>/dev/null || \
+docker-compose exec -T app php artisan storage:link 2>/dev/null || \
+echo "Storage link exists or setup completed"
+
+docker-compose exec -T php php artisan migrate --force || \
+docker-compose exec -T app php artisan migrate --force
+
+docker-compose exec -T php php artisan optimize || \
+docker-compose exec -T app php artisan optimize
+
+docker-compose exec -T php chmod -R 775 storage bootstrap/cache public/uploads/item_images public/uploads/staff_photos public/uploads/business_logos public/business_logos 2>/dev/null || \
+docker-compose exec -T app chmod -R 775 storage bootstrap/cache public/uploads/item_images public/uploads/staff_photos public/uploads/business_logos public/business_logos 2>/dev/null || \
+echo "Permissions update finished"
 
 echo ""
 echo "5. Wait and check..."

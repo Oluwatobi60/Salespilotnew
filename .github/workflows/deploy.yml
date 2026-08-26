@@ -69,6 +69,28 @@ jobs:
             docker-compose stop 2>/dev/null
             docker-compose up -d --build
           }
+
+          echo ""
+          echo "Running post-deployment steps..."
+          echo "Installing Composer dependencies..."
+          docker-compose exec -T php composer install --no-interaction --optimize-autoloader 2>/dev/null || \
+          docker-compose exec -T app composer install --no-interaction --optimize-autoloader 2>/dev/null || \
+          echo "⚠️ Composer install failed or service not found"
+
+          echo "Running database migrations..."
+          docker-compose exec -T php php artisan migrate --force 2>/dev/null || \
+          docker-compose exec -T app php artisan migrate --force 2>/dev/null || \
+          echo "⚠️ Migrations failed"
+
+          echo "Optimizing application cache..."
+          docker-compose exec -T php php artisan optimize 2>/dev/null || \
+          docker-compose exec -T app php artisan optimize 2>/dev/null || \
+          echo "⚠️ Optimize failed"
+
+          echo "Setting folder permissions..."
+          docker-compose exec -T php chmod -R 775 storage bootstrap/cache 2>/dev/null || \
+          docker-compose exec -T app chmod -R 775 storage bootstrap/cache 2>/dev/null || \
+          echo "⚠️ Permissions setup failed"
           
           echo ""
           echo "5. Verify..."
