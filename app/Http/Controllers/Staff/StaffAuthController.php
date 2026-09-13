@@ -3,13 +3,13 @@
 namespace App\Http\Controllers\Staff;
 
 use App\Http\Controllers\Controller;
+use App\Models\Branch\Branch;
+use App\Models\Staffs;
+use App\Models\User;
+use App\Models\UserSubscription;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\UserSubscription;
-use App\Models\User;
-use App\Models\Staffs;
-use App\Models\Branch\Branch;
-use Carbon\Carbon;
 
 class StaffAuthController extends Controller
 {
@@ -35,9 +35,10 @@ class StaffAuthController extends Controller
 
         // Check if staff exists and is locked
         $staff = \App\Models\Staffs::where($fieldType, $loginField)->first();
-        
+
         if ($staff && method_exists($staff, 'isLocked') && $staff->isLocked()) {
             $minutes = $staff->getRemainingLockTimeMinutes();
+
             return back()->withErrors([
                 'login' => "Account is locked due to too many failed login attempts. Please try again in {$minutes} minutes.",
             ])->withInput($request->only('login'));
@@ -61,10 +62,11 @@ class StaffAuthController extends Controller
             $staff = Auth::guard('staff')->user();
 
             // Prevent login if status is 0 or not active
-            if (!$staff->status || $staff->status == 0 || $staff->status === 'Inactive') {
+            if (! $staff->status || $staff->status == 0 || $staff->status === 'Inactive') {
                 Auth::guard('staff')->logout();
                 $request->session()->invalidate();
                 $request->session()->regenerateToken();
+
                 return back()->withErrors([
                     'login' => 'Your account is disabled. Please contact your manager.',
                 ])->withInput($request->only('login'));
@@ -83,7 +85,7 @@ class StaffAuthController extends Controller
                         ->with('subscriptionPlan')
                         ->first();
 
-                    if (!$subscription) {
+                    if (! $subscription) {
                         // Manager's subscription is expired or inactive
                         Auth::guard('staff')->logout();
                         $request->session()->invalidate();
@@ -96,13 +98,14 @@ class StaffAuthController extends Controller
 
                     // For non-basic subscriptions, check if staff is assigned to an active branch
                     $planName = strtolower($subscription->subscriptionPlan->name ?? '');
-                    if (!in_array($planName, ['free', 'basic'])) {
+                    if (! in_array($planName, ['free', 'basic'])) {
                         // Standard, Premium, and other plans require active branch assignment
                         $activeBranches = $staff->branches()->where('status', 1)->count();
                         if ($activeBranches === 0) {
                             Auth::guard('staff')->logout();
                             $request->session()->invalidate();
                             $request->session()->regenerateToken();
+
                             return back()->withErrors([
                                 'login' => 'Your assigned branch is currently inactive. Please contact your manager.',
                             ])->withInput($request->only('login'));
@@ -129,14 +132,15 @@ class StaffAuthController extends Controller
                 'ip_address' => $request->ip(),
             ];
             \App\Helpers\ActivityLogger::log('login', json_encode($details));
+
             return redirect()->intended('/staff/dashboard');
         }
-        
+
         // Track failed login attempt
         if ($staff && method_exists($staff, 'incrementFailedLoginAttempts')) {
             $staff->incrementFailedLoginAttempts();
             $remaining = $staff->getRemainingAttempts();
-            
+
             if ($remaining > 0) {
                 return back()->withErrors([
                     'login' => "Invalid credentials or inactive account. You have {$remaining} attempts remaining.",
@@ -147,7 +151,7 @@ class StaffAuthController extends Controller
                 ])->withInput($request->only('login'));
             }
         }
-        
+
         return back()->withErrors([
             'login' => 'Invalid credentials or inactive account.',
         ])->withInput($request->only('login', 'remember'));
@@ -158,6 +162,7 @@ class StaffAuthController extends Controller
         Auth::guard('staff')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+
         return redirect('/staff/login');
     }
 }

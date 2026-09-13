@@ -9,12 +9,12 @@
 
 use App\Models\AppSetting;
 
-if (!function_exists('setting')) {
+if (! function_exists('setting')) {
     /**
      * Get a setting value by key
      *
-     * @param string $key Setting key
-     * @param mixed $default Default value if setting not found
+     * @param  string  $key  Setting key
+     * @param  mixed  $default  Default value if setting not found
      * @return mixed
      */
     function setting(string $key, $default = null)
@@ -23,11 +23,11 @@ if (!function_exists('setting')) {
     }
 }
 
-if (!function_exists('settings')) {
+if (! function_exists('settings')) {
     /**
      * Get settings by group
      *
-     * @param string|null $group Group name (null for all)
+     * @param  string|null  $group  Group name (null for all)
      * @return \Illuminate\Support\Collection|array
      */
     function settings(?string $group = null)
@@ -40,13 +40,12 @@ if (!function_exists('settings')) {
     }
 }
 
-if (!function_exists('update_setting')) {
+if (! function_exists('update_setting')) {
     /**
      * Update a setting value
      *
-     * @param string $key Setting key
-     * @param mixed $value New value
-     * @return bool
+     * @param  string  $key  Setting key
+     * @param  mixed  $value  New value
      */
     function update_setting(string $key, $value): bool
     {
@@ -54,11 +53,9 @@ if (!function_exists('update_setting')) {
     }
 }
 
-if (!function_exists('app_name')) {
+if (! function_exists('app_name')) {
     /**
      * Get the application name
-     *
-     * @return string
      */
     function app_name(): string
     {
@@ -66,37 +63,33 @@ if (!function_exists('app_name')) {
     }
 }
 
-if (!function_exists('app_logo')) {
+if (! function_exists('app_logo')) {
     /**
      * Get the application logo URL
-     *
-     * @return string
      */
     function app_logo(): string
     {
         $logo = setting('logo_url');
-        return $logo ? asset('storage/' . $logo) : asset('manager_asset/images/salespilot logo1.png');
+
+        return $logo ? asset('storage/'.$logo) : asset('manager_asset/images/salespilot logo1.png');
     }
 }
 
-if (!function_exists('app_favicon')) {
+if (! function_exists('app_favicon')) {
     /**
      * Get the application favicon URL
-     *
-     * @return string
      */
     function app_favicon(): string
     {
         $favicon = setting('favicon_url');
-        return $favicon ? asset('storage/' . $favicon) : asset('manager_asset/images/favicon.png');
+
+        return $favicon ? asset('storage/'.$favicon) : asset('manager_asset/images/favicon.png');
     }
 }
 
-if (!function_exists('is_maintenance_mode')) {
+if (! function_exists('is_maintenance_mode')) {
     /**
      * Check if application is in maintenance mode
-     *
-     * @return bool
      */
     function is_maintenance_mode(): bool
     {
@@ -104,11 +97,9 @@ if (!function_exists('is_maintenance_mode')) {
     }
 }
 
-if (!function_exists('support_email')) {
+if (! function_exists('support_email')) {
     /**
      * Get support email address
-     *
-     * @return string
      */
     function support_email(): string
     {
@@ -116,11 +107,9 @@ if (!function_exists('support_email')) {
     }
 }
 
-if (!function_exists('support_phone')) {
+if (! function_exists('support_phone')) {
     /**
      * Get support phone number
-     *
-     * @return string
      */
     function support_phone(): string
     {
@@ -128,11 +117,9 @@ if (!function_exists('support_phone')) {
     }
 }
 
-if (!function_exists('primary_color')) {
+if (! function_exists('primary_color')) {
     /**
      * Get primary brand color
-     *
-     * @return string
      */
     function primary_color(): string
     {
@@ -140,11 +127,9 @@ if (!function_exists('primary_color')) {
     }
 }
 
-if (!function_exists('secondary_color')) {
+if (! function_exists('secondary_color')) {
     /**
      * Get secondary brand color
-     *
-     * @return string
      */
     function secondary_color(): string
     {
@@ -152,11 +137,9 @@ if (!function_exists('secondary_color')) {
     }
 }
 
-if (!function_exists('is_registration_enabled')) {
+if (! function_exists('is_registration_enabled')) {
     /**
      * Check if new user registration is enabled
-     *
-     * @return bool
      */
     function is_registration_enabled(): bool
     {
@@ -164,11 +147,9 @@ if (!function_exists('is_registration_enabled')) {
     }
 }
 
-if (!function_exists('currency_symbol')) {
+if (! function_exists('currency_symbol')) {
     /**
      * Get currency symbol
-     *
-     * @return string
      */
     function currency_symbol(): string
     {
@@ -176,11 +157,9 @@ if (!function_exists('currency_symbol')) {
     }
 }
 
-if (!function_exists('currency_code')) {
+if (! function_exists('currency_code')) {
     /**
      * Get currency code
-     *
-     * @return string
      */
     function currency_code(): string
     {
@@ -188,11 +167,9 @@ if (!function_exists('currency_code')) {
     }
 }
 
-if (!function_exists('default_currency')) {
+if (! function_exists('default_currency')) {
     /**
      * Get default system currency
-     *
-     * @return string
      */
     function default_currency(): string
     {
@@ -200,11 +177,9 @@ if (!function_exists('default_currency')) {
     }
 }
 
-if (!function_exists('default_timezone')) {
+if (! function_exists('default_timezone')) {
     /**
      * Get default system timezone
-     *
-     * @return string
      */
     function default_timezone(): string
     {
@@ -212,11 +187,9 @@ if (!function_exists('default_timezone')) {
     }
 }
 
-if (!function_exists('system_date_format')) {
+if (! function_exists('system_date_format')) {
     /**
      * Get system date format
-     *
-     * @return string
      */
     function system_date_format(): string
     {
@@ -224,11 +197,9 @@ if (!function_exists('system_date_format')) {
     }
 }
 
-if (!function_exists('system_time_format')) {
+if (! function_exists('system_time_format')) {
     /**
      * Get system time format
-     *
-     * @return string
      */
     function system_time_format(): string
     {
@@ -236,23 +207,19 @@ if (!function_exists('system_time_format')) {
     }
 }
 
-if (!function_exists('system_datetime_format')) {
+if (! function_exists('system_datetime_format')) {
     /**
      * Get system datetime format
-     *
-     * @return string
      */
     function system_datetime_format(): string
     {
-        return system_date_format() . ' ' . system_time_format();
+        return system_date_format().' '.system_time_format();
     }
 }
 
-if (!function_exists('items_per_page')) {
+if (! function_exists('items_per_page')) {
     /**
      * Get default items per page for pagination
-     *
-     * @return int
      */
     function items_per_page(): int
     {
@@ -260,11 +227,9 @@ if (!function_exists('items_per_page')) {
     }
 }
 
-if (!function_exists('session_timeout')) {
+if (! function_exists('session_timeout')) {
     /**
      * Get session timeout in minutes
-     *
-     * @return int
      */
     function session_timeout(): int
     {
@@ -272,11 +237,9 @@ if (!function_exists('session_timeout')) {
     }
 }
 
-if (!function_exists('max_upload_size')) {
+if (! function_exists('max_upload_size')) {
     /**
      * Get maximum upload size in KB
-     *
-     * @return int
      */
     function max_upload_size(): int
     {
@@ -284,11 +247,9 @@ if (!function_exists('max_upload_size')) {
     }
 }
 
-if (!function_exists('max_upload_size_mb')) {
+if (! function_exists('max_upload_size_mb')) {
     /**
      * Get maximum upload size in MB
-     *
-     * @return float
      */
     function max_upload_size_mb(): float
     {
@@ -296,32 +257,33 @@ if (!function_exists('max_upload_size_mb')) {
     }
 }
 
-if (!function_exists('allowed_file_types')) {
+if (! function_exists('allowed_file_types')) {
     /**
      * Get allowed file types as array
-     *
-     * @return array
      */
     function allowed_file_types(): array
     {
         $types = setting('allowed_file_types', 'jpg,jpeg,png,pdf');
+
         return array_map('trim', explode(',', $types));
     }
 }
 
-if (!function_exists('format_date')) {
+if (! function_exists('format_date')) {
     /**
      * Format a date according to system settings
      *
-     * @param mixed $date Date string or Carbon instance
-     * @return string
+     * @param  mixed  $date  Date string or Carbon instance
      */
     function format_date($date): string
     {
-        if (!$date) return '';
+        if (! $date) {
+            return '';
+        }
 
         try {
             $carbon = $date instanceof \Carbon\Carbon ? $date : \Carbon\Carbon::parse($date);
+
             return $carbon->format(system_date_format());
         } catch (\Exception $e) {
             return (string) $date;
@@ -329,19 +291,21 @@ if (!function_exists('format_date')) {
     }
 }
 
-if (!function_exists('format_time')) {
+if (! function_exists('format_time')) {
     /**
      * Format a time according to system settings
      *
-     * @param mixed $time Time string or Carbon instance
-     * @return string
+     * @param  mixed  $time  Time string or Carbon instance
      */
     function format_time($time): string
     {
-        if (!$time) return '';
+        if (! $time) {
+            return '';
+        }
 
         try {
             $carbon = $time instanceof \Carbon\Carbon ? $time : \Carbon\Carbon::parse($time);
+
             return $carbon->format(system_time_format());
         } catch (\Exception $e) {
             return (string) $time;
@@ -349,19 +313,21 @@ if (!function_exists('format_time')) {
     }
 }
 
-if (!function_exists('format_datetime')) {
+if (! function_exists('format_datetime')) {
     /**
      * Format a datetime according to system settings
      *
-     * @param mixed $datetime Datetime string or Carbon instance
-     * @return string
+     * @param  mixed  $datetime  Datetime string or Carbon instance
      */
     function format_datetime($datetime): string
     {
-        if (!$datetime) return '';
+        if (! $datetime) {
+            return '';
+        }
 
         try {
             $carbon = $datetime instanceof \Carbon\Carbon ? $datetime : \Carbon\Carbon::parse($datetime);
+
             return $carbon->format(system_datetime_format());
         } catch (\Exception $e) {
             return (string) $datetime;
@@ -369,36 +335,35 @@ if (!function_exists('format_datetime')) {
     }
 }
 
-if (!function_exists('is_allowed_file')) {
+if (! function_exists('is_allowed_file')) {
     /**
      * Check if a file extension is allowed
      *
-     * @param string $filename Filename or extension
-     * @return bool
+     * @param  string  $filename  Filename or extension
      */
     function is_allowed_file(string $filename): bool
     {
         $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+
         return in_array($extension, allowed_file_types());
     }
 }
 
-if (!function_exists('user_has_feature')) {
+if (! function_exists('user_has_feature')) {
     /**
      * Check if the authenticated user's subscription plan has a specific feature
      *
-     * @param string $featureSlug The feature slug to check
-     * @param \App\Models\User|\App\Models\Staffs|null $user Optional user (defaults to authenticated user)
-     * @return bool
+     * @param  string  $featureSlug  The feature slug to check
+     * @param  \App\Models\User|\App\Models\Staffs|null  $user  Optional user (defaults to authenticated user)
      */
     function user_has_feature(string $featureSlug, $user = null): bool
     {
         // Get user (passed or authenticated)
-        if (!$user) {
+        if (! $user) {
             $user = auth()->user();
         }
 
-        if (!$user) {
+        if (! $user) {
             return false;
         }
 
@@ -407,13 +372,13 @@ if (!function_exists('user_has_feature')) {
             // Staff users inherit features from their manager/business creator
             $parentUser = \App\Models\User::where('email', $user->manager_email)->first();
 
-            if (!$parentUser) {
+            if (! $parentUser) {
                 return false;
             }
 
             // Get parent user's subscription
             $subscription = $parentUser->currentSubscription()->first();
-        } elseif ($user instanceof \App\Models\User && $user->role === 'manager' && !empty($user->addby)) {
+        } elseif ($user instanceof \App\Models\User && $user->role === 'manager' && ! empty($user->addby)) {
             // Managers created by another user inherit the creator's subscription
             $parentUser = \App\Models\User::where('email', $user->addby)
                 ->orWhere('id', $user->addby)
@@ -431,7 +396,7 @@ if (!function_exists('user_has_feature')) {
             $subscription = $user->currentSubscription()->first();
         }
 
-        if (!$subscription || !$subscription->subscriptionPlan) {
+        if (! $subscription || ! $subscription->subscriptionPlan) {
             return false;
         }
 
@@ -440,13 +405,12 @@ if (!function_exists('user_has_feature')) {
     }
 }
 
-if (!function_exists('plan_has_feature')) {
+if (! function_exists('plan_has_feature')) {
     /**
      * Check if a subscription plan has a specific feature
      *
-     * @param \App\Models\SubscriptionPlan|int $plan Plan model or ID
-     * @param string $featureSlug The feature slug to check
-     * @return bool
+     * @param  \App\Models\SubscriptionPlan|int  $plan  Plan model or ID
+     * @param  string  $featureSlug  The feature slug to check
      */
     function plan_has_feature($plan, string $featureSlug): bool
     {
@@ -454,7 +418,7 @@ if (!function_exists('plan_has_feature')) {
             $plan = \App\Models\SubscriptionPlan::find($plan);
         }
 
-        if (!$plan) {
+        if (! $plan) {
             return false;
         }
 
@@ -462,26 +426,26 @@ if (!function_exists('plan_has_feature')) {
     }
 }
 
-if (!function_exists('user_subscription_features')) {
+if (! function_exists('user_subscription_features')) {
     /**
      * Get all enabled features for the authenticated user's subscription
      *
-     * @param \App\Models\User|null $user Optional user (defaults to authenticated user)
+     * @param  \App\Models\User|null  $user  Optional user (defaults to authenticated user)
      * @return array Array of feature slugs
      */
     function user_subscription_features($user = null): array
     {
         // Get user (passed or authenticated)
-        if (!$user) {
+        if (! $user) {
             $user = auth()->user();
         }
 
-        if (!$user) {
+        if (! $user) {
             return [];
         }
 
         // If this is a manager created by another user, inherit the creator's subscription
-        if ($user instanceof \App\Models\User && $user->role === 'manager' && !empty($user->addby)) {
+        if ($user instanceof \App\Models\User && $user->role === 'manager' && ! empty($user->addby)) {
             $parentUser = \App\Models\User::where('email', $user->addby)
                 ->orWhere('id', $user->addby)
                 ->first();
@@ -496,7 +460,7 @@ if (!function_exists('user_subscription_features')) {
             $subscription = $user->currentSubscription()->first();
         }
 
-        if (!$subscription || !$subscription->subscriptionPlan) {
+        if (! $subscription || ! $subscription->subscriptionPlan) {
             return [];
         }
 

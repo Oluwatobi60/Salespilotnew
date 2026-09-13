@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Manager;
 
 use App\Http\Controllers\Controller;
-use App\Models\StandardItem;
-use App\Models\PricingTier;
-use App\Models\BranchInventory;
 use App\Models\Branch\Branch;
+use App\Models\BranchInventory;
+use App\Models\PricingTier;
+use App\Models\StandardItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -17,11 +17,11 @@ class StandardItemController extends Controller
     {
         try {
             // Clean profit_margin BEFORE validation
-            if ($request->has('profit_margin') && !empty($request->profit_margin)) {
+            if ($request->has('profit_margin') && ! empty($request->profit_margin)) {
                 // Remove percentage symbol and spaces from profit_margin
                 $cleanedMargin = str_replace(['%', ' '], '', $request->profit_margin);
                 // Convert to float if numeric, otherwise set to null
-                $request->merge(['profit_margin' => is_numeric($cleanedMargin) ? (float)$cleanedMargin : null]);
+                $request->merge(['profit_margin' => is_numeric($cleanedMargin) ? (float) $cleanedMargin : null]);
             }
 
             // Validate the incoming request data
@@ -47,7 +47,7 @@ class StandardItemController extends Controller
                 'max_price' => 'nullable|numeric|min:0',
                 'range_potential_profit' => 'nullable|numeric',
                 'tax_rate' => 'nullable|numeric|min:0|max:100',
-               /*  'discount' => 'nullable|numeric|min:0|max:100', */
+                /*  'discount' => 'nullable|numeric|min:0|max:100', */
                 'final_price' => 'nullable|numeric|min:0',
                 'track_stock' => 'nullable|boolean',
                 'opening_stock' => 'nullable|integer|min:0',
@@ -69,12 +69,12 @@ class StandardItemController extends Controller
 
             // Generate item code if not provided
             if (empty($validatedData['item_code'])) {
-                $validatedData['item_code'] = 'STD-' . strtoupper(substr($validatedData['item_name'], 0, 3)) . '-' . time();
+                $validatedData['item_code'] = 'STD-'.strtoupper(substr($validatedData['item_name'], 0, 3)).'-'.time();
             }
 
             // Get manager info from logged-in user
             $manager = Auth::user();
-            $managerFullName = trim(($manager->firstname ?? '') . ' ' . ($manager->othername ?? '') . ' ' . ($manager->surname ?? ''));
+            $managerFullName = trim(($manager->firstname ?? '').' '.($manager->othername ?? '').' '.($manager->surname ?? ''));
             $validatedData['business_name'] = $manager->business_name ?? null;
             $validatedData['manager_name'] = $managerFullName ?: null;
             $validatedData['manager_email'] = $manager->email ?? null;
@@ -109,7 +109,7 @@ class StandardItemController extends Controller
             if ($request->pricing_type === 'range' && $request->has('pricing_tiers')) {
                 $tiers = $request->input('pricing_tiers');
                 foreach ($tiers as $tier) {
-                    if (!empty($tier['min_quantity']) && !empty($tier['max_quantity']) && !empty($tier['price_per_unit'])) {
+                    if (! empty($tier['min_quantity']) && ! empty($tier['max_quantity']) && ! empty($tier['price_per_unit'])) {
                         PricingTier::create([
                             'standard_item_id' => $standardItem->id,
                             'min_quantity' => $tier['min_quantity'],
@@ -121,16 +121,16 @@ class StandardItemController extends Controller
             }
 
             // Redirect to dashboard with success message
-            return redirect()->route('manager')->with('success', 'Standard item "' . $standardItem->item_name . '" added successfully!');
+            return redirect()->route('manager')->with('success', 'Standard item "'.$standardItem->item_name.'" added successfully!');
 
         } catch (\Exception $e) {
             // Log the error
-            Log::error('Error creating standard item: ' . $e->getMessage());
+            Log::error('Error creating standard item: '.$e->getMessage());
 
             // Redirect back with error
             return redirect()->back()
                 ->withInput()
-                ->withErrors(['error' => 'Failed to create item: ' . $e->getMessage()]);
+                ->withErrors(['error' => 'Failed to create item: '.$e->getMessage()]);
         }
     }
 }

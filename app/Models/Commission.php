@@ -98,7 +98,7 @@ class Commission extends Model
     public function approve()
     {
         $this->update(['status' => 'approved']);
-        
+
         // Add commission directly to BRM's wallet balance
         if ($this->brm && $this->brm->wallet) {
             $this->brm->wallet->increment('balance', $this->commission_amount);

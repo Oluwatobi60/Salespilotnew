@@ -4,8 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\BranchInventory;
-use App\Models\Unit;
 
 class StandardItem extends Model
 {
@@ -72,10 +70,10 @@ class StandardItem extends Model
         /* 'discount' => 'decimal:2', */
         'final_price' => 'decimal:2',
         'expiry_date' => 'date',
-        'opening_stock' => 'integer',
-        'current_stock' => 'integer',
-        'stock_added' => 'integer',
-        'low_stock_threshold' => 'integer',
+        'opening_stock' => 'decimal:2',
+        'current_stock' => 'decimal:2',
+        'stock_added' => 'decimal:2',
+        'low_stock_threshold' => 'decimal:2',
     ];
 
     // Relationships
@@ -104,8 +102,10 @@ class StandardItem extends Model
     {
         if (is_numeric($this->category)) {
             $category = Category::find($this->category);
+
             return $category ? $category->category_name : $this->category;
         }
+
         return $this->category;
     }
 
@@ -115,9 +115,10 @@ class StandardItem extends Model
         $unitId = $this->getAttribute('unit');
         if ($unitId && is_numeric($unitId)) {
             $unit = Unit::find($unitId);
+
             return $unit ? $unit->name : 'units';
         }
+
         return 'units';
     }
 }
-

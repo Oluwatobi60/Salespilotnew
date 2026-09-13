@@ -4,8 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\BranchInventory;
-use App\Models\Unit;
 
 class VariantItem extends Model
 {
@@ -18,6 +16,7 @@ class VariantItem extends Model
     {
         return $this->hasMany(BranchInventory::class, 'item_id')->where('item_type', 'variant');
     }
+
     use SoftDeletes;
 
     protected $fillable = [
@@ -66,8 +65,10 @@ class VariantItem extends Model
     {
         if (is_numeric($this->category)) {
             $category = Category::find($this->category);
+
             return $category ? $category->category_name : $this->category;
         }
+
         return $this->category;
     }
 
@@ -77,8 +78,10 @@ class VariantItem extends Model
         $unitId = $this->getAttribute('unit');
         if ($unitId && is_numeric($unitId)) {
             $unit = Unit::find($unitId);
+
             return $unit ? $unit->name : 'units';
         }
+
         return 'units';
     }
 }

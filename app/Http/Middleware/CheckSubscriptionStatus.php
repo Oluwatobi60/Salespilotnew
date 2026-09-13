@@ -2,12 +2,12 @@
 
 namespace App\Http\Middleware;
 
-use Closure;
-use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\Response;
-use Illuminate\Support\Facades\Auth;
 use App\Models\UserSubscription;
 use Carbon\Carbon;
+use Closure;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Symfony\Component\HttpFoundation\Response;
 
 class CheckSubscriptionStatus
 {
@@ -57,15 +57,25 @@ class CheckSubscriptionStatus
                 return redirect()->route('plan_pricing')->with('redirect_to_plans', true);
             }
 
-            // No valid subscription — check if they have ever had one (not brand-new signups)
-            $hasAnySubscription = UserSubscription::where('user_id', $user->id)->exists();
+            // For managers created by another user (addby), check creator's subscription
+            if ($user->role === 'manager' && $user->addby) {
+                $creator = \App\Models\User::where('email', $user->addby)->first();
+                if ($creator) {
+                    $creatorActive = UserSubscription::where('user_id', $creator->id)
+                        ->where('status', 'active')
+                        ->where('end_date', '>=', Carbon::today())
+                        ->exists();
 
-            if ($hasAnySubscription) {
-                Auth::logout();
-                return redirect()->route('login')->withErrors([
-                    'email' => 'Your subscription has expired. Please renew to continue using SalesPilot.',
-                ])->with('redirect_to_plans', true);
+                    if ($creatorActive) {
+                        return $next($request);
+                    }
+                }
             }
+
+            // If subscription is expired or missing, redirect to pricing page while keeping session active for renewal
+            return redirect()->route('plan_pricing')->withErrors([
+                'email' => 'Your subscription has expired. Please choose a plan to continue using SalesPilot.',
+            ])->with('redirect_to_plans', true);
         }
 
         return $next($request);

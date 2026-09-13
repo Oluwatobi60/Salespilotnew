@@ -3,19 +3,18 @@
 namespace App\Http\Controllers\Manager;
 
 use App\Http\Controllers\Controller;
+use App\Mail\StaffCredentials;
+use App\Models\Branch\Branch;
+use App\Models\Staffs;
+use App\Models\UserSubscription;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
-use App\Models\Staffs;
-use App\Mail\StaffCredentials;
-use App\Models\UserSubscription;
-use App\Models\Branch\Branch;
 
 class StaffMainController extends Controller
 {
-
     public function createstaff(Request $request)
     {
         try {
@@ -54,7 +53,7 @@ class StaffMainController extends Controller
             /** @var \App\Models\User $manager */
             $manager = Auth::user();
             $validatedData['business_name'] = $manager->business_name ?? null;
-            $managerFullName = trim(($manager->firstname ?? '') . ' ' . ($manager->othername ?? '') . ' ' . ($manager->surname ?? ''));
+            $managerFullName = trim(($manager->firstname ?? '').' '.($manager->othername ?? '').' '.($manager->surname ?? ''));
             $validatedData['manager_name'] = $managerFullName ?: null;
             $validatedData['manager_email'] = $manager->email ?? null;
 
@@ -90,7 +89,7 @@ class StaffMainController extends Controller
             }
 
             // Handle file upload - SECURE: Uses Laravel's storage with auto-generated safe filename
-            if($request->hasFile('passport_photo')) {
+            if ($request->hasFile('passport_photo')) {
                 $path = $request->file('passport_photo')->store('staff_photos', 'public');
                 $validatedData['passport_photo'] = $path;
             }
@@ -112,11 +111,11 @@ class StaffMainController extends Controller
                 $currentFeatures = is_array($plan->features) ? $plan->features : [];
                 $missingFeatures = array_diff($staffFeatures, $currentFeatures);
 
-                if (!empty($missingFeatures)) {
+                if (! empty($missingFeatures)) {
                     $newFeatures = array_merge($currentFeatures, $missingFeatures);
                     $plan->features = array_values(array_unique($newFeatures));
                     $plan->save();
-                    
+
                     // Clear plan cache
                     \Illuminate\Support\Facades\Cache::forget("subscription_plan_{$plan->id}");
                     \Illuminate\Support\Facades\Cache::forget('active_subscription_plans');
@@ -146,7 +145,7 @@ class StaffMainController extends Controller
                 $emailSent = true;
                 $emailMessage = 'Login credentials have been sent to the staff member\'s email.';
             } catch (\Exception $e) {
-                $emailMessage = 'Staff created but email could not be sent: ' . $e->getMessage();
+                $emailMessage = 'Staff created but email could not be sent: '.$e->getMessage();
             }
 
             // Check if it's an AJAX request
@@ -155,7 +154,7 @@ class StaffMainController extends Controller
                     'success' => true,
                     'message' => 'Staff member added successfully!',
                     'email_sent' => $emailSent,
-                    'email_message' => $emailMessage
+                    'email_message' => $emailMessage,
                 ]);
             }
 
@@ -164,6 +163,7 @@ class StaffMainController extends Controller
             if ($emailSent) {
                 $successMessage .= ' Login credentials have been sent to their email.';
             }
+
             return redirect()->route('manager.staff')->with('success', $successMessage);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -172,7 +172,7 @@ class StaffMainController extends Controller
                 return response()->json([
                     'success' => false,
                     'message' => 'Validation failed',
-                    'errors' => $e->errors()
+                    'errors' => $e->errors(),
                 ], 422);
             }
             throw $e;
@@ -180,10 +180,11 @@ class StaffMainController extends Controller
             if ($request->expectsJson() || $request->ajax()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'An error occurred: ' . $e->getMessage()
+                    'message' => 'An error occurred: '.$e->getMessage(),
                 ], 500);
             }
-            return redirect()->back()->with('error', 'An error occurred: ' . $e->getMessage());
+
+            return redirect()->back()->with('error', 'An error occurred: '.$e->getMessage());
         }
     }
 
@@ -198,10 +199,10 @@ class StaffMainController extends Controller
             ->latest();
 
         // If user is not the business creator, only show staff from their assigned branches
-        if (!$manager->isBusinessCreator()) {
+        if (! $manager->isBusinessCreator()) {
             $managedBranchIds = \App\Models\Branch\Branch::where('manager_id', $manager->id)->pluck('id');
             if ($managedBranchIds->isNotEmpty()) {
-                $query->whereHas('branches', function($q) use ($managedBranchIds) {
+                $query->whereHas('branches', function ($q) use ($managedBranchIds) {
                     $q->whereIn('branches.id', $managedBranchIds);
                 });
             } else {
@@ -217,7 +218,7 @@ class StaffMainController extends Controller
             ->where('status', 1)
             ->withCount('staffMembers')
             ->get()
-            ->filter(function($branch) use ($manager) {
+            ->filter(function ($branch) use ($manager) {
                 // For Standard plan, limit 2 staff per branch
                 $subscription = $manager->currentSubscription()->with('subscriptionPlan')->first();
                 if ($subscription && $subscription->subscriptionPlan) {
@@ -226,6 +227,7 @@ class StaffMainController extends Controller
                         return false; // Skip branches with 2+ staff on Standard plan
                     }
                 }
+
                 return true; // Show branch
             });
 
@@ -261,7 +263,7 @@ class StaffMainController extends Controller
             ->where('status', 1)
             ->withCount('staffMembers')
             ->get()
-            ->filter(function($branch) use ($manager, $staffedit) {
+            ->filter(function ($branch) use ($manager, $staffedit) {
                 // Show current branch even if at limit
                 if ($staffedit->branches->contains($branch->id)) {
                     return true;
@@ -275,12 +277,12 @@ class StaffMainController extends Controller
                         return false; // Skip branches with 2+ staff on Standard plan
                     }
                 }
+
                 return true;
             });
 
         return view('manager.staff.edit', compact('staffedit', 'branches'));
     }
-
 
     public function updatestaff(Request $request, $id)
     {
@@ -327,14 +329,14 @@ class StaffMainController extends Controller
             // Auto-populate business_name, manager_name, and manager_email from the logged-in manager's user record
             $manager = Auth::user();
             $validatedData['business_name'] = $manager->business_name ?? null;
-            $managerFullName = trim(($manager->firstname ?? '') . ' ' . ($manager->othername ?? '') . ' ' . ($manager->surname ?? ''));
+            $managerFullName = trim(($manager->firstname ?? '').' '.($manager->othername ?? '').' '.($manager->surname ?? ''));
             $validatedData['manager_name'] = $managerFullName ?: null;
             $validatedData['manager_email'] = $manager->email ?? null;
 
             // Handle file upload
-            if($request->hasFile('passport_photo')) {
+            if ($request->hasFile('passport_photo')) {
                 // Delete old photo if exists
-                if($staff->passport_photo && Storage::disk('public')->exists($staff->passport_photo)) {
+                if ($staff->passport_photo && Storage::disk('public')->exists($staff->passport_photo)) {
                     Storage::disk('public')->delete($staff->passport_photo);
                 }
 
@@ -367,7 +369,6 @@ class StaffMainController extends Controller
         }
     }
 
-
     public function deletestaff($id)
     {
         try {
@@ -377,7 +378,7 @@ class StaffMainController extends Controller
             $staff = Staffs::where('business_name', $businessName)->findOrFail($id);
 
             // Delete passport photo if exists
-            if($staff->passport_photo && file_exists(public_path($staff->passport_photo))) {
+            if ($staff->passport_photo && file_exists(public_path($staff->passport_photo))) {
                 unlink(public_path($staff->passport_photo));
             }
 
@@ -388,11 +389,9 @@ class StaffMainController extends Controller
             return redirect()->route('manager.staff')->with('success', 'Staff member deleted successfully.');
 
         } catch (\Exception $e) {
-            return redirect()->route('manager.staff')->with('error', 'An error occurred: ' . $e->getMessage());
+            return redirect()->route('manager.staff')->with('error', 'An error occurred: '.$e->getMessage());
         }
     }
-
-
 
     public function toggleStatus(Request $request, $id)
     {
@@ -408,6 +407,7 @@ class StaffMainController extends Controller
 
         // Prepare status text for the flash message
         $statusText = ($staff->status === 'active') ? 'activated' : 'deactivated';
+
         return redirect()->back()->with('success', "Staff has been {$statusText} successfully.");
     }
 }

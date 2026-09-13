@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
+use App\Traits\TrackLoginAttempts;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use App\Traits\TrackLoginAttempts;
 
 class SuperAdmin extends Authenticatable
 {

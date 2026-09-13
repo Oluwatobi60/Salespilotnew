@@ -1,8 +1,6 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
@@ -19,7 +17,7 @@ return new class extends Migration
             'pos_system',
             'basic_reports',
             'basic_user_roles',
-            'email_support'
+            'email_support',
         ];
 
         // Basic Plan Features
@@ -28,7 +26,7 @@ return new class extends Migration
             'invoicing',
             'customer_management',
             'priority_support',
-            'manager_edit_items_features'
+            'manager_edit_items_features',
         ]);
 
         // Standard Plan Features
@@ -42,7 +40,7 @@ return new class extends Migration
             'advanced_reports',
             'export_data',
             'advanced_user_roles',
-            'manager_edit_subscription'
+            'manager_edit_subscription',
         ]);
 
         // Get all active features for Premium
@@ -53,7 +51,7 @@ return new class extends Migration
             'free' => $freeFeatures,
             'basic' => $basicFeatures,
             'standard' => $standardFeatures,
-            'premium' => $premiumFeatures
+            'premium' => $premiumFeatures,
         ];
 
         foreach ($plansFeatures as $name => $features) {
@@ -61,7 +59,7 @@ return new class extends Migration
                 ->where('name', $name)
                 ->update(['features' => json_encode(array_values(array_unique($features)))]);
         }
-        
+
         // Also clear cache for all plans so the changes take effect immediately
         // Though Cache facade cannot be used here safely without application context sometimes,
         // it's usually safe in a Laravel migration.
@@ -88,7 +86,7 @@ return new class extends Migration
                 '1 Staff Account',
                 'Basic Inventory Management',
                 'Sales Tracking',
-                'Email Support'
+                'Email Support',
             ],
             'basic' => [
                 '1 Manager/Administrator Account',
@@ -96,7 +94,7 @@ return new class extends Migration
                 'Advanced Inventory Management',
                 'Sales & Purchase Tracking',
                 'Basic Reports & Analytics',
-                'Priority Email Support'
+                'Priority Email Support',
             ],
             'standard' => [
                 '2 Manager/Administrator Accounts',
@@ -105,7 +103,7 @@ return new class extends Migration
                 'Advanced Inventory Management',
                 'Sales & Purchase Tracking',
                 'Basic Reports & Analytics',
-                'Priority Email Support'
+                'Priority Email Support',
             ],
             'premium' => [
                 '3 Manager/Administrator Accounts',
@@ -114,8 +112,8 @@ return new class extends Migration
                 'Advanced Reports & Analytics',
                 'Multi-branch Support',
                 '24/7 Priority Support',
-                'Custom Integrations'
-            ]
+                'Custom Integrations',
+            ],
         ];
 
         foreach ($plansFeatures as $name => $features) {

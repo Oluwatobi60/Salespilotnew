@@ -64,8 +64,10 @@ class BrmWallet extends Model
         if ($this->balance >= $amount) {
             $this->decrement('balance', $amount);
             $this->increment('total_withdrawn', $amount);
+
             return true;
         }
+
         return false;
     }
 }

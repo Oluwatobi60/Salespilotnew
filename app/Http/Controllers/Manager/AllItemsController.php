@@ -2,20 +2,20 @@
 
 namespace App\Http\Controllers\Manager;
 
+use App\Exports\ReportExport;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use App\Models\StandardItem;
-use App\Models\VariantItem;
+use App\Models\Branch\Branch;
+use App\Models\BranchInventory;
 use App\Models\ProductVariant;
+use App\Models\StandardItem;
 use App\Models\Supplier;
 use App\Models\Unit;
-use Illuminate\Pagination\LengthAwarePaginator;
-use App\Models\BranchInventory;
-use App\Models\Branch\Branch;
-use App\Exports\ReportExport;
-use Maatwebsite\Excel\Facades\Excel;
+use App\Models\VariantItem;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Auth;
+use Maatwebsite\Excel\Facades\Excel;
 
 class AllItemsController extends Controller
 {
@@ -35,14 +35,14 @@ class AllItemsController extends Controller
         $standardQuery = StandardItem::with([
             'supplier',
             'unit',
-            'pricingTiers'
+            'pricingTiers',
         ])->where('business_name', $businessName);
 
         // Base query for Variant Items
         $variantQuery = VariantItem::with([
             'supplier',
             'unit',
-            'variants.pricingTiers'
+            'variants.pricingTiers',
         ])->where('business_name', $businessName);
 
         // If user is an added manager (has addby), filter by their own email
@@ -50,7 +50,7 @@ class AllItemsController extends Controller
             // Get branches where this manager is the branch manager
             $managedBranchIds = Branch::where('manager_id', $manager->id)->pluck('id');
             // Only show items allocated to the branches this manager manages
-            $standardQuery->whereHas('branchInventory', function($q) use ($managedBranchIds) {
+            $standardQuery->whereHas('branchInventory', function ($q) use ($managedBranchIds) {
                 $q->whereIn('branch_id', $managedBranchIds);
             });
             // For variant items, branch_inventory entries reference product variant IDs, not the parent VariantItem.
@@ -61,7 +61,7 @@ class AllItemsController extends Controller
                 ->pluck('item_id')
                 ->unique();
             if ($variantIds->count() > 0) {
-                $variantQuery->whereHas('variants', function($q) use ($variantIds) {
+                $variantQuery->whereHas('variants', function ($q) use ($variantIds) {
                     $q->whereIn('id', $variantIds);
                 });
             } else {
@@ -80,17 +80,17 @@ class AllItemsController extends Controller
         $productVariants = ProductVariant::with([
             'variantItem.supplier',
             'variantItem.unit',
-            'pricingTiers'
+            'pricingTiers',
         ])->latest()->get();
 
         // Get unique categories from all item types
         $categories = collect();
         $categories = $categories->merge($standardItems->pluck('category_name'))
-                                 ->merge($variantItems->pluck('category_name'))
-                                 ->filter()
-                                 ->unique()
-                                 ->sort()
-                                 ->values();
+            ->merge($variantItems->pluck('category_name'))
+            ->filter()
+            ->unique()
+            ->sort()
+            ->values();
 
         // Get all suppliers filtered by business_name
         $suppliersQuery = Supplier::where('business_name', $businessName);
@@ -101,7 +101,6 @@ class AllItemsController extends Controller
         }
 
         $suppliers = $suppliersQuery->orderBy('name')->get();
-
 
         // Get all branches for this business
         $branches = Branch::where('business_name', $businessName)->get();
@@ -119,42 +118,43 @@ class AllItemsController extends Controller
                 $branchInventoriesQuery->whereIn('branch_id', $managedBranchIds);
             }
             $branchInventories = $branchInventoriesQuery->get();
-            $branch_inventory_list = $branchInventories->map(function($inv) {
-                $branchName = ($inv->branch && $inv->branch->branch_name) ? $inv->branch->branch_name : ('Branch ID ' . $inv->branch_id);
-                return $branchName . ': Allocated ' . $inv->allocated_quantity . ', Current ' . $inv->current_quantity;
+            $branch_inventory_list = $branchInventories->map(function ($inv) {
+                $branchName = ($inv->branch && $inv->branch->branch_name) ? $inv->branch->branch_name : ('Branch ID '.$inv->branch_id);
+
+                return $branchName.': Allocated '.$inv->allocated_quantity.', Current '.$inv->current_quantity;
             })->values();
             $totalAllocated = $branchInventories->sum('allocated_quantity');
             $branchCurrent = $branchInventories->sum('current_quantity');
-// Determine opening stock, current stock, and general left based on plan and manager type
-                    if ($isBasicOrFree) {
-                        $openingStock = ($item->opening_stock ?? 0) > 0
-                            ? $item->opening_stock
-                            : (($item->current_stock ?? 0) + $totalAllocated);
-                        $currentStock = $branchInventories->count() > 0
-                            ? $branchCurrent
-                            : ($item->current_stock ?? 0);
-                        $generalLeft = $currentStock;
-                    } else {
-                        if ($manager->addby) {
-                            $branchStockAdded = clone $branchInventories;
-                            $totalBranchStockAdded = $branchStockAdded->sum('stock_added');
-                            $openingStock = $totalAllocated - $totalBranchStockAdded;
-                            $currentStock = $branchCurrent;
-                            $generalLeft = $branchCurrent;
-                        } else {
-                            $openingStock = ($item->opening_stock ?? 0) > 0 
-                                ? $item->opening_stock 
-                                : (($item->current_stock ?? 0) + $totalAllocated);
-                            $currentStock = ($item->current_stock ?? 0) + $branchCurrent;
-                            $generalLeft = $item->current_stock ?? 0;
-                        }
-                    }
+            // Determine opening stock, current stock, and general left based on plan and manager type
+            if ($isBasicOrFree) {
+                $openingStock = ($item->opening_stock ?? 0) > 0
+                    ? $item->opening_stock
+                    : (($item->current_stock ?? 0) + $totalAllocated);
+                $currentStock = $branchInventories->count() > 0
+                    ? $branchCurrent
+                    : ($item->current_stock ?? 0);
+                $generalLeft = $currentStock;
+            } else {
+                if ($manager->addby) {
+                    $branchStockAdded = clone $branchInventories;
+                    $totalBranchStockAdded = $branchStockAdded->sum('stock_added');
+                    $openingStock = $totalAllocated - $totalBranchStockAdded;
+                    $currentStock = $branchCurrent;
+                    $generalLeft = $branchCurrent;
+                } else {
+                    $openingStock = ($item->opening_stock ?? 0) > 0
+                        ? $item->opening_stock
+                        : (($item->current_stock ?? 0) + $totalAllocated);
+                    $currentStock = ($item->current_stock ?? 0) + $branchCurrent;
+                    $generalLeft = $item->current_stock ?? 0;
+                }
+            }
 
             $branchStockAdded = clone $branchInventories;
             $totalBranchStockAdded = $branchStockAdded->sum('stock_added');
 
-// Only include items that are either not an added manager (full access) or have inventory in the branches they manage
-            if (!$manager->addby || $branchInventories->count() > 0) {
+            // Only include items that are either not an added manager (full access) or have inventory in the branches they manage
+            if (! $manager->addby || $branchInventories->count() > 0) {
                 $unit = $item->relationLoaded('unit') ? $item->getRelation('unit') : (Unit::find($item->getAttribute('unit')) ?? null);
                 $allItems->push([
                     'id' => $item->id,
@@ -197,9 +197,10 @@ class AllItemsController extends Controller
                         $branchInventoriesQuery->whereIn('branch_id', $managedBranchIds);
                     }
                     $branchInventories = $branchInventoriesQuery->get();
-                    $branch_inventory_list = $branchInventories->map(function($inv) {
-                        $branchName = ($inv->branch && $inv->branch->branch_name) ? $inv->branch->branch_name : ('Branch ID ' . $inv->branch_id);
-                        return $branchName . ': Allocated ' . $inv->allocated_quantity . ', Current ' . $inv->current_quantity;
+                    $branch_inventory_list = $branchInventories->map(function ($inv) {
+                        $branchName = ($inv->branch && $inv->branch->branch_name) ? $inv->branch->branch_name : ('Branch ID '.$inv->branch_id);
+
+                        return $branchName.': Allocated '.$inv->allocated_quantity.', Current '.$inv->current_quantity;
                     })->values();
                     $totalAllocated = $branchInventories->sum('allocated_quantity');
                     $branchCurrent = $branchInventories->sum('current_quantity');
@@ -220,8 +221,8 @@ class AllItemsController extends Controller
                             $currentStock = $branchCurrent;
                             $generalLeft = $branchCurrent;
                         } else {
-                            $openingStock = ($variant->opening_stock ?? 0) > 0 
-                                ? $variant->opening_stock 
+                            $openingStock = ($variant->opening_stock ?? 0) > 0
+                                ? $variant->opening_stock
                                 : (($variant->current_stock ?? 0) + $totalAllocated);
                             $currentStock = ($variant->current_stock ?? 0) + $branchCurrent;
                             $generalLeft = $variant->current_stock ?? 0;
@@ -231,13 +232,13 @@ class AllItemsController extends Controller
                     $branchStockAdded = clone $branchInventories;
                     $totalBranchStockAdded = $branchStockAdded->sum('stock_added');
 
-                    if (!$manager->addby || $branchInventories->count() > 0) {
+                    if (! $manager->addby || $branchInventories->count() > 0) {
                         $unit = $item->relationLoaded('unit') ? $item->getRelation('unit') : (Unit::find($item->getAttribute('unit')) ?? null);
                         $allItems->push([
                             'id' => $variant->id,
                             'type' => 'product_variant',
                             'parent_id' => $item->id,
-                            'name' => $item->item_name . ' - ' . $variant->variant_name,
+                            'name' => $item->item_name.' - '.$variant->variant_name,
                             'code' => $variant->sku ?? $item->item_code,
                             'barcode' => $variant->barcode ?? $item->barcode,
                             'category' => $item->category_name,
@@ -265,7 +266,7 @@ class AllItemsController extends Controller
                     }
                 }
             } else {
-                if (!$manager->addby) {
+                if (! $manager->addby) {
                     $unit = $item->relationLoaded('unit') ? $item->getRelation('unit') : (Unit::find($item->getAttribute('unit')) ?? null);
                     $allItems->push([
                         'id' => $item->id,
@@ -336,7 +337,7 @@ class AllItemsController extends Controller
 
         if ($manager->addby) {
             $managedBranchIds = Branch::where('manager_id', $manager->id)->pluck('id');
-            $standardQuery->whereHas('branchInventory', function($q) use ($managedBranchIds) {
+            $standardQuery->whereHas('branchInventory', function ($q) use ($managedBranchIds) {
                 $q->whereIn('branch_id', $managedBranchIds);
             });
             $variantIds = BranchInventory::where('item_type', 'variant')
@@ -345,7 +346,7 @@ class AllItemsController extends Controller
                 ->pluck('item_id')
                 ->unique();
             if ($variantIds->count() > 0) {
-                $variantQuery->whereHas('variants', function($q) use ($variantIds) {
+                $variantQuery->whereHas('variants', function ($q) use ($variantIds) {
                     $q->whereIn('id', $variantIds);
                 });
             } else {
@@ -385,7 +386,7 @@ class AllItemsController extends Controller
                 }
             }
 
-            if (!$manager->addby || $branchInventories->count() > 0) {
+            if (! $manager->addby || $branchInventories->count() > 0) {
                 $unit = $item->relationLoaded('unit') ? $item->getRelation('unit') : (Unit::find($item->getAttribute('unit')) ?? null);
                 $allItems->push([
                     'id' => $item->id,
@@ -436,12 +437,12 @@ class AllItemsController extends Controller
                         }
                     }
 
-                    if (!$manager->addby || $branchInventories->count() > 0) {
+                    if (! $manager->addby || $branchInventories->count() > 0) {
                         $unit = $item->relationLoaded('unit') ? $item->getRelation('unit') : (Unit::find($item->getAttribute('unit')) ?? null);
                         $allItems->push([
                             'id' => $variant->id,
                             'type' => 'product_variant',
-                            'name' => $item->item_name . ' - ' . $variant->variant_name,
+                            'name' => $item->item_name.' - '.$variant->variant_name,
                             'code' => $variant->sku ?? $item->item_code,
                             'barcode' => $variant->barcode ?? $item->barcode,
                             'category' => $item->category_name,
@@ -458,7 +459,7 @@ class AllItemsController extends Controller
                     }
                 }
             } else {
-                if (!$manager->addby) {
+                if (! $manager->addby) {
                     $unit = $item->relationLoaded('unit') ? $item->getRelation('unit') : (Unit::find($item->getAttribute('unit')) ?? null);
                     $allItems->push([
                         'id' => $item->id,
@@ -490,8 +491,10 @@ class AllItemsController extends Controller
 
         if ($format === 'pdf') {
             $pdf = Pdf::loadView($viewName, $data)->setPaper('a4', 'landscape');
+
             return $pdf->download('all_items.pdf');
         }
+
         return Excel::download(new ReportExport($viewName, $data), 'all_items.xlsx');
     }
 
@@ -501,7 +504,7 @@ class AllItemsController extends Controller
     private function canEditItems()
     {
         $manager = Auth::user();
-        if (!$manager) {
+        if (! $manager) {
             return false;
         }
 
@@ -513,14 +516,13 @@ class AllItemsController extends Controller
         return user_has_feature('manager_edit_items_features', $manager);
     }
 
-
     public function delete_item($type, $id)
     {
         /** @var \App\Models\User $manager */
         $manager = Auth::user();
         $businessName = $manager->business_name;
 
-        if (!$this->canEditItems()) {
+        if (! $this->canEditItems()) {
             return redirect()->route('all_items')->with('error', 'You do not have permission to delete items. This must be enabled by your business creator.');
         }
 
@@ -541,7 +543,7 @@ class AllItemsController extends Controller
                 if ($variant->variantItem->business_name !== $businessName) {
                     return redirect()->back()->with('error', 'Unauthorized access.');
                 }
-                $itemName = $variant->variantItem->item_name . ' - ' . $variant->variant_name;
+                $itemName = $variant->variantItem->item_name.' - '.$variant->variant_name;
                 $variant->forceDelete();
                 break;
             default:
@@ -549,9 +551,9 @@ class AllItemsController extends Controller
         }
 
         \App\Helpers\ActivityLogger::log('Delete item', json_encode(['type' => $type, 'id' => $id, 'name' => $itemName]));
-        return redirect()->back()->with('success', ucfirst($type) . ' item permanently deleted successfully.');
-    }
 
+        return redirect()->back()->with('success', ucfirst($type).' item permanently deleted successfully.');
+    }
 
     public function show_item_details($type, $id)
     {
@@ -587,7 +589,7 @@ class AllItemsController extends Controller
                         'pricing_tiers' => $item->pricingTiers,
                         'description' => $item->description,
                         'updated_at' => $item->updated_at,
-                        'created_at' => $item->created_at
+                        'created_at' => $item->created_at,
                     ];
                     break;
 
@@ -611,7 +613,7 @@ class AllItemsController extends Controller
                         'supplier' => $item->supplier,
                         'description' => $item->description,
                         'updated_at' => $item->updated_at,
-                        'created_at' => $item->created_at
+                        'created_at' => $item->created_at,
                     ];
                     break;
 
@@ -628,7 +630,7 @@ class AllItemsController extends Controller
                         'id' => $variant->id,
                         'type' => 'product_variant',
                         'parent_id' => $variant->variant_item_id,
-                        'item_name' => $variant->variantItem->item_name . ' - ' . $variant->variant_name,
+                        'item_name' => $variant->variantItem->item_name.' - '.$variant->variant_name,
                         'variant_name' => $variant->variant_name,
                         'sku' => $variant->sku,
                         'barcode' => $variant->barcode,
@@ -648,7 +650,7 @@ class AllItemsController extends Controller
                         'expiry_date' => $variant->expiry_date,
                         'location' => $variant->location,
                         'updated_at' => $variant->updated_at,
-                        'created_at' => $variant->created_at
+                        'created_at' => $variant->created_at,
                     ];
                     break;
 
@@ -661,7 +663,7 @@ class AllItemsController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Item not found or error occurred.',
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], 404);
         }
     }
@@ -672,7 +674,7 @@ class AllItemsController extends Controller
             $manager = Auth::user();
             $businessName = $manager->business_name;
 
-            if (!$this->canEditItems()) {
+            if (! $this->canEditItems()) {
                 return redirect()->route('all_items')->with('error', 'You do not have permission to edit items. This must be enabled by your business creator.');
             }
 
@@ -709,7 +711,7 @@ class AllItemsController extends Controller
             return view('manager.inventory.all_items.edit_item', compact('item', 'itemType', 'suppliers', 'units'));
 
         } catch (\Exception $e) {
-            return redirect()->route('all_items')->with('error', 'Item not found: ' . $e->getMessage());
+            return redirect()->route('all_items')->with('error', 'Item not found: '.$e->getMessage());
         }
     }
 
@@ -719,7 +721,7 @@ class AllItemsController extends Controller
             $manager = Auth::user();
             $businessName = $manager->business_name;
 
-            if (!$this->canEditItems()) {
+            if (! $this->canEditItems()) {
                 return redirect()->route('all_items')->with('error', 'You do not have permission to edit items. This must be enabled by your business creator.');
             }
 
@@ -739,7 +741,7 @@ class AllItemsController extends Controller
                         'selling_price' => 'required|numeric|min:0',
                         'add_stock' => 'nullable|integer|min:0',
                         'low_stock_threshold' => 'nullable|integer|min:0',
-                        'item_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
+                        'item_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
                     ]);
 
                     // Handle image upload - SECURE: Uses Laravel's storage
@@ -781,7 +783,7 @@ class AllItemsController extends Controller
                         'unit_id' => 'nullable|exists:units,id',
                         'brand' => 'nullable|string|max:255',
                         'description' => 'nullable|string',
-                        'item_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
+                        'item_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
                     ]);
 
                     // Handle image upload - SECURE: Uses Laravel's storage
@@ -812,7 +814,7 @@ class AllItemsController extends Controller
                         'add_stock' => 'nullable|integer|min:0',
                         'low_stock_threshold' => 'nullable|integer|min:0',
                         'variant_options' => 'nullable|string',
-                        'item_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
+                        'item_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
                     ]);
 
                     // Handle image upload for parent VariantItem
@@ -837,7 +839,7 @@ class AllItemsController extends Controller
                     }
 
                     $item->update($validatedData);
-                    $itemName = $item->variantItem->item_name . ' - ' . $item->variant_name;
+                    $itemName = $item->variantItem->item_name.' - '.$item->variant_name;
                     \App\Helpers\ActivityLogger::log('Update item', json_encode(['type' => $type, 'id' => $id, 'name' => $itemName]));
                     break;
 
@@ -845,10 +847,10 @@ class AllItemsController extends Controller
                     return redirect()->route('all_items')->with('error', 'Invalid item type specified.');
             }
 
-            return redirect()->route('all_items')->with('success', ucfirst($type) . ' item updated successfully.');
+            return redirect()->route('all_items')->with('success', ucfirst($type).' item updated successfully.');
 
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Error updating item: ' . $e->getMessage())->withInput();
+            return redirect()->back()->with('error', 'Error updating item: '.$e->getMessage())->withInput();
         }
     }
 
@@ -858,7 +860,7 @@ class AllItemsController extends Controller
             $manager = Auth::user();
             $businessName = $manager->business_name;
 
-            if (!$this->canEditItems()) {
+            if (! $this->canEditItems()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'You do not have permission to delete items. This must be enabled by your business creator.',
@@ -869,10 +871,10 @@ class AllItemsController extends Controller
             $items = $request->input('items');
 
             // Check if items array is provided and is an array
-            if (!$items || !is_array($items)) {
+            if (! $items || ! is_array($items)) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'No items selected for deletion.'
+                    'message' => 'No items selected for deletion.',
                 ], 400);
             }
 
@@ -885,7 +887,7 @@ class AllItemsController extends Controller
                 $type = $itemData['type'] ?? null;
                 $id = $itemData['id'] ?? null;
 
-                if (!$type || !$id) {
+                if (! $type || ! $id) {
                     continue;
                 }
 
@@ -916,34 +918,34 @@ class AllItemsController extends Controller
                             $errors[] = "Invalid item type: {$type} for ID: {$id}";
                     }
                 } catch (\Exception $e) {
-                    $errors[] = "Error deleting {$type} item ID {$id}: " . $e->getMessage();
+                    $errors[] = "Error deleting {$type} item ID {$id}: ".$e->getMessage();
                 }
             }
 
             if ($deletedCount > 0) {
-                $message = "Successfully deleted {$deletedCount} item" . ($deletedCount > 1 ? 's' : '');
-                if (!empty($errors)) {
-                    $message .= " (with some errors)";
+                $message = "Successfully deleted {$deletedCount} item".($deletedCount > 1 ? 's' : '');
+                if (! empty($errors)) {
+                    $message .= ' (with some errors)';
                 }
 
                 return response()->json([
                     'success' => true,
                     'message' => $message,
                     'deleted_count' => $deletedCount,
-                    'errors' => $errors
+                    'errors' => $errors,
                 ]);
             } else {
                 return response()->json([
                     'success' => false,
                     'message' => 'No items were deleted.',
-                    'errors' => $errors
+                    'errors' => $errors,
                 ], 400);
             }
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error deleting items: ' . $e->getMessage()
+                'message' => 'Error deleting items: '.$e->getMessage(),
             ], 500);
         }
     }

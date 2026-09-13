@@ -14,11 +14,12 @@ class SetupPassword extends Mailable
     use Queueable, SerializesModels;
 
     public $user;
+
     public $token;
 
     public function __construct(User $user, string $token)
     {
-        $this->user  = $user;
+        $this->user = $user;
         $this->token = $token;
     }
 

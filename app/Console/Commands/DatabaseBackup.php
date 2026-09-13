@@ -4,7 +4,6 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Config;
 
 class DatabaseBackup extends Command
 {
@@ -32,13 +31,13 @@ class DatabaseBackup extends Command
 
             // Create backup directory if it doesn't exist
             $backupPath = storage_path('app/backups');
-            if (!File::exists($backupPath)) {
+            if (! File::exists($backupPath)) {
                 File::makeDirectory($backupPath, 0755, true);
             }
 
             // Generate filename
-            $filename = $this->option('filename') ?: 'backup-' . date('Y-m-d-His') . '.sql';
-            $filepath = $backupPath . '/' . $filename;
+            $filename = $this->option('filename') ?: 'backup-'.date('Y-m-d-His').'.sql';
+            $filepath = $backupPath.'/'.$filename;
 
             // Get database configuration
             $connection = config('database.default');
@@ -51,10 +50,11 @@ class DatabaseBackup extends Command
             // Try mysqldump first
             if ($this->tryMysqldump($filepath, $host, $port, $database, $username, $password)) {
                 $size = $this->formatBytes(File::size($filepath));
-                $this->info("✓ Database backup created successfully using mysqldump!");
+                $this->info('✓ Database backup created successfully using mysqldump!');
                 $this->info("Location: {$filepath}");
                 $this->info("Size: {$size}");
                 $this->cleanupOldBackups($backupPath);
+
                 return Command::SUCCESS;
             }
 
@@ -62,18 +62,21 @@ class DatabaseBackup extends Command
             $this->info('mysqldump not available, using Laravel database export...');
             if ($this->exportDatabaseUsingLaravel($filepath)) {
                 $size = $this->formatBytes(File::size($filepath));
-                $this->info("✓ Database backup created successfully!");
+                $this->info('✓ Database backup created successfully!');
                 $this->info("Location: {$filepath}");
                 $this->info("Size: {$size}");
                 $this->cleanupOldBackups($backupPath);
+
                 return Command::SUCCESS;
             }
 
             $this->error('All backup methods failed.');
+
             return Command::FAILURE;
 
         } catch (\Exception $e) {
-            $this->error('Backup failed: ' . $e->getMessage());
+            $this->error('Backup failed: '.$e->getMessage());
+
             return Command::FAILURE;
         }
     }
@@ -115,8 +118,8 @@ class DatabaseBackup extends Command
 
             // Get all tables
             $tables = \DB::select('SHOW TABLES');
-            $dbName = config('database.connections.' . config('database.default') . '.database');
-            $tableKey = 'Tables_in_' . $dbName;
+            $dbName = config('database.connections.'.config('database.default').'.database');
+            $tableKey = 'Tables_in_'.$dbName;
 
             foreach ($tables as $table) {
                 $tableName = $table->$tableKey;
@@ -126,7 +129,7 @@ class DatabaseBackup extends Command
 
                 // Get create table statement
                 $createTable = \DB::select("SHOW CREATE TABLE `{$tableName}`");
-                $sql .= $createTable[0]->{'Create Table'} . ";\n\n";
+                $sql .= $createTable[0]->{'Create Table'}.";\n\n";
 
                 // Get table data
                 $rows = \DB::table($tableName)->get();
@@ -141,12 +144,13 @@ class DatabaseBackup extends Command
                             if ($value === null) {
                                 return 'NULL';
                             }
-                            return "'" . addslashes($value) . "'";
+
+                            return "'".addslashes($value)."'";
                         }, $rowData);
-                        $values[] = '(' . implode(', ', $escapedValues) . ')';
+                        $values[] = '('.implode(', ', $escapedValues).')';
                     }
 
-                    $sql .= implode(",\n", $values) . ";\n\n";
+                    $sql .= implode(",\n", $values).";\n\n";
                 }
             }
 
@@ -156,7 +160,8 @@ class DatabaseBackup extends Command
             return File::exists($filepath) && File::size($filepath) > 0;
 
         } catch (\Exception $e) {
-            $this->error('Laravel export failed: ' . $e->getMessage());
+            $this->error('Laravel export failed: '.$e->getMessage());
+
             return false;
         }
     }
@@ -179,10 +184,10 @@ class DatabaseBackup extends Command
 
             foreach ($filesToDelete as $file) {
                 File::delete($file);
-                $this->info("Cleaned up old backup: " . basename($file));
+                $this->info('Cleaned up old backup: '.basename($file));
             }
         } catch (\Exception $e) {
-            $this->warn('Could not clean up old backups: ' . $e->getMessage());
+            $this->warn('Could not clean up old backups: '.$e->getMessage());
         }
     }
 
@@ -197,6 +202,6 @@ class DatabaseBackup extends Command
             $bytes /= 1024;
         }
 
-        return round($bytes, $precision) . ' ' . $units[$i];
+        return round($bytes, $precision).' '.$units[$i];
     }
 }

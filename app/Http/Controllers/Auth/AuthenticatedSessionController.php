@@ -2,25 +2,70 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Helpers\ActivityLogger;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
-use App\Models\Welcome\SignupRequest;
-use App\Models\UserSubscription;
 use App\Models\Branch\Branch;
+use App\Models\User;
+use App\Models\UserSubscription;
+use App\Models\Welcome\SignupRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
-use App\Models\User;
-
 
 class AuthenticatedSessionController extends Controller
 {
     /**
      * Display the login view.
+     * If a user is already authenticated, redirect them appropriately instead of
+     * showing the login form (which would cause the guest middleware loop).
      */
-    public function create(): View
+    public function create(): View|RedirectResponse
     {
+        // Already logged in — guard against the "nothing happens" loop
+        if (Auth::check()) {
+            $user = Auth::user();
+
+            // Check if they have an active subscription
+            $hasActiveSub = UserSubscription::where('user_id', $user->id)
+                ->where('status', 'active')
+                ->where('end_date', '>=', now())
+                ->exists();
+
+            // For managers, also check creator subscription
+            if (! $hasActiveSub && $user->role === 'manager' && $user->addby) {
+                $creator = User::where('email', $user->addby)->first();
+                $hasActiveSub = $creator
+                    ? UserSubscription::where('user_id', $creator->id)
+                        ->where('status', 'active')
+                        ->where('end_date', '>=', now())
+                        ->exists()
+                    : false;
+            }
+
+            // Expired or missing subscription → send to plan renewal
+            if (! $hasActiveSub && $user->role !== 'superadmin') {
+                return redirect()->route('plan_pricing');
+            }
+
+            // Active subscription → send to their dashboard
+            if ($user->role === 'superadmin') {
+                return redirect()->route('superadmin');
+            }
+            if ($user->role === 'manager') {
+                return redirect()->route('manager');
+            }
+            if ($user->role === 'businessowner') {
+                return redirect()->route('businessdashboard');
+            }
+            if ($user->role === 'staff') {
+                return redirect()->route('dashboard');
+            }
+
+            return redirect('/');
+        }
+
         return view('auth.login');
     }
 
@@ -42,7 +87,7 @@ class AuthenticatedSessionController extends Controller
             ->first();
 
         // Allow login for managers created by another user (addby) if creator is verified and has active subscription
-        if (!$signupRequest && $user->role === 'manager' && $user->addby) {
+        if (! $signupRequest && $user->role === 'manager' && $user->addby) {
             $creator = User::where('email', $user->addby)->first();
             $creatorSignup = $creator ? SignupRequest::where('email', $creator->email)->where('is_used', true)->first() : null;
             $creatorActiveSub = $creator ? UserSubscription::where('user_id', $creator->id)
@@ -53,20 +98,23 @@ class AuthenticatedSessionController extends Controller
                 // Allow login, skip this check
             } else {
                 Auth::logout();
+
                 return redirect()->route('login')->withErrors([
                     'email' => 'Your email has not been verified. Please complete the signup process first.',
                 ]);
             }
-        } elseif (!$signupRequest) {
+        } elseif (! $signupRequest) {
             Auth::logout();
+
             return redirect()->route('login')->withErrors([
                 'email' => 'Your email has not been verified. Please complete the signup process first.',
             ]);
         }
 
         // Check if user account has been deactivated by superadmin
-        if ((int)$user->status === 0) {
+        if ((int) $user->status === 0) {
             Auth::logout();
+
             return redirect()->route('login')->withErrors([
                 'email' => 'Your account has been deactivated. Please contact support.',
             ]);
@@ -75,22 +123,34 @@ class AuthenticatedSessionController extends Controller
         // Check if user status is 0 (disabled) - only for managers created by another user
         if ($user->role === 'manager' && $user->addby && $user->status == 0) {
             Auth::logout();
+
             return redirect()->route('login')->withErrors([
-                'email' => 'Your account has been disabled. Contact your administrator.'
+                'email' => 'Your account has been disabled. Contact your administrator.',
             ]);
         }
+        // Check if manager is assigned to a branch (either via manager_id or legacy branch_name)
+        if ($user->role === 'manager' && $user->addby) {
+            $assignedBranch = Branch::where('manager_id', $user->id)->first();
 
-        // Check if manager is assigned to an inactive branch
-        if ($user->role === 'manager' && $user->addby && !empty($user->branch_name)) {
-            $activeBranch = Branch::where('branch_name', $user->branch_name)
-                ->where('business_name', $user->business_name)
-                ->where('status', 1)
-                ->first();
+            if (! $assignedBranch && ! empty($user->branch_name)) {
+                $assignedBranch = Branch::where('branch_name', $user->branch_name)
+                    ->where('business_name', $user->business_name)
+                    ->first();
+            }
 
-            if (!$activeBranch) {
+            if (! $assignedBranch) {
                 Auth::logout();
+
                 return redirect()->route('login')->withErrors([
-                    'email' => 'Your assigned branch is currently inactive. Contact your administrator.'
+                    'email' => 'You have not been assigned to a branch yet. Please contact your administrator.',
+                ]);
+            }
+
+            if ((int) $assignedBranch->status !== 1) {
+                Auth::logout();
+
+                return redirect()->route('login')->withErrors([
+                    'email' => 'Your assigned branch is currently inactive. Contact your administrator.',
                 ]);
             }
         }
@@ -98,10 +158,11 @@ class AuthenticatedSessionController extends Controller
         // If user is a manager created by another user, check addby and creator's subscription
         if ($user->role === 'manager' && $user->addby) {
             $creator = User::where('email', $user->addby)->first();
-            if (!$creator) {
+            if (! $creator) {
                 Auth::logout();
+
                 return redirect()->route('login')->withErrors([
-                    'email' => 'Your account cannot be verified. Contact your administrator.'
+                    'email' => 'Your account cannot be verified. Contact your administrator.',
                 ]);
             }
             // Check creator's subscription
@@ -109,10 +170,11 @@ class AuthenticatedSessionController extends Controller
                 ->where('status', 'active')
                 ->where('end_date', '>=', now())
                 ->first();
-            if (!$creatorActiveSub) {
+            if (! $creatorActiveSub) {
                 Auth::logout();
+
                 return redirect()->route('login')->withErrors([
-                    'email' => 'Your account cannot be used because your creator does not have an active subscription.'
+                    'email' => 'Your account cannot be used because your creator does not have an active subscription.',
                 ]);
             }
         }
@@ -124,7 +186,7 @@ class AuthenticatedSessionController extends Controller
             ->first();
 
         // For managers created by another user, allow login if creator has active subscription
-        if (!$activeSubscription && $user->role === 'manager' && $user->addby) {
+        if (! $activeSubscription && $user->role === 'manager' && $user->addby) {
             $creator = User::where('email', $user->addby)->first();
             $creatorActiveSub = $creator ? UserSubscription::where('user_id', $creator->id)
                 ->where('status', 'active')
@@ -146,7 +208,7 @@ class AuthenticatedSessionController extends Controller
                     'email' => 'You do not have an active subscription. Please subscribe to a plan to continue.',
                 ])->with('redirect_to_plans', true);
             }
-        } elseif (!$activeSubscription) {
+        } elseif (! $activeSubscription) {
             $pendingSubscription = UserSubscription::where('user_id', $user->id)
                 ->where('status', 'pending')
                 ->first();
@@ -162,18 +224,18 @@ class AuthenticatedSessionController extends Controller
         }
 
         // Log user login activity
-        \App\Helpers\ActivityLogger::log('login', 'User logged in via AuthenticatedSessionController');
+        ActivityLogger::log('login', 'User logged in via AuthenticatedSessionController');
 
         // Get the authenticated user's role
         $authUserRole = $user->role;
 
-        if($authUserRole === 'superadmin'){
+        if ($authUserRole === 'superadmin') {
             return redirect()->intended(route('superadmin', absolute: false));
-        } elseif($authUserRole === 'manager'){
+        } elseif ($authUserRole === 'manager') {
             return redirect()->intended(route('manager', absolute: false));
-        } elseif($authUserRole === 'businessowner'){
+        } elseif ($authUserRole === 'businessowner') {
             return redirect()->intended(route('businessdashboard', absolute: false));
-        } elseif($authUserRole === 'staff'){
+        } elseif ($authUserRole === 'staff') {
             return redirect()->intended(route('dashboard', absolute: false));
         }
 
@@ -196,7 +258,7 @@ class AuthenticatedSessionController extends Controller
                 ->first();
 
             // If no active subscription, check if email is in signup_requests
-            if (!$activeSubscription) {
+            if (! $activeSubscription) {
                 $signupRequest = SignupRequest::where('email', $user->email)
                     ->where('is_used', true)
                     ->first();

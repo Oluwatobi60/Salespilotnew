@@ -3,20 +3,20 @@
 namespace App\Http\Controllers\Superadmin;
 
 use App\Http\Controllers\Controller;
+use App\Mail\BrmCreated;
+use App\Mail\SubscriptionExpiryReminder;
+use App\Models\ActivityLog;
+use App\Models\Brm;
 use App\Models\SuperAdmin;
 use App\Models\User;
 use App\Models\UserSubscription;
-use App\Models\ActivityLog;
-use App\Models\Brm;
-use App\Mail\SubscriptionExpiryReminder;
-use App\Mail\BrmCreated;
+use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Password;
-use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Support\Str;
 
 class SuperAdminController extends Controller
@@ -29,16 +29,16 @@ class SuperAdminController extends Controller
     public function register(Request $request)
     {
         $validated = $request->validate([
-            'name'     => 'required|string|max:255',
-            'email'    => 'required|email|unique:superadmins,email',
-            'phone'    => 'nullable|string|max:20',
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:superadmins,email',
+            'phone' => 'nullable|string|max:20',
             'password' => 'required|string|min:8|confirmed',
         ]);
 
         SuperAdmin::create([
-            'name'     => $validated['name'],
-            'email'    => $validated['email'],
-            'phone'    => $validated['phone'] ?? null,
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'phone' => $validated['phone'] ?? null,
             'password' => Hash::make($validated['password']),
         ]);
 
@@ -55,15 +55,16 @@ class SuperAdminController extends Controller
     public function login(Request $request)
     {
         $credentials = $request->validate([
-            'email'    => 'required|email',
+            'email' => 'required|email',
             'password' => 'required|string',
         ]);
 
         // Check if superadmin exists and is locked
         $superadmin = \App\Models\SuperAdmin::where('email', $request->email)->first();
-        
+
         if ($superadmin && method_exists($superadmin, 'isLocked') && $superadmin->isLocked()) {
             $minutes = $superadmin->getRemainingLockTimeMinutes();
+
             return back()->withErrors([
                 'email' => "Account is locked due to too many failed login attempts. Please try again in {$minutes} minutes.",
             ])->onlyInput('email');
@@ -71,12 +72,12 @@ class SuperAdminController extends Controller
 
         if (Auth::guard('superadmin')->attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
-            
+
             // Reset failed attempts on successful login
             if ($superadmin && method_exists($superadmin, 'resetLoginAttempts')) {
                 $superadmin->resetLoginAttempts();
             }
-            
+
             return redirect()->route('superadmin');
         }
 
@@ -84,7 +85,7 @@ class SuperAdminController extends Controller
         if ($superadmin && method_exists($superadmin, 'incrementFailedLoginAttempts')) {
             $superadmin->incrementFailedLoginAttempts();
             $remaining = $superadmin->getRemainingAttempts();
-            
+
             if ($remaining > 0) {
                 return back()->withErrors([
                     'email' => "These credentials do not match our records. You have {$remaining} attempts remaining.",
@@ -126,7 +127,7 @@ class SuperAdminController extends Controller
             ->get();
 
         // BRM stats
-        $totalBrms  = Brm::count();
+        $totalBrms = Brm::count();
         $activeBrms = Brm::where('status', 1)->count();
 
         return view('superadmin.superadmin', compact(
@@ -140,6 +141,7 @@ class SuperAdminController extends Controller
         Auth::guard('superadmin')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+
         return redirect()->route('superadmin.login');
     }
 
@@ -152,9 +154,9 @@ class SuperAdminController extends Controller
             ->when($search, function ($q) use ($search) {
                 $q->where(function ($q2) use ($search) {
                     $q2->where('first_name', 'like', "%{$search}%")
-                       ->orWhere('surname', 'like', "%{$search}%")
-                       ->orWhere('business_name', 'like', "%{$search}%")
-                       ->orWhere('email', 'like', "%{$search}%");
+                        ->orWhere('surname', 'like', "%{$search}%")
+                        ->orWhere('business_name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%");
                 });
             })
             ->latest()
@@ -171,6 +173,7 @@ class SuperAdminController extends Controller
         $user->save();
 
         $label = $user->status ? 'activated' : 'deactivated';
+
         return back()->with('success', "Customer account has been {$label}.");
     }
 
@@ -179,14 +182,14 @@ class SuperAdminController extends Controller
         $subscription = $user->currentSubscription()->with('subscriptionPlan')->first();
 
         // Also check for most recent expired subscription if no active one
-        if (!$subscription) {
+        if (! $subscription) {
             $subscription = UserSubscription::where('user_id', $user->id)
                 ->with('subscriptionPlan')
                 ->latest()
                 ->first();
         }
 
-        if (!$subscription) {
+        if (! $subscription) {
             return back()->with('error', "{$user->first_name} has no subscription record to reminder about.");
         }
 
@@ -196,9 +199,10 @@ class SuperAdminController extends Controller
 
         try {
             Mail::to($user->email)->send(new SubscriptionExpiryReminder($user, $subscription, max($daysLeft, 0)));
+
             return back()->with('success', "Subscription reminder sent to {$user->email}.");
         } catch (\Exception $e) {
-            return back()->with('error', "Failed to send email: " . $e->getMessage());
+            return back()->with('error', 'Failed to send email: '.$e->getMessage());
         }
     }
 
@@ -211,8 +215,8 @@ class SuperAdminController extends Controller
         $brms = Brm::withCount('customers')
             ->when($search, function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('region', 'like', "%{$search}%");
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('region', 'like', "%{$search}%");
             })
             ->latest()
             ->paginate(20);
@@ -228,13 +232,13 @@ class SuperAdminController extends Controller
     public function storeBrm(Request $request)
     {
         $validated = $request->validate([
-            'name'     => 'required|string|max:255',
-            'email'    => 'required|email|unique:brms,email',
-            'phone'    => 'nullable|string|max:20',
-            'address'  => 'nullable|string|max:255',
-            'region'   => 'nullable|string|max:100',
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:brms,email',
+            'phone' => 'nullable|string|max:20',
+            'address' => 'nullable|string|max:255',
+            'region' => 'nullable|string|max:100',
             'referral_code' => 'nullable|string|max:6|unique:brms,referral_code',
-            'notes'    => 'nullable|string|max:1000',
+            'notes' => 'nullable|string|max:1000',
             'password' => 'required|string|min:8|confirmed',
         ]);
 
@@ -254,10 +258,10 @@ class SuperAdminController extends Controller
             Mail::to($brm->email)->send(new BrmCreated($brm, $plainPassword));
         } catch (\Exception $e) {
             // Log the error but don't block BRM creation
-            Log::error('Failed to send BRM creation email: ' . $e->getMessage());
+            Log::error('Failed to send BRM creation email: '.$e->getMessage());
         }
 
-        return redirect()->route('superadmin.brms')->with('success', 'BRM registered successfully. Welcome email sent to ' . $brm->email);
+        return redirect()->route('superadmin.brms')->with('success', 'BRM registered successfully. Welcome email sent to '.$brm->email);
     }
 
     /**
@@ -286,17 +290,17 @@ class SuperAdminController extends Controller
     public function updateBrm(Request $request, Brm $brm)
     {
         $validated = $request->validate([
-            'name'     => 'required|string|max:255',
-            'email'    => 'required|email|unique:brms,email,' . $brm->id,
-            'phone'    => 'nullable|string|max:20',
-            'address'  => 'nullable|string|max:255',
-            'region'   => 'nullable|string|max:100',
-            'notes'    => 'nullable|string|max:1000',
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:brms,email,'.$brm->id,
+            'phone' => 'nullable|string|max:20',
+            'address' => 'nullable|string|max:255',
+            'region' => 'nullable|string|max:100',
+            'notes' => 'nullable|string|max:1000',
             'password' => 'nullable|string|min:8|confirmed',
         ]);
 
         $data = collect($validated)->except('password')->toArray();
-        if (!empty($validated['password'])) {
+        if (! empty($validated['password'])) {
             $data['password'] = Hash::make($validated['password']);
         }
 
@@ -310,6 +314,7 @@ class SuperAdminController extends Controller
         $brm->status = $brm->status ? 0 : 1;
         $brm->save();
         $label = $brm->status ? 'activated' : 'deactivated';
+
         return back()->with('success', "BRM {$brm->name} has been {$label}.");
     }
 
@@ -333,6 +338,7 @@ class SuperAdminController extends Controller
             ->latest()
             ->get();
         $activeBrms = Brm::where('status', 1)->orderBy('name')->get(['id', 'name', 'region']);
+
         return view('superadmin.users.show', compact('user', 'subscriptions', 'activeBrms'));
     }
 
@@ -360,7 +366,7 @@ class SuperAdminController extends Controller
     {
         return view('superadmin.auth.reset-password', [
             'token' => $token,
-            'email' => $request->email
+            'email' => $request->email,
         ]);
     }
 

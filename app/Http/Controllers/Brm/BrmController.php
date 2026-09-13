@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Brm;
 
 use App\Http\Controllers\Controller;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Carbon\Carbon;
 
 class BrmController extends Controller
 {
@@ -20,15 +20,16 @@ class BrmController extends Controller
     public function login(Request $request)
     {
         $credentials = $request->validate([
-            'email'    => 'required|email',
+            'email' => 'required|email',
             'password' => 'required|string',
         ]);
 
         // Check if BRM exists and is locked
         $brm = \App\Models\Brm::where('email', $request->email)->first();
-        
+
         if ($brm && method_exists($brm, 'isLocked') && $brm->isLocked()) {
             $minutes = $brm->getRemainingLockTimeMinutes();
+
             return back()->withErrors([
                 'email' => "Account is locked due to too many failed login attempts. Please try again in {$minutes} minutes.",
             ])->onlyInput('email');
@@ -36,12 +37,12 @@ class BrmController extends Controller
 
         if (Auth::guard('brms')->attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
-            
+
             // Reset failed attempts on successful login
             if ($brm && method_exists($brm, 'resetLoginAttempts')) {
                 $brm->resetLoginAttempts();
             }
-            
+
             return redirect()->route('brm.dashboard');
         }
 
@@ -49,7 +50,7 @@ class BrmController extends Controller
         if ($brm && method_exists($brm, 'incrementFailedLoginAttempts')) {
             $brm->incrementFailedLoginAttempts();
             $remaining = $brm->getRemainingAttempts();
-            
+
             if ($remaining > 0) {
                 return back()->withErrors([
                     'email' => "These credentials do not match our records. You have {$remaining} attempts remaining.",
@@ -74,6 +75,7 @@ class BrmController extends Controller
         Auth::guard('brms')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+
         return redirect()->route('brm.login');
     }
 

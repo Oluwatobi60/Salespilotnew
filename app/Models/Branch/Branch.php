@@ -2,13 +2,13 @@
 
 namespace App\Models\Branch;
 
+use App\Models\Staffs;
+use App\Models\SubscriptionPlan;
+use App\Models\User;
+use App\Models\UserSubscription;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use App\Models\User;
-use App\Models\SubscriptionPlan;
-use App\Models\UserSubscription;
-use App\Models\Staffs;
 
 class Branch extends Model
 {

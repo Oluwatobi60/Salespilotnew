@@ -3,8 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Staffs;
-use App\Models\User;
 
 class AddCustomer extends Model
 {

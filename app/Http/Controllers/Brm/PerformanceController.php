@@ -5,9 +5,8 @@ namespace App\Http\Controllers\Brm;
 use App\Http\Controllers\Controller;
 use App\Models\Brm;
 use App\Models\Commission;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class PerformanceController extends Controller
 {
@@ -26,12 +25,12 @@ class PerformanceController extends Controller
 
         // ===== CURRENT MONTH STATS =====
         $totalCustomers = $brm->customers()->count();
-        
+
         // Count conversions (customers with subscriptions)
         $thisMonthConversions = $brm->customers()
             ->whereHas('subscriptions')
             ->count();
-        
+
         // Revenue from commissions this month
         $thisMonthRevenue = $brm->commissions()
             ->where('status', '!=', 'rejected')
@@ -39,16 +38,16 @@ class PerformanceController extends Controller
             ->sum('commission_amount');
 
         // Conversion rate
-        $conversionRate = $totalCustomers > 0 
-            ? round(($thisMonthConversions / $totalCustomers) * 100, 1) 
+        $conversionRate = $totalCustomers > 0
+            ? round(($thisMonthConversions / $totalCustomers) * 100, 1)
             : 0;
 
         // ===== LAST MONTH STATS (for comparison) =====
         $lastMonthConversions = $brm->customers()
-            ->whereHas('subscriptions', function($q) {
+            ->whereHas('subscriptions', function ($q) {
                 $q->whereBetween('created_at', [
                     Carbon::now()->subMonth()->startOfMonth(),
-                    Carbon::now()->subMonth()->endOfMonth()
+                    Carbon::now()->subMonth()->endOfMonth(),
                 ]);
             })
             ->count();
@@ -93,6 +92,7 @@ class PerformanceController extends Controller
         if ($previous == 0) {
             return $current > 0 ? 100 : 0;
         }
+
         return round((($current - $previous) / $previous) * 100, 1);
     }
 
@@ -121,7 +121,7 @@ class PerformanceController extends Controller
 
             // Get conversions for this month
             $monthConversions = $brm->customers()
-                ->whereHas('subscriptions', function($q) use ($monthStart, $monthEnd) {
+                ->whereHas('subscriptions', function ($q) use ($monthStart, $monthEnd) {
                     $q->whereBetween('created_at', [$monthStart, $monthEnd]);
                 })
                 ->count();
@@ -142,12 +142,12 @@ class PerformanceController extends Controller
     {
         return Brm::with('commissions')
             ->get()
-            ->map(function($brm) {
+            ->map(function ($brm) {
                 $totalCommission = $brm->commissions()
                     ->where('status', '!=', 'rejected')
                     ->sum('commission_amount');
                 $customerCount = $brm->customers()->count();
-                $conversionRate = $customerCount > 0 
+                $conversionRate = $customerCount > 0
                     ? round(($brm->customers()->whereHas('subscriptions')->count() / $customerCount) * 100, 1)
                     : 0;
 
@@ -174,14 +174,14 @@ class PerformanceController extends Controller
 
         // Achievement 1: Top Performer (Rank #1)
         $rank = Brm::get()
-            ->map(function($b) {
+            ->map(function ($b) {
                 return [
                     'id' => $b->id,
                     'commission' => $b->commissions()->where('status', '!=', 'rejected')->sum('commission_amount'),
                 ];
             })
             ->sortByDesc('commission')
-            ->search(function($item) use ($brm) {
+            ->search(function ($item) use ($brm) {
                 return $item['id'] == $brm->id;
             });
 
@@ -209,7 +209,7 @@ class PerformanceController extends Controller
         } else {
             $achievements[] = [
                 'title' => '100 Customers',
-                'description' => 'Century Club (' . $totalCustomers . '/100)',
+                'description' => 'Century Club ('.$totalCustomers.'/100)',
                 'icon' => 'bi-star-fill',
                 'gradient' => 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
                 'unlocked' => false,
@@ -234,7 +234,7 @@ class PerformanceController extends Controller
         } else {
             $achievements[] = [
                 'title' => 'Fast Closer',
-                'description' => '20 Deals in a Month (' . $thisMonthDeals . '/20)',
+                'description' => '20 Deals in a Month ('.$thisMonthDeals.'/20)',
                 'icon' => 'bi-lightning-fill',
                 'gradient' => 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
                 'unlocked' => false,
@@ -246,11 +246,11 @@ class PerformanceController extends Controller
             ->where('status', '!=', 'rejected')
             ->whereBetween('created_at', [
                 Carbon::now()->subMonth()->startOfMonth(),
-                Carbon::now()->subMonth()->endOfMonth()
+                Carbon::now()->subMonth()->endOfMonth(),
             ])
             ->sum('commission_amount');
 
-        $growthRate = $lastMonthRevenue > 0 
+        $growthRate = $lastMonthRevenue > 0
             ? round((($revenue - $lastMonthRevenue) / $lastMonthRevenue) * 100, 1)
             : 0;
 
@@ -266,7 +266,7 @@ class PerformanceController extends Controller
         } else {
             $achievements[] = [
                 'title' => 'Growth Leader',
-                'description' => '+25% Month Growth (' . $growthRate . '%)',
+                'description' => '+25% Month Growth ('.$growthRate.'%)',
                 'icon' => 'bi-graph-up-arrow',
                 'gradient' => 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
                 'unlocked' => false,
@@ -286,7 +286,7 @@ class PerformanceController extends Controller
         } else {
             $achievements[] = [
                 'title' => 'Premium Seller',
-                'description' => '10 Enterprise Deals (' . $conversions . '/10)',
+                'description' => '10 Enterprise Deals ('.$conversions.'/10)',
                 'icon' => 'bi-gem',
                 'gradient' => 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
                 'unlocked' => false,

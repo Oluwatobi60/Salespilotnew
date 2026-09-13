@@ -2,14 +2,12 @@
 
 namespace App\Http\Controllers\Branch;
 
+use App\Helpers\ActivityLogger;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Branch\Branch;
 use App\Models\User;
-use App\Models\SubscriptionPlan;
-use App\Models\UserSubscription;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Helpers\ActivityLogger;
 
 class BranchController extends Controller
 {
@@ -58,13 +56,13 @@ class BranchController extends Controller
         $user = Auth::user();
 
         // Only business creator can create branches
-        if (!$user->isBusinessCreator()) {
+        if (! $user->isBusinessCreator()) {
             return redirect()->back()->with('error', 'Only the business owner can create branches.');
         }
 
         // Check subscription and enforce limits
         $subscription = $user->currentSubscription()->first();
-        if (!$subscription || !$subscription->subscriptionPlan) {
+        if (! $subscription || ! $subscription->subscriptionPlan) {
             return redirect()->back()
                 ->with('error', 'No active subscription found. Please subscribe to a plan.')
                 ->with('upgrade_url', route('plan_pricing'));
@@ -100,14 +98,14 @@ class BranchController extends Controller
         ]);
 
         // Check if manager is already assigned to another branch
-        if (!empty($validated['manager_id'])) {
+        if (! empty($validated['manager_id'])) {
             $existingBranch = Branch::where('manager_id', $validated['manager_id'])
                 ->where('user_id', $user->id)
                 ->first();
 
             if ($existingBranch) {
                 return redirect()->back()
-                    ->with('error', 'This manager is already assigned to branch: ' . $existingBranch->branch_name . '. A manager can only be assigned to one branch.')
+                    ->with('error', 'This manager is already assigned to branch: '.$existingBranch->branch_name.'. A manager can only be assigned to one branch.')
                     ->withInput();
             }
         }
@@ -125,7 +123,7 @@ class BranchController extends Controller
 
         $branch = Branch::create($validated);
 
-        ActivityLogger::log('create_branch', 'Created new branch: ' . $branch->branch_name);
+        ActivityLogger::log('create_branch', 'Created new branch: '.$branch->branch_name);
 
         return redirect()->route('manager.branches')
             ->with('success', 'Branch created successfully!');
@@ -141,7 +139,7 @@ class BranchController extends Controller
             ->with(['manager', 'subscriptionPlan'])
             ->findOrFail($id);
 
-        ActivityLogger::log('view_branch', 'Viewed branch: ' . $branch->branch_name);
+        ActivityLogger::log('view_branch', 'Viewed branch: '.$branch->branch_name);
 
         return response()->json($branch);
     }
@@ -170,7 +168,7 @@ class BranchController extends Controller
 
         return response()->json([
             'branch' => $branch,
-            'managers' => $managers
+            'managers' => $managers,
         ]);
     }
 
@@ -182,7 +180,7 @@ class BranchController extends Controller
         $user = Auth::user();
 
         // Only business creator can update branches
-        if (!$user->isBusinessCreator()) {
+        if (! $user->isBusinessCreator()) {
             return redirect()->back()->with('error', 'Only the business owner can update branches.');
         }
 
@@ -198,7 +196,7 @@ class BranchController extends Controller
         ]);
 
         // Check if manager is already assigned to another branch (excluding current branch)
-        if (!empty($validated['manager_id'])) {
+        if (! empty($validated['manager_id'])) {
             $existingBranch = Branch::where('manager_id', $validated['manager_id'])
                 ->where('user_id', $user->id)
                 ->where('id', '!=', $id)
@@ -206,7 +204,7 @@ class BranchController extends Controller
 
             if ($existingBranch) {
                 return redirect()->back()
-                    ->with('error', 'This manager is already assigned to branch: ' . $existingBranch->branch_name . '. A manager can only be assigned to one branch.')
+                    ->with('error', 'This manager is already assigned to branch: '.$existingBranch->branch_name.'. A manager can only be assigned to one branch.')
                     ->withInput();
             }
         }
@@ -216,7 +214,7 @@ class BranchController extends Controller
 
         $branch->update($validated);
 
-        ActivityLogger::log('update_branch', 'Updated branch: ' . $branch->branch_name);
+        ActivityLogger::log('update_branch', 'Updated branch: '.$branch->branch_name);
 
         return redirect()->route('manager.branches')
             ->with('success', 'Branch updated successfully!');
@@ -230,7 +228,7 @@ class BranchController extends Controller
         $user = Auth::user();
 
         // Only business creator can toggle branch status
-        if (!$user->isBusinessCreator()) {
+        if (! $user->isBusinessCreator()) {
             return redirect()->back()->with('error', 'Only the business owner can modify branch status.');
         }
 
@@ -240,7 +238,7 @@ class BranchController extends Controller
         $branch->save();
 
         $statusText = $branch->status == 1 ? 'activated' : 'deactivated';
-        ActivityLogger::log('toggle_branch_status', 'Branch ' . $statusText . ': ' . $branch->branch_name);
+        ActivityLogger::log('toggle_branch_status', 'Branch '.$statusText.': '.$branch->branch_name);
 
         return redirect()->back()
             ->with('success', 'Branch status updated successfully!');
@@ -254,7 +252,7 @@ class BranchController extends Controller
         $user = Auth::user();
 
         // Only business creator can delete branches
-        if (!$user->isBusinessCreator()) {
+        if (! $user->isBusinessCreator()) {
             return redirect()->back()->with('error', 'Only the business owner can delete branches.');
         }
 
@@ -263,7 +261,7 @@ class BranchController extends Controller
 
         $branch->delete();
 
-        ActivityLogger::log('delete_branch', 'Deleted branch: ' . $branchName);
+        ActivityLogger::log('delete_branch', 'Deleted branch: '.$branchName);
 
         return redirect()->route('manager.branches')
             ->with('success', 'Branch deleted successfully!');

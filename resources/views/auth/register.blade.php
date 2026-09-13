@@ -145,6 +145,7 @@
                                         <input id="businessLogo" name="business_logo" type="file" accept="image/*" class="file-upload-input" />
                                     </label>
                                 </div>
+                                <img id="logoPreview" src="#" alt="Logo Preview" style="display: none; max-width: 150px; max-height: 150px; margin-top: 10px; border-radius: 8px; border: 1px solid #e2e8f0; object-fit: contain;" />
                             </div>
                         </div>
 
@@ -435,6 +436,27 @@
             });
         }
     })();
+
+    // Business Logo Preview Logic
+    document.getElementById('businessLogo').addEventListener('change', function(event) {
+        const file = event.target.files[0];
+        const preview = document.getElementById('logoPreview');
+        const placeholder = document.getElementById('logoPlaceholder');
+        
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+                placeholder.textContent = file.name;
+            }
+            reader.readAsDataURL(file);
+        } else {
+            preview.src = '#';
+            preview.style.display = 'none';
+            placeholder.textContent = 'Upload business logo (optional)';
+        }
+    });
     </script>
 </body>
 </html>

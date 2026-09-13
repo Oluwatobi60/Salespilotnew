@@ -25,7 +25,7 @@ return new class extends Migration
             // Check if setting already exists
             $exists = DB::table('app_settings')->where('key', $setting['key'])->exists();
 
-            if (!$exists) {
+            if (! $exists) {
                 DB::table('app_settings')->insert(array_merge($setting, [
                     'created_at' => now(),
                     'updated_at' => now(),

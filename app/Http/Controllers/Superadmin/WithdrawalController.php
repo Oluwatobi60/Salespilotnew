@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Superadmin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Withdrawal;
 use App\Models\Brm;
-use Illuminate\Http\Request;
+use App\Models\Withdrawal;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
 
 class WithdrawalController extends Controller
 {
@@ -87,7 +87,7 @@ class WithdrawalController extends Controller
         $notes = $request->input('notes');
         $withdrawal->approve($notes);
 
-        return back()->with('success', "Withdrawal #" . $withdrawal->id . " (₦" . number_format((float)$withdrawal->amount, 2) . ") has been approved. Amount deducted from wallet. Please make the bank transfer.");
+        return back()->with('success', 'Withdrawal #'.$withdrawal->id.' (₦'.number_format((float) $withdrawal->amount, 2).') has been approved. Amount deducted from wallet. Please make the bank transfer.');
     }
 
     /**
@@ -102,7 +102,7 @@ class WithdrawalController extends Controller
         $notes = $request->input('notes');
         $withdrawal->markAsPaid($notes);
 
-        return back()->with('success', "Withdrawal #" . $withdrawal->id . " has been marked as paid. Bank transfer confirmed.");
+        return back()->with('success', 'Withdrawal #'.$withdrawal->id.' has been marked as paid. Bank transfer confirmed.');
     }
 
     /**
@@ -110,14 +110,14 @@ class WithdrawalController extends Controller
      */
     public function reject(Withdrawal $withdrawal, Request $request)
     {
-        if (!in_array($withdrawal->status, ['pending', 'approved'])) {
+        if (! in_array($withdrawal->status, ['pending', 'approved'])) {
             return back()->with('error', 'Cannot reject a paid or already rejected withdrawal.');
         }
 
         $notes = $request->input('notes');
         $withdrawal->reject($notes);
 
-        return back()->with('error', "Withdrawal #" . $withdrawal->id . " has been rejected.");
+        return back()->with('error', 'Withdrawal #'.$withdrawal->id.' has been rejected.');
     }
 
     /**
@@ -143,7 +143,7 @@ class WithdrawalController extends Controller
             }
         }
 
-        return back()->with('success', "$count withdrawal(s) approved. Total: ₦" . number_format($totalAmount, 2) . " deducted from wallets.");
+        return back()->with('success', "$count withdrawal(s) approved. Total: ₦".number_format($totalAmount, 2).' deducted from wallets.');
     }
 
     /**
@@ -169,6 +169,6 @@ class WithdrawalController extends Controller
             }
         }
 
-        return back()->with('success', "$count withdrawal(s) marked as paid. Total: ₦" . number_format($totalAmount, 2));
+        return back()->with('success', "$count withdrawal(s) marked as paid. Total: ₦".number_format($totalAmount, 2));
     }
 }

@@ -23,7 +23,7 @@ return new class extends Migration
             $table->boolean('is_verified')->default(false);
             $table->dateTime('verified_at')->nullable();
             $table->timestamps();
-            
+
             $table->unique(['brm_id', 'account_number']);
             $table->index(['brm_id', 'brm_wallet_id']);
         });

@@ -42,7 +42,7 @@ return new class extends Migration
 
             // Tax and discount
             $table->decimal('tax_rate', 5, 2)->default(0);
-           /*  $table->decimal('discount', 5, 2)->default(0); */
+            /*  $table->decimal('discount', 5, 2)->default(0); */
             $table->decimal('final_price', 15, 2)->nullable();
 
             // Stock tracking

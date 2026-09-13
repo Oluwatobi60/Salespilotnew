@@ -3,19 +3,18 @@
 namespace App\Http\Controllers\Manager;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use App\Models\StandardItem;
-use App\Models\ProductVariant;
-use App\Models\Category;
-use App\Models\BranchInventory;
 use App\Models\Branch\Branch;
+use App\Models\BranchInventory;
+use App\Models\Category;
+use App\Models\ProductVariant;
+use App\Models\StandardItem;
+use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 
 class ValuationReportController extends Controller
 {
-      public function valuation_report(Request $request)
+    public function valuation_report(Request $request)
     {
         // Get manager information
         $manager = Auth::user();
@@ -39,7 +38,7 @@ class ValuationReportController extends Controller
         if ($branchRecord) {
             $branchIds = [$branchRecord->id];
             $managerBranchName = $branchRecord->branch_name;
-        } elseif (!empty($managerBranchName)) {
+        } elseif (! empty($managerBranchName)) {
             // Fallback for manager records that store branch_name but may not have a branch_id mapping
             $branchIds = Branch::where('business_name', $businessName)
                 ->where('branch_name', $managerBranchName)
@@ -47,7 +46,17 @@ class ValuationReportController extends Controller
                 ->toArray();
         }
 
-        $isBranchManager = !empty($branchIds);
+        $isBranchManager = ! empty($branchIds);
+
+        $allBranches = collect();
+        if (!$isBranchManager) {
+            $allBranches = Branch::where('business_name', $businessName)->orderBy('branch_name')->get();
+
+            if ($request->filled('branch') && $request->branch !== 'all') {
+                $branchIds = [$request->branch];
+                $isBranchManager = true; // Query exactly like a branch manager for this specific branch
+            }
+        }
 
         // Fetch items based on user role
         $items = [];
@@ -57,7 +66,7 @@ class ValuationReportController extends Controller
         $totalMargin = 0;
         $marginDenominator = 0;
 
-        if ($isBranchManager && !empty($branchIds)) {
+        if ($isBranchManager && ! empty($branchIds)) {
             // Branch manager: Get items from branch_inventory
             $branchInventories = BranchInventory::whereIn('branch_id', $branchIds)
                 ->where('business_name', $businessName)
@@ -97,7 +106,7 @@ class ValuationReportController extends Controller
                     }
                 }
 
-                if (!empty($itemName)) {
+                if (! empty($itemName)) {
                     $inventoryValue = $quantity * $cost;
                     $sellingValue = $quantity * $selling;
                     $potentialProfit = $sellingValue - $inventoryValue;
@@ -192,7 +201,7 @@ class ValuationReportController extends Controller
                 $branchName = $branchQuantity > 0 ? 'Main Stock + Branch Stock' : 'Main Stock';
 
                 $items[] = [
-                    'item_name' => ($variant->variantItem->item_name ?? '') . ' - ' . $variant->variant_name,
+                    'item_name' => ($variant->variantItem->item_name ?? '').' - '.$variant->variant_name,
                     'category_name' => $categoryName,
                     'category_id' => $categoryId,
                     'quantity' => $quantity,
@@ -214,7 +223,7 @@ class ValuationReportController extends Controller
         $itemsCollection = collect($items);
         if ($request->filled('search')) {
             $search = strtolower($request->search);
-            $itemsCollection = $itemsCollection->filter(function($item) use ($search) {
+            $itemsCollection = $itemsCollection->filter(function ($item) use ($search) {
                 return str_contains(strtolower($item['item_name']), $search) ||
                        str_contains(strtolower($item['category_name']), $search);
             });
@@ -223,7 +232,7 @@ class ValuationReportController extends Controller
         // Apply category filter
         if ($request->filled('category')) {
             $selectedCategory = $request->category;
-            $itemsCollection = $itemsCollection->filter(function($item) use ($selectedCategory) {
+            $itemsCollection = $itemsCollection->filter(function ($item) use ($selectedCategory) {
                 return $item['category_name'] === $selectedCategory;
             });
         }
@@ -243,6 +252,6 @@ class ValuationReportController extends Controller
         // Get all unique categories from items filtered by business_name
         $allCategories = Category::where('business_name', $businessName)->orderBy('category_name')->get();
 
-        return view('manager.reports.inventory_valuation', compact('paginatedItems', 'totalInventoryValue', 'totalSellingValue', 'totalPotentialProfit', 'overallMargin', 'allCategories', 'isBasicPlan'));
+        return view('manager.reports.inventory_valuation', compact('paginatedItems', 'totalInventoryValue', 'totalSellingValue', 'totalPotentialProfit', 'overallMargin', 'allCategories', 'isBasicPlan', 'allBranches'));
     }
 }

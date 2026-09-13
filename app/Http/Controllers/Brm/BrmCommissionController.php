@@ -3,12 +3,12 @@
 namespace App\Http\Controllers\Brm;
 
 use App\Http\Controllers\Controller;
-use App\Models\Commission;
 use App\Models\Brm;
 use App\Models\BrmWalletAccount;
+use App\Models\Commission;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Carbon\Carbon;
 
 class BrmCommissionController extends Controller
 {
@@ -139,7 +139,7 @@ class BrmCommissionController extends Controller
         $user = $userSubscription->user;
 
         // Check if BRM exists for this customer
-        if (!$user->brm_id) {
+        if (! $user->brm_id) {
             return null;
         }
 
@@ -156,7 +156,7 @@ class BrmCommissionController extends Controller
             'commission_amount' => $commissionAmount,
             'status' => 'pending',
             'commission_type' => 'referral',
-            'notes' => "Commission from " . ($user->business_name ?? ($user->first_name . ' ' . $user->surname)) . " subscription",
+            'notes' => 'Commission from '.($user->business_name ?? ($user->first_name.' '.$user->surname)).' subscription',
         ]);
     }
 
@@ -283,7 +283,7 @@ class BrmCommissionController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error adding account: ' . $e->getMessage(),
+                'message' => 'Error adding account: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -332,7 +332,7 @@ class BrmCommissionController extends Controller
             if ($wallet->balance < $amount) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Insufficient balance. Available: ₦' . number_format($wallet->balance, 2),
+                    'message' => 'Insufficient balance. Available: ₦'.number_format($wallet->balance, 2),
                 ], 422);
             }
 
@@ -354,7 +354,7 @@ class BrmCommissionController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error processing withdrawal: ' . $e->getMessage(),
+                'message' => 'Error processing withdrawal: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -377,4 +377,3 @@ class BrmCommissionController extends Controller
         ]);
     }
 }
-

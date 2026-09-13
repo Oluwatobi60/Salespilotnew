@@ -2,21 +2,23 @@
 
 namespace App\Mail;
 
+use App\Models\Staffs;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
-use App\Models\Staffs;
 
 class StaffCredentials extends Mailable
 {
     use Queueable, SerializesModels;
 
     public $staff;
+
     public $password;
+
     public $businessName;
+
     public $managerName;
 
     /**

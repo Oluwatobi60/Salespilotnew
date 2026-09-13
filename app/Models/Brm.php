@@ -2,12 +2,12 @@
 
 namespace App\Models;
 
+use App\Traits\TrackLoginAttempts;
+use Illuminate\Auth\Authenticatable as AuthenticableTrait;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Contracts\Auth\Authenticatable;
-use Illuminate\Auth\Authenticatable as AuthenticableTrait;
-use App\Traits\TrackLoginAttempts;
 
 /**
  * @property int $id
@@ -20,6 +20,7 @@ use App\Traits\TrackLoginAttempts;
  * @property string $password
  * @property string $notes
  * @property int $status
+ *
  * @method HasMany customers()
  */
 class Brm extends Model implements Authenticatable

@@ -2,8 +2,8 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
 use App\Models\SuperAdmin;
+use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Hash;
 
 class CreateSuperAdmin extends Command
@@ -24,8 +24,6 @@ class CreateSuperAdmin extends Command
 
     /**
      * Execute the console command.
-     *
-     * @return int
      */
     public function handle(): int
     {
@@ -36,6 +34,7 @@ class CreateSuperAdmin extends Command
 
         if (SuperAdmin::where('email', $email)->exists()) {
             $this->error("SuperAdmin with email {$email} already exists.");
+
             return Command::FAILURE;
         }
 

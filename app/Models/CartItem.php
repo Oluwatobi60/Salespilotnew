@@ -3,11 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Models\AddCustomer;
-use App\Models\AddDiscount;
-use App\Models\User;
-use App\Models\Staffs;
-
 
 class CartItem extends Model
 {
@@ -36,15 +31,16 @@ class CartItem extends Model
         'staff_id',
         'branch_id',
         'branch_name',
-        'branch_manager_id'
+        'branch_manager_id',
     ];
+
     public function discount()
     {
         return $this->belongsTo(AddDiscount::class, 'discount_id');
     }
 
     protected $casts = [
-        'quantity' => 'integer',
+        'quantity' => 'decimal:2',
         'item_price' => 'decimal:2',
         'subtotal' => 'decimal:2',
         'discount' => 'decimal:2',
@@ -69,5 +65,10 @@ class CartItem extends Model
     public function branch()
     {
         return $this->belongsTo(\App\Models\Branch\Branch::class);
+    }
+
+    public function sale()
+    {
+        return $this->belongsTo(Sale::class, 'receipt_number', 'receipt_number');
     }
 }

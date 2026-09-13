@@ -1,8 +1,6 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
@@ -53,11 +51,11 @@ return new class extends Migration
 
         foreach ($plans as $plan) {
             $features = json_decode($plan->features, true) ?? [];
-            
-            // Add all new features to all plans by default to restore functionality 
+
+            // Add all new features to all plans by default to restore functionality
             // without downgrading users.
             foreach ($allNewSlugs as $slug) {
-                if (!in_array($slug, $features)) {
+                if (! in_array($slug, $features)) {
                     $features[] = $slug;
                 }
             }
@@ -86,18 +84,18 @@ return new class extends Migration
         $slugsToRemove = [
             'sales_summary', 'sales_by_staff', 'sales_by_item', 'sales_by_category', 'inventory_valuation', 'discount_report',
             'manager_pos', 'manager_inventory', 'manager_suppliers', 'manager_customers', 'manager_activity_logs', 'manager_discounts', 'manager_view_branches',
-            'manager_sales_summary', 'manager_sales_by_staff', 'manager_sales_by_item', 'manager_sales_by_category', 'manager_inventory_valuation', 'manager_discount_report'
+            'manager_sales_summary', 'manager_sales_by_staff', 'manager_sales_by_item', 'manager_sales_by_category', 'manager_inventory_valuation', 'manager_discount_report',
         ];
 
         DB::table('subscription_features')
             ->whereIn('slug', $slugsToRemove)
             ->delete();
-            
+
         $plans = DB::table('subscription_plans')->get();
         foreach ($plans as $plan) {
             $features = json_decode($plan->features, true) ?? [];
-            $features = array_filter($features, function($f) use ($slugsToRemove) {
-                return !in_array($f, $slugsToRemove);
+            $features = array_filter($features, function ($f) use ($slugsToRemove) {
+                return ! in_array($f, $slugsToRemove);
             });
             DB::table('subscription_plans')
                 ->where('id', $plan->id)

@@ -2,8 +2,8 @@
 
 namespace App\Console\Commands;
 
-use App\Mail\SubscriptionRenewed;
 use App\Mail\SubscriptionExpiryReminder;
+use App\Mail\SubscriptionRenewed;
 use App\Models\UserSubscription;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
@@ -13,8 +13,8 @@ use Illuminate\Support\Facades\Mail;
 
 class ProcessAutoRenewals extends Command
 {
+    protected $signature = 'subscriptions:process-renewals';
 
-    protected $signature   = 'subscriptions:process-renewals';
     protected $description = 'Auto-renew eligible subscriptions and send expiry reminder emails';
 
     public function handle(): int
@@ -60,17 +60,17 @@ class ProcessAutoRenewals extends Command
                 $sub->save();
 
                 $newSub = UserSubscription::create([
-                    'user_id'              => $sub->user_id,
+                    'user_id' => $sub->user_id,
                     'subscription_plan_id' => $sub->subscription_plan_id,
-                    'duration_months'      => $sub->duration_months,
-                    'amount_paid'          => $sub->amount_paid,
-                    'discount_percentage'  => $sub->discount_percentage,
-                    'start_date'           => Carbon::today(),
-                    'end_date'             => Carbon::today()->addMonths($sub->duration_months),
-                    'status'               => 'active',
-                    'payment_reference'    => 'AUTO-' . strtoupper(uniqid()),
-                    'auto_renew'           => true,
-                    'last_renewed_at'      => Carbon::now(),
+                    'duration_months' => $sub->duration_months,
+                    'amount_paid' => $sub->amount_paid,
+                    'discount_percentage' => $sub->discount_percentage,
+                    'start_date' => Carbon::today(),
+                    'end_date' => Carbon::today()->addMonths($sub->duration_months),
+                    'status' => 'active',
+                    'payment_reference' => 'AUTO-'.strtoupper(uniqid()),
+                    'auto_renew' => true,
+                    'last_renewed_at' => Carbon::now(),
                 ]);
 
                 // Generate renewal commission for BRM
@@ -92,8 +92,8 @@ class ProcessAutoRenewals extends Command
                 $this->line("  ✔ Renewed: {$sub->user->business_name} (user #{$sub->user_id})");
             } catch (\Exception $e) {
                 DB::rollBack();
-                Log::error("Auto-renewal failed for user #{$sub->user_id}: " . $e->getMessage());
-                $this->warn("  ✘ Failed for user #{$sub->user_id}: " . $e->getMessage());
+                Log::error("Auto-renewal failed for user #{$sub->user_id}: ".$e->getMessage());
+                $this->warn("  ✘ Failed for user #{$sub->user_id}: ".$e->getMessage());
             }
         }
 
@@ -115,7 +115,7 @@ class ProcessAutoRenewals extends Command
                 // Only send if we haven't already sent a reminder today
                 ->where(function ($q) {
                     $q->whereNull('renewal_notified_at')
-                      ->orWhereDate('renewal_notified_at', '<', Carbon::today());
+                        ->orWhereDate('renewal_notified_at', '<', Carbon::today());
                 })
                 ->get();
 
@@ -132,7 +132,7 @@ class ProcessAutoRenewals extends Command
                         $this->line("  📧 Reminder ({$days}d): {$sub->user->email}");
                     }
                 } catch (\Exception $e) {
-                    Log::error("Reminder email failed for user #{$sub->user_id}: " . $e->getMessage());
+                    Log::error("Reminder email failed for user #{$sub->user_id}: ".$e->getMessage());
                 }
             }
         }

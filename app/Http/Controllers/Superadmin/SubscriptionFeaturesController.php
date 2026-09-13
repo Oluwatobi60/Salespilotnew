@@ -3,12 +3,11 @@
 namespace App\Http\Controllers\Superadmin;
 
 use App\Http\Controllers\Controller;
-use App\Models\SubscriptionPlan;
 use App\Models\SubscriptionFeature;
+use App\Models\SubscriptionPlan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
-
 
 class SubscriptionFeaturesController extends Controller
 {
@@ -19,27 +18,28 @@ class SubscriptionFeaturesController extends Controller
     protected function canEditFeatures()
     {
         $user = auth()->user();
-        
+
         // SuperAdmin always can edit
         if (auth('superadmin')->check()) {
             return true;
         }
-        
+
         // Business creator (no addby) can edit
         if ($user && $user->addby === null) {
             return true;
         }
-        
+
         // Managers need the feature enabled
         if ($user && $user->addby !== null) {
             try {
                 return user_has_feature('manager_edit_items_features', $user);
             } catch (\Exception $e) {
-                Log::warning('Error checking manager_edit_items_features: ' . $e->getMessage());
+                Log::warning('Error checking manager_edit_items_features: '.$e->getMessage());
+
                 return false;
             }
         }
-        
+
         return false;
     }
 
@@ -51,6 +51,7 @@ class SubscriptionFeaturesController extends Controller
         // Auto-enable all features only if manually triggered via query parameter
         if (request()->has('reset_features') && request()->get('reset_features') === 'true') {
             $this->autoEnableAllFeatures();
+
             return redirect()->route('superadmin.subscription-features.index')
                 ->with('success', 'All features have been reset and enabled for all plans');
         }
@@ -58,7 +59,7 @@ class SubscriptionFeaturesController extends Controller
         $plans = SubscriptionPlan::orderBy('monthly_price')->get();
         $features = SubscriptionFeature::getGroupedFeatures();
         $roles = SubscriptionFeature::getRoles();
-        
+
         // Pass authorization info to view
         $canEditFeatures = $this->canEditFeatures();
 
@@ -90,7 +91,7 @@ class SubscriptionFeaturesController extends Controller
     public function toggleFeature(Request $request, SubscriptionPlan $plan)
     {
         // Check authorization
-        if (!$this->canEditFeatures()) {
+        if (! $this->canEditFeatures()) {
             return response()->json([
                 'success' => false,
                 'message' => 'You do not have permission to edit subscription features. This must be enabled by your business creator.',
@@ -108,12 +109,12 @@ class SubscriptionFeaturesController extends Controller
 
             if ($validated['enabled']) {
                 // Add feature if not already present
-                if (!in_array($validated['feature_slug'], $currentFeatures)) {
+                if (! in_array($validated['feature_slug'], $currentFeatures)) {
                     $currentFeatures[] = $validated['feature_slug'];
                 }
             } else {
                 // Remove feature
-                $currentFeatures = array_values(array_filter($currentFeatures, fn($f) => $f !== $validated['feature_slug']));
+                $currentFeatures = array_values(array_filter($currentFeatures, fn ($f) => $f !== $validated['feature_slug']));
             }
 
             Log::info('Before setFeatures', [
@@ -121,7 +122,7 @@ class SubscriptionFeaturesController extends Controller
                 'current_features_in_plan' => $plan->features,
                 'new_features_array' => $currentFeatures,
                 'feature_slug' => $validated['feature_slug'],
-                'enabled' => $validated['enabled']
+                'enabled' => $validated['enabled'],
             ]);
 
             $plan->setFeatures($currentFeatures);
@@ -131,7 +132,7 @@ class SubscriptionFeaturesController extends Controller
             Log::info('After setFeatures and refresh', [
                 'plan_id' => $plan->id,
                 'features_now' => $plan->features,
-                'expected' => $currentFeatures
+                'expected' => $currentFeatures,
             ]);
 
             // Clear cache with error handling
@@ -139,31 +140,31 @@ class SubscriptionFeaturesController extends Controller
                 Cache::forget("subscription_plan_{$plan->id}");
                 Cache::forget('active_subscription_plans');
             } catch (\Exception $cacheError) {
-                Log::warning('Cache clearing failed in toggleFeature: ' . $cacheError->getMessage());
+                Log::warning('Cache clearing failed in toggleFeature: '.$cacheError->getMessage());
                 // Continue anyway - cache clearing failure shouldn't stop the operation
             }
 
             return response()->json([
                 'success' => true,
-                'message' => 'Feature ' . ($validated['enabled'] ? 'enabled' : 'disabled') . ' successfully',
+                'message' => 'Feature '.($validated['enabled'] ? 'enabled' : 'disabled').' successfully',
                 'features_count' => count($currentFeatures),
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Validation error: ' . implode(', ', $e->validator->errors()->all()),
-                'errors' => $e->validator->errors()
+                'message' => 'Validation error: '.implode(', ', $e->validator->errors()->all()),
+                'errors' => $e->validator->errors(),
             ], 422);
         } catch (\Exception $e) {
-            Log::error('Error in toggleFeature: ' . $e->getMessage(), [
+            Log::error('Error in toggleFeature: '.$e->getMessage(), [
                 'plan_id' => $plan->id,
                 'feature_slug' => $request->input('feature_slug'),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Server error: ' . $e->getMessage()
+                'message' => 'Server error: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -174,7 +175,7 @@ class SubscriptionFeaturesController extends Controller
     public function updatePlanFeatures(Request $request, SubscriptionPlan $plan)
     {
         // Check authorization
-        if (!$this->canEditFeatures()) {
+        if (! $this->canEditFeatures()) {
             return response()->json([
                 'success' => false,
                 'message' => 'You do not have permission to edit subscription features. This must be enabled by your business creator.',
@@ -205,7 +206,7 @@ class SubscriptionFeaturesController extends Controller
     public function createFeature(Request $request)
     {
         // Check authorization
-        if (!$this->canEditFeatures()) {
+        if (! $this->canEditFeatures()) {
             return response()->json([
                 'success' => false,
                 'message' => 'You do not have permission to create subscription features. This must be enabled by your business creator.',
@@ -236,7 +237,7 @@ class SubscriptionFeaturesController extends Controller
         $plans = SubscriptionPlan::all();
         foreach ($plans as $plan) {
             $currentFeatures = is_array($plan->features) ? $plan->features : [];
-            if (!in_array($feature->slug, $currentFeatures)) {
+            if (! in_array($feature->slug, $currentFeatures)) {
                 $currentFeatures[] = $feature->slug;
                 $plan->features = $currentFeatures;
                 $plan->save();
@@ -258,7 +259,7 @@ class SubscriptionFeaturesController extends Controller
     public function deleteFeature(SubscriptionFeature $feature)
     {
         // Check authorization
-        if (!$this->canEditFeatures()) {
+        if (! $this->canEditFeatures()) {
             return response()->json([
                 'success' => false,
                 'message' => 'You do not have permission to delete subscription features. This must be enabled by your business creator.',
@@ -352,7 +353,7 @@ class SubscriptionFeaturesController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => "All features synced! {$updatedCount} plans updated with " . count($allFeatureSlugs) . " features.",
+            'message' => "All features synced! {$updatedCount} plans updated with ".count($allFeatureSlugs).' features.',
             'plans_updated' => $updatedCount,
             'features_count' => count($allFeatureSlugs),
         ]);

@@ -59,6 +59,7 @@ class BundleComponent extends Model
         } elseif ($this->product_type === 'variant') {
             return $this->variantItem;
         }
+
         return null;
     }
 
@@ -72,6 +73,7 @@ class BundleComponent extends Model
         } elseif ($this->product_type === 'variant' && $this->variantItem) {
             return $this->variantItem->stock_quantity ?? 0;
         }
+
         return 0;
     }
 
@@ -99,6 +101,7 @@ class BundleComponent extends Model
         } elseif ($this->product_type === 'variant' && $this->variantItem) {
             return $this->variantItem->variant_name;
         }
+
         return 'Unknown Product';
     }
 }

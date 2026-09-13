@@ -2,9 +2,8 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
-
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -24,7 +23,7 @@ return new class extends Migration
                 '1 Staff Account',
                 'Basic Inventory Management',
                 'Sales Tracking',
-                'Email Support'
+                'Email Support',
             ],
             'basic' => [
                 '1 Manager/Administrator Account',
@@ -32,7 +31,7 @@ return new class extends Migration
                 'Advanced Inventory Management',
                 'Sales & Purchase Tracking',
                 'Basic Reports & Analytics',
-                'Priority Email Support'
+                'Priority Email Support',
             ],
             'standard' => [
                 '2 Manager/Administrator Accounts',
@@ -41,7 +40,7 @@ return new class extends Migration
                 'Advanced Inventory Management',
                 'Sales & Purchase Tracking',
                 'Basic Reports & Analytics',
-                'Priority Email Support'
+                'Priority Email Support',
             ],
             'premium' => [
                 '3 Manager/Administrator Accounts',
@@ -50,8 +49,8 @@ return new class extends Migration
                 'Advanced Reports & Analytics',
                 'Multi-branch Support',
                 '24/7 Priority Support',
-                'Custom Integrations'
-            ]
+                'Custom Integrations',
+            ],
         ];
 
         foreach ($plansFeatures as $name => $features) {

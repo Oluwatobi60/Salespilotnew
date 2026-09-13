@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Superadmin;
 
 use App\Http\Controllers\Controller;
-use App\Models\UserSubscription;
 use App\Models\SubscriptionPlan;
-use Illuminate\Http\Request;
+use App\Models\UserSubscription;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
 
 class RevenueController extends Controller
 {
@@ -30,16 +30,16 @@ class RevenueController extends Controller
             $baseQuery->where('subscription_plan_id', $planId);
         }
 
-        $periodRevenue       = (clone $baseQuery)->sum('amount_paid');
-        $periodTransactions  = (clone $baseQuery)->count();
-        $periodAvg           = $periodTransactions > 0 ? $periodRevenue / $periodTransactions : 0;
+        $periodRevenue = (clone $baseQuery)->sum('amount_paid');
+        $periodTransactions = (clone $baseQuery)->count();
+        $periodAvg = $periodTransactions > 0 ? $periodRevenue / $periodTransactions : 0;
 
         // Previous period for comparison (same length)
-        $days       = max(1, $from->diffInDays($to) + 1);
-        $prevFrom   = $from->copy()->subDays($days);
-        $prevTo     = $from->copy()->subSecond();
+        $days = max(1, $from->diffInDays($to) + 1);
+        $prevFrom = $from->copy()->subDays($days);
+        $prevTo = $from->copy()->subSecond();
         $prevRevenue = UserSubscription::whereBetween('created_at', [$prevFrom, $prevTo])
-            ->when($planId, fn($q) => $q->where('subscription_plan_id', $planId))
+            ->when($planId, fn ($q) => $q->where('subscription_plan_id', $planId))
             ->sum('amount_paid');
 
         $revenueChange = $prevRevenue > 0
@@ -49,7 +49,7 @@ class RevenueController extends Controller
         // ── Daily revenue for chart ────────────────────────────────────────
         $daily = UserSubscription::selectRaw('DATE(created_at) as date, SUM(amount_paid) as total')
             ->whereBetween('created_at', [$from, $to])
-            ->when($planId, fn($q) => $q->where('subscription_plan_id', $planId))
+            ->when($planId, fn ($q) => $q->where('subscription_plan_id', $planId))
             ->groupBy('date')
             ->orderBy('date')
             ->get()
@@ -57,12 +57,12 @@ class RevenueController extends Controller
 
         // Fill every day in range (including zero-revenue days)
         $chartLabels = [];
-        $chartData   = [];
+        $chartData = [];
         $cursor = $from->copy()->startOfDay();
         while ($cursor <= $to) {
-            $key           = $cursor->toDateString();
+            $key = $cursor->toDateString();
             $chartLabels[] = $cursor->format('M d');
-            $chartData[]   = (float) ($daily[$key]->total ?? 0);
+            $chartData[] = (float) ($daily[$key]->total ?? 0);
             $cursor->addDay();
         }
 
@@ -77,7 +77,7 @@ class RevenueController extends Controller
         // ── Transaction list (paginated) ──────────────────────────────────
         $transactions = UserSubscription::with(['user:id,first_name,surname,email', 'subscriptionPlan:id,name'])
             ->whereBetween('created_at', [$from, $to])
-            ->when($planId, fn($q) => $q->where('subscription_plan_id', $planId))
+            ->when($planId, fn ($q) => $q->where('subscription_plan_id', $planId))
             ->latest()
             ->paginate(20);
 

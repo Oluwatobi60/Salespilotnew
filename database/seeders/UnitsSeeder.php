@@ -28,6 +28,7 @@ class UnitsSeeder extends Seeder
         // Check if units already exist to prevent duplicates
         if (DB::table('units')->count() > 0) {
             $this->command->info('Units table already has data. Skipping seeder.');
+
             return;
         }
 

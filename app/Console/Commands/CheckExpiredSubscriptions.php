@@ -2,11 +2,11 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
-use App\Models\UserSubscription;
 use App\Mail\SubscriptionExpiryReminder;
-use Illuminate\Support\Facades\Mail;
+use App\Models\UserSubscription;
 use Carbon\Carbon;
+use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Mail;
 
 class CheckExpiredSubscriptions extends Command
 {
@@ -52,7 +52,7 @@ class CheckExpiredSubscriptions extends Command
             ->where('status', 'active')
             ->whereBetween('end_date', [
                 Carbon::today(),
-                Carbon::today()->addDays(5)
+                Carbon::today()->addDays(5),
             ])
             ->get();
 

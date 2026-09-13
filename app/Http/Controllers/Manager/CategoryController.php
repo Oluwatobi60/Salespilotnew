@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Manager;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use App\Models\Category;
 use App\Models\StandardItem;
 use App\Models\VariantItem;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class CategoryController extends Controller
 {
@@ -15,7 +15,7 @@ class CategoryController extends Controller
     {
         $manager = Auth::user();
 
-        if (!$manager) {
+        if (! $manager) {
             return false;
         }
 
@@ -47,14 +47,13 @@ class CategoryController extends Controller
         return view('manager.category.all_category', compact('categories'));
     }
 
-
     public function create_category(Request $request)
     {
-        if (!$this->canManageCategories()) {
+        if (! $this->canManageCategories()) {
             if ($this->wantsJson($request)) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'You do not have permission to create categories. This must be enabled by your business creator.'
+                    'message' => 'You do not have permission to create categories. This must be enabled by your business creator.',
                 ], 403);
             }
 
@@ -65,8 +64,8 @@ class CategoryController extends Controller
         $manager = Auth::user();
 
         // Validate the request data - category must be unique per business
-       $validatedata = $request->validate([
-             'category_name' => [
+        $validatedata = $request->validate([
+            'category_name' => [
                 'required',
                 'min:5',
                 'max:100',
@@ -78,11 +77,11 @@ class CategoryController extends Controller
                     if ($exists) {
                         $fail('This category name already exists for your business.');
                     }
-                }
+                },
             ],
         ]);
 
-        $managerName = trim(($manager->firstname ?? '') . ' ' . ($manager->othername ?? '') . ' ' . ($manager->surname ?? ''));
+        $managerName = trim(($manager->firstname ?? '').' '.($manager->othername ?? '').' '.($manager->surname ?? ''));
 
         // Add manager info to validated data
         $validatedata['business_name'] = $manager->business_name;
@@ -91,7 +90,7 @@ class CategoryController extends Controller
 
         // Create a new category
         $category = Category::create($validatedata);
-        \App\Helpers\ActivityLogger::log('create_category', 'Created category: ' . $category->category_name);
+        \App\Helpers\ActivityLogger::log('create_category', 'Created category: '.$category->category_name);
 
         // Check if the request expects JSON (AJAX request)
         if ($request->expectsJson()) {
@@ -100,8 +99,8 @@ class CategoryController extends Controller
                 'message' => 'Category created successfully',
                 'category' => [
                     'id' => $category->id,
-                    'category_name' => $category->category_name
-                ]
+                    'category_name' => $category->category_name,
+                ],
             ], 201);
         }
 
@@ -113,20 +112,21 @@ class CategoryController extends Controller
     {
         $manager = Auth::user();
         $businessName = $manager->business_name;
-        
+
         // ✅ SECURITY: Verify category belongs to manager's business
         $category = Category::where('business_name', $businessName)
             ->findOrFail($id);
+
         return view('manager.category.edit_category', compact('category'));
     }
 
     public function update_category(Request $request, $id)
     {
-        if (!$this->canManageCategories()) {
+        if (! $this->canManageCategories()) {
             if ($this->wantsJson($request)) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'You do not have permission to update categories. This must be enabled by your business creator.'
+                    'message' => 'You do not have permission to update categories. This must be enabled by your business creator.',
                 ], 403);
             }
 
@@ -135,32 +135,31 @@ class CategoryController extends Controller
 
         $manager = Auth::user();
         $businessName = $manager->business_name;
-        
+
         // ✅ SECURITY: Verify category belongs to manager's business
         $category = Category::where('business_name', $businessName)
             ->findOrFail($id);
 
         // Validate the request data
         $validatedData = $request->validate([
-            'category_name' => 'required|max:100|min:5|unique:categories,category_name,' . $category->id,
+            'category_name' => 'required|max:100|min:5|unique:categories,category_name,'.$category->id,
         ]);
 
         // Update the category
         $category->update($validatedData);
-        \App\Helpers\ActivityLogger::log('update_category', 'Updated category: ' . $category->category_name);
+        \App\Helpers\ActivityLogger::log('update_category', 'Updated category: '.$category->category_name);
 
         // Redirect back with success message
         return redirect()->route('all_categories')->with('success', 'Category updated successfully.');
     }
 
-
     public function delete_category(Request $request, $id)
     {
-        if (!$this->canManageCategories()) {
+        if (! $this->canManageCategories()) {
             if ($this->wantsJson($request)) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'You do not have permission to delete categories. This must be enabled by your business creator.'
+                    'message' => 'You do not have permission to delete categories. This must be enabled by your business creator.',
                 ], 403);
             }
 
@@ -169,7 +168,7 @@ class CategoryController extends Controller
 
         $manager = Auth::user();
         $businessName = $manager->business_name;
-        
+
         // ✅ SECURITY: Verify category belongs to manager's business
         $category = Category::where('business_name', $businessName)
             ->findOrFail($id);
@@ -185,7 +184,7 @@ class CategoryController extends Controller
         // Delete the category
         $categoryName = $category->category_name;
         $category->delete();
-        \App\Helpers\ActivityLogger::log('delete_category', 'Deleted category: ' . $categoryName);
+        \App\Helpers\ActivityLogger::log('delete_category', 'Deleted category: '.$categoryName);
 
         // Redirect back with success message
         return redirect()->route('all_categories')->with('success', 'Category deleted successfully.');

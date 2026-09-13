@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Manager;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use App\Models\AddDiscount;
 use App\Models\CartItem;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class AddDiscountController extends Controller
 {
@@ -18,7 +18,7 @@ class AddDiscountController extends Controller
     {
         $manager = Auth::user();
 
-        if (!$manager) {
+        if (! $manager) {
             return false;
         }
 
@@ -97,14 +97,14 @@ class AddDiscountController extends Controller
         // Apply staff filter
         if ($request->filled('staff_id')) {
             $staffId = $request->staff_id;
-            $query->where(function($q) use ($staffId) {
+            $query->where(function ($q) use ($staffId) {
                 $q->where('staff_id', $staffId)
-                  ->orWhere('user_id', $staffId);
+                    ->orWhere('user_id', $staffId);
             });
         }
 
         // For each discount, calculate total times used and total amount discounted
-        $discountStats = $discounnts->map(function($discount) use ($query) {
+        $discountStats = $discounnts->map(function ($discount) use ($query) {
             // Clone the query for each discount
             $discountQuery = clone $query;
             $timesUsed = $discountQuery->where('discount_id', $discount->id)->count();
@@ -118,36 +118,34 @@ class AddDiscountController extends Controller
                 'customers_group' => $discount->customers_group,
                 'discount_rate' => $discount->discount_rate,
                 'times_used' => $timesUsed,
-                'amount_discounted' => $amountDiscounted
+                'amount_discounted' => $amountDiscounted,
             ];
         });
 
         return view('manager.reports.discount_report', [
-            'discountStats' => $discountStats
+            'discountStats' => $discountStats,
         ]);
     }
 
-
-   public function add_discount()
+    public function add_discount()
     {
-         // Get logged-in manager's business name
-         $manager = Auth::user();
-         $businessName = $manager->business_name;
+        // Get logged-in manager's business name
+        $manager = Auth::user();
+        $businessName = $manager->business_name;
 
-         // Fetch discounts only for this manager's business
-         $discounnts = AddDiscount::where('business_name', $businessName)->get();
+        // Fetch discounts only for this manager's business
+        $discounnts = AddDiscount::where('business_name', $businessName)->get();
 
         return view('manager.customer.add_discount', compact('discounnts'));
     }
 
-
     public function create_discount(Request $request)
     {
-        if (!$this->canManageDiscounts()) {
+        if (! $this->canManageDiscounts()) {
             if ($this->wantsJson($request)) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'You do not have permission to create discounts. This must be enabled by your business creator.'
+                    'message' => 'You do not have permission to create discounts. This must be enabled by your business creator.',
                 ], 403);
             }
 
@@ -164,10 +162,10 @@ class AddDiscountController extends Controller
 
         // Get manager info from logged-in user
         $manager = Auth::user();
-        $managerFullName = trim(($manager->firstname ?? '') . ' ' . ($manager->othername ?? '') . ' ' . ($manager->surname ?? ''));
+        $managerFullName = trim(($manager->firstname ?? '').' '.($manager->othername ?? '').' '.($manager->surname ?? ''));
 
         // Create a new discount record in the database
-        $discount = new AddDiscount();
+        $discount = new AddDiscount;
         $discount->business_name = $manager->business_name ?? null;
         $discount->manager_name = $managerFullName ?: null;
         $discount->manager_email = $manager->email ?? null;
@@ -181,7 +179,6 @@ class AddDiscountController extends Controller
         // Redirect to the discount report page with a success message
         return redirect()->route('manager.add_discount')->with('success', 'Discount created successfully!');
     }
-
 
     // Return all discounts as JSON for AJAX requests.
 
@@ -197,17 +194,17 @@ class AddDiscountController extends Controller
 
         return response()->json([
             'success' => true,
-            'discounts' => $discounts
+            'discounts' => $discounts,
         ]);
     }
 
     public function update_discount(Request $request, $id)
     {
-        if (!$this->canManageDiscounts()) {
+        if (! $this->canManageDiscounts()) {
             if ($this->wantsJson($request)) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'You do not have permission to update discounts. This must be enabled by your business creator.'
+                    'message' => 'You do not have permission to update discounts. This must be enabled by your business creator.',
                 ], 403);
             }
 
@@ -216,7 +213,7 @@ class AddDiscountController extends Controller
 
         $manager = Auth::user();
         $businessName = $manager->business_name;
-        
+
         // ✅ SECURITY: Verify discount belongs to manager's business
         $discount = AddDiscount::where('business_name', $businessName)
             ->findOrFail($id);
@@ -237,7 +234,7 @@ class AddDiscountController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Discount updated successfully',
-                'discount' => $discount
+                'discount' => $discount,
             ], 200);
         }
 
@@ -247,11 +244,11 @@ class AddDiscountController extends Controller
 
     public function delete_discount(Request $request, $id)
     {
-        if (!$this->canManageDiscounts()) {
+        if (! $this->canManageDiscounts()) {
             if ($this->wantsJson($request)) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'You do not have permission to delete discounts. This must be enabled by your business creator.'
+                    'message' => 'You do not have permission to delete discounts. This must be enabled by your business creator.',
                 ], 403);
             }
 
@@ -260,7 +257,7 @@ class AddDiscountController extends Controller
 
         $manager = Auth::user();
         $businessName = $manager->business_name;
-        
+
         // ✅ SECURITY: Verify discount belongs to manager's business
         $discount = AddDiscount::where('business_name', $businessName)
             ->findOrFail($id);
@@ -270,14 +267,11 @@ class AddDiscountController extends Controller
         if (request()->expectsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Discount deleted successfully'
+                'message' => 'Discount deleted successfully',
             ], 200);
         }
 
         // Redirect back with success message
         return redirect()->route('manager.add_discount')->with('success', 'Discount deleted successfully.');
     }
-
-
-
 }

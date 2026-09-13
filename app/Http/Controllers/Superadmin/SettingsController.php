@@ -5,12 +5,12 @@ namespace App\Http\Controllers\Superadmin;
 use App\Http\Controllers\Controller;
 use App\Models\AppSetting;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 
 class SettingsController extends Controller
 {
@@ -83,11 +83,11 @@ class SettingsController extends Controller
             }
 
             // Process all other submitted settings
-            if (!empty($submittedSettings)) {
+            if (! empty($submittedSettings)) {
                 foreach ($submittedSettings as $key => $value) {
                     $setting = AppSetting::where('key', $key)->first();
 
-                    if (!$setting || $setting->type === 'boolean') {
+                    if (! $setting || $setting->type === 'boolean') {
                         // Skip if not found or already processed as boolean
                         continue;
                     }
@@ -128,7 +128,8 @@ class SettingsController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Settings update failed', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
-            return back()->with('error', 'Failed to update settings: ' . $e->getMessage());
+
+            return back()->with('error', 'Failed to update settings: '.$e->getMessage());
         }
     }
 
@@ -143,19 +144,19 @@ class SettingsController extends Controller
 
         try {
             // Send test email
-            Mail::raw('This is a test email from ' . app_name() . ' settings configuration.', function ($message) use ($validated) {
+            Mail::raw('This is a test email from '.app_name().' settings configuration.', function ($message) use ($validated) {
                 $message->to($validated['test_email'])
-                    ->subject('Test Email - ' . app_name());
+                    ->subject('Test Email - '.app_name());
             });
 
             return response()->json([
                 'success' => true,
-                'message' => 'Test email sent successfully to ' . $validated['test_email']
+                'message' => 'Test email sent successfully to '.$validated['test_email'],
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to send test email: ' . $e->getMessage()
+                'message' => 'Failed to send test email: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -174,12 +175,12 @@ class SettingsController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'All caches cleared successfully!'
+                'message' => 'All caches cleared successfully!',
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to clear cache: ' . $e->getMessage()
+                'message' => 'Failed to clear cache: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -197,17 +198,17 @@ class SettingsController extends Controller
         try {
             $setting = AppSetting::where('key', $validated['key'])->first();
 
-            if (!$setting) {
+            if (! $setting) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Setting not found'
+                    'message' => 'Setting not found',
                 ], 404);
             }
 
             if ($setting->type !== 'boolean') {
                 return response()->json([
                     'success' => false,
-                    'message' => 'This setting is not a boolean type'
+                    'message' => 'This setting is not a boolean type',
                 ], 400);
             }
 
@@ -221,25 +222,25 @@ class SettingsController extends Controller
             // Clear application config cache
             Artisan::call('config:clear');
 
-            Log::info("Toggle setting updated", [
+            Log::info('Toggle setting updated', [
                 'key' => $validated['key'],
                 'value' => $validated['value'],
-                'label' => $setting->label
+                'label' => $setting->label,
             ]);
 
             return response()->json([
                 'success' => true,
-                'message' => $setting->label . ' updated successfully!'
+                'message' => $setting->label.' updated successfully!',
             ]);
         } catch (\Exception $e) {
             Log::error('Toggle update failed', [
                 'key' => $validated['key'],
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to update setting: ' . $e->getMessage()
+                'message' => 'Failed to update setting: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -266,18 +267,18 @@ class SettingsController extends Controller
                 return response()->json([
                     'success' => true,
                     'message' => 'Database backup completed successfully!',
-                    'download_url' => $filename ? route('superadmin.settings.download-backup', ['filename' => $filename]) : null
+                    'download_url' => $filename ? route('superadmin.settings.download-backup', ['filename' => $filename]) : null,
                 ]);
             } else {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Backup failed. Please check server logs.'
+                    'message' => 'Backup failed. Please check server logs.',
                 ], 500);
             }
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Backup failed: ' . $e->getMessage()
+                'message' => 'Backup failed: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -287,10 +288,11 @@ class SettingsController extends Controller
      */
     public function downloadBackup($filename)
     {
-        $path = storage_path('app/backups/' . $filename);
-        if (!file_exists($path)) {
+        $path = storage_path('app/backups/'.$filename);
+        if (! file_exists($path)) {
             abort(404, 'Backup file not found.');
         }
+
         return response()->download($path);
     }
 
@@ -301,7 +303,7 @@ class SettingsController extends Controller
     {
         try {
             $currentMode = AppSetting::get('maintenance_mode', false);
-            $newMode = !$currentMode;
+            $newMode = ! $currentMode;
 
             if ($newMode) {
                 // Set the setting BEFORE enabling maintenance mode
@@ -317,12 +319,12 @@ class SettingsController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => $message,
-                'mode' => $newMode
+                'mode' => $newMode,
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to toggle maintenance mode: ' . $e->getMessage()
+                'message' => 'Failed to toggle maintenance mode: '.$e->getMessage(),
             ], 500);
         }
     }

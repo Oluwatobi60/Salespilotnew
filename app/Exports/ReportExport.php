@@ -11,6 +11,7 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 class ReportExport implements FromView, ShouldAutoSize, WithStyles
 {
     protected $viewName;
+
     protected $data;
 
     public function __construct(string $viewName, array $data)

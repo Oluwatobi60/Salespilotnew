@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Helpers;
 
 use App\Models\ActivityLog;
@@ -12,7 +13,7 @@ class ActivityLogger
         $staff = Auth::guard('staff')->user();
         $device = request()->header('User-Agent');
         $ip = request()->ip();
-        
+
         $businessName = null;
         if ($user) {
             $businessName = $user->business_name;

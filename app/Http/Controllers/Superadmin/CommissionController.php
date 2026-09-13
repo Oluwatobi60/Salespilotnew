@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Superadmin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Commission;
 use App\Models\Brm;
-use Illuminate\Http\Request;
+use App\Models\Commission;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
 
 class CommissionController extends Controller
 {
@@ -41,12 +41,12 @@ class CommissionController extends Controller
                     $brmQ->where('name', 'like', "%{$search}%")
                         ->orWhere('email', 'like', "%{$search}%");
                 })
-                ->orWhereHas('user', function ($userQ) use ($search) {
-                    $userQ->where('business_name', 'like', "%{$search}%")
-                        ->orWhere('first_name', 'like', "%{$search}%")
-                        ->orWhere('surname', 'like', "%{$search}%")
-                        ->orWhere('email', 'like', "%{$search}%");
-                });
+                    ->orWhereHas('user', function ($userQ) use ($search) {
+                        $userQ->where('business_name', 'like', "%{$search}%")
+                            ->orWhere('first_name', 'like', "%{$search}%")
+                            ->orWhere('surname', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -96,7 +96,7 @@ class CommissionController extends Controller
 
         $commission->approve();
 
-        return back()->with('success', "Commission #" . $commission->id . " has been approved. Amount: ₦" . number_format($commission->commission_amount, 2));
+        return back()->with('success', 'Commission #'.$commission->id.' has been approved. Amount: ₦'.number_format($commission->commission_amount, 2));
     }
 
     /**
@@ -104,13 +104,13 @@ class CommissionController extends Controller
      */
     public function markAsPaid(Commission $commission)
     {
-        if (!in_array($commission->status, ['approved', 'paid'])) {
+        if (! in_array($commission->status, ['approved', 'paid'])) {
             return back()->with('error', 'Only approved commissions can be marked as paid.');
         }
 
         $commission->markAsPaid();
 
-        return back()->with('success', "Commission #" . $commission->id . " has been marked as paid. Amount: ₦" . number_format($commission->commission_amount, 2));
+        return back()->with('success', 'Commission #'.$commission->id.' has been marked as paid. Amount: ₦'.number_format($commission->commission_amount, 2));
     }
 
     /**
@@ -124,7 +124,7 @@ class CommissionController extends Controller
 
         $commission->reject();
 
-        return back()->with('error', "Commission #" . $commission->id . " has been rejected.");
+        return back()->with('error', 'Commission #'.$commission->id.' has been rejected.');
     }
 
     /**
@@ -149,7 +149,7 @@ class CommissionController extends Controller
             ->where('status', 'approved')
             ->sum('commission_amount');
 
-        return back()->with('success', "$count commission(s) approved. Total: ₦" . number_format($totalAmount, 2));
+        return back()->with('success', "$count commission(s) approved. Total: ₦".number_format($totalAmount, 2));
     }
 
     /**
@@ -169,7 +169,7 @@ class CommissionController extends Controller
                 $commission->reject();
             });
 
-        return back()->with('error', count($ids) . ' commission(s) rejected.');
+        return back()->with('error', count($ids).' commission(s) rejected.');
     }
 
     /**

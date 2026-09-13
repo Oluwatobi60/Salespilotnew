@@ -53,28 +53,28 @@ class SubscriptionFeature extends Model
                 'label' => 'Business Creator / Super Admin',
                 'description' => 'Full system access and business management',
                 'color' => 'danger',
-                'icon' => 'shield-fill-check'
+                'icon' => 'shield-fill-check',
             ],
             [
                 'slug' => 'manager',
                 'label' => 'Manager',
                 'description' => 'Branch management and operations',
                 'color' => 'primary',
-                'icon' => 'person-badge'
+                'icon' => 'person-badge',
             ],
             [
                 'slug' => 'staff',
                 'label' => 'Staff',
                 'description' => 'Daily operations and sales',
                 'color' => 'success',
-                'icon' => 'person'
+                'icon' => 'person',
             ],
             [
                 'slug' => 'branch',
                 'label' => 'Branch',
                 'description' => 'Branch-specific features',
                 'color' => 'warning',
-                'icon' => 'building'
+                'icon' => 'building',
             ],
         ];
     }

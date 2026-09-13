@@ -3,12 +3,12 @@
 namespace App\Http\Controllers\Manager;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use App\Models\Branch\Branch;
+use App\Models\ReceiptSetting;
 use App\Models\Staffs;
 use App\Models\User;
-use App\Models\ReceiptSetting;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class SystemPreferencesController extends Controller
 {
@@ -24,8 +24,8 @@ class SystemPreferencesController extends Controller
         } else {
             // For branch managers, fetch the business owner
             $businessOwner = User::where('business_name', $manager->business_name)
-                                ->where('addby', null)
-                                ->first() ?? $manager;
+                ->where('addby', null)
+                ->first() ?? $manager;
         }
 
         // Load branches based on role
@@ -72,7 +72,7 @@ class SystemPreferencesController extends Controller
         $manager = Auth::user();
 
         // Only business creator can update business information
-        if (!$manager->isBusinessCreator()) {
+        if (! $manager->isBusinessCreator()) {
             return redirect()->back()->with('error', 'Only business owner can update business information.');
         }
 
@@ -89,12 +89,12 @@ class SystemPreferencesController extends Controller
         // Handle logo upload
         if ($request->hasFile('business_logo')) {
             $logo = $request->file('business_logo');
-            $logoName = time() . '_' . $manager->id . '.' . $logo->extension();
+            $logoName = time().'_'.$manager->id.'.'.$logo->extension();
             $logo->move(public_path('business_logos'), $logoName);
 
             // Delete old logo if exists
-            if ($manager->business_logo && file_exists(public_path('business_logos/' . $manager->business_logo))) {
-                unlink(public_path('business_logos/' . $manager->business_logo));
+            if ($manager->business_logo && file_exists(public_path('business_logos/'.$manager->business_logo))) {
+                unlink(public_path('business_logos/'.$manager->business_logo));
             }
 
             $validated['business_logo'] = $logoName;
@@ -110,7 +110,7 @@ class SystemPreferencesController extends Controller
         $manager = Auth::user();
 
         // Only business creator can update receipt settings
-        if (!$manager->isBusinessCreator()) {
+        if (! $manager->isBusinessCreator()) {
             return redirect()->back()->with('error', 'Only business owner can update receipt settings.');
         }
 

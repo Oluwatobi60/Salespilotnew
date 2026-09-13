@@ -3,29 +3,29 @@
 namespace App\Http\Controllers\Staff;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\StandardItem;
-use App\Models\VariantItem;
-use App\Models\Category;
+use App\Models\AddCustomer;
+use App\Models\Branch\Branch;
+use App\Models\BranchInventory;
 use App\Models\CartItem;
+use App\Models\Category;
+use App\Models\ProductVariant;
+use App\Models\Sale;
+use App\Models\Staffs;
+use App\Models\StandardItem;
 use App\Models\Unit;
-use Illuminate\Support\Str;
+use App\Models\User;
+use App\Models\VariantItem;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use App\Models\Staffs;
-use App\Models\ProductVariant;
-use App\Models\AddCustomer;
-use App\Models\BranchInventory;
-use App\Models\User;
-use App\Models\Branch\Branch;
-use Carbon\Carbon;
-use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Str;
 
 class StaffsMainController extends Controller
 {
     public function index()
     {
-       $staff = Auth::guard('staff')->user();
+        $staff = Auth::guard('staff')->user();
         $businessName = $staff->business_name;
 
         // Get staff's branch
@@ -42,11 +42,10 @@ class StaffsMainController extends Controller
             $branchInventory = BranchInventory::where('branch_id', $branchId)
                 ->where('business_name', $businessName)
                 ->where('current_quantity', '>', 0)
-                ->when($branchOwnerId, function($q) use ($branchOwnerId) {
+                ->when($branchOwnerId, function ($q) use ($branchOwnerId) {
                     $q->where('allocated_by', $branchOwnerId);
                 })
                 ->get();
-
 
             foreach ($branchInventory as $inventory) {
                 if ($inventory->item_type === 'standard') {
@@ -60,13 +59,13 @@ class StaffsMainController extends Controller
         // Fetch StandardItems - only items in the staff's branch inventory
         $standard_items = StandardItem::with([
             'supplier',
-            'pricingTiers'
+            'pricingTiers',
         ])
-        ->where('business_name', $businessName)
-        ->where('enable_sale', true);
+            ->where('business_name', $businessName)
+            ->where('enable_sale', true);
 
         // Filter by branch inventory if staff has a branch
-        if ($branchId && !empty($standardBranchItemIds)) {
+        if ($branchId && ! empty($standardBranchItemIds)) {
             $standard_items->whereIn('id', $standardBranchItemIds);
         } elseif ($branchId) {
             // If staff has branch but no items, return empty
@@ -79,21 +78,21 @@ class StaffsMainController extends Controller
         $variant_items = VariantItem::with([
             'supplier',
             'unit',
-            'variants' => function($query) use ($variantBranchItemIds, $branchId) {
+            'variants' => function ($query) use ($variantBranchItemIds, $branchId) {
                 $query->where('sell_item', true);
-                if ($branchId && !empty($variantBranchItemIds)) {
+                if ($branchId && ! empty($variantBranchItemIds)) {
                     $query->whereIn('id', $variantBranchItemIds);
                 } elseif ($branchId) {
                     $query->whereRaw('1 = 0');
                 }
                 $query->with('pricingTiers');
-            }
+            },
         ])
-        ->where('business_name', $businessName);
+            ->where('business_name', $businessName);
 
         // Filter variant items by branch inventory
-        if ($branchId && !empty($variantBranchItemIds)) {
-            $variant_items->whereHas('variants', function($q) use ($variantBranchItemIds) {
+        if ($branchId && ! empty($variantBranchItemIds)) {
+            $variant_items->whereHas('variants', function ($q) use ($variantBranchItemIds) {
                 $q->whereIn('id', $variantBranchItemIds);
             });
         } elseif ($branchId) {
@@ -108,7 +107,7 @@ class StaffsMainController extends Controller
             $branchOwnerId = $staffBranch->user_id ?? null;
             $branchInventory = BranchInventory::where('branch_id', $branchId)
                 ->where('business_name', $businessName)
-                ->when($branchOwnerId, function($q) use ($branchOwnerId) {
+                ->when($branchOwnerId, function ($q) use ($branchOwnerId) {
                     $q->where('allocated_by', $branchOwnerId);
                 })
                 ->get();
@@ -204,7 +203,6 @@ class StaffsMainController extends Controller
         ));
     }
 
-
     public function sell_product()
     {
         $staff = Auth::guard('staff')->user();
@@ -219,14 +217,14 @@ class StaffsMainController extends Controller
 
         // Get item IDs from branch_inventory for staff's branch
         if ($branchId) {
-             $branchOwnerId = $staffBranch->user_id ?? null;
-             $branchInventory = BranchInventory::where('branch_id', $branchId)
-                 ->where('business_name', $businessName)
-                 ->where('current_quantity', '>', 0)
-                 ->when($branchOwnerId, function ($q) use ($branchOwnerId) {
-                     $q->where('allocated_by', $branchOwnerId);
-                 })
-                 ->get();
+            $branchOwnerId = $staffBranch->user_id ?? null;
+            $branchInventory = BranchInventory::where('branch_id', $branchId)
+                ->where('business_name', $businessName)
+                ->where('current_quantity', '>', 0)
+                ->when($branchOwnerId, function ($q) use ($branchOwnerId) {
+                    $q->where('allocated_by', $branchOwnerId);
+                })
+                ->get();
 
             foreach ($branchInventory as $inventory) {
                 if ($inventory->item_type === 'standard') {
@@ -241,13 +239,13 @@ class StaffsMainController extends Controller
         $standard_items = StandardItem::with([
             'supplier',
             'unit',
-            'pricingTiers'
+            'pricingTiers',
         ])
-        ->where('business_name', $businessName)
-        ->where('enable_sale', true);
+            ->where('business_name', $businessName)
+            ->where('enable_sale', true);
 
         // Filter by branch inventory if staff has a branch
-        if ($branchId && !empty($standardBranchItemIds)) {
+        if ($branchId && ! empty($standardBranchItemIds)) {
             $standard_items->whereIn('id', $standardBranchItemIds);
         } elseif ($branchId) {
             // If staff has branch but no items, return empty
@@ -260,21 +258,21 @@ class StaffsMainController extends Controller
         $variant_items = VariantItem::with([
             'supplier',
             'unit',
-            'variants' => function($query) use ($variantBranchItemIds, $branchId) {
+            'variants' => function ($query) use ($variantBranchItemIds, $branchId) {
                 $query->where('sell_item', true);
-                if ($branchId && !empty($variantBranchItemIds)) {
+                if ($branchId && ! empty($variantBranchItemIds)) {
                     $query->whereIn('id', $variantBranchItemIds);
                 } elseif ($branchId) {
                     $query->whereRaw('1 = 0');
                 }
                 $query->with('pricingTiers');
-            }
+            },
         ])
-        ->where('business_name', $businessName);
+            ->where('business_name', $businessName);
 
         // Filter variant items by branch inventory
-        if ($branchId && !empty($variantBranchItemIds)) {
-            $variant_items->whereHas('variants', function($q) use ($variantBranchItemIds) {
+        if ($branchId && ! empty($variantBranchItemIds)) {
+            $variant_items->whereHas('variants', function ($q) use ($variantBranchItemIds) {
                 $q->whereIn('id', $variantBranchItemIds);
             });
         } elseif ($branchId) {
@@ -286,38 +284,38 @@ class StaffsMainController extends Controller
 
         // Replace stock quantities with branch inventory quantities
         if ($branchId) {
-             $branchOwnerId = $staffBranch->user_id ?? null;
-             $branchInventory = BranchInventory::where('branch_id', $branchId)
-                 ->where('business_name', $businessName)
-                 ->when($branchOwnerId, function ($q) use ($branchOwnerId) {
-                     $q->where('allocated_by', $branchOwnerId);
-                 })
-                 ->get();
+            $branchOwnerId = $staffBranch->user_id ?? null;
+            $branchInventory = BranchInventory::where('branch_id', $branchId)
+                ->where('business_name', $businessName)
+                ->when($branchOwnerId, function ($q) use ($branchOwnerId) {
+                    $q->where('allocated_by', $branchOwnerId);
+                })
+                ->get();
 
-             // Replace standard item stock with branch inventory stock
-             foreach ($standard_items as $item) {
-                 $branchStock = $branchInventory->where('item_type', 'standard')
-                     ->where('item_id', $item->id)
-                     ->first();
-                 if ($branchStock) {
-                     $item->current_stock = $branchStock->current_quantity;
-                     $item->branch_inventory_id = $branchStock->id;
-                 }
-             }
+            // Replace standard item stock with branch inventory stock
+            foreach ($standard_items as $item) {
+                $branchStock = $branchInventory->where('item_type', 'standard')
+                    ->where('item_id', $item->id)
+                    ->first();
+                if ($branchStock) {
+                    $item->current_stock = $branchStock->current_quantity;
+                    $item->branch_inventory_id = $branchStock->id;
+                }
+            }
 
-             // Replace variant stock with branch inventory stock
-             foreach ($variant_items as $variantItem) {
-                 foreach ($variantItem->variants as $variant) {
-                     $branchStock = $branchInventory->where('item_type', 'variant')
-                         ->where('item_id', $variant->id)
-                         ->first();
-                     if ($branchStock) {
-                         $variant->current_stock = $branchStock->current_quantity;
-                         $variant->branch_inventory_id = $branchStock->id;
-                     }
-                 }
-             }
-         }
+            // Replace variant stock with branch inventory stock
+            foreach ($variant_items as $variantItem) {
+                foreach ($variantItem->variants as $variant) {
+                    $branchStock = $branchInventory->where('item_type', 'variant')
+                        ->where('item_id', $variant->id)
+                        ->first();
+                    if ($branchStock) {
+                        $variant->current_stock = $branchStock->current_quantity;
+                        $variant->branch_inventory_id = $branchStock->id;
+                    }
+                }
+            }
+        }
 
         // Get all unique categories
         $categories = Category::where('business_name', $businessName)
@@ -363,13 +361,13 @@ class StaffsMainController extends Controller
                 'items.*.note' => 'nullable|string',
                 'items.*.img' => 'nullable|string',
                 'total' => 'required|numeric',
-                'note' => 'nullable|string'
+                'note' => 'nullable|string',
             ]);
 
             $sessionId = Str::uuid();
 
             $staff = Auth::guard('staff')->user();
-            $managerName = trim(($staff->firstname ?? '') . ' ' . ($staff->othername ?? '') . ' ' . ($staff->surname ?? ''));
+            $managerName = trim(($staff->firstname ?? '').' '.($staff->othername ?? '').' '.($staff->surname ?? ''));
 
             // Get staff's branch information
             $branch = $staff->branch;
@@ -403,27 +401,27 @@ class StaffsMainController extends Controller
                     'manager_email' => $staff->email,
                     'branch_id' => $branchId,
                     'branch_name' => $branchName,
-                    'user_id' => $managerId
+                    'user_id' => $managerId,
                 ]);
-                \App\Helpers\ActivityLogger::log('add_to_cart', 'Staff added item to cart: ' . ($item['name'] ?? ''));
+                \App\Helpers\ActivityLogger::log('add_to_cart', 'Staff added item to cart: '.($item['name'] ?? ''));
             }
 
             return response()->json([
                 'success' => true,
                 'message' => 'Cart saved successfully',
-                'session_id' => $sessionId
+                'session_id' => $sessionId,
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to save cart: ' . $e->getMessage()
+                'message' => 'Failed to save cart: '.$e->getMessage(),
             ], 500);
         }
     }
 
     public function checkout(Request $request)
     {
-        // Process the checkout and create CartItem entries with 'completed' status
+        // Process the checkout and create CartItem entries and Sale header with atomic transaction
         try {
             $validated = $request->validate([
                 'customer_id' => 'nullable|integer',
@@ -434,122 +432,159 @@ class StaffsMainController extends Controller
                 'items.*.type' => 'required|string',
                 'items.*.name' => 'required|string',
                 'items.*.price' => 'required|numeric',
-                'items.*.quantity' => 'required|integer|min:1',
+                'items.*.quantity' => 'required|numeric|min:0.01',
                 'items.*.note' => 'nullable|string',
                 'items.*.img' => 'nullable|string',
                 'total' => 'required|numeric',
-                'discount' => 'nullable|numeric'
+                'discount' => 'nullable|numeric',
+                'payment_method' => 'nullable|string',
+                'notes' => 'nullable|string',
             ]);
 
             $staff = Auth::guard('staff')->user();
-            $managerName = trim(($staff->firstname ?? '') . ' ' . ($staff->othername ?? '') . ' ' . ($staff->surname ?? ''));
+            $managerName = trim(($staff->firstname ?? '').' '.($staff->othername ?? '').' '.($staff->surname ?? ''));
 
-            // Get staff's assigned branch (use the same logic as sell_product)
+            // Get staff's assigned branch
             $staffBranch = $staff->branches->first();
             $branchId = $staffBranch ? $staffBranch->id : null;
             $branchName = $staffBranch ? $staffBranch->branch_name : null;
             $managerId = $staffBranch ? $staffBranch->user_id : null;
 
-            // Validate selling price and stock availability for all items first
+            $sessionId = Str::uuid()->toString();
+            $receiptNumber = 'RCPT-'.strtoupper(substr($sessionId, 0, 8));
+            $discount = $validated['discount'] ?? 0;
+
+            $cartSubtotal = 0;
             foreach ($validated['items'] as $item) {
-                $itemType = isset($item['type']) ? $item['type'] : 'standard';
-
-                if (isset($item['price'])) {
-                    if ($itemType === 'standard') {
-                        $standardItem = StandardItem::find($item['id']);
-                        if ($standardItem && $item['price'] <= $standardItem->cost_price) {
-                            return response()->json([
-                                'success' => false,
-                                'message' => "Selling price for '{$item['name']}' must be greater than cost price (" . number_format((float)$standardItem->cost_price, 2) . ")"
-                            ], 400);
-                        }
-                    } elseif ($itemType === 'variant') {
-                        $productVariant = ProductVariant::find($item['id']);
-                        if ($productVariant && $item['price'] <= $productVariant->cost_price) {
-                            return response()->json([
-                                'success' => false,
-                                'message' => "Selling price for variant '{$item['name']}' must be greater than cost price (" . number_format((float)$productVariant->cost_price, 2) . ")"
-                            ], 400);
-                        }
-                    }
-                }
-
-                // Stock validation
-                if ($branchId) {
-                    $branchInventory = BranchInventory::where('branch_id', $branchId)
-                        ->where('item_id', $item['id'])
-                        ->where('item_type', $itemType)
-                        ->first();
-
-                    if ($branchInventory) {
-                        if ($branchInventory->current_quantity < $item['quantity']) {
-                            return response()->json([
-                                'success' => false,
-                                'message' => "Insufficient stock in branch inventory for item: {$item['name']}"
-                            ], 400);
-                        }
-                    } else {
-                        $manager = $managerId ? User::find($managerId) : null;
-                        if ($itemType === 'standard') {
-                            $standardItem = null;
-                            if ($manager) {
-                                $standardItem = StandardItem::where('id', $item['id'])
-                                    ->where('business_name', $staff->business_name)
-                                    ->where('manager_email', $manager->email)
-                                    ->first();
-                            }
-
-                            if (!$standardItem || $standardItem->current_stock < $item['quantity']) {
-                                return response()->json([
-                                    'success' => false,
-                                    'message' => "Insufficient stock for item: {$item['name']}"
-                                ], 400);
-                            }
-                        } elseif ($itemType === 'variant') {
-                            $productVariant = null;
-                            if ($manager) {
-                                $productVariant = ProductVariant::whereHas('variantItem', function($query) use ($manager, $staff) {
-                                    $query->where('business_name', $staff->business_name)
-                                          ->where('manager_email', $manager->email);
-                                })->find($item['id']);
-                            }
-
-                            if (!$productVariant || $productVariant->current_stock < $item['quantity']) {
-                                return response()->json([
-                                    'success' => false,
-                                    'message' => "Insufficient stock for variant: {$item['name']}"
-                                ], 400);
-                            }
-                        }
-                    }
-                } else {
-                    if ($itemType === 'standard') {
-                        $standardItem = StandardItem::where('id', $item['id'])
-                            ->where('business_name', $staff->business_name)
-                            ->first();
-                        if (!$standardItem || $standardItem->current_stock < $item['quantity']) {
-                            return response()->json([
-                                'success' => false,
-                                'message' => "Insufficient stock for item: {$item['name']}"
-                            ], 400);
-                        }
-                    } elseif ($itemType === 'variant') {
-                        $productVariant = ProductVariant::whereHas('variantItem', function($query) use ($staff) {
-                            $query->where('business_name', $staff->business_name);
-                        })->find($item['id']);
-                        if (!$productVariant || $productVariant->current_stock < $item['quantity']) {
-                            return response()->json([
-                                'success' => false,
-                                'message' => "Insufficient stock for variant: {$item['name']}"
-                            ], 400);
-                        }
-                    }
-                }
+                $cartSubtotal += $item['price'] * $item['quantity'];
             }
 
-            $sessionId = Str::uuid();
-            $receiptNumber = 'RCPT-' . strtoupper(substr($sessionId, 0, 8));
-            $discount = $validated['discount'] ?? 0;
+            // Execute in an atomic database transaction
+            DB::transaction(function () use ($validated, $staff, $managerName, $branchId, $branchName, $managerId, $sessionId, $receiptNumber, $discount, $cartSubtotal) {
+                foreach ($validated['items'] as $item) {
+                    $itemType = isset($item['type']) ? $item['type'] : 'standard';
+                    $itemCode = isset($item['code']) ? $item['code'] : null;
+
+                    // Proportional discount calculation
+                    $itemSubtotal = $item['price'] * $item['quantity'];
+                    $itemDiscount = ($cartSubtotal > 0 && $discount > 0) ? ($discount * ($itemSubtotal / $cartSubtotal)) : 0;
+                    $itemTotal = $itemSubtotal - $itemDiscount;
+
+                    // 1. Stock deduction with row-level locking
+                    if ($branchId) {
+                        $branchInventory = BranchInventory::where('branch_id', $branchId)
+                            ->where('item_id', $item['id'])
+                            ->where('item_type', $itemType)
+                            ->lockForUpdate()
+                            ->first();
+
+                        if ($branchInventory) {
+                            if (! $branchInventory->hasStock($item['quantity'])) {
+                                throw new \Exception("Insufficient stock in branch inventory for item: {$item['name']}");
+                            }
+                            $branchInventory->deductStock($item['quantity']);
+                        } else {
+                            if ($itemType === 'standard') {
+                                $standardItem = StandardItem::where('id', $item['id'])
+                                    ->where('business_name', $staff->business_name)
+                                    ->lockForUpdate()
+                                    ->first();
+
+                                if (! $standardItem || $standardItem->current_stock < $item['quantity']) {
+                                    throw new \Exception("Insufficient stock for item: {$item['name']}");
+                                }
+                                $standardItem->current_stock = max(0, $standardItem->current_stock - $item['quantity']);
+                                $standardItem->save();
+                            } elseif ($itemType === 'variant') {
+                                $productVariant = ProductVariant::where('id', $item['id'])
+                                    ->where('business_name', $staff->business_name)
+                                    ->lockForUpdate()
+                                    ->first();
+
+                                if (! $productVariant || $productVariant->current_stock < $item['quantity']) {
+                                    throw new \Exception("Insufficient stock for variant: {$item['name']}");
+                                }
+                                $productVariant->current_stock = max(0, $productVariant->current_stock - $item['quantity']);
+                                $productVariant->save();
+                            }
+                        }
+                    } else {
+                        if ($itemType === 'standard') {
+                            $standardItem = StandardItem::where('id', $item['id'])
+                                ->where('business_name', $staff->business_name)
+                                ->lockForUpdate()
+                                ->first();
+
+                            if (! $standardItem || $standardItem->current_stock < $item['quantity']) {
+                                throw new \Exception("Insufficient stock for item: {$item['name']}");
+                            }
+                            $standardItem->current_stock = max(0, $standardItem->current_stock - $item['quantity']);
+                            $standardItem->save();
+                        } elseif ($itemType === 'variant') {
+                            $productVariant = ProductVariant::where('id', $item['id'])
+                                ->where('business_name', $staff->business_name)
+                                ->lockForUpdate()
+                                ->first();
+
+                            if (! $productVariant || $productVariant->current_stock < $item['quantity']) {
+                                throw new \Exception("Insufficient stock for variant: {$item['name']}");
+                            }
+                            $productVariant->current_stock = max(0, $productVariant->current_stock - $item['quantity']);
+                            $productVariant->save();
+                        }
+                    }
+
+                    // 2. Create CartItem line item
+                    CartItem::create([
+                        'cart_name' => 'Sale - '.now()->format('Y-m-d H:i'),
+                        'customer_id' => $validated['customer_id'] ?? null,
+                        'customer_name' => $validated['customer_name'] ?? 'Walk-in Customer',
+                        'item_id' => $item['id'],
+                        'item_code' => $itemCode,
+                        'item_type' => $itemType,
+                        'item_name' => $item['name'],
+                        'item_price' => $item['price'],
+                        'quantity' => $item['quantity'],
+                        'note' => $item['note'] ?? null,
+                        'item_image' => $item['img'] ?? null,
+                        'subtotal' => $itemSubtotal,
+                        'discount' => $itemDiscount,
+                        'total' => $itemTotal,
+                        'status' => 'completed',
+                        'session_id' => $sessionId,
+                        'receipt_number' => $receiptNumber,
+                        'staff_id' => Auth::guard('staff')->id(),
+                        'business_name' => $staff->business_name,
+                        'manager_name' => $managerName,
+                        'manager_email' => $staff->email,
+                        'branch_id' => $branchId,
+                        'branch_name' => $branchName,
+                        'user_id' => $managerId,
+                    ]);
+                }
+
+                // 3. Create normalized Sale transaction header
+                Sale::create([
+                    'receipt_number' => $receiptNumber,
+                    'session_id' => $sessionId,
+                    'business_name' => $staff->business_name,
+                    'user_id' => $managerId,
+                    'staff_id' => Auth::guard('staff')->id(),
+                    'branch_id' => $branchId,
+                    'branch_name' => $branchName,
+                    'customer_id' => $validated['customer_id'] ?? null,
+                    'customer_name' => $validated['customer_name'] ?? 'Walk-in Customer',
+                    'subtotal' => $cartSubtotal,
+                    'discount_total' => $discount,
+                    'tax_total' => 0,
+                    'grand_total' => $validated['total'],
+                    'payment_method' => $validated['payment_method'] ?? 'cash',
+                    'status' => 'completed',
+                    'items_count' => count($validated['items']),
+                    'notes' => $validated['notes'] ?? null,
+                    'completed_at' => now(),
+                ]);
+            });
 
             // Log checkout activity for staff
             $details = [
@@ -557,119 +592,21 @@ class StaffsMainController extends Controller
                 'customer_name' => $request->input('customer_name'),
                 'total' => $request->input('total'),
                 'discount' => $request->input('discount'),
-                'items_count' => is_array($request->input('items')) ? count($request->input('items')) : 0,
+                'receipt_number' => $receiptNumber,
+                'items_count' => count($validated['items']),
             ];
             \App\Helpers\ActivityLogger::log('Checkout completed', json_encode($details));
-
-            foreach ($validated['items'] as $item) {
-                $itemSubtotal = $item['price'] * $item['quantity'];
-                $itemDiscount = ($discount / $validated['total']) * $itemSubtotal;
-                $itemTotal = $itemSubtotal - $itemDiscount;
-
-                $itemType = isset($item['type']) ? $item['type'] : 'standard';
-                $itemCode = isset($item['code']) ? $item['code'] : null;
-                CartItem::create([
-                    'cart_name' => 'Sale - ' . now()->format('Y-m-d H:i'),
-                    'customer_id' => $validated['customer_id'],
-                    'customer_name' => $validated['customer_name'] ?? 'Walk-in Customer',
-                    'item_id' => $item['id'],
-                    'item_code' => $itemCode,
-                    'item_type' => $itemType,
-                    'item_name' => $item['name'],
-                    'item_price' => $item['price'],
-                    'quantity' => $item['quantity'],
-                    'note' => $item['note'] ?? null,
-                    'item_image' => $item['img'] ?? null,
-                    'subtotal' => $itemSubtotal,
-                    'discount' => $itemDiscount,
-                    'total' => $itemTotal,
-                    'status' => 'completed',
-                    'session_id' => $sessionId,
-                    'receipt_number' => $receiptNumber,
-                    'staff_id' => Auth::guard('staff')->id(),
-                    'business_name' => $staff->business_name,
-                    'manager_name' => $managerName,
-                    'manager_email' => $staff->email,
-                    'branch_id' => $branchId,
-                    'branch_name' => $branchName,
-                    'user_id' => $managerId
-                ]);
-
-                // Update branch inventory if applicable
-                if ($branchId) {
-                    $branchInventory = BranchInventory::where('branch_id', $branchId)
-                        ->where('item_id', $item['id'])
-                        ->where('item_type', $itemType)
-                        ->first();
-
-                    if ($branchInventory) {
-                        // Deduct from branch inventory
-                        $branchInventory->deductStock($item['quantity']);
-                    } else {
-                        // Deduct from main inventory instead
-                        $manager = $managerId ? User::find($managerId) : null;
-
-                        if ($itemType === 'standard') {
-                            $standardItem = null;
-                            if ($manager) {
-                                $standardItem = StandardItem::where('id', $item['id'])
-                                    ->where('business_name', $staff->business_name)
-                                    ->where('manager_email', $manager->email)
-                                    ->first();
-                            }
-
-                            if ($standardItem) {
-                                $standardItem->current_stock -= $item['quantity'];
-                                $standardItem->save();
-                            }
-
-                        } elseif ($itemType === 'variant') {
-                            $productVariant = null;
-                            if ($manager) {
-                                $productVariant = ProductVariant::whereHas('variantItem', function($query) use ($manager, $staff) {
-                                    $query->where('business_name', $staff->business_name)
-                                          ->where('manager_email', $manager->email);
-                                })->find($item['id']);
-                            }
-
-                            if ($productVariant) {
-                                $productVariant->current_stock -= $item['quantity'];
-                                $productVariant->save();
-                            }
-                        }
-                    }
-                } else {
-                    // No branch assigned - update main inventory
-                    if ($itemType === 'standard') {
-                        $standardItem = StandardItem::where('id', $item['id'])
-                            ->where('business_name', $staff->business_name)
-                            ->first();
-                        if ($standardItem) {
-                            $standardItem->current_stock -= $item['quantity'];
-                            $standardItem->save();
-                        }
-                    } elseif ($itemType === 'variant') {
-                        $productVariant = ProductVariant::whereHas('variantItem', function($query) use ($staff) {
-                            $query->where('business_name', $staff->business_name);
-                        })->find($item['id']);
-                        if ($productVariant) {
-                            $productVariant->current_stock -= $item['quantity'];
-                            $productVariant->save();
-                        }
-                    }
-                }
-            }
 
             return response()->json([
                 'success' => true,
                 'message' => 'Sale completed successfully',
                 'session_id' => $sessionId,
-                'receipt_number' => 'RCPT-' . strtoupper(substr($sessionId, 0, 8))
+                'receipt_number' => $receiptNumber,
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to complete sale: ' . $e->getMessage()
+                'message' => 'Failed to complete sale: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -693,12 +630,12 @@ class StaffsMainController extends Controller
 
             return response()->json([
                 'success' => true,
-                'carts' => $savedCarts
+                'carts' => $savedCarts,
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to fetch saved carts: ' . $e->getMessage()
+                'message' => 'Failed to fetch saved carts: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -718,7 +655,7 @@ class StaffsMainController extends Controller
             if ($cartItems->isEmpty()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Cart not found'
+                    'message' => 'Cart not found',
                 ], 404);
             }
 
@@ -738,13 +675,13 @@ class StaffsMainController extends Controller
                     'user_name' => $userName,
                     'total' => $total,
                     'created_at' => $firstItem->created_at,
-                    'items' => $cartItems
-                ]
+                    'items' => $cartItems,
+                ],
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to load cart: ' . $e->getMessage()
+                'message' => 'Failed to load cart: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -762,16 +699,15 @@ class StaffsMainController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Cart deleted successfully'
+                'message' => 'Cart deleted successfully',
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to delete cart: ' . $e->getMessage()
+                'message' => 'Failed to delete cart: '.$e->getMessage(),
             ], 500);
         }
     }
-
 
     public function view_saved_carts()
     {
@@ -792,8 +728,7 @@ class StaffsMainController extends Controller
         return view('staff.sales.saved_carts', compact('savedCarts'));
     }
 
-
-     public function completed_sales()
+    public function completed_sales()
     {
         $staff = Auth::guard('staff')->user();
         $businessName = $staff->business_name;
@@ -827,20 +762,18 @@ class StaffsMainController extends Controller
         if ($items->isEmpty()) {
             return response()->json([
                 'success' => false,
-                'message' => 'No items found for this sale.'
+                'message' => 'No items found for this sale.',
             ], 404);
         }
 
         return response()->json([
             'success' => true,
-            'items' => $items
+            'items' => $items,
         ]);
     }
 
-
-
-
-  public function customers() {
+    public function customers()
+    {
         $staff = Auth::guard('staff')->user();
         $businessName = $staff->business_name;
 
@@ -848,25 +781,27 @@ class StaffsMainController extends Controller
             ->where('staff_id', $staff->id)
             ->latest()
             ->paginate(10);
+
         return view('staff.customer.customerinfo', compact('customers'));
     }
 
-    public function get_all_customers() {
+    public function get_all_customers()
+    {
         $staff = Auth::guard('staff')->user();
         $businessName = $staff->business_name;
 
         $customers = AddCustomer::where('business_name', $businessName)
-                                ->select('id', 'customer_name', 'email', 'phone_number')
-                                ->orderBy('customer_name', 'asc')
-                                ->get();
+            ->select('id', 'customer_name', 'email', 'phone_number')
+            ->orderBy('customer_name', 'asc')
+            ->get();
 
         return response()->json([
             'success' => true,
-            'customers' => $customers
+            'customers' => $customers,
         ]);
     }
 
-     public function add_customer(Request $request)
+    public function add_customer(Request $request)
     {
         // Validate incoming request data
         $validatedData = $request->validate([
@@ -880,7 +815,7 @@ class StaffsMainController extends Controller
         $staff = Auth::guard('staff')->user();
         $validatedData['staff_id'] = Auth::guard('staff')->id();
         $validatedData['business_name'] = $staff->business_name;
-        $validatedData['manager_name'] = trim(($staff->firstname ?? '') . ' ' . ($staff->othername ?? '') . ' ' . ($staff->surname ?? ''));
+        $validatedData['manager_name'] = trim(($staff->firstname ?? '').' '.($staff->othername ?? '').' '.($staff->surname ?? ''));
         $validatedData['manager_email'] = $staff->email;
 
         // Create new customer
@@ -906,6 +841,7 @@ class StaffsMainController extends Controller
 
         $customer = AddCustomer::where('business_name', $businessName)
             ->findOrFail($id);
+
         return view('staff.customer.edit_customer', compact('customer'));
     }
 
@@ -921,8 +857,8 @@ class StaffsMainController extends Controller
         // Validate incoming request data
         $validatedData = $request->validate([
             'customer_name' => 'required|string|max:255',
-            'email' => 'nullable|email|max:255|unique:add_customers,email,' . $id,
-            'phone_number' => 'nullable|string|max:20|unique:add_customers,phone_number,' . $id,
+            'email' => 'nullable|email|max:255|unique:add_customers,email,'.$id,
+            'phone_number' => 'nullable|string|max:20|unique:add_customers,phone_number,'.$id,
             'address' => 'nullable|string|max:500',
         ]);
 
@@ -968,21 +904,21 @@ class StaffsMainController extends Controller
         if ($customer->user) {
             $addedBy = $customer->user->name;
         } elseif ($customer->staff) {
-            $addedBy = $customer->staff->fullname ?? ($customer->staff->firstname . ' ' . $customer->staff->surname);
+            $addedBy = $customer->staff->fullname ?? ($customer->staff->firstname.' '.$customer->staff->surname);
         }
 
         // Get order statistics - check both customer_id and customer_name
-        $orders = CartItem::where(function($query) use ($id, $customer) {
-                            $query->where('customer_id', $id)
-                                  ->orWhere('customer_name', $customer->customer_name);
-                         })
-                         ->where('status', 'completed')
-                         ->select('receipt_number',
-                                 DB::raw('SUM(total) as order_total'),
-                                 DB::raw('MIN(created_at) as order_date'))
-                         ->groupBy('receipt_number')
-                         ->orderBy('order_date', 'desc')
-                         ->get();
+        $orders = CartItem::where(function ($query) use ($id, $customer) {
+            $query->where('customer_id', $id)
+                ->orWhere('customer_name', $customer->customer_name);
+        })
+            ->where('status', 'completed')
+            ->select('receipt_number',
+                DB::raw('SUM(total) as order_total'),
+                DB::raw('MIN(created_at) as order_date'))
+            ->groupBy('receipt_number')
+            ->orderBy('order_date', 'desc')
+            ->get();
 
         $totalOrders = $orders->count();
         $totalSpent = $orders->sum('order_total');
@@ -991,27 +927,27 @@ class StaffsMainController extends Controller
         // Get order details with items
         $orderDetails = [];
         foreach ($orders->take(10) as $order) { // Limit to last 10 orders
-            $items = CartItem::where(function($query) use ($id, $customer) {
-                                $query->where('customer_id', $id)
-                                      ->orWhere('customer_name', $customer->customer_name);
-                             })
-                           ->where('receipt_number', $order->receipt_number)
-                           ->where('status', 'completed')
-                           ->get();
+            $items = CartItem::where(function ($query) use ($id, $customer) {
+                $query->where('customer_id', $id)
+                    ->orWhere('customer_name', $customer->customer_name);
+            })
+                ->where('receipt_number', $order->receipt_number)
+                ->where('status', 'completed')
+                ->get();
 
             $orderDetails[] = [
                 'receipt_number' => $order->receipt_number,
                 'date' => date('M d, Y', strtotime($order->order_date)),
                 'items_count' => $items->count(),
-                'total' => number_format((float)$order->order_total, 2),
-                'items' => $items->map(function($item) {
+                'total' => number_format((float) $order->order_total, 2),
+                'items' => $items->map(function ($item) {
                     return [
                         'name' => $item->item_name,
                         'quantity' => $item->quantity,
-                        'price' => number_format((float)$item->item_price, 2),
-                        'subtotal' => number_format((float)$item->subtotal, 2),
+                        'price' => number_format((float) $item->item_price, 2),
+                        'subtotal' => number_format((float) $item->subtotal, 2),
                     ];
-                })
+                }),
             ];
         }
 
@@ -1028,14 +964,14 @@ class StaffsMainController extends Controller
                 'lastUpdated' => $customer->updated_at->format('M d, Y'),
                 'status' => 'Active',
                 'totalOrders' => $totalOrders,
-                'totalSpent' => '₦' . number_format($totalSpent, 2),
+                'totalSpent' => '₦'.number_format($totalSpent, 2),
                 'lastPurchase' => $lastPurchaseDate ? date('M d, Y', strtotime($lastPurchaseDate)) : 'Never',
-                'orders' => $orderDetails
-            ]
+                'orders' => $orderDetails,
+            ],
         ]);
     }
 
- public function print_receipt($receiptNumber)
+    public function print_receipt($receiptNumber)
     {
         $staff = Auth::guard('staff')->user();
         $businessName = $staff->business_name;
@@ -1086,5 +1022,4 @@ class StaffsMainController extends Controller
             'subtotal' => $subtotal,
         ]);
     }
-
 }

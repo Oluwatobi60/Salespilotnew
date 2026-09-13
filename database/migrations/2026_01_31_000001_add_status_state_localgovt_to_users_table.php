@@ -14,13 +14,13 @@ return new class extends Migration
     public function up()
     {
         Schema::table('users', function (Blueprint $table) {
-            if (!Schema::hasColumn('users', 'status')) {
+            if (! Schema::hasColumn('users', 'status')) {
                 $table->tinyInteger('status')->default(0)->after('role'); // 0 = inactive, 1 = active
             }
-            if (!Schema::hasColumn('users', 'state')) {
+            if (! Schema::hasColumn('users', 'state')) {
                 $table->string('state')->nullable()->after('business_name');
             }
-            if (!Schema::hasColumn('users', 'local_govt')) {
+            if (! Schema::hasColumn('users', 'local_govt')) {
                 $table->string('local_govt')->nullable()->after('state');
             }
         });

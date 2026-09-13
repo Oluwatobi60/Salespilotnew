@@ -3,10 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Models\AddCustomer;
-use App\Models\AddDiscount;
-use App\Models\User;
-use App\Models\Staffs;
 
 class SellProduct extends Model
 {
@@ -34,7 +30,7 @@ class SellProduct extends Model
         'staff_id',
         'branch_id',
         'branch_name',
-        'branch_manager_id'
+        'branch_manager_id',
     ];
 
     protected $casts = [

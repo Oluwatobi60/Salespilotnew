@@ -1,53 +1,51 @@
 <?php
 
+use App\Http\Controllers\Branch\BranchController;
+use App\Http\Controllers\Brm\BrmCommissionController;
+use App\Http\Controllers\Brm\BrmController;
+use App\Http\Controllers\Brm\PerformanceController;
 use App\Http\Controllers\Manager\ActivityLogsController;
 use App\Http\Controllers\Manager\AddDiscountController;
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Manager\AddManagerController;
+use App\Http\Controllers\Manager\AICopilotController;
+use App\Http\Controllers\Manager\AIInventoryController;
 use App\Http\Controllers\Manager\AllItemsController;
-use App\Http\Controllers\Manager\ItemImportController;
+use App\Http\Controllers\Manager\BranchInventoryController;
 use App\Http\Controllers\Manager\CategoryController;
 use App\Http\Controllers\Manager\CustomerController;
-use App\Http\Controllers\Manager\SupplierController;
-use App\Http\Controllers\Manager\UnitController;
-use App\Http\Controllers\Manager\StaffMainController;
+use App\Http\Controllers\Manager\ItemImportController;
 use App\Http\Controllers\Manager\ManagerMainController;
+use App\Http\Controllers\Manager\SalesbyItemController;
 use App\Http\Controllers\Manager\SalesReportController;
 use App\Http\Controllers\Manager\SellProductController;
+use App\Http\Controllers\Manager\StaffMainController;
 use App\Http\Controllers\Manager\StaffSalesController;
-use App\Http\Controllers\Manager\VariantItemController;
 use App\Http\Controllers\Manager\StandardItemController;
-use App\Http\Controllers\Manager\SalesbyItemController;
+use App\Http\Controllers\Manager\SupplierController;
+use App\Http\Controllers\Manager\SystemPreferencesController;
 use App\Http\Controllers\Manager\TaxController;
-use App\Http\Controllers\Staff\StaffsMainController;
+use App\Http\Controllers\Manager\UnitController;
+use App\Http\Controllers\Manager\ValuationReportController;
+use App\Http\Controllers\Manager\VariantItemController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Staff\StaffAddDiscountController;
 use App\Http\Controllers\Staff\StaffAuthController;
 use App\Http\Controllers\Staff\StaffProfileController;
-use App\Http\Controllers\Manager\ValuationReportController;
-use App\Http\Controllers\Staff\StaffAddDiscountController;
-use App\Http\Controllers\Welcome\SignupController;
-use App\Http\Controllers\Manager\AddManagerController;
-use App\Http\Controllers\Branch\BranchController;
-use App\Http\Controllers\Manager\BranchInventoryController;
-use App\Http\Controllers\Manager\SystemPreferencesController;
-use App\Http\Controllers\Superadmin\SuperAdminController;
+use App\Http\Controllers\Staff\StaffsMainController;
+use App\Http\Controllers\Superadmin\CommissionController;
 use App\Http\Controllers\Superadmin\PlansController;
 use App\Http\Controllers\Superadmin\RevenueController;
-use App\Http\Controllers\Superadmin\SubscriptionRenewalController;
-use App\Http\Controllers\Superadmin\CommissionController;
-use App\Http\Controllers\Superadmin\WithdrawalController;
 use App\Http\Controllers\Superadmin\SettingsController;
 use App\Http\Controllers\Superadmin\SubscriptionFeaturesController;
-use App\Http\Controllers\Brm\BrmController;
-use App\Http\Controllers\Brm\BrmCommissionController;
-use App\Http\Controllers\Brm\PerformanceController;
-use App\Http\Controllers\Manager\AIInventoryController;
-use App\Http\Controllers\Manager\AICopilotController;
-
+use App\Http\Controllers\Superadmin\SubscriptionRenewalController;
+use App\Http\Controllers\Superadmin\SuperAdminController;
+use App\Http\Controllers\Superadmin\WithdrawalController;
+use App\Http\Controllers\Welcome\SignupController;
+use Illuminate\Support\Facades\Route;
 
 /* Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified', 'rolemanager:staff'])->name('dashboard'); */
-
 
 // Superadmin auth routes (unauthenticated)
 Route::prefix('superadmin')->controller(SuperAdminController::class)->group(function () {
@@ -162,7 +160,6 @@ Route::middleware(['auth:superadmin', 'throttle:60,1'])->prefix('superadmin/syst
     Route::put('/', 'update')->name('superadmin.system-preferences.update');
 });
 
-
 /* Route::get('/businessdashboard', function () {
     return view('businessdashboard');
 })->middleware(['auth', 'verified', 'rolemanager:businessmanager'])->name('businessdashboard'); */
@@ -174,7 +171,6 @@ Route::prefix('brm')->controller(BrmController::class)->group(function () {
     Route::post('/login', 'login')->name('brm.login.submit');
     Route::post('/logout', 'logout')->name('brm.logout');
 });
-
 
 // brms protected routes
 Route::middleware(['auth:brms', 'throttle:60,1'])->prefix('brms')->controller(BrmController::class)->group(function () {
@@ -200,14 +196,13 @@ Route::middleware(['auth:brms', 'throttle:60,1'])->prefix('brms')->controller(Br
     });
 });
 
-
 Route::get('/', function () {
     // Get dynamic statistics from database
     $stats = [
         'active_businesses' => \App\Models\Brm::where('status', 1)->count(),
         'total_transactions' => \App\Models\SellProduct::count(),
         'uptime' => '99.9', // Can be calculated from monitoring system
-        'support' => '24/7' // Static value
+        'support' => '24/7', // Static value
     ];
 
     $plans = \App\Models\SubscriptionPlan::active()->orderBy('monthly_price')->get();
@@ -230,232 +225,213 @@ Route::prefix('signup')->middleware('throttle:5,1')->controller(SignupController
     Route::get('/account-created', 'accountCreated')->name('signup.account.created');
 });
 
-
-
-
-//Manager routes
+// Manager routes
 Route::middleware(['auth', 'verified', 'rolemanager:manager', 'check.subscription', 'throttle:60,1'])->group(function () {
-  Route::prefix('manager')->group(function () {
-    // Manager Profile routes
-    Route::controller(\App\Http\Controllers\Manager\ProfileController::class)->group(function () {
-        Route::get('/profile', 'show')->name('manager.profile.show');
-        Route::get('/profile/edit', 'edit')->name('manager.profile.edit');
-        Route::patch('/profile', 'update')->name('manager.profile.update');
-        Route::get('/profile/change-password', 'changePasswordForm')->name('manager.profile.change_password');
-        Route::post('/profile/change-password', 'changePassword')->name('manager.profile.change_password.post');
-    });
-
-    //managers main controller
-    Route::controller(ManagerMainController::class)->group(function () {
-        Route::get('/', 'index')->name('manager');
-        Route::get('/add_item_standard', 'add_item_standard')->name('manager.add_item_standard');
-        Route::get('/add_item_variant', 'add_item_variant')->name('manager.add_item_variant');
-        Route::get('/suppliers', 'suppliers')->name('manager.suppliers');
-        Route::get('/sell_product', 'sell_product')->name('manager.sell_product');
-    });
-
-     Route::controller(StaffMainController::class)->group(function () {
-       Route::get('/staff_member/show', 'add_staff')->name('manager.staff');
-        Route::post('/staff_member/create', 'createstaff')->name('staff.create');
-        Route::get('/staff_member/edit/{id}', 'editstaff')->name('staff.edit');
-        Route::put('/staff_member/update/{id}', 'updatestaff')->name('staff.update');
-        // Redirect GET request for update to edit page
-        Route::get('/staff_member/update/{id}', function($id) {
-            return redirect()->route('staff.edit', $id);
+    Route::prefix('manager')->group(function () {
+        // Manager Profile routes
+        Route::controller(\App\Http\Controllers\Manager\ProfileController::class)->group(function () {
+            Route::get('/profile', 'show')->name('manager.profile.show');
+            Route::get('/profile/edit', 'edit')->name('manager.profile.edit');
+            Route::patch('/profile', 'update')->name('manager.profile.update');
+            Route::get('/profile/change-password', 'changePasswordForm')->name('manager.profile.change_password');
+            Route::post('/profile/change-password', 'changePassword')->name('manager.profile.change_password.post');
         });
-        Route::delete('/staff_member/delete/{id}', 'deletestaff')->name('staff.delete');
-         // Enable/Disable Manager
-         Route::patch('/staff_member/toggle_status/{id}', 'toggleStatus')->name('staff.toggle_status');
-    });
 
-     Route::controller(AddManagerController::class)->group(function () {
-         Route::get('/manager_member/show', 'add_manager')->name('manager.manager');
-          Route::post('/manager_member/create', 'createmanager')->name('manager.create');
-         Route::get('/manager_member/edit/{id}', 'editmanager')->name('manager.edit');
-         Route::put('/manager_member/update/{id}', 'updatemanager')->name('manager.update');
-         // Enable/Disable Manager
-         Route::patch('/manager_member/toggle_status/{id}', 'toggleStatus')->name('manager.toggle_status');
-          // Redirect GET request for update to edit page
-          Route::get('/manager_member/update/{id}', function($id) {
+        // managers main controller
+        Route::controller(ManagerMainController::class)->group(function () {
+            Route::get('/', 'index')->name('manager');
+            Route::get('/add_item_standard', 'add_item_standard')->name('manager.add_item_standard');
+            Route::get('/add_item_variant', 'add_item_variant')->name('manager.add_item_variant');
+            Route::get('/suppliers', 'suppliers')->name('manager.suppliers');
+            Route::get('/sell_product', 'sell_product')->name('manager.sell_product');
+        });
+
+        Route::controller(StaffMainController::class)->group(function () {
+            Route::get('/staff_member/show', 'add_staff')->name('manager.staff');
+            Route::post('/staff_member/create', 'createstaff')->name('staff.create');
+            Route::get('/staff_member/edit/{id}', 'editstaff')->name('staff.edit');
+            Route::put('/staff_member/update/{id}', 'updatestaff')->name('staff.update');
+            // Redirect GET request for update to edit page
+            Route::get('/staff_member/update/{id}', function ($id) {
+                return redirect()->route('staff.edit', $id);
+            });
+            Route::delete('/staff_member/delete/{id}', 'deletestaff')->name('staff.delete');
+            // Enable/Disable Manager
+            Route::patch('/staff_member/toggle_status/{id}', 'toggleStatus')->name('staff.toggle_status');
+        });
+
+        Route::controller(AddManagerController::class)->group(function () {
+            Route::get('/manager_member/show', 'add_manager')->name('manager.manager');
+            Route::post('/manager_member/create', 'createmanager')->name('manager.create');
+            Route::get('/manager_member/edit/{id}', 'editmanager')->name('manager.edit');
+            Route::put('/manager_member/update/{id}', 'updatemanager')->name('manager.update');
+            // Enable/Disable Manager
+            Route::patch('/manager_member/toggle_status/{id}', 'toggleStatus')->name('manager.toggle_status');
+            // Redirect GET request for update to edit page
+            Route::get('/manager_member/update/{id}', function ($id) {
                 return redirect()->route('manager.edit', $id);
-          });
-          Route::delete('/manager_member/delete/{id}', 'deletemanager')->name('manager.delete');
+            });
+            Route::delete('/manager_member/delete/{id}', 'deletemanager')->name('manager.delete');
 
-     });
-
-
-     Route::controller(StandardItemController::class)->group(function () {
-       Route::post('/standard_item/create', 'createstandard')->name('standard.create');
-    });
-
-    Route::controller(VariantItemController::class)->group(function () {
-       Route::post('/variant_item/create', 'createvariant')->name('variant.create');
-    });
-
-    Route::controller(AIInventoryController::class)->prefix('ai')->group(function () {
-        Route::post('/suggest-category', 'suggestCategory')->name('manager.ai.suggest-category');
-        Route::post('/generate-description', 'generateDescription')->name('manager.ai.generate-description');
-        Route::post('/recommend-price', 'recommendPrice')->name('manager.ai.recommend-price');
-    });
-
-    Route::post('/ai/copilot', [AICopilotController::class, 'query'])->name('manager.ai.copilot');
-
-    Route::controller(TaxController::class)->group(function () {
-         Route::get('/taxes', 'taxes')->name('manager.taxes');
-    });
-
-    Route::controller(SalesReportController::class)->group(function () {
-    Route::get('/completed_sales', 'completed_sales')->name('manager.completed_sales');
-    Route::get('/completed_sales/export/{format}', 'exportCompletedSales')->name('manager.completed_sales.export');
-    Route::get('/get_sale_items/{receiptNumber}', 'get_sale_items')->name('manager.get_sale_items');
-    Route::get('/print_receipt/{receiptNumber}', 'print_receipt')->name('manager.print_receipt');
-    Route::get('/sales_summary', 'sales_summary')->name('manager.sales_summary');
-    Route::get('/sales_summary/export/{format}', 'exportSalesSummary')->name('manager.sales_summary.export');
-    Route::get('/sales_by_category', 'sales_by_category')->name('manager.sales_by_category');
-    Route::get('/sales_by_category/export/{format}', 'exportSalesByCategory')->name('manager.sales_by_category.export');
-    Route::get('/get-staff-user-list', 'getStaffUserList')->name('manager.getStaffUserList');
-  });
-
-
-
-    Route::controller(AddDiscountController::class)->group(function () {
-        Route::get('/discount_report', 'discount_report')->name('manager.discount_report');
-        Route::get('/add_discount', 'add_discount')->name('manager.add_discount');
-        Route::post('/discount/create', 'create_discount')->name('discount.create');
-        Route::get('/get_discounts', 'get_discounts')->name('manager.get_discounts');
-        Route::put('/discount/update/{id}', 'update_discount')->name('discount.update');
-        Route::delete('/discount/delete/{id}', 'delete_discount')->name('discount.delete');
-   });
-
-
-
-   Route::controller(StaffSalesController::class)->group(function () {
-         Route::get('/staff_sales', 'staff_sales')->name('manager.staff_sales');
-         Route::get('/staff_sales/export/{format}', 'exportStaffSales')->name('manager.staff_sales.export');
-   });
-
-   Route::controller(ActivityLogsController::class)->group(function () {
-         Route::get('/activity_logs', 'activity_logs')->name('manager.activity_logs');
-   });
-
-   Route::controller(SalesbyItemController::class)->group(function () {
-       Route::get('/sales_by_item', 'sales_by_item')->name('manager.sales_by_item');
-       Route::get('/sales_by_item/export/{format}', 'exportSalesByItem')->name('manager.sales_by_item.export');
-       Route::get('/get-categories-list', 'getCategoriesList')->name('manager.getCategoriesList');
-       Route::get('/get-items-list', 'getItemsList')->name('manager.getItemsList');
-   });
-
-
-     Route::controller(ValuationReportController::class)->group(function () {
-        Route::get('/valuation_report', 'valuation_report')->name('manager.valuation_report');
-   });
-
-
-    Route::controller(AllItemsController::class)->group(function () {
-       Route::get('/all_items', 'all_items')->name('all_items');
-       Route::get('/all_items/export/{format}', 'exportAllItems')->name('manager.all_items.export');
-        Route::delete('/all_items/delete/{type}/{id}', 'delete_item')->name('all_items.delete');
-        Route::post('/all_items/delete_multiple', 'delete_multiple')->name('all_items.delete_multiple');
-        Route::get('/Show_Item_Details/{type}/{id}', 'show_item_details')->name('all_items.show_item_details');
-        Route::get('/all_items/edit/{type}/{id}', 'edit_item')->name('all_items.edit_item');
-        Route::put('/all_items/update/{type}/{id}', 'update_item')->name('all_items.update_item');
-        // Redirect GET request for update to edit page
-        Route::get('/all_items/update/{type}/{id}', function($type, $id) {
-            return redirect()->route('all_items.edit_item', ['type' => $type, 'id' => $id]);
         });
+
+        Route::controller(StandardItemController::class)->group(function () {
+            Route::post('/standard_item/create', 'createstandard')->name('standard.create');
+        });
+
+        Route::controller(VariantItemController::class)->group(function () {
+            Route::post('/variant_item/create', 'createvariant')->name('variant.create');
+        });
+
+        Route::controller(AIInventoryController::class)->prefix('ai')->group(function () {
+            Route::post('/suggest-category', 'suggestCategory')->name('manager.ai.suggest-category');
+            Route::post('/generate-description', 'generateDescription')->name('manager.ai.generate-description');
+            Route::post('/recommend-price', 'recommendPrice')->name('manager.ai.recommend-price');
+        });
+
+        Route::post('/ai/copilot', [AICopilotController::class, 'query'])->name('manager.ai.copilot');
+
+        Route::controller(TaxController::class)->group(function () {
+            Route::get('/taxes', 'taxes')->name('manager.taxes');
+        });
+
+        Route::controller(SalesReportController::class)->group(function () {
+            Route::get('/completed_sales', 'completed_sales')->name('manager.completed_sales');
+            Route::get('/completed_sales/export/{format}', 'exportCompletedSales')->name('manager.completed_sales.export');
+            Route::get('/get_sale_items/{receiptNumber}', 'get_sale_items')->name('manager.get_sale_items');
+            Route::get('/print_receipt/{receiptNumber}', 'print_receipt')->name('manager.print_receipt');
+            Route::get('/sales_summary', 'sales_summary')->name('manager.sales_summary');
+            Route::get('/sales_summary/export/{format}', 'exportSalesSummary')->name('manager.sales_summary.export');
+            Route::get('/sales_by_category', 'sales_by_category')->name('manager.sales_by_category');
+            Route::get('/sales_by_category/export/{format}', 'exportSalesByCategory')->name('manager.sales_by_category.export');
+            Route::get('/get-staff-user-list', 'getStaffUserList')->name('manager.getStaffUserList');
+        });
+
+        Route::controller(AddDiscountController::class)->group(function () {
+            Route::get('/discount_report', 'discount_report')->name('manager.discount_report');
+            Route::get('/add_discount', 'add_discount')->name('manager.add_discount');
+            Route::post('/discount/create', 'create_discount')->name('discount.create');
+            Route::get('/get_discounts', 'get_discounts')->name('manager.get_discounts');
+            Route::put('/discount/update/{id}', 'update_discount')->name('discount.update');
+            Route::delete('/discount/delete/{id}', 'delete_discount')->name('discount.delete');
+        });
+
+        Route::controller(StaffSalesController::class)->group(function () {
+            Route::get('/staff_sales', 'staff_sales')->name('manager.staff_sales');
+            Route::get('/staff_sales/export/{format}', 'exportStaffSales')->name('manager.staff_sales.export');
+        });
+
+        Route::controller(ActivityLogsController::class)->group(function () {
+            Route::get('/activity_logs', 'activity_logs')->name('manager.activity_logs');
+        });
+
+        Route::controller(SalesbyItemController::class)->group(function () {
+            Route::get('/sales_by_item', 'sales_by_item')->name('manager.sales_by_item');
+            Route::get('/sales_by_item/export/{format}', 'exportSalesByItem')->name('manager.sales_by_item.export');
+            Route::get('/get-categories-list', 'getCategoriesList')->name('manager.getCategoriesList');
+            Route::get('/get-items-list', 'getItemsList')->name('manager.getItemsList');
+        });
+
+        Route::controller(ValuationReportController::class)->group(function () {
+            Route::get('/valuation_report', 'valuation_report')->name('manager.valuation_report');
+        });
+
+        Route::controller(AllItemsController::class)->group(function () {
+            Route::get('/all_items', 'all_items')->name('all_items');
+            Route::get('/all_items/export/{format}', 'exportAllItems')->name('manager.all_items.export');
+            Route::delete('/all_items/delete/{type}/{id}', 'delete_item')->name('all_items.delete');
+            Route::post('/all_items/delete_multiple', 'delete_multiple')->name('all_items.delete_multiple');
+            Route::get('/Show_Item_Details/{type}/{id}', 'show_item_details')->name('all_items.show_item_details');
+            Route::get('/all_items/edit/{type}/{id}', 'edit_item')->name('all_items.edit_item');
+            Route::put('/all_items/update/{type}/{id}', 'update_item')->name('all_items.update_item');
+            // Redirect GET request for update to edit page
+            Route::get('/all_items/update/{type}/{id}', function ($type, $id) {
+                return redirect()->route('all_items.edit_item', ['type' => $type, 'id' => $id]);
+            });
+        });
+
+        Route::controller(ItemImportController::class)->group(function () {
+            Route::get('/items/import/standard/template', 'downloadStandardTemplate')->name('items.import.standard.template');
+            Route::post('/items/import/standard', 'importStandard')->name('items.import.standard');
+            Route::get('/items/import/variant/template', 'downloadVariantTemplate')->name('items.import.variant.template');
+            Route::post('/items/import/variant', 'importVariant')->name('items.import.variant');
+        });
+
+        Route::controller(CategoryController::class)->group(function () {
+            Route::get('/all_category', 'all_category')->name('all_categories');
+            Route::post('/category/create', 'create_category')->name('category.create');
+            Route::get('/edit_category/{id}', 'edit_category')->name('category.edit');
+            Route::put('/update_category/{id}', 'update_category')->name('category.update');
+            Route::delete('/delete_category/{id}', 'delete_category')->name('category.delete');
+        });
+
+        Route::controller(SupplierController::class)->group(function () {
+            Route::get('/suppliers', 'suppliers')->name('manager.suppliers');
+            Route::post('/supplier/create', 'create_supplier')->name('supplier.create');
+            Route::get('/edit_supplier/{id}', 'edit_supplier')->name('supplier.edit');
+            Route::put('/update_supplier/{id}', 'update_supplier')->name('supplier.update');
+            Route::delete('/delete_supplier/{id}', 'delete_supplier')->name('supplier.delete');
+        });
+
+        Route::controller(UnitController::class)->group(function () {
+            Route::get('/units', 'all_units')->name('manager.units');
+            Route::post('/unit/create', 'create_unit')->name('unit.create');
+            Route::put('/unit/update/{id}', 'update_unit')->name('unit.update');
+            Route::delete('/unit/delete/{id}', 'delete_unit')->name('unit.delete');
+        });
+
+        Route::controller(SellProductController::class)->group(function () {
+            Route::get('/sell_product', 'sell_product')->name('manager.sell_product');
+            Route::post('/checkout', 'checkout')->name('manager.checkout');
+            Route::post('/save_cart', 'save_cart')->name('manager.save_cart');
+            Route::get('/get_saved_carts', 'get_saved_carts')->name('manager.get_saved_carts');
+            Route::get('/load_saved_cart/{sessionId}', 'load_saved_cart')->name('manager.load_saved_cart');
+            Route::delete('/delete_saved_cart/{sessionId}', 'delete_saved_cart')->name('manager.delete_saved_cart');
+            Route::get('/View_Saved_Carts', 'view_saved_carts')->name('manager.view_saved_carts');
+            Route::get('/get_all_staff', 'get_all_staff')->name('manager.get_all_staff');
+        });
+
+        Route::controller(CustomerController::class)->group(function () {
+            Route::get('/get_all_customers', 'get_all_customers')->name('manager.get_all_customers');
+            Route::post('/add_customer', 'add_customer')->name('manager.add_customer');
+            Route::get('/customers_information', 'customers')->name('manager.customers');
+            Route::get('/get_customer_details/{id}', 'get_customer_details')->name('customer.details');
+            Route::get('/edit_customer/{id}', 'edit_customer')->name('customer.edit');
+            Route::put('/update_customer/{id}', 'update_customer')->name('customer.update');
+            Route::delete('/delete_customer/{id}', 'delete_customer')->name('customer.delete');
+        });
+
+        Route::controller(BranchController::class)->group(function () {
+            Route::get('/branches', 'index')->name('manager.branches');
+            Route::post('/branches/create', 'store')->name('branch.create');
+            Route::get('/branches/{id}', 'show')->name('branch.show');
+            Route::get('/branches/{id}/edit', 'edit')->name('branch.edit');
+            Route::put('/branches/{id}', 'update')->name('branch.update');
+            Route::patch('/branches/{id}/toggle_status', 'toggleStatus')->name('branch.toggle_status');
+            Route::delete('/branches/{id}', 'destroy')->name('branch.delete');
+        });
+
+        Route::controller(BranchInventoryController::class)->group(function () {
+            Route::get('/inventory/branch-allocation', 'index')->name('manager.inventory.allocation');
+            Route::post('/inventory/allocate', 'allocate')->name('manager.inventory.allocate');
+            Route::post('/inventory/transfer', 'transfer')->name('manager.inventory.transfer');
+            Route::get('/inventory/branch/{branchId}', 'branchInventory')->name('manager.inventory.branch');
+        });
+
+        Route::controller(SystemPreferencesController::class)->group(function () {
+            Route::get('/system/preferences', 'index')->name('manager.system.preferences');
+            Route::post('/system/preferences/update', 'update')->name('manager.system.preferences.update');
+            Route::post('/system/preferences/receipt/update', 'updateReceiptSettings')->name('manager.receipt.settings.update');
+        });
+
     });
-
-    Route::controller(ItemImportController::class)->group(function () {
-        Route::get('/items/import/standard/template', 'downloadStandardTemplate')->name('items.import.standard.template');
-        Route::post('/items/import/standard', 'importStandard')->name('items.import.standard');
-        Route::get('/items/import/variant/template', 'downloadVariantTemplate')->name('items.import.variant.template');
-        Route::post('/items/import/variant', 'importVariant')->name('items.import.variant');
-    });
-
-    Route::controller(CategoryController::class)->group(function () {
-      Route::get('/all_category', 'all_category')->name('all_categories');
-         Route::post('/category/create', 'create_category')->name('category.create');
-         Route::get('/edit_category/{id}', 'edit_category')->name('category.edit');
-         Route::put('/update_category/{id}', 'update_category')->name('category.update');
-         Route::delete('/delete_category/{id}', 'delete_category')->name('category.delete');
-    });
-
-    Route::controller(SupplierController::class)->group(function () {
-       Route::get('/suppliers', 'suppliers')->name('manager.suppliers');
-         Route::post('/supplier/create', 'create_supplier')->name('supplier.create');
-         Route::get('/edit_supplier/{id}', 'edit_supplier')->name('supplier.edit');
-         Route::put('/update_supplier/{id}', 'update_supplier')->name('supplier.update');
-         Route::delete('/delete_supplier/{id}', 'delete_supplier')->name('supplier.delete');
-    });
-
-    Route::controller(UnitController::class)->group(function () {
-         Route::get('/units', 'all_units')->name('manager.units');
-         Route::post('/unit/create', 'create_unit')->name('unit.create');
-         Route::put('/unit/update/{id}', 'update_unit')->name('unit.update');
-         Route::delete('/unit/delete/{id}', 'delete_unit')->name('unit.delete');
-    });
-
-    Route::controller(SellProductController::class)->group(function () {
-       Route::get('/sell_product', 'sell_product')->name('manager.sell_product');
-       Route::post('/checkout', 'checkout')->name('manager.checkout');
-       Route::post('/save_cart', 'save_cart')->name('manager.save_cart');
-       Route::get('/get_saved_carts', 'get_saved_carts')->name('manager.get_saved_carts');
-       Route::get('/load_saved_cart/{sessionId}', 'load_saved_cart')->name('manager.load_saved_cart');
-       Route::delete('/delete_saved_cart/{sessionId}', 'delete_saved_cart')->name('manager.delete_saved_cart');
-       Route::get('/View_Saved_Carts', 'view_saved_carts')->name('manager.view_saved_carts');
-       Route::get('/get_all_staff', 'get_all_staff')->name('manager.get_all_staff');
-    });
-
-
-    Route::controller(CustomerController::class)->group(function () {
-      Route::get('/get_all_customers', 'get_all_customers')->name('manager.get_all_customers');
-      Route::post('/add_customer', 'add_customer')->name('manager.add_customer');
-         Route::get('/customers_information', 'customers')->name('manager.customers');
-         Route::get('/get_customer_details/{id}', 'get_customer_details')->name('customer.details');
-         Route::get('/edit_customer/{id}', 'edit_customer')->name('customer.edit');
-         Route::put('/update_customer/{id}', 'update_customer')->name('customer.update');
-         Route::delete('/delete_customer/{id}', 'delete_customer')->name('customer.delete');
-    });
-
-
-    Route::controller(BranchController::class)->group(function () {
-        Route::get('/branches', 'index')->name('manager.branches');
-        Route::post('/branches/create', 'store')->name('branch.create');
-        Route::get('/branches/{id}', 'show')->name('branch.show');
-        Route::get('/branches/{id}/edit', 'edit')->name('branch.edit');
-        Route::put('/branches/{id}', 'update')->name('branch.update');
-        Route::patch('/branches/{id}/toggle_status', 'toggleStatus')->name('branch.toggle_status');
-        Route::delete('/branches/{id}', 'destroy')->name('branch.delete');
-    });
-
-    Route::controller(BranchInventoryController::class)->group(function () {
-        Route::get('/inventory/branch-allocation', 'index')->name('manager.inventory.allocation');
-        Route::post('/inventory/allocate', 'allocate')->name('manager.inventory.allocate');
-        Route::post('/inventory/transfer', 'transfer')->name('manager.inventory.transfer');
-        Route::get('/inventory/branch/{branchId}', 'branchInventory')->name('manager.inventory.branch');
-    });
-
-
-    Route::controller(SystemPreferencesController::class)->group(function () {
-        Route::get('/system/preferences', 'index')->name('manager.system.preferences');
-        Route::post('/system/preferences/update', 'update')->name('manager.system.preferences.update');
-        Route::post('/system/preferences/receipt/update', 'updateReceiptSettings')->name('manager.receipt.settings.update');
-    });
-
-  });
-}); //End of manager router
-
-
-
-
+}); // End of manager router
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
-
-
 
 // Staff Auth Routes
 Route::prefix('staff')->group(function () {
@@ -488,19 +464,16 @@ Route::middleware(['auth:staff', 'throttle:60,1'])->prefix('staff')->group(funct
         Route::get('/get_sale_items/{receiptNumber}', 'get_sale_items')->name('staff.get_sale_items');
     });
 
-
     Route::controller(StaffProfileController::class)->group(function () {
         Route::get('/profile', 'staff_profile')->name('staff.profile');
         Route::post('/update-password', 'updatePassword')->name('staff.update.password');
     });
 
-     Route::controller(StaffAddDiscountController::class)->group(function () {
+    Route::controller(StaffAddDiscountController::class)->group(function () {
         Route::get('/get_discounts', 'get_discounts')->name('staff.get_discounts');
     });
 
     Route::post('/ai/copilot', [AICopilotController::class, 'query'])->name('staff.ai.copilot');
-
-
 
 });
 

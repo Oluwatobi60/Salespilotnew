@@ -2,8 +2,8 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
 use App\Models\SubscriptionPlan;
+use Illuminate\Console\Command;
 
 class FixSubscriptionFeatures extends Command
 {
@@ -40,6 +40,7 @@ class FixSubscriptionFeatures extends Command
                 $plan->save();
                 $fixed++;
                 $this->info("Fixed null features for plan: {$plan->name}");
+
                 continue;
             }
 
@@ -53,7 +54,7 @@ class FixSubscriptionFeatures extends Command
                     $plan->save();
                     $fixed++;
                     $this->warn("Fixed invalid JSON for plan: {$plan->name}");
-                } else if (!is_array($decoded)) {
+                } elseif (! is_array($decoded)) {
                     // Valid JSON but not an array
                     $plan->features = [];
                     $plan->save();
@@ -65,7 +66,7 @@ class FixSubscriptionFeatures extends Command
                     $plan->save();
                     $this->info("Validated features for plan: {$plan->name}");
                 }
-            } else if (is_array($originalFeatures)) {
+            } elseif (is_array($originalFeatures)) {
                 // Already an array, just ensure it's saved properly
                 $plan->features = $originalFeatures;
                 $plan->save();

@@ -51,7 +51,7 @@ return new class extends Migration
                 'local_govt',
                 'address',
                 'phone_number',
-                'referral_code'
+                'referral_code',
             ]);
         });
     }

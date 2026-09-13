@@ -18,7 +18,7 @@ class StaffProfileController extends Controller
         $staff->load('branch');
 
         // If no staff is authenticated, redirect to login
-        if (!$staff) {
+        if (! $staff) {
             return redirect()->route('staff.login')->with('error', 'Please login to view your profile');
         }
 
@@ -44,18 +44,18 @@ class StaffProfileController extends Controller
             $staff = Auth::guard('staff')->user();
 
             // Check if staff is authenticated
-            if (!$staff) {
+            if (! $staff) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Authentication required'
+                    'message' => 'Authentication required',
                 ], 401);
             }
 
             // Check if current password is correct
-            if (!Hash::check($request->current_password, $staff->password)) {
+            if (! Hash::check($request->current_password, $staff->password)) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Current password is incorrect'
+                    'message' => 'Current password is incorrect',
                 ], 422);
             }
 
@@ -65,17 +65,17 @@ class StaffProfileController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Password updated successfully!'
+                'message' => 'Password updated successfully!',
             ]);
         } catch (ValidationException $e) {
             return response()->json([
                 'success' => false,
-                'message' => $e->validator->errors()->first()
+                'message' => $e->validator->errors()->first(),
             ], 422);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'An error occurred while updating password'
+                'message' => 'An error occurred while updating password',
             ], 500);
         }
     }

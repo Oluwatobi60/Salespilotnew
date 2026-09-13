@@ -3,8 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Models\VariantItem;
-use App\Models\StandardItem;
 
 class Category extends Model
 {
@@ -24,11 +22,4 @@ class Category extends Model
     {
         return $this->hasMany(StandardItem::class);
     }
-
-
-
-
-
-
-
 }

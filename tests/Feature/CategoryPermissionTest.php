@@ -8,7 +8,7 @@ it('blocks added managers from creating categories without the edit-items featur
     $creator = User::create([
         'first_name' => 'Creator',
         'surname' => 'User',
-        'email' => 'creator-' . uniqid() . '@example.com',
+        'email' => 'creator-'.uniqid().'@example.com',
         'password' => Hash::make('password'),
         'role' => 'manager',
         'business_name' => 'Demo Business',
@@ -22,7 +22,7 @@ it('blocks added managers from creating categories without the edit-items featur
     $manager = User::create([
         'first_name' => 'Added',
         'surname' => 'Manager',
-        'email' => 'manager-' . uniqid() . '@example.com',
+        'email' => 'manager-'.uniqid().'@example.com',
         'password' => Hash::make('password'),
         'role' => 'manager',
         'business_name' => 'Demo Business',
@@ -50,7 +50,7 @@ it('blocks added managers from updating categories without the edit-items featur
     $creator = User::create([
         'first_name' => 'Creator',
         'surname' => 'User',
-        'email' => 'creator-' . uniqid() . '@example.com',
+        'email' => 'creator-'.uniqid().'@example.com',
         'password' => Hash::make('password'),
         'role' => 'manager',
         'business_name' => 'Demo Business',
@@ -64,7 +64,7 @@ it('blocks added managers from updating categories without the edit-items featur
     $manager = User::create([
         'first_name' => 'Added',
         'surname' => 'Manager',
-        'email' => 'manager-' . uniqid() . '@example.com',
+        'email' => 'manager-'.uniqid().'@example.com',
         'password' => Hash::make('password'),
         'role' => 'manager',
         'business_name' => 'Demo Business',
@@ -84,7 +84,7 @@ it('blocks added managers from updating categories without the edit-items featur
 
     $this->actingAs($manager);
 
-    $response = $this->put('/manager/update_category/' . $category->id, [
+    $response = $this->put('/manager/update_category/'.$category->id, [
         'category_name' => 'Updated Category',
     ]);
 

@@ -110,6 +110,7 @@ class BundleItem extends Model
                 return true;
             }
         }
+
         return false;
     }
 
@@ -154,6 +155,7 @@ class BundleItem extends Model
         if ($this->low_stock_threshold === null) {
             return false;
         }
+
         return $this->current_stock <= $this->low_stock_threshold;
     }
 }

@@ -2,26 +2,25 @@
 
 namespace App\Http\Controllers\Manager;
 
+use App\Exports\ReportExport;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\CartItem;
-use Illuminate\Support\Facades\Log;
-use App\Models\StandardItem;
-use App\Models\VariantItem;
+use App\Models\Category;
 use App\Models\ProductVariant;
 use App\Models\Staffs;
-use App\Models\User;
-use App\Models\Category;
+use App\Models\StandardItem;
 use App\Models\Unit;
-use Carbon\Carbon;
-use Illuminate\Support\Facades\Auth;
-use App\Exports\ReportExport;
-use Maatwebsite\Excel\Facades\Excel;
+use App\Models\User;
+use App\Models\VariantItem;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Maatwebsite\Excel\Facades\Excel;
 
 class SalesReportController extends Controller
 {
-
     // Display completed sales with pagination
     public function completed_sales()
     {
@@ -33,7 +32,7 @@ class SalesReportController extends Controller
             ->where('cart_items.business_name', $businessName);
 
         // Check if user is a business creator or branch manager
-        if (!$manager->isBusinessCreator()) {
+        if (! $manager->isBusinessCreator()) {
             // This is a branch manager (added by another manager)
             // Show only sales from staff assigned to their branch
             $managerBranchName = $manager->branch_name;
@@ -57,20 +56,20 @@ class SalesReportController extends Controller
                 'branch_name' => $managerBranchName,
                 'business_name' => $businessName,
                 'staff_ids_found' => $managerStaffIds,
-                'staff_count' => count($managerStaffIds)
+                'staff_count' => count($managerStaffIds),
             ]);
 
-            $query->where(function($q) use ($manager, $managerStaffIds, $managerBranchName) {
+            $query->where(function ($q) use ($manager, $managerStaffIds, $managerBranchName) {
                 // Sales made by this manager themselves
                 $q->where('cart_items.user_id', $manager->id);
 
                 // Sales made by staff assigned to this manager's branch
-                if (!empty($managerStaffIds)) {
+                if (! empty($managerStaffIds)) {
                     $q->orWhereIn('cart_items.staff_id', $managerStaffIds);
                 }
 
                 // Also include sales where branch_name matches (fallback for direct branch sales)
-                if (!empty($managerBranchName)) {
+                if (! empty($managerBranchName)) {
                     $q->orWhere('cart_items.branch_name', $managerBranchName);
                 }
             });
@@ -106,7 +105,7 @@ class SalesReportController extends Controller
         $query = CartItem::where('cart_items.status', 'completed')
             ->where('cart_items.business_name', $businessName);
 
-        if (!$manager->isBusinessCreator()) {
+        if (! $manager->isBusinessCreator()) {
             $managerBranchName = $manager->branch_name;
             $managerStaffIds = [];
             $managedBranchIds = \App\Models\Branch\Branch::where('manager_id', $manager->id)->pluck('id');
@@ -117,12 +116,12 @@ class SalesReportController extends Controller
                     ->pluck('staffs.id')
                     ->toArray();
             }
-            $query->where(function($q) use ($manager, $managerStaffIds, $managerBranchName) {
+            $query->where(function ($q) use ($manager, $managerStaffIds, $managerBranchName) {
                 $q->where('cart_items.user_id', $manager->id);
-                if (!empty($managerStaffIds)) {
+                if (! empty($managerStaffIds)) {
                     $q->orWhereIn('cart_items.staff_id', $managerStaffIds);
                 }
-                if (!empty($managerBranchName)) {
+                if (! empty($managerBranchName)) {
                     $q->orWhere('cart_items.branch_name', $managerBranchName);
                 }
             });
@@ -152,6 +151,7 @@ class SalesReportController extends Controller
         if ($format === 'pdf') {
             return Pdf::loadView($viewName, $data)->download('completed_sales.pdf');
         }
+
         return Excel::download(new ReportExport($viewName, $data), 'completed_sales.xlsx');
     }
 
@@ -174,14 +174,14 @@ class SalesReportController extends Controller
 
         // If the user was added by another manager, filter by user_id, staff_id, or branch_name
         if ($manager->addby) {
-            $query->where(function($q) use ($manager, $branchName) {
+            $query->where(function ($q) use ($manager, $branchName) {
                 $q->where('user_id', $manager->id)
-                  ->orWhereIn('staff_id', function($subQuery) use ($manager) {
-                      $subQuery->select('id')
-                          ->from('staffs')
-                          ->where('manager_email', $manager->email);
-                  })
-                  ->orWhere('branch_name', $branchName);
+                    ->orWhereIn('staff_id', function ($subQuery) use ($manager) {
+                        $subQuery->select('id')
+                            ->from('staffs')
+                            ->where('manager_email', $manager->email);
+                    })
+                    ->orWhere('branch_name', $branchName);
             });
         }
 
@@ -202,9 +202,9 @@ class SalesReportController extends Controller
             ->distinct('receipt_number')
             ->count('receipt_number');
 
-            // Log the total completed sales and sales data count
-        Log::info('Total completed sales (by receipt): ' . $totalCompletedSales);
-        Log::info('Sales data grouped by date: ' . $salesData->count());
+        // Log the total completed sales and sales data count
+        Log::info('Total completed sales (by receipt): '.$totalCompletedSales);
+        Log::info('Sales data grouped by date: '.$salesData->count());
 
         // Calculate cost of items, gross profit, margin, and taxes for each day
         $salesSummary = $salesData->map(function ($sale) use ($query) {
@@ -214,12 +214,13 @@ class SalesReportController extends Controller
                 ->get();
 
             // Collect unique seller IDs for this date
-            $sellerIds = $items->map(function($item) {
+            $sellerIds = $items->map(function ($item) {
                 if ($item->staff_id) {
-                    return 'staff_' . $item->staff_id;
+                    return 'staff_'.$item->staff_id;
                 } elseif ($item->user_id) {
-                    return 'user_' . $item->user_id;
+                    return 'user_'.$item->user_id;
                 }
+
                 return null;
             })->filter()->unique()->values()->toArray();
 
@@ -238,15 +239,15 @@ class SalesReportController extends Controller
                     'item_id' => $item->item_id,
                     'item_code' => $item->item_code ?? null,
                     'quantity' => $item->quantity,
-                    'subtotal' => $item->subtotal
+                    'subtotal' => $item->subtotal,
                 ]);
 
                 if ($item->item_type === 'standard') {
                     $standardItem = null;
-                    if (!empty($item->item_code)) {
+                    if (! empty($item->item_code)) {
                         $standardItem = StandardItem::where('item_code', $item->item_code)->first();
                     }
-                    if (!$standardItem) {
+                    if (! $standardItem) {
                         $standardItem = StandardItem::find($item->item_id);
                     }
                     if ($standardItem) {
@@ -256,19 +257,19 @@ class SalesReportController extends Controller
                             'item_name' => $standardItem->item_name,
                             'cost_price' => $standardItem->cost_price,
                             'quantity' => $item->quantity,
-                            'itemCost' => $itemCost
+                            'itemCost' => $itemCost,
                         ]);
                         $taxRate = ($standardItem->tax_rate ?? 0) / 100;
                         $totalTaxes += $item->subtotal * $taxRate;
                     } else {
-                        Log::warning('Standard item not found for item_id: ' . $item->item_id . ' or item_code: ' . ($item->item_code ?? ''));
+                        Log::warning('Standard item not found for item_id: '.$item->item_id.' or item_code: '.($item->item_code ?? ''));
                     }
                 } elseif ($item->item_type === 'variant') {
                     $productVariant = null;
-                    if (!empty($item->item_code)) {
+                    if (! empty($item->item_code)) {
                         $productVariant = ProductVariant::where('variant_code', $item->item_code)->first();
                     }
-                    if (!$productVariant) {
+                    if (! $productVariant) {
                         $productVariant = ProductVariant::find($item->item_id);
                     }
                     if ($productVariant) {
@@ -278,16 +279,16 @@ class SalesReportController extends Controller
                             'variant_name' => $productVariant->variant_name,
                             'cost_price' => $productVariant->cost_price,
                             'quantity' => $item->quantity,
-                            'itemCost' => $itemCost
+                            'itemCost' => $itemCost,
                         ]);
                         $taxRate = ($productVariant->tax_rate ?? 0) / 100;
                         $totalTaxes += $item->subtotal * $taxRate;
                     } else {
                         $variantItem = null;
-                        if (!empty($item->item_code)) {
+                        if (! empty($item->item_code)) {
                             $variantItem = VariantItem::where('variant_code', $item->item_code)->first();
                         }
-                        if (!$variantItem) {
+                        if (! $variantItem) {
                             $variantItem = VariantItem::find($item->item_id);
                         }
                         if ($variantItem) {
@@ -297,12 +298,12 @@ class SalesReportController extends Controller
                                 'item_name' => $variantItem->item_name,
                                 'cost_price' => $variantItem->cost_price,
                                 'quantity' => $item->quantity,
-                                'itemCost' => $itemCost
+                                'itemCost' => $itemCost,
                             ]);
                             $taxRate = ($variantItem->tax_rate ?? 0) / 100;
                             $totalTaxes += $item->subtotal * $taxRate;
                         } else {
-                            Log::warning('Product variant and variant item not found for item_id: ' . $item->item_id . ' or item_code: ' . ($item->item_code ?? ''));
+                            Log::warning('Product variant and variant item not found for item_id: '.$item->item_id.' or item_code: '.($item->item_code ?? ''));
                         }
                     }
                 }
@@ -312,7 +313,7 @@ class SalesReportController extends Controller
                 'sale_date' => $sale->sale_date,
                 'total_cost_of_items' => $costOfItems,
                 'gross_sales' => $sale->gross_sales,
-                'total_discount' => $totalDiscount
+                'total_discount' => $totalDiscount,
             ]);
 
             // Calculate gross profit: (Gross Sales - Discount) - Cost of Items
@@ -347,7 +348,7 @@ class SalesReportController extends Controller
 
         return view('manager.reports.sales_summary', [
             'salesSummary' => $salesSummaryPaginated,
-            'allSalesData' => $salesSummary->values()->toArray() // Convert to array for charts
+            'allSalesData' => $salesSummary->values()->toArray(), // Convert to array for charts
         ]);
     }
 
@@ -367,14 +368,14 @@ class SalesReportController extends Controller
             ->where('business_name', $businessName);
 
         if ($manager->addby) {
-            $query->where(function($q) use ($manager, $branchName) {
+            $query->where(function ($q) use ($manager, $branchName) {
                 $q->where('user_id', $manager->id)
-                  ->orWhereIn('staff_id', function($subQuery) use ($manager) {
-                      $subQuery->select('id')
-                          ->from('staffs')
-                          ->where('manager_email', $manager->email);
-                  })
-                  ->orWhere('branch_name', $branchName);
+                    ->orWhereIn('staff_id', function ($subQuery) use ($manager) {
+                        $subQuery->select('id')
+                            ->from('staffs')
+                            ->where('manager_email', $manager->email);
+                    })
+                    ->orWhere('branch_name', $branchName);
             });
         }
 
@@ -397,21 +398,27 @@ class SalesReportController extends Controller
             foreach ($items as $item) {
                 $totalDiscount += $item->discount;
                 if ($item->item_type === 'standard') {
-                    $standardItem = !empty($item->item_code) ? StandardItem::where('item_code', $item->item_code)->first() : null;
-                    if (!$standardItem) $standardItem = StandardItem::find($item->item_id);
+                    $standardItem = ! empty($item->item_code) ? StandardItem::where('item_code', $item->item_code)->first() : null;
+                    if (! $standardItem) {
+                        $standardItem = StandardItem::find($item->item_id);
+                    }
                     if ($standardItem) {
                         $costOfItems += ($standardItem->cost_price ?? 0) * $item->quantity;
                         $totalTaxes += $item->subtotal * (($standardItem->tax_rate ?? 0) / 100);
                     }
                 } elseif ($item->item_type === 'variant') {
-                    $productVariant = !empty($item->item_code) ? ProductVariant::where('variant_code', $item->item_code)->first() : null;
-                    if (!$productVariant) $productVariant = ProductVariant::find($item->item_id);
+                    $productVariant = ! empty($item->item_code) ? ProductVariant::where('variant_code', $item->item_code)->first() : null;
+                    if (! $productVariant) {
+                        $productVariant = ProductVariant::find($item->item_id);
+                    }
                     if ($productVariant) {
                         $costOfItems += ($productVariant->cost_price ?? 0) * $item->quantity;
                         $totalTaxes += $item->subtotal * (($productVariant->tax_rate ?? 0) / 100);
                     } else {
-                        $variantItem = !empty($item->item_code) ? VariantItem::where('variant_code', $item->item_code)->first() : null;
-                        if (!$variantItem) $variantItem = VariantItem::find($item->item_id);
+                        $variantItem = ! empty($item->item_code) ? VariantItem::where('variant_code', $item->item_code)->first() : null;
+                        if (! $variantItem) {
+                            $variantItem = VariantItem::find($item->item_id);
+                        }
                         if ($variantItem) {
                             $costOfItems += ($variantItem->cost_price ?? 0) * $item->quantity;
                             $totalTaxes += $item->subtotal * (($variantItem->tax_rate ?? 0) / 100);
@@ -427,6 +434,7 @@ class SalesReportController extends Controller
             $sale->margin = round($margin, 1);
             $sale->taxes = round($totalTaxes, 2);
             $sale->total_discount = round($totalDiscount, 2);
+
             return $sale;
         });
 
@@ -436,13 +444,9 @@ class SalesReportController extends Controller
         if ($format === 'pdf') {
             return Pdf::loadView($viewName, $data)->download('sales_summary.pdf');
         }
+
         return Excel::download(new ReportExport($viewName, $data), 'sales_summary.xlsx');
     }
-
-
-
-
-
 
     public function sales_by_category(Request $request)
     {
@@ -463,14 +467,14 @@ class SalesReportController extends Controller
 
         // If the user was added by another manager, filter by user_id, staff_id, or branch_name
         if ($manager->addby) {
-            $query->where(function($q) use ($manager, $branchName) {
+            $query->where(function ($q) use ($manager, $branchName) {
                 $q->where('user_id', $manager->id)
-                  ->orWhereIn('staff_id', function($subQuery) use ($manager) {
-                      $subQuery->select('id')
-                          ->from('staffs')
-                          ->where('manager_email', $manager->email);
-                  })
-                  ->orWhere('branch_name', $branchName);
+                    ->orWhereIn('staff_id', function ($subQuery) use ($manager) {
+                        $subQuery->select('id')
+                            ->from('staffs')
+                            ->where('manager_email', $manager->email);
+                    })
+                    ->orWhere('branch_name', $branchName);
             });
         }
 
@@ -565,7 +569,7 @@ class SalesReportController extends Controller
                 $categoryId = 'uncategorized';
                 $categoryName = 'Uncategorized';
             }
-            if (!isset($categoryData[$categoryId])) {
+            if (! isset($categoryData[$categoryId])) {
                 $categoryData[$categoryId] = [
                     'category_id' => $categoryId,
                     'category_name' => $categoryName,
@@ -607,7 +611,7 @@ class SalesReportController extends Controller
 
         // Apply category filter after aggregation
         if ($request->filled('category_id')) {
-            $salesByCategory = $salesByCategory->filter(function($category) use ($request) {
+            $salesByCategory = $salesByCategory->filter(function ($category) use ($request) {
                 return $category['category_id'] == $request->category_id;
             })->values();
         }
@@ -624,7 +628,7 @@ class SalesReportController extends Controller
 
         return view('manager.reports.sales_by_category', [
             'salesByCategory' => $salesByCategory,
-            'totals' => $totals
+            'totals' => $totals,
         ]);
     }
 
@@ -644,14 +648,14 @@ class SalesReportController extends Controller
             ->where('business_name', $businessName);
 
         if ($manager->addby) {
-            $query->where(function($q) use ($manager, $branchName) {
+            $query->where(function ($q) use ($manager, $branchName) {
                 $q->where('user_id', $manager->id)
-                  ->orWhereIn('staff_id', function($subQuery) use ($manager) {
-                      $subQuery->select('id')
-                          ->from('staffs')
-                          ->where('manager_email', $manager->email);
-                  })
-                  ->orWhere('branch_name', $branchName);
+                    ->orWhereIn('staff_id', function ($subQuery) use ($manager) {
+                        $subQuery->select('id')
+                            ->from('staffs')
+                            ->where('manager_email', $manager->email);
+                    })
+                    ->orWhere('branch_name', $branchName);
             });
         }
 
@@ -661,24 +665,44 @@ class SalesReportController extends Controller
             $endDate = null;
             switch ($dateRange) {
                 case 'today':
-                    $startDate = Carbon::today(); $endDate = Carbon::today()->endOfDay(); break;
+                    $startDate = Carbon::today();
+                    $endDate = Carbon::today()->endOfDay();
+                    break;
                 case 'yesterday':
-                    $startDate = Carbon::yesterday(); $endDate = Carbon::yesterday()->endOfDay(); break;
+                    $startDate = Carbon::yesterday();
+                    $endDate = Carbon::yesterday()->endOfDay();
+                    break;
                 case 'last7':
-                    $startDate = Carbon::today()->subDays(6); $endDate = Carbon::today()->endOfDay(); break;
+                    $startDate = Carbon::today()->subDays(6);
+                    $endDate = Carbon::today()->endOfDay();
+                    break;
                 case 'last30':
-                    $startDate = Carbon::today()->subDays(29); $endDate = Carbon::today()->endOfDay(); break;
+                    $startDate = Carbon::today()->subDays(29);
+                    $endDate = Carbon::today()->endOfDay();
+                    break;
                 case 'thisMonth':
-                    $startDate = Carbon::now()->startOfMonth(); $endDate = Carbon::now()->endOfMonth(); break;
+                    $startDate = Carbon::now()->startOfMonth();
+                    $endDate = Carbon::now()->endOfMonth();
+                    break;
                 case 'lastMonth':
-                    $startDate = Carbon::now()->subMonth()->startOfMonth(); $endDate = Carbon::now()->subMonth()->endOfMonth(); break;
+                    $startDate = Carbon::now()->subMonth()->startOfMonth();
+                    $endDate = Carbon::now()->subMonth()->endOfMonth();
+                    break;
                 case 'custom':
-                    if ($request->filled('start_date')) $startDate = Carbon::parse($request->start_date)->startOfDay();
-                    if ($request->filled('end_date')) $endDate = Carbon::parse($request->end_date)->endOfDay();
+                    if ($request->filled('start_date')) {
+                        $startDate = Carbon::parse($request->start_date)->startOfDay();
+                    }
+                    if ($request->filled('end_date')) {
+                        $endDate = Carbon::parse($request->end_date)->endOfDay();
+                    }
                     break;
             }
-            if ($startDate) $query->where('created_at', '>=', $startDate);
-            if ($endDate) $query->where('created_at', '<=', $endDate);
+            if ($startDate) {
+                $query->where('created_at', '>=', $startDate);
+            }
+            if ($endDate) {
+                $query->where('created_at', '<=', $endDate);
+            }
         }
 
         $cartItems = $query->get();
@@ -721,7 +745,7 @@ class SalesReportController extends Controller
                 $categoryId = 'uncategorized';
                 $categoryName = 'Uncategorized';
             }
-            if (!isset($categoryData[$categoryId])) {
+            if (! isset($categoryData[$categoryId])) {
                 $categoryData[$categoryId] = [
                     'category_id' => $categoryId, 'category_name' => $categoryName,
                     'total_quantity_sold' => 0, 'gross_sales' => 0, 'total_discount' => 0,
@@ -748,7 +772,7 @@ class SalesReportController extends Controller
 
         $salesByCategory = collect($categoryData)->sortByDesc('gross_sales')->values();
         if ($request->filled('category_id')) {
-            $salesByCategory = $salesByCategory->filter(function($category) use ($request) {
+            $salesByCategory = $salesByCategory->filter(function ($category) use ($request) {
                 return $category['category_id'] == $request->category_id;
             })->values();
         }
@@ -768,11 +792,9 @@ class SalesReportController extends Controller
         if ($format === 'pdf') {
             return Pdf::loadView($viewName, $data)->download('sales_by_category.pdf');
         }
+
         return Excel::download(new ReportExport($viewName, $data), 'sales_by_category.xlsx');
     }
-
-
-
 
     // Get sale items by receipt number
     public function get_sale_items($receiptNumber)
@@ -795,14 +817,14 @@ class SalesReportController extends Controller
 
             // If the user was added by another manager, filter by user_id, staff_id, or branch_name
             if ($manager->addby) {
-                $query->where(function($q) use ($manager, $branchName) {
+                $query->where(function ($q) use ($manager, $branchName) {
                     $q->where('user_id', $manager->id)
-                      ->orWhereIn('staff_id', function($subQuery) use ($manager) {
-                          $subQuery->select('id')
-                              ->from('staffs')
-                              ->where('manager_email', $manager->email);
-                      })
-                      ->orWhere('branch_name', $branchName);
+                        ->orWhereIn('staff_id', function ($subQuery) use ($manager) {
+                            $subQuery->select('id')
+                                ->from('staffs')
+                                ->where('manager_email', $manager->email);
+                        })
+                        ->orWhere('branch_name', $branchName);
                 });
             }
 
@@ -811,23 +833,21 @@ class SalesReportController extends Controller
             if ($items->isEmpty()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'No items found for this receipt'
+                    'message' => 'No items found for this receipt',
                 ], 404);
             }
 
             return response()->json([
                 'success' => true,
-                'items' => $items
+                'items' => $items,
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to load sale items: ' . $e->getMessage()
+                'message' => 'Failed to load sale items: '.$e->getMessage(),
             ], 500);
         }
     }
-
-
 
     public function getStaffUserList(): \Illuminate\Http\JsonResponse
     {
@@ -847,20 +867,20 @@ class SalesReportController extends Controller
             ->where('business_name', $businessName);
 
         // If the user was added by another manager (is not business creator), filter by user_id or staff in their branch
-        if (!$manager->isBusinessCreator()) {
+        if (! $manager->isBusinessCreator()) {
             $managedBranchIds = \App\Models\Branch\Branch::where('manager_id', $manager->id)->pluck('id');
-            $query->where(function($q) use ($manager, $managedBranchIds, $branchName) {
+            $query->where(function ($q) use ($manager, $managedBranchIds, $branchName) {
                 $q->where('user_id', $manager->id);
-                
+
                 if ($managedBranchIds->isNotEmpty()) {
-                    $q->orWhereIn('staff_id', function($subQuery) use ($managedBranchIds) {
+                    $q->orWhereIn('staff_id', function ($subQuery) use ($managedBranchIds) {
                         $subQuery->select('staff_id')
                             ->from('branch_staff')
                             ->whereIn('branch_id', $managedBranchIds);
                     });
                 }
-                
-                if (!empty($branchName)) {
+
+                if (! empty($branchName)) {
                     $q->orWhere('branch_name', $branchName);
                 }
             });
@@ -886,9 +906,9 @@ class SalesReportController extends Controller
                 ->get()
                 ->map(function ($staff) {
                     return [
-                        'id' => 'staff_' . $staff->id,
+                        'id' => 'staff_'.$staff->id,
                         'name' => $staff->fullname,
-                        'type' => 'staff'
+                        'type' => 'staff',
                     ];
                 });
         }
@@ -900,11 +920,12 @@ class SalesReportController extends Controller
                 ->select('id', 'first_name', 'other_name', 'surname')
                 ->get()
                 ->map(function ($user) {
-                    $userName = trim(($user->first_name ?? '') . ' ' . ($user->other_name ?? '') . ' ' . ($user->surname ?? '')) ?: 'Unknown User';
+                    $userName = trim(($user->first_name ?? '').' '.($user->other_name ?? '').' '.($user->surname ?? '')) ?: 'Unknown User';
+
                     return [
-                        'id' => 'user_' . $user->id,
+                        'id' => 'user_'.$user->id,
                         'name' => $userName,
-                        'type' => 'user'
+                        'type' => 'user',
                     ];
                 });
         }
@@ -915,17 +936,16 @@ class SalesReportController extends Controller
         Log::info('Seller filter data', [
             'staff_count' => $staffUsers->count(),
             'user_count' => $users->count(),
-            'total' => $userList->count()
+            'total' => $userList->count(),
         ]);
 
         return response()->json([
             'success' => true,
-            'staffUsers' => $userList
+            'staffUsers' => $userList,
         ]);
     }
 
-
-        // Print receipt for a completed sale
+    // Print receipt for a completed sale
     public function print_receipt($receiptNumber)
     {
         // Get all items for this receipt

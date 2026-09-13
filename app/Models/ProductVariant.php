@@ -45,7 +45,7 @@ class ProductVariant extends Model
         'discount',
         'final_price',
         // Stock Management
-        //'stock_quantity',
+        // 'stock_quantity',
         'opening_stock',
         'current_stock',
         'stock_added',
@@ -71,10 +71,10 @@ class ProductVariant extends Model
         'max_price' => 'decimal:2',
         'range_potential_profit' => 'decimal:2',
         'tax_rate' => 'decimal:2',
-        'opening_stock' => 'integer',
-        'current_stock' => 'integer',
-        'stock_added' => 'integer',
-      /* /* 'discount' => 'decimal:2', */
+        'opening_stock' => 'decimal:2',
+        'current_stock' => 'decimal:2',
+        'stock_added' => 'decimal:2',
+        /* /* 'discount' => 'decimal:2', */
         'final_price' => 'decimal:2',
         'expiry_date' => 'date',
     ];

@@ -25,21 +25,21 @@ class PlansController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name'          => 'required|string|max:100|unique:subscription_plans,name',
+            'name' => 'required|string|max:100|unique:subscription_plans,name',
             'monthly_price' => 'required|numeric|min:0',
-            'description'   => 'nullable|string|max:500',
-            'features'      => 'nullable|string',
-            'max_managers'  => 'required|integer|min:1',
-            'max_staff'     => 'nullable|integer|min:1',
-            'max_branches'  => 'nullable|integer|min:0',
-            'trial_days'    => 'required|integer|min:0',
-            'is_popular'    => 'boolean',
-            'is_active'     => 'boolean',
+            'description' => 'nullable|string|max:500',
+            'features' => 'nullable|string',
+            'max_managers' => 'required|integer|min:1',
+            'max_staff' => 'nullable|integer|min:1',
+            'max_branches' => 'nullable|integer|min:0',
+            'trial_days' => 'required|integer|min:0',
+            'is_popular' => 'boolean',
+            'is_active' => 'boolean',
         ]);
 
         $validated['display_features'] = $this->parseFeatures($request->input('features'));
         unset($validated['features']);
-        $validated['is_active']  = $request->has('is_active');
+        $validated['is_active'] = $request->has('is_active');
         $validated['is_popular'] = $request->has('is_popular');
 
         SubscriptionPlan::create($validated);
@@ -55,21 +55,21 @@ class PlansController extends Controller
     public function update(Request $request, SubscriptionPlan $plan)
     {
         $validated = $request->validate([
-            'name'          => 'required|string|max:100|unique:subscription_plans,name,' . $plan->id,
+            'name' => 'required|string|max:100|unique:subscription_plans,name,'.$plan->id,
             'monthly_price' => 'required|numeric|min:0',
-            'description'   => 'nullable|string|max:500',
-            'features'      => 'nullable|string',
-            'max_managers'  => 'required|integer|min:1',
-            'max_staff'     => 'nullable|integer|min:1',
-            'max_branches'  => 'nullable|integer|min:0',
-            'trial_days'    => 'required|integer|min:0',
-            'is_popular'    => 'boolean',
-            'is_active'     => 'boolean',
+            'description' => 'nullable|string|max:500',
+            'features' => 'nullable|string',
+            'max_managers' => 'required|integer|min:1',
+            'max_staff' => 'nullable|integer|min:1',
+            'max_branches' => 'nullable|integer|min:0',
+            'trial_days' => 'required|integer|min:0',
+            'is_popular' => 'boolean',
+            'is_active' => 'boolean',
         ]);
 
         $validated['display_features'] = $this->parseFeatures($request->input('features'));
         unset($validated['features']);
-        $validated['is_active']  = $request->has('is_active');
+        $validated['is_active'] = $request->has('is_active');
         $validated['is_popular'] = $request->has('is_popular');
 
         $plan->update($validated);
@@ -79,7 +79,7 @@ class PlansController extends Controller
 
     public function toggleStatus(SubscriptionPlan $plan)
     {
-        $plan->is_active = !$plan->is_active;
+        $plan->is_active = ! $plan->is_active;
         $plan->save();
         $label = $plan->is_active ? 'activated' : 'deactivated';
 

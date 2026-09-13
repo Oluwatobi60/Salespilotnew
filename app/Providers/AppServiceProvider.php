@@ -2,12 +2,12 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
-use Illuminate\Pagination\Paginator;
 use App\Models\AppSetting;
+use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\View;
-use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -43,7 +43,7 @@ class AppServiceProvider extends ServiceProvider
     {
         try {
             // Check if app_settings table exists (avoid errors during fresh migrations)
-            if (!\Illuminate\Support\Facades\Schema::hasTable('app_settings')) {
+            if (! \Illuminate\Support\Facades\Schema::hasTable('app_settings')) {
                 return;
             }
 
@@ -79,22 +79,23 @@ class AppServiceProvider extends ServiceProvider
             // Apply password validation rules dynamically
             $minL = (int) AppSetting::get('password_min_length', 8);
             $requireStrong = AppSetting::get('require_strong_password');
-            
+
             \Illuminate\Validation\Rules\Password::defaults(function () use ($minL, $requireStrong) {
                 $rule = \Illuminate\Validation\Rules\Password::min($minL);
                 if ($requireStrong == '1' || $requireStrong === true) {
                     $rule->letters()
-                         ->mixedCase()
-                         ->numbers()
-                         ->symbols();
+                        ->mixedCase()
+                        ->numbers()
+                        ->symbols();
                 }
+
                 return $rule;
             });
 
         } catch (\Exception $e) {
             // Silently fail to avoid breaking the application
             // This can happen during initial setup or migrations
-            \Illuminate\Support\Facades\Log::debug('Failed to apply system preferences: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::debug('Failed to apply system preferences: '.$e->getMessage());
         }
     }
 
@@ -104,7 +105,7 @@ class AppServiceProvider extends ServiceProvider
     protected function shareViewVariables(): void
     {
         try {
-            if (!\Illuminate\Support\Facades\Schema::hasTable('app_settings')) {
+            if (! \Illuminate\Support\Facades\Schema::hasTable('app_settings')) {
                 return;
             }
 
@@ -121,7 +122,7 @@ class AppServiceProvider extends ServiceProvider
             });
 
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::debug('Failed to share view variables: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::debug('Failed to share view variables: '.$e->getMessage());
         }
     }
 
@@ -152,7 +153,7 @@ class AppServiceProvider extends ServiceProvider
 
         // @currency - Display currency symbol
         Blade::directive('currency', function () {
-            return "<?php echo default_currency(); ?>";
+            return '<?php echo default_currency(); ?>';
         });
     }
 }

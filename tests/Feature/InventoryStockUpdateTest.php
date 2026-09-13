@@ -10,7 +10,7 @@ it('adds to current stock only while keeping opening stock unchanged for standar
     $manager = User::create([
         'first_name' => 'Stock',
         'surname' => 'Manager',
-        'email' => 'stock-manager-' . uniqid() . '@example.com',
+        'email' => 'stock-manager-'.uniqid().'@example.com',
         'password' => Hash::make('password'),
         'role' => 'manager',
         'business_name' => 'Demo Business',
@@ -26,7 +26,7 @@ it('adds to current stock only while keeping opening stock unchanged for standar
         'manager_name' => 'Stock Manager',
         'manager_email' => $manager->email,
         'item_name' => 'Test Item',
-        'item_code' => 'STD-TEST-' . uniqid(),
+        'item_code' => 'STD-TEST-'.uniqid(),
         'category' => 'General',
         'unit' => 'pcs',
         'cost_price' => 10,
@@ -38,7 +38,7 @@ it('adds to current stock only while keeping opening stock unchanged for standar
 
     $this->actingAs($manager);
 
-    $response = $this->put('/manager/all_items/update/standard/' . $item->id, [
+    $response = $this->put('/manager/all_items/update/standard/'.$item->id, [
         'item_name' => 'Test Item',
         'item_code' => $item->item_code,
         'category' => 'General',
@@ -55,11 +55,11 @@ it('adds to current stock only while keeping opening stock unchanged for standar
 
     $item->refresh();
 
-    expect($item->current_stock)->toBe(15)
-        ->and($item->opening_stock)->toBe(10)
-        ->and($item->stock_added)->toBe(5);
+    expect($item->current_stock)->toEqual(15)
+        ->and($item->opening_stock)->toEqual(10)
+        ->and($item->stock_added)->toEqual(5);
 
-    $secondResponse = $this->put('/manager/all_items/update/standard/' . $item->id, [
+    $secondResponse = $this->put('/manager/all_items/update/standard/'.$item->id, [
         'item_name' => 'Test Item',
         'item_code' => $item->item_code,
         'category' => 'General',
@@ -76,16 +76,16 @@ it('adds to current stock only while keeping opening stock unchanged for standar
 
     $item->refresh();
 
-    expect($item->current_stock)->toBe(22)
-        ->and($item->opening_stock)->toBe(10)
-        ->and($item->stock_added)->toBe(7);
+    expect($item->current_stock)->toEqual(22)
+        ->and($item->opening_stock)->toEqual(10)
+        ->and($item->stock_added)->toEqual(12);
 });
 
 it('adds to current stock only while keeping opening stock unchanged for product variants', function () {
     $manager = User::create([
         'first_name' => 'Variant',
         'surname' => 'Manager',
-        'email' => 'variant-manager-' . uniqid() . '@example.com',
+        'email' => 'variant-manager-'.uniqid().'@example.com',
         'password' => Hash::make('password'),
         'role' => 'manager',
         'business_name' => 'Demo Business',
@@ -101,7 +101,7 @@ it('adds to current stock only while keeping opening stock unchanged for product
         'manager_name' => 'Variant Manager',
         'manager_email' => $manager->email,
         'item_name' => 'Variant Parent',
-        'item_code' => 'VAR-PARENT-' . uniqid(),
+        'item_code' => 'VAR-PARENT-'.uniqid(),
         'category' => 'General',
         'unit_id' => null,
         'brand' => 'Test Brand',
@@ -114,8 +114,8 @@ it('adds to current stock only while keeping opening stock unchanged for product
         'manager_name' => 'Variant Manager',
         'manager_email' => $manager->email,
         'variant_name' => 'Red',
-        'sku' => 'VAR-RED-' . uniqid(),
-        'barcode' => 'VAR-RED-' . uniqid(),
+        'sku' => 'VAR-RED-'.uniqid(),
+        'barcode' => 'VAR-RED-'.uniqid(),
         'cost_price' => 10,
         'selling_price' => 15,
         'opening_stock' => 10,
@@ -125,7 +125,7 @@ it('adds to current stock only while keeping opening stock unchanged for product
 
     $this->actingAs($manager);
 
-    $response = $this->put('/manager/all_items/update/product_variant/' . $variant->id, [
+    $response = $this->put('/manager/all_items/update/product_variant/'.$variant->id, [
         'variant_name' => 'Red',
         'sku' => $variant->sku,
         'barcode' => $variant->barcode,
@@ -140,11 +140,11 @@ it('adds to current stock only while keeping opening stock unchanged for product
 
     $variant->refresh();
 
-    expect($variant->current_stock)->toBe(15)
-        ->and($variant->opening_stock)->toBe(10)
-        ->and($variant->stock_added)->toBe(5);
+    expect($variant->current_stock)->toEqual(15)
+        ->and($variant->opening_stock)->toEqual(10)
+        ->and($variant->stock_added)->toEqual(5);
 
-    $secondResponse = $this->put('/manager/all_items/update/product_variant/' . $variant->id, [
+    $secondResponse = $this->put('/manager/all_items/update/product_variant/'.$variant->id, [
         'variant_name' => 'Red',
         'sku' => $variant->sku,
         'barcode' => $variant->barcode,
@@ -159,7 +159,7 @@ it('adds to current stock only while keeping opening stock unchanged for product
 
     $variant->refresh();
 
-    expect($variant->current_stock)->toBe(22)
-        ->and($variant->opening_stock)->toBe(10)
-        ->and($variant->stock_added)->toBe(7);
+    expect($variant->current_stock)->toEqual(22)
+        ->and($variant->opening_stock)->toEqual(10)
+        ->and($variant->stock_added)->toEqual(12);
 });

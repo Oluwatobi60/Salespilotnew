@@ -3,7 +3,6 @@
 namespace App\Traits;
 
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Hash;
 
 trait TrackLoginAttempts
 {
@@ -29,11 +28,12 @@ trait TrackLoginAttempts
      */
     public function getRemainingLockTimeMinutes(): int
     {
-        if (!$this->locked_until) {
+        if (! $this->locked_until) {
             return 0;
         }
 
         $remaining = Carbon::parse($this->locked_until)->diffInMinutes(Carbon::now(), false);
+
         return max(0, (int) ceil($remaining));
     }
 
@@ -43,7 +43,7 @@ trait TrackLoginAttempts
     public function incrementFailedLoginAttempts(): void
     {
         $maxAttempts = (int) setting('max_login_attempts', 5);
-        
+
         $this->failed_login_attempts = ($this->failed_login_attempts ?? 0) + 1;
         $this->last_failed_login_at = Carbon::now();
 
@@ -81,6 +81,7 @@ trait TrackLoginAttempts
     {
         $max = $this->getMaxLoginAttempts();
         $remaining = $max - ($this->failed_login_attempts ?? 0);
+
         return max(0, $remaining);
     }
 }

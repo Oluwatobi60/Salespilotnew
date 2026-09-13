@@ -138,15 +138,54 @@
             <li><a href="#contact">Contact</a></li>
 
             <!-- Auth Links from header -->
-            @if (Route::has('login'))
-                <li class="auth-links">
-                    <a href="{{ route('login') }}">Log in</a>
+            @auth
+                @php
+                    $navHasActiveSub = \App\Models\UserSubscription::where('user_id', auth()->id())
+                        ->where('status', 'active')
+                        ->where('end_date', '>=', now())
+                        ->exists();
 
-                    @if (Route::has('get_started'))
-                        <a href="{{ route('get_started') }}">Get Started</a>
+                    // For managers created by another user, check creator's subscription
+                    if (!$navHasActiveSub && auth()->user()->role === 'manager' && auth()->user()->addby) {
+                        $navCreator = \App\Models\User::where('email', auth()->user()->addby)->first();
+                        $navHasActiveSub = $navCreator
+                            ? \App\Models\UserSubscription::where('user_id', $navCreator->id)
+                                ->where('status', 'active')
+                                ->where('end_date', '>=', now())
+                                ->exists()
+                            : false;
+                    }
+
+                    $navDashRoute = '/';
+                    $role = auth()->user()->role;
+                    if ($role === 'superadmin') $navDashRoute = route('superadmin');
+                    elseif ($role === 'manager') $navDashRoute = route('manager');
+                    elseif ($role === 'businessowner') $navDashRoute = route('businessdashboard');
+                    elseif ($role === 'staff') $navDashRoute = route('dashboard');
+                @endphp
+                <li class="auth-links">
+                    @if($navHasActiveSub)
+                        <a href="{{ $navDashRoute }}">Dashboard</a>
+                    @else
+                        <a href="{{ route('plan_pricing') }}" style="color: #f59e0b; font-weight: 600;">Renew Plan</a>
                     @endif
+                    <form method="POST" action="{{ route('logout') }}" style="display:inline;">
+                        @csrf
+                        <button type="submit" style="background:none;border:none;padding:0;cursor:pointer;font-size:inherit;color:inherit;font-family:inherit;">
+                            Log out
+                        </button>
+                    </form>
                 </li>
-            @endif
+            @else
+                @if (Route::has('login'))
+                    <li class="auth-links">
+                        <a href="{{ route('login') }}">Log in</a>
+                        @if (Route::has('get_started'))
+                            <a href="{{ route('get_started') }}">Get Started</a>
+                        @endif
+                    </li>
+                @endif
+            @endauth
             <li>
                 <button type="button" class="theme-toggle-btn ms-2" title="Toggle theme">
                     <i class="bi bi-moon-stars-fill"></i>

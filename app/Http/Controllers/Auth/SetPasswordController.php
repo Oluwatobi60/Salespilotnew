@@ -57,9 +57,9 @@ class SetPasswordController extends Controller
         }
 
         $user->forceFill([
-            'password'                  => Hash::make($request->password),
-            'password_set'              => true,
-            'password_setup_token'      => null,
+            'password' => Hash::make($request->password),
+            'password_set' => true,
+            'password_setup_token' => null,
             'password_setup_expires_at' => null,
         ])->save();
 

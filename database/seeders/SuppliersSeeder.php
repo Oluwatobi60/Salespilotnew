@@ -53,6 +53,7 @@ class SuppliersSeeder extends Seeder
         // Check if suppliers already exist to prevent duplicates
         if (DB::table('suppliers')->count() > 0) {
             $this->command->info('Suppliers table already has data. Skipping seeder.');
+
             return;
         }
 

@@ -26,11 +26,11 @@ class StandardItemTemplateExport implements FromArray, WithHeadings, WithStyles
                 'ABC Supplies Ltd',         // Supplier Name (will be created if not found)
                 'supplier@example.com',     // Supplier Email
                 '08012345678',              // Supplier Phone
-                '10 Supplier Street, Lagos',// Supplier Address
+                '10 Supplier Street, Lagos', // Supplier Address
                 'https://example.com/image.jpg', // Product Image URL (optional)
                 '1234567890',               // Barcode
                 'Example standard item description.',  // Description
-            ]
+            ],
         ];
     }
 

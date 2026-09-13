@@ -53,7 +53,7 @@ class VariantItemTemplateExport implements FromArray, WithHeadings, WithStyles
                 'https://example.com/tshirt.jpg',
                 '1234567892',
                 'Example t-shirt description',
-            ]
+            ],
         ];
     }
 

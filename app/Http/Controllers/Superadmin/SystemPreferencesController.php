@@ -3,14 +3,14 @@
 namespace App\Http\Controllers\Superadmin;
 
 use App\Http\Controllers\Controller;
+use App\Models\AppSetting;
+use App\Models\Branch\Branch;
+use App\Models\Brm;
+use App\Models\Staffs;
+use App\Models\SubscriptionPlan;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use App\Models\Branch\Branch;
-use App\Models\Staffs;
-use App\Models\User;
-use App\Models\Brm;
-use App\Models\SubscriptionPlan;
-use App\Models\AppSetting;
 
 class SystemPreferencesController extends Controller
 {
@@ -123,7 +123,7 @@ class SystemPreferencesController extends Controller
                         'type' => is_numeric($value) ? 'number' : 'text',
                         'group' => 'system',
                         'label' => ucwords(str_replace('_', ' ', $key)),
-                        'description' => 'System preference for ' . str_replace('_', ' ', $key),
+                        'description' => 'System preference for '.str_replace('_', ' ', $key),
                     ]);
                 }
 
@@ -150,7 +150,7 @@ class SystemPreferencesController extends Controller
                         'description' => 'Main application logo',
                     ]);
                 }
-                \Illuminate\Support\Facades\Cache::forget("app_setting_logo_url");
+                \Illuminate\Support\Facades\Cache::forget('app_setting_logo_url');
             }
 
             return redirect()
@@ -161,7 +161,7 @@ class SystemPreferencesController extends Controller
             return redirect()
                 ->back()
                 ->withInput()
-                ->with('error', 'Failed to update system preferences: ' . $e->getMessage());
+                ->with('error', 'Failed to update system preferences: '.$e->getMessage());
         }
     }
 }

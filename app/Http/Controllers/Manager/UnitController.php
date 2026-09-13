@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Manager;
 
 use App\Http\Controllers\Controller;
+use App\Models\Unit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Unit;
 
 class UnitController extends Controller
 {
@@ -18,8 +18,8 @@ class UnitController extends Controller
         $businessName = $manager->business_name;
 
         $units = Unit::where('business_name', $businessName)
-                     ->orderBy('created_at', 'desc')
-                     ->get();
+            ->orderBy('created_at', 'desc')
+            ->get();
 
         return view('manager.units.all_units', compact('units'));
     }
@@ -46,7 +46,7 @@ class UnitController extends Controller
                     if ($exists) {
                         $fail('This unit name already exists for your business.');
                     }
-                }
+                },
             ],
             'abbreviation' => [
                 'required',
@@ -60,11 +60,11 @@ class UnitController extends Controller
                     if ($exists) {
                         $fail('This abbreviation already exists for your business.');
                     }
-                }
+                },
             ],
         ]);
 
-        $managerName = trim(($manager->firstname ?? '') . ' ' . ($manager->othername ?? '') . ' ' . ($manager->surname ?? ''));
+        $managerName = trim(($manager->firstname ?? '').' '.($manager->othername ?? '').' '.($manager->surname ?? ''));
 
         // Add manager info to validated data
         $validatedata['business_name'] = $manager->business_name;
@@ -77,7 +77,7 @@ class UnitController extends Controller
 
         // Log activity if helper exists
         if (class_exists('\App\Helpers\ActivityLogger')) {
-            \App\Helpers\ActivityLogger::log('create_unit', 'Created unit: ' . $unit->name);
+            \App\Helpers\ActivityLogger::log('create_unit', 'Created unit: '.$unit->name);
         }
 
         // Check if the request expects JSON (AJAX request)
@@ -88,8 +88,8 @@ class UnitController extends Controller
                 'unit' => [
                     'id' => $unit->id,
                     'name' => $unit->name,
-                    'abbreviation' => $unit->abbreviation
-                ]
+                    'abbreviation' => $unit->abbreviation,
+                ],
             ], 201);
         }
 
@@ -104,7 +104,7 @@ class UnitController extends Controller
     {
         $manager = Auth::user();
         $businessName = $manager->business_name;
-        
+
         // ✅ SECURITY: Verify unit belongs to manager's business
         $unit = Unit::where('business_name', $businessName)
             ->findOrFail($id);
@@ -124,7 +124,7 @@ class UnitController extends Controller
                     if ($exists) {
                         $fail('This unit name already exists for your business.');
                     }
-                }
+                },
             ],
             'abbreviation' => [
                 'required',
@@ -139,7 +139,7 @@ class UnitController extends Controller
                     if ($exists) {
                         $fail('This abbreviation already exists for your business.');
                     }
-                }
+                },
             ],
         ]);
 
@@ -148,7 +148,7 @@ class UnitController extends Controller
 
         // Log activity if helper exists
         if (class_exists('\App\Helpers\ActivityLogger')) {
-            \App\Helpers\ActivityLogger::log('update_unit', 'Updated unit: ' . $unit->name);
+            \App\Helpers\ActivityLogger::log('update_unit', 'Updated unit: '.$unit->name);
         }
 
         // Redirect back with success message
@@ -162,7 +162,7 @@ class UnitController extends Controller
     {
         $manager = Auth::user();
         $businessName = $manager->business_name;
-        
+
         // ✅ SECURITY: Verify unit belongs to manager's business
         $unit = Unit::where('business_name', $businessName)
             ->findOrFail($id);
@@ -173,7 +173,7 @@ class UnitController extends Controller
 
         // Log activity if helper exists
         if (class_exists('\App\Helpers\ActivityLogger')) {
-            \App\Helpers\ActivityLogger::log('delete_unit', 'Deleted unit: ' . $unit->name);
+            \App\Helpers\ActivityLogger::log('delete_unit', 'Deleted unit: '.$unit->name);
         }
 
         $unit->delete();

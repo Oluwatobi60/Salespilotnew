@@ -2,12 +2,9 @@
 
 namespace App\Models;
 
+use App\Models\Branch\Branch;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use App\Models\Branch\Branch;
-use App\Models\User;
-use App\Models\StandardItem;
-use App\Models\ProductVariant;
 
 class BranchInventory extends Model
 {
@@ -60,6 +57,7 @@ class BranchInventory extends Model
         if ($this->item_type === 'standard') {
             return $this->belongsTo(StandardItem::class, 'item_id');
         }
+
         return $this->belongsTo(ProductVariant::class, 'item_id');
     }
 
@@ -78,11 +76,12 @@ class BranchInventory extends Model
     public function deductStock(float $quantity): bool
     {
         if ($this->current_quantity >= $quantity) {
-            $this->current_quantity -= $quantity;
+            $this->current_quantity = max(0, $this->current_quantity - $quantity);
             $this->sold_quantity += $quantity;
-            $this->save();
-            return true;
+
+            return $this->save();
         }
+
         return false;
     }
 

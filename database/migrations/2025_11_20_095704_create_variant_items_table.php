@@ -82,7 +82,7 @@ return new class extends Migration
 
             // Additional Pricing Options (common for all pricing types)
             $table->decimal('tax_rate', 5, 2)->default(0); // percentage
-           /*  $table->decimal('discount', 5, 2)->default(0); */ // percentage
+            /*  $table->decimal('discount', 5, 2)->default(0); */ // percentage
             $table->decimal('final_price', 15, 2)->nullable();
 
             // Stock Management
@@ -107,6 +107,7 @@ return new class extends Migration
             $table->timestamps();
         });
     }
+
     /**
      * Reverse the migrations.
      */

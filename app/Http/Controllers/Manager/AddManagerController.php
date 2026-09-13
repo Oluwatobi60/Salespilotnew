@@ -3,20 +3,20 @@
 namespace App\Http\Controllers\Manager;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Mail\ManagerCredentials;
+use App\Models\Branch\Branch;
+use App\Models\Staffs;
 use App\Models\User;
+use App\Models\UserSubscription;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
-use App\Mail\ManagerCredentials;
-use App\Models\Staffs;
-use App\Models\UserSubscription;
-use App\Models\Branch\Branch;
 
 class AddManagerController extends Controller
 {
     public function add_manager()
-    {        /** @var \App\Models\User $manager */        $manager = Auth::user();
+    {        /** @var \App\Models\User $manager */ $manager = Auth::user();
         $businessName = $manager->business_name;
 
         // All managers for the business (for main table)
@@ -44,12 +44,11 @@ class AddManagerController extends Controller
         return view('manager.staff.add_manager', compact('managerdata', 'delegatedManagers', 'activeSubscription', 'branchCount', 'isBusinessCreator'));
     }
 
-
     public function createmanager(Request $request)
     {
         $validatedData = $request->validate([
             'firstname' => 'required|string|max:255',
-           /*  'othername' => 'required|string|max:255', */
+            /*  'othername' => 'required|string|max:255', */
             'surname' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'phone' => 'nullable|string|max:20',
@@ -58,14 +57,14 @@ class AddManagerController extends Controller
             'branch_name' => 'nullable|string|max:255',
             'state' => 'required|string',
             'local_govt' => 'required|string',
-            'address' => 'nullable|string',
+            'address' => 'required|string',
             'status' => 'required|string',
             'password' => 'required|string|min:8|confirmed',
         ]);
 
         // Check if email or phone exists in staffs table
         $staffEmailExists = Staffs::where('email', $validatedData['email'])->exists();
-        $staffPhoneExists = !empty($validatedData['phone']) && Staffs::where('phone', $validatedData['phone'])->exists();
+        $staffPhoneExists = ! empty($validatedData['phone']) && Staffs::where('phone', $validatedData['phone'])->exists();
         if ($staffEmailExists) {
             return redirect()->back()->withErrors(['email' => 'This email address is already registered as a staff.'])->withInput();
         }
@@ -82,13 +81,13 @@ class AddManagerController extends Controller
             ->orderByDesc('end_date')
             ->first();
 
-        if (!$subscription || ($subscription->end_date < now())) {
+        if (! $subscription || ($subscription->end_date < now())) {
             return redirect()->back()->with('error', 'Your subscription has expired. You cannot add a new manager.');
         }
 
         // Check manager creation limits based on plan
         $plan = $subscription->subscriptionPlan;
-        if (!$plan || empty($plan->name)) {
+        if (! $plan || empty($plan->name)) {
             // If no plan found, treat as free plan (most restrictive)
             return redirect()->back()
                 ->with('error', 'Unable to verify your subscription plan. Please contact support or subscribe to a valid plan.');
@@ -136,8 +135,8 @@ class AddManagerController extends Controller
 
         $user = User::create([
             'first_name' => $validatedData['firstname'],
-/*             'other_name' => $validatedData['othername'],
- */            'surname' => $validatedData['surname'],
+            /*             'other_name' => $validatedData['othername'],
+ */ 'surname' => $validatedData['surname'],
             'email' => $validatedData['email'],
             'phone_number' => $validatedData['phone'],
             'business_name' => $sessionManager->business_name,
@@ -158,16 +157,14 @@ class AddManagerController extends Controller
                 $user,
                 $validatedData['password'],
                 $sessionManager->business_name,
-                $user->first_name . ' ' . $user->surname
+                $user->first_name.' '.$user->surname
             ));
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Mail error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Mail error: '.$e->getMessage());
         }
 
         return redirect()->back()->with('success', 'Manager added successfully! Login details have been sent to their email.');
     }
-
-
 
     public function editmanager($id)
     {
@@ -177,10 +174,9 @@ class AddManagerController extends Controller
         // ✅ SECURITY: Verify manager belongs to same business
         $manageredit = User::where('business_name', $businessName)
             ->findOrFail($id);
+
         return view('manager.staff.edit_manager', compact('manageredit'));
     }
-
-
 
     public function updatemanager(Request $request, $id)
     {
@@ -190,8 +186,8 @@ class AddManagerController extends Controller
         $validatedData = $request->validate([
             'first_name' => 'required|string|max:255',
             'surname' => 'required|string|max:255',
-/*             'other_name' => 'required|string|max:255|unique:users,other_name,' . $id,
- */            'phone' => 'nullable|string|max:20',
+            /*             'other_name' => 'required|string|max:255|unique:users,other_name,' . $id,
+ */ 'phone' => 'nullable|string|max:20',
         ]);
 
         // ✅ SECURITY: Verify manager belongs to same business
@@ -199,14 +195,12 @@ class AddManagerController extends Controller
             ->findOrFail($id);
         $manager->surname = $validatedData['surname'];
         $manager->first_name = $validatedData['first_name'];
-/*         $manager->other_name = $validatedData['other_name'];
- */        $manager->phone_number = $validatedData['phone'];
+        /*         $manager->other_name = $validatedData['other_name'];
+         */ $manager->phone_number = $validatedData['phone'];
         $manager->save();
 
         return redirect()->route('manager.manager')->with('success', 'Manager profile updated successfully.');
     }
-
-
 
     public function toggleStatus(Request $request, $id)
     {
@@ -217,19 +211,19 @@ class AddManagerController extends Controller
         $manager = User::where('business_name', $businessName)
             ->findOrFail($id);
         // Toggle the status
-        $manager->status = !$manager->status;
+        $manager->status = ! $manager->status;
         $manager->save();
 
         // Prepare status text for the flash message
         $statusText = $manager->status ? 'activated' : 'deactivated';
+
         return redirect()->back()->with('success', "Manager has been {$statusText} successfully.");
     }
-
 
     public function deletemanager($id)
     {
         $currentManager = Auth::user();
-        $businessName   = $currentManager->business_name;
+        $businessName = $currentManager->business_name;
 
         // ✅ SECURITY: Verify manager belongs to same business
         $manager = User::where('business_name', $businessName)
@@ -245,6 +239,3 @@ class AddManagerController extends Controller
         return redirect()->route('manager.manager')->with('success', 'Manager account deleted successfully.');
     }
 }
-
-
-

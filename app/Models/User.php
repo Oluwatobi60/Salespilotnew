@@ -3,19 +3,19 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
-use App\Models\UserSubscription;
 use App\Models\Branch\Branch;
 use App\Traits\TrackLoginAttempts;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
 
 /**
  * @property int $id
  * @property string $email
  * @property string $business_name
  * @property string|null $addby
+ *
  * @method \Illuminate\Database\Eloquent\Relations\HasOne currentSubscription()
  * @method bool isBusinessCreator()
  */
@@ -84,7 +84,7 @@ class User extends Authenticatable
     public function currentSubscription(): \Illuminate\Database\Eloquent\Relations\HasOne
     {
 
-    // Get the most recent active subscription for this user
+        // Get the most recent active subscription for this user
         return $this->hasOne(UserSubscription::class)
             ->where('status', 'active')
             ->where('end_date', '>=', Carbon::today())

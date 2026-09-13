@@ -19,7 +19,7 @@ return new class extends Migration
             $table->decimal('total_withdrawn', 15, 2)->default(0)->comment('Total amount withdrawn');
             $table->decimal('pending_approval', 15, 2)->default(0)->comment('Amount pending approval');
             $table->timestamps();
-            
+
             $table->index('brm_id');
         });
     }

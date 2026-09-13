@@ -44,7 +44,7 @@ class LoginRequest extends FormRequest
 
         // Check if user exists and is locked
         $user = User::where('email', $this->email)->first();
-        
+
         if ($user && method_exists($user, 'isLocked') && $user->isLocked()) {
             $minutes = $user->getRemainingLockTimeMinutes();
             throw ValidationException::withMessages([
@@ -59,10 +59,10 @@ class LoginRequest extends FormRequest
             if ($user && method_exists($user, 'incrementFailedLoginAttempts')) {
                 $user->incrementFailedLoginAttempts();
                 $remaining = $user->getRemainingAttempts();
-                
+
                 if ($remaining > 0) {
                     throw ValidationException::withMessages([
-                        'email' => trans('auth.failed') . " You have {$remaining} attempts remaining.",
+                        'email' => trans('auth.failed')." You have {$remaining} attempts remaining.",
                     ]);
                 } else {
                     throw ValidationException::withMessages([
@@ -92,7 +92,7 @@ class LoginRequest extends FormRequest
     public function ensureIsNotRateLimited(): void
     {
         $maxAttempts = (int) setting('max_login_attempts', 5);
-        
+
         if (! RateLimiter::tooManyAttempts($this->throttleKey(), $maxAttempts)) {
             return;
         }

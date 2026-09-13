@@ -3,21 +3,19 @@
 namespace App\Http\Controllers\Manager;
 
 use App\Http\Controllers\Controller;
+use App\Models\CartItem;
+use App\Models\Category;
 use App\Models\ProductVariant;
+use App\Models\StandardItem;
 use App\Models\Supplier;
 use App\Models\Unit;
-use App\Models\StandardItem;
-use App\Models\Category;
-use App\Models\UserSubscription;
 use App\Models\User;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use App\Models\CartItem;
+use App\Models\UserSubscription;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class ManagerMainController extends Controller
 {
-
     // Dashboard view with sales metrics
     public function index()
     {
@@ -44,18 +42,18 @@ class ManagerMainController extends Controller
         // If the user was added by another manager, filter by user_id, staff_id, or branch_name
         if ($user->addby) {
             // For added managers, show sales for their own transactions, transactions by staff they manage, or transactions from their branch
-            $query->where(function($q) use ($user, $branchName) {
+            $query->where(function ($q) use ($user, $branchName) {
                 // Check if user_id matches the manager's own ID
                 $q->where('user_id', $user->id)
                 // Check if staff_id is in the list of staff managed by this manager
-                  ->orWhereIn('staff_id', function($subQuery) use ($user) {
-                      $subQuery->select('id')
-                          ->from('staffs')
-                          ->where('manager_email', $user->email);
-                  });
-                  
+                    ->orWhereIn('staff_id', function ($subQuery) use ($user) {
+                        $subQuery->select('id')
+                            ->from('staffs')
+                            ->where('manager_email', $user->email);
+                    });
+
                 // Only include branch sales if the manager has a branch assigned
-                if (!empty($branchName)) {
+                if (! empty($branchName)) {
                     $q->orWhere('branch_name', $branchName);
                 }
             });
@@ -63,7 +61,7 @@ class ManagerMainController extends Controller
 
         if ($startDate && $endDate) {
             $query->whereDate('created_at', '>=', $startDate)
-                  ->whereDate('created_at', '<=', $endDate);
+                ->whereDate('created_at', '<=', $endDate);
         }
 
         // Calculate key metrics
@@ -101,7 +99,7 @@ class ManagerMainController extends Controller
             ->groupBy('date')
             ->orderBy('date')
             ->get()
-            ->map(function($row) {
+            ->map(function ($row) {
                 return [
                     'date' => $row->date,
                     'gross_sales' => $row->gross_sales,
@@ -115,15 +113,16 @@ class ManagerMainController extends Controller
             ->orderByDesc('units_sold')
             ->limit(5)
             ->get()
-            ->map(function($row) {
+            ->map(function ($row) {
                 // Get correct item name for chart
                 if ($row->item_type === 'standard') {
                     $item = StandardItem::find($row->item_id);
-                    $name = $item ? ($item->item_name ?? $item->item_code ?? ('ID: ' . $row->item_id)) : 'Unknown';
+                    $name = $item ? ($item->item_name ?? $item->item_code ?? ('ID: '.$row->item_id)) : 'Unknown';
                 } else {
                     $item = ProductVariant::find($row->item_id);
-                    $name = $item ? ($item->variant_name ?? $item->sku ?? ('ID: ' . $row->item_id)) : 'Unknown';
+                    $name = $item ? ($item->variant_name ?? $item->sku ?? ('ID: '.$row->item_id)) : 'Unknown';
                 }
+
                 return [
                     'name' => $name,
                     'units_sold' => $row->units_sold,
@@ -170,7 +169,6 @@ class ManagerMainController extends Controller
         ]);
     }
 
-
     public function add_item_standard()
     {
         $user = Auth::user();
@@ -194,8 +192,4 @@ class ManagerMainController extends Controller
 
         return view('manager.variantItems.add_item_variant', compact('suppliers', 'units', 'categories'));
     }
-
-
-
-
 }

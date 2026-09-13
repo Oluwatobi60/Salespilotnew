@@ -3,18 +3,18 @@
 namespace App\Http\Controllers\Welcome;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\Welcome\SignupRequest;
-use App\Models\SubscriptionPlan;
-use App\Models\UserSubscription;
-use App\Mail\SubscriptionActivated;
 use App\Mail\SetupPassword;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Mail;
+use App\Mail\SubscriptionActivated;
+use App\Models\SubscriptionPlan;
+use App\Models\User;
+use App\Models\UserSubscription;
+use App\Models\Welcome\SignupRequest;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
-use App\Models\User;
-use Carbon\Carbon;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 
 class SignupController extends Controller
 {
@@ -36,13 +36,13 @@ class SignupController extends Controller
             ->orderBy('created_at', 'desc')
             ->first();
 
-        if (!$signupRequest) {
+        if (! $signupRequest) {
             return response()->json(['verified' => false]);
         }
 
         return response()->json([
             'verified' => $signupRequest->is_used == 1,
-            'email' => $signupRequest->email
+            'email' => $signupRequest->email,
         ]);
     }
 
@@ -60,6 +60,7 @@ class SignupController extends Controller
                     'message' => 'This email is already registered. Please login instead.',
                 ], 400);
             }
+
             return redirect()->back()->with('error', 'This email is already registered. Please login instead.');
         }
 
@@ -69,7 +70,7 @@ class SignupController extends Controller
             ->first();
 
         // If exists and not used and not expired, return error
-        if ($existingRequest && !$existingRequest->is_used && Carbon::now()->lessThan($existingRequest->token_expires_at)) {
+        if ($existingRequest && ! $existingRequest->is_used && Carbon::now()->lessThan($existingRequest->token_expires_at)) {
             if ($request->expectsJson()) {
                 return response()->json([
                     'success' => false,
@@ -77,6 +78,7 @@ class SignupController extends Controller
                     'expires_at' => $existingRequest->token_expires_at->toIso8601String(),
                 ], 400);
             }
+
             return redirect()->back()->with('error', 'A verification link has already been sent to this email. Please check your inbox.');
         }
 
@@ -139,7 +141,7 @@ class SignupController extends Controller
             ->orderBy('created_at', 'desc')
             ->first();
 
-        if (!$signupRequest) {
+        if (! $signupRequest) {
             return response()->json([
                 'success' => false,
                 'message' => 'No verification request found for this email. Please start over.',
@@ -184,7 +186,7 @@ class SignupController extends Controller
             'expiresIn' => 30,
         ], function ($message) use ($signupRequest) {
             $message->to($signupRequest->email)
-                    ->subject('Your SalesPilot Signup Token');
+                ->subject('Your SalesPilot Signup Token');
         });
     }
 
@@ -196,7 +198,7 @@ class SignupController extends Controller
         $signupRequest = SignupRequest::where('token', $token)->first();
 
         // Check if token exists
-        if (!$signupRequest) {
+        if (! $signupRequest) {
             return redirect()->route('get_started')->with('error', 'Invalid token.');
         }
 
@@ -220,10 +222,9 @@ class SignupController extends Controller
         return redirect()->route('register')->with([
             'success' => 'Email verified! Please complete your registration.',
             'email_verified' => true,
-            'signup_email' => $signupRequest->email
+            'signup_email' => $signupRequest->email,
         ]);
     }
-
 
     public function plan_pricing()
     {
@@ -238,7 +239,7 @@ class SignupController extends Controller
                 ->where('end_date', '>=', now())
                 ->with('subscriptionPlan')
                 ->first();
-                
+
             $pendingSubscription = UserSubscription::where('user_id', Auth::id())
                 ->where('status', 'pending')
                 ->with('subscriptionPlan')
@@ -261,7 +262,7 @@ class SignupController extends Controller
         // Get the selected plan
         $plan = SubscriptionPlan::where('name', $validated['plan'])->first();
 
-        if (!$plan) {
+        if (! $plan) {
             return redirect()->back()->with('error', 'Invalid plan selected.');
         }
 
@@ -289,7 +290,7 @@ class SignupController extends Controller
      */
     public function showPayment()
     {
-        if (!session('selected_plan')) {
+        if (! session('selected_plan')) {
             return redirect()->route('plan_pricing')->with('error', 'Please select a plan first.');
         }
 
@@ -311,7 +312,7 @@ class SignupController extends Controller
             'payment_reference' => 'nullable|string',
         ]);
 
-        if (!session('selected_plan')) {
+        if (! session('selected_plan')) {
             return redirect()->route('plan_pricing')->with('error', 'Session expired. Please select a plan again.');
         }
 
@@ -332,7 +333,7 @@ class SignupController extends Controller
             'start_date' => Carbon::today(),
             'end_date' => Carbon::today()->addMonths($duration),
             'status' => 'pending', // Pending admin verification for bank transfers
-            'payment_reference' => $validated['payment_reference'] ?? 'BANK-' . Str::random(10),
+            'payment_reference' => $validated['payment_reference'] ?? 'BANK-'.Str::random(10),
         ]);
 
         // Generate commission for BRM if customer has one and paid amount is > 0
@@ -343,15 +344,20 @@ class SignupController extends Controller
         // Send activation email
         Mail::to(Auth::user()->email)->send(new SubscriptionActivated(Auth::user(), $subscription));
 
-        // Send set-password email
-        $this->sendPasswordSetupEmail(Auth::user());
+        // If user hasn't set their password yet (initial signup)
+        if (! Auth::user()->password_set) {
+            $this->sendPasswordSetupEmail(Auth::user());
+            $userEmail = Auth::user()->email;
+            Auth::logout();
+            session()->forget(['selected_plan', 'selected_duration', 'pricing']);
 
-        // Log the user out — they must set password before logging in
-        $userEmail = Auth::user()->email;
-        Auth::logout();
+            return redirect()->route('signup.account.created')->with('setup_email', $userEmail);
+        }
+
+        // For existing users (renewals/upgrades)
         session()->forget(['selected_plan', 'selected_duration', 'pricing']);
 
-        return redirect()->route('signup.account.created')->with('setup_email', $userEmail);
+        return redirect()->route('plan_pricing')->with('success', 'Your manual bank transfer payment has been submitted and is pending approval.');
     }
 
     /**
@@ -373,7 +379,7 @@ class SignupController extends Controller
             'start_date' => Carbon::today(),
             'end_date' => $plan->trial_days > 0 ? Carbon::today()->addDays($plan->trial_days) : Carbon::today()->addMonths($duration),
             'status' => 'active',
-            'payment_reference' => 'FREE-TRIAL-' . Str::random(10),
+            'payment_reference' => 'FREE-TRIAL-'.Str::random(10),
         ]);
 
         // Note: No commission generated for free trials (amount_paid = 0)
@@ -398,6 +404,7 @@ class SignupController extends Controller
     public function accountCreated()
     {
         $email = session('setup_email');
+
         return view('auth.account-created', compact('email'));
     }
 
@@ -430,9 +437,9 @@ class SignupController extends Controller
         $token = Str::random(64);
 
         $user->forceFill([
-            'password_setup_token'      => $token,
+            'password_setup_token' => $token,
             'password_setup_expires_at' => Carbon::now()->addHours(48),
-            'password_set'              => false,
+            'password_set' => false,
         ])->save();
 
         Mail::to($user->email)->send(new SetupPassword($user, $token));
@@ -445,7 +452,7 @@ class SignupController extends Controller
     {
         $reference = $request->query('reference');
 
-        if (!$reference) {
+        if (! $reference) {
             return redirect()->route('payment.show')->with('error', 'Invalid payment reference.');
         }
 
@@ -456,7 +463,7 @@ class SignupController extends Controller
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            "Authorization: Bearer " . config('services.paystack.secret_key')
+            'Authorization: Bearer '.config('services.paystack.secret_key'),
         ]);
 
         $response = curl_exec($ch);
@@ -464,7 +471,7 @@ class SignupController extends Controller
 
         $result = json_decode($response);
 
-        if (!$result->status || $result->data->status !== 'success') {
+        if (! $result->status || $result->data->status !== 'success') {
             return redirect()->route('payment.show')->with('error', 'Payment verification failed. Please try again.');
         }
 
@@ -473,7 +480,7 @@ class SignupController extends Controller
             return redirect()->route('payment.show')->with('error', 'This payment reference has already been used.');
         }
 
-        if (!session('selected_plan')) {
+        if (! session('selected_plan')) {
             return redirect()->route('plan_pricing')->with('error', 'Session expired. Please select a plan again.');
         }
 

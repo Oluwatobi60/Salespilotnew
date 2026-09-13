@@ -2,9 +2,8 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
 use App\Models\SubscriptionPlan;
+use Illuminate\Database\Seeder;
 
 class SubscriptionPlanSeeder extends Seeder
 {
@@ -23,7 +22,7 @@ class SubscriptionPlanSeeder extends Seeder
                     '1 Staff Account',
                     'Basic Inventory Management',
                     'Sales Tracking',
-                    'Email Support'
+                    'Email Support',
                 ]),
                 'max_managers' => 1,
                 'max_staff' => 1,
@@ -42,7 +41,7 @@ class SubscriptionPlanSeeder extends Seeder
                     'Advanced Inventory Management',
                     'Sales & Purchase Tracking',
                     'Basic Reports & Analytics',
-                    'Priority Email Support'
+                    'Priority Email Support',
                 ]),
                 'max_managers' => 1,
                 'max_staff' => 2,
@@ -62,7 +61,7 @@ class SubscriptionPlanSeeder extends Seeder
                     'Advanced Inventory Management',
                     'Sales & Purchase Tracking',
                     'Basic Reports & Analytics',
-                    'Priority Email Support'
+                    'Priority Email Support',
                 ]),
                 'max_managers' => 2,
                 'max_staff' => 4,
@@ -82,7 +81,7 @@ class SubscriptionPlanSeeder extends Seeder
                     'Advanced Reports & Analytics',
                     'Multi-branch Support',
                     '24/7 Priority Support',
-                    'Custom Integrations'
+                    'Custom Integrations',
                 ]),
                 'max_managers' => 3,
                 'max_staff' => null, // unlimited

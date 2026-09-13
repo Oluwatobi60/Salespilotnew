@@ -23,8 +23,8 @@ class AppSetting extends Model
     {
         return Cache::remember("app_setting_{$key}", 3600, function () use ($key, $default) {
             $setting = self::where('key', $key)->first();
-            
-            if (!$setting) {
+
+            if (! $setting) {
                 return $default;
             }
 
@@ -49,7 +49,7 @@ class AppSetting extends Model
     {
         $setting = self::where('key', $key)->first();
 
-        if (!$setting) {
+        if (! $setting) {
             return false;
         }
 
@@ -89,7 +89,7 @@ class AppSetting extends Model
     public static function clearCache(): void
     {
         $settings = self::all();
-        
+
         foreach ($settings as $setting) {
             Cache::forget("app_setting_{$setting->key}");
         }

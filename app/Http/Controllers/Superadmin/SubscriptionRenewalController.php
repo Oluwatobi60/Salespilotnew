@@ -7,8 +7,8 @@ use App\Mail\SubscriptionRenewed;
 use App\Models\UserSubscription;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 
 class SubscriptionRenewalController extends Controller
 {
@@ -29,9 +29,8 @@ class SubscriptionRenewalController extends Controller
             ->groupBy('user_id');
 
         $activeIds = DB::table('user_subscriptions as us')
-            ->joinSub($bestActiveDates, 'ba', fn($j) =>
-                $j->on('us.user_id', '=', 'ba.user_id')
-                  ->on('us.end_date', '=', 'ba.best_end_date'))
+            ->joinSub($bestActiveDates, 'ba', fn ($j) => $j->on('us.user_id', '=', 'ba.user_id')
+                ->on('us.end_date', '=', 'ba.best_end_date'))
             ->where('us.status', 'active')
             ->where('us.end_date', '>=', Carbon::today())
             ->selectRaw('MAX(us.id) as id')
@@ -66,23 +65,23 @@ class SubscriptionRenewalController extends Controller
             $s = $request->search;
             $query->whereHas('user', function ($q) use ($s) {
                 $q->where('first_name', 'like', "%{$s}%")
-                  ->orWhere('surname', 'like', "%{$s}%")
-                  ->orWhere('email', 'like', "%{$s}%")
-                  ->orWhere('business_name', 'like', "%{$s}%");
+                    ->orWhere('surname', 'like', "%{$s}%")
+                    ->orWhere('email', 'like', "%{$s}%")
+                    ->orWhere('business_name', 'like', "%{$s}%");
             });
         }
 
         if ($request->filled('status')) {
             if ($request->status === 'active') {
                 $query->where('status', 'active')
-                      ->where('end_date', '>=', Carbon::today());
+                    ->where('end_date', '>=', Carbon::today());
             } elseif ($request->status === 'expired') {
                 $query->where(function ($q) {
                     $q->where('status', 'expired')
-                      ->orWhere(function ($q2) {
-                          $q2->where('status', 'active')
-                             ->where('end_date', '<', Carbon::today());
-                      });
+                        ->orWhere(function ($q2) {
+                            $q2->where('status', 'active')
+                                ->where('end_date', '<', Carbon::today());
+                        });
                 });
             } else {
                 $query->where('status', $request->status);
@@ -96,24 +95,24 @@ class SubscriptionRenewalController extends Controller
         $subscriptions = $query->paginate(20)->withQueryString();
 
         $stats = [
-            'total'       => $currentIds->count(),
-            'pending'     => UserSubscription::whereIn('id', $currentIds)
-                                ->where('status', 'pending')
-                                ->count(),
-            'active'      => UserSubscription::whereIn('id', $currentIds)
-                                ->where('status', 'active')
-                                ->where('end_date', '>=', Carbon::today())
-                                ->count(),
-            'auto_renew'  => UserSubscription::whereIn('id', $currentIds)
-                                ->where('auto_renew', true)
-                                ->where('status', 'active')
-                                ->where('end_date', '>=', Carbon::today())
-                                ->count(),
+            'total' => $currentIds->count(),
+            'pending' => UserSubscription::whereIn('id', $currentIds)
+                ->where('status', 'pending')
+                ->count(),
+            'active' => UserSubscription::whereIn('id', $currentIds)
+                ->where('status', 'active')
+                ->where('end_date', '>=', Carbon::today())
+                ->count(),
+            'auto_renew' => UserSubscription::whereIn('id', $currentIds)
+                ->where('auto_renew', true)
+                ->where('status', 'active')
+                ->where('end_date', '>=', Carbon::today())
+                ->count(),
             'expiring_7d' => UserSubscription::whereIn('id', $currentIds)
-                                ->where('status', 'active')
-                                ->where('end_date', '>=', Carbon::today())
-                                ->whereBetween('end_date', [Carbon::today(), Carbon::today()->addDays(7)])
-                                ->count(),
+                ->where('status', 'active')
+                ->where('end_date', '>=', Carbon::today())
+                ->whereBetween('end_date', [Carbon::today(), Carbon::today()->addDays(7)])
+                ->count(),
         ];
 
         return view('superadmin.subscriptions.index', compact('subscriptions', 'stats'));
@@ -138,16 +137,16 @@ class SubscriptionRenewalController extends Controller
     public function bulkToggle(Request $request)
     {
         $validated = $request->validate([
-            'ids'        => 'required|array',
-            'ids.*'      => 'integer|exists:user_subscriptions,id',
+            'ids' => 'required|array',
+            'ids.*' => 'integer|exists:user_subscriptions,id',
             'auto_renew' => 'required|boolean',
         ]);
 
         UserSubscription::whereIn('id', $validated['ids'])
             ->update(['auto_renew' => $validated['auto_renew']]);
 
-        $count  = count($validated['ids']);
-        $state  = $validated['auto_renew'] ? 'enabled' : 'disabled';
+        $count = count($validated['ids']);
+        $state = $validated['auto_renew'] ? 'enabled' : 'disabled';
 
         return back()->with('success', "Auto-renewal {$state} for {$count} subscription(s).");
     }
@@ -184,7 +183,7 @@ class SubscriptionRenewalController extends Controller
     public function processRenewals()
     {
         $renewed = 0;
-        $errors  = [];
+        $errors = [];
 
         // Find active subscriptions that ended today or earlier with auto_renew on
         $due = UserSubscription::with(['user', 'subscriptionPlan'])
@@ -203,17 +202,17 @@ class SubscriptionRenewalController extends Controller
 
                 // Create renewed subscription
                 $newSub = UserSubscription::create([
-                    'user_id'              => $sub->user_id,
+                    'user_id' => $sub->user_id,
                     'subscription_plan_id' => $sub->subscription_plan_id,
-                    'duration_months'      => $sub->duration_months,
-                    'amount_paid'          => $sub->amount_paid,
-                    'discount_percentage'  => $sub->discount_percentage,
-                    'start_date'           => Carbon::today(),
-                    'end_date'             => Carbon::today()->addMonths($sub->duration_months),
-                    'status'               => 'active',
-                    'payment_reference'    => 'AUTO-' . strtoupper(uniqid()),
-                    'auto_renew'           => true,
-                    'last_renewed_at'      => Carbon::now(),
+                    'duration_months' => $sub->duration_months,
+                    'amount_paid' => $sub->amount_paid,
+                    'discount_percentage' => $sub->discount_percentage,
+                    'start_date' => Carbon::today(),
+                    'end_date' => Carbon::today()->addMonths($sub->duration_months),
+                    'status' => 'active',
+                    'payment_reference' => 'AUTO-'.strtoupper(uniqid()),
+                    'auto_renew' => true,
+                    'last_renewed_at' => Carbon::now(),
                 ]);
 
                 // Generate renewal commission for BRM
@@ -235,13 +234,13 @@ class SubscriptionRenewalController extends Controller
                 $renewed++;
             } catch (\Exception $e) {
                 DB::rollBack();
-                $errors[] = "User #{$sub->user_id}: " . $e->getMessage();
+                $errors[] = "User #{$sub->user_id}: ".$e->getMessage();
             }
         }
 
         $msg = "Processed {$renewed} auto-renewal(s).";
         if (count($errors)) {
-            $msg .= ' Errors: ' . implode('; ', $errors);
+            $msg .= ' Errors: '.implode('; ', $errors);
         }
 
         return back()->with($errors ? 'error' : 'success', $msg);
@@ -271,7 +270,7 @@ class SubscriptionRenewalController extends Controller
                 Mail::to($subscription->user->email)->send(new \App\Mail\SubscriptionActivated($subscription->user, $subscription));
             } catch (\Exception $e) {
                 // Email failure shouldn't rollback approval, just log it
-                \Illuminate\Support\Facades\Log::error("Failed to send activation email: " . $e->getMessage());
+                \Illuminate\Support\Facades\Log::error('Failed to send activation email: '.$e->getMessage());
             }
         }
 

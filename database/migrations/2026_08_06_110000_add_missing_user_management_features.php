@@ -1,8 +1,6 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
@@ -46,7 +44,7 @@ return new class extends Migration
                 'sort_order' => 45,
                 'created_at' => now(),
                 'updated_at' => now(),
-            ]
+            ],
         ];
 
         foreach ($features as $feature) {
@@ -65,17 +63,17 @@ return new class extends Migration
             $planName = strtolower($plan->name);
 
             // All plans can manage staff
-            if (!in_array('manage_staff', $features)) {
+            if (! in_array('manage_staff', $features)) {
                 $features[] = 'manage_staff';
             }
 
             // Standard, Premium, Basic can manage managers
-            if (in_array($planName, ['standard', 'premium', 'basic']) && !in_array('manage_managers', $features)) {
+            if (in_array($planName, ['standard', 'premium', 'basic']) && ! in_array('manage_managers', $features)) {
                 $features[] = 'manage_managers';
             }
 
             // Standard and Premium managers can manage staff
-            if (in_array($planName, ['standard', 'premium']) && !in_array('manager_manage_staff', $features)) {
+            if (in_array($planName, ['standard', 'premium']) && ! in_array('manager_manage_staff', $features)) {
                 $features[] = 'manager_manage_staff';
             }
 
@@ -103,14 +101,14 @@ return new class extends Migration
         DB::table('subscription_features')
             ->whereIn('slug', ['manage_staff', 'manage_managers', 'manager_manage_staff'])
             ->delete();
-            
-        // We don't strictly need to remove them from the JSON array in down(), 
+
+        // We don't strictly need to remove them from the JSON array in down(),
         // as invalid slugs are just ignored, but for cleanliness:
         $plans = DB::table('subscription_plans')->get();
         foreach ($plans as $plan) {
             $features = json_decode($plan->features, true) ?? [];
-            $features = array_filter($features, function($f) {
-                return !in_array($f, ['manage_staff', 'manage_managers', 'manager_manage_staff']);
+            $features = array_filter($features, function ($f) {
+                return ! in_array($f, ['manage_staff', 'manage_managers', 'manager_manage_staff']);
             });
             DB::table('subscription_plans')
                 ->where('id', $plan->id)

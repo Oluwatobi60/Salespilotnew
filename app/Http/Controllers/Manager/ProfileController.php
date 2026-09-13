@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Manager;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Http\Request;
-use App\Models\User;
 
 class ProfileController extends Controller
 {
@@ -17,12 +17,14 @@ class ProfileController extends Controller
         $manager->load('managedBranch', 'brm');
         $subscription = $manager->currentSubscription;
         $plan = $subscription ? $subscription->subscriptionPlan : null;
+
         return view('manager.profile.show', compact('manager', 'subscription', 'plan'));
     }
 
     public function edit()
     {
         $manager = Auth::user();
+
         return view('manager.profile.edit', compact('manager'));
     }
 
@@ -45,6 +47,7 @@ class ProfileController extends Controller
         $manager->phone_number = $validated['phone'] ?? null;
         $manager->address = $validated['address'] ?? null;
         $manager->save();
+
         return redirect()->route('manager.profile.show')->with('success', 'Profile updated successfully!');
     }
 
@@ -62,11 +65,12 @@ class ProfileController extends Controller
 
         /** @var \App\Models\User $manager */
         $manager = Auth::user();
-        if (!Hash::check($request->current_password, $manager->password)) {
+        if (! Hash::check($request->current_password, $manager->password)) {
             return back()->withErrors(['current_password' => 'Current password is incorrect']);
         }
         $manager->password = bcrypt($request->new_password);
         $manager->save();
+
         return redirect()->route('manager.profile.show')->with('success', 'Password changed successfully!');
     }
 }

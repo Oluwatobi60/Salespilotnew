@@ -2,14 +2,13 @@
 
 namespace App\Http\Controllers\Manager;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Maatwebsite\Excel\Facades\Excel;
-use App\Imports\StandardItemImport;
-use App\Imports\VariantItemImport;
 use App\Exports\StandardItemTemplateExport;
 use App\Exports\VariantItemTemplateExport;
-use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\Controller;
+use App\Imports\StandardItemImport;
+use App\Imports\VariantItemImport;
+use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ItemImportController extends Controller
 {
@@ -32,16 +31,18 @@ class ItemImportController extends Controller
 
         try {
             Excel::import(new StandardItemImport, $request->file('import_file'));
+
             return redirect()->back()->with('success', 'Standard items imported successfully.');
         } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
             $failures = $e->failures();
             $messages = [];
             foreach ($failures as $failure) {
-                $messages[] = 'Row ' . $failure->row() . ': ' . implode(', ', $failure->errors());
+                $messages[] = 'Row '.$failure->row().': '.implode(', ', $failure->errors());
             }
-            return redirect()->back()->with('error', 'Import failed due to validation errors. ' . implode(' | ', $messages));
+
+            return redirect()->back()->with('error', 'Import failed due to validation errors. '.implode(' | ', $messages));
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'An error occurred during import: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'An error occurred during import: '.$e->getMessage());
         }
     }
 
@@ -64,16 +65,18 @@ class ItemImportController extends Controller
 
         try {
             Excel::import(new VariantItemImport, $request->file('import_file'));
+
             return redirect()->back()->with('success', 'Variant items imported successfully.');
         } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
             $failures = $e->failures();
             $messages = [];
             foreach ($failures as $failure) {
-                $messages[] = 'Row ' . $failure->row() . ': ' . implode(', ', $failure->errors());
+                $messages[] = 'Row '.$failure->row().': '.implode(', ', $failure->errors());
             }
-            return redirect()->back()->with('error', 'Import failed due to validation errors. ' . implode(' | ', $messages));
+
+            return redirect()->back()->with('error', 'Import failed due to validation errors. '.implode(' | ', $messages));
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'An error occurred during import: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'An error occurred during import: '.$e->getMessage());
         }
     }
 }

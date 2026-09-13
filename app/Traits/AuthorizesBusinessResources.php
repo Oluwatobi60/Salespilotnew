@@ -2,9 +2,9 @@
 
 namespace App\Traits;
 
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Database\Eloquent\Model;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 
 /**
  * Authorization Trait for Business Resources
@@ -28,14 +28,12 @@ trait AuthorizesBusinessResources
 {
     /**
      * Get the business name for the current authenticated user
-     *
-     * @return string
      */
     protected function getUserBusinessName(): string
     {
         $user = Auth::user();
 
-        if (!$user) {
+        if (! $user) {
             abort(401, 'Unauthenticated');
         }
 
@@ -55,16 +53,17 @@ trait AuthorizesBusinessResources
     /**
      * Check if the current user owns this resource
      *
-     * @param Model $resource The model instance to check
-     * @param string $businessField The field name containing business identifier (default: 'business_name')
+     * @param  Model  $resource  The model instance to check
+     * @param  string  $businessField  The field name containing business identifier (default: 'business_name')
      * @return Model Returns the resource if authorized
+     *
      * @throws \Symfony\Component\HttpKernel\Exception\HttpException (403) if unauthorized
      */
     protected function authorizeResource(Model $resource, string $businessField = 'business_name'): Model
     {
         $userBusinessName = $this->getUserBusinessName();
 
-        if (!isset($resource->$businessField) || $resource->$businessField !== $userBusinessName) {
+        if (! isset($resource->$businessField) || $userBusinessName !== $resource->$businessField) {
             abort(403, 'You do not have permission to access this resource');
         }
 
@@ -77,10 +76,11 @@ trait AuthorizesBusinessResources
      * This is the most common method you'll use. It finds a resource by ID
      * and automatically verifies the user has permission to access it.
      *
-     * @param string $modelClass The fully qualified model class name
-     * @param int|string $id The resource ID
-     * @param string $businessField The field name containing business identifier (default: 'business_name')
+     * @param  string  $modelClass  The fully qualified model class name
+     * @param  int|string  $id  The resource ID
+     * @param  string  $businessField  The field name containing business identifier (default: 'business_name')
      * @return Model Returns the authorized resource
+     *
      * @throws \Illuminate\Database\Eloquent\ModelNotFoundException if not found
      * @throws \Symfony\Component\HttpKernel\Exception\HttpException (403) if unauthorized
      *
@@ -103,8 +103,8 @@ trait AuthorizesBusinessResources
      *
      * Useful for listing resources.
      *
-     * @param string $modelClass The fully qualified model class name
-     * @param string $businessField The field name containing business identifier (default: 'business_name')
+     * @param  string  $modelClass  The fully qualified model class name
+     * @param  string  $businessField  The field name containing business identifier (default: 'business_name')
      * @return \Illuminate\Database\Eloquent\Builder
      *
      * @example
@@ -121,19 +121,16 @@ trait AuthorizesBusinessResources
      * Check if current user owns a resource by manager_email field
      *
      * Some models use manager_email instead of business_name.
-     *
-     * @param Model $resource
-     * @return Model
      */
     protected function authorizeByManagerEmail(Model $resource): Model
     {
         $user = Auth::user();
 
-        if (!$user) {
+        if (! $user) {
             abort(401, 'Unauthenticated');
         }
 
-        if (!isset($resource->manager_email) || $resource->manager_email !== $user->email) {
+        if (! isset($resource->manager_email) || $resource->manager_email !== $user->email) {
             abort(403, 'You do not have permission to access this resource');
         }
 
@@ -143,15 +140,13 @@ trait AuthorizesBusinessResources
     /**
      * Find and authorize by manager_email field
      *
-     * @param string $modelClass
-     * @param int|string $id
-     * @return Model
+     * @param  int|string  $id
      */
     protected function findAndAuthorizeByManagerEmail(string $modelClass, $id): Model
     {
         $user = Auth::user();
 
-        if (!$user) {
+        if (! $user) {
             abort(401, 'Unauthenticated');
         }
 
@@ -166,15 +161,12 @@ trait AuthorizesBusinessResources
      * Check if user has permission to access staff resource
      *
      * Staff can be filtered by manager_email or business_name
-     *
-     * @param Model $staff
-     * @return Model
      */
     protected function authorizeStaff(Model $staff): Model
     {
         $user = Auth::user();
 
-        if (!$user) {
+        if (! $user) {
             abort(401, 'Unauthenticated');
         }
 
@@ -184,7 +176,7 @@ trait AuthorizesBusinessResources
         $hasAccess = ($staff->manager_email === $user->email)
                   || ($staff->business_name === $userBusinessName);
 
-        if (!$hasAccess) {
+        if (! $hasAccess) {
             abort(403, 'You do not have permission to access this staff member');
         }
 

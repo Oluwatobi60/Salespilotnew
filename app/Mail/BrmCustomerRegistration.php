@@ -2,19 +2,20 @@
 
 namespace App\Mail;
 
+use App\Models\Brm;
+use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
-use App\Models\User;
-use App\Models\Brm;
 
 class BrmCustomerRegistration extends Mailable
 {
     use Queueable, SerializesModels;
 
     public $customer;
+
     public $brm;
 
     /**
@@ -32,7 +33,7 @@ class BrmCustomerRegistration extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'New Customer Registration - ' . $this->customer->business_name,
+            subject: 'New Customer Registration - '.$this->customer->business_name,
         );
     }
 

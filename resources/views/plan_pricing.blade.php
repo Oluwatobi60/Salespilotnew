@@ -2,14 +2,16 @@
 @section('welcome_page_title')
 Choose Your Plan - {{ app_name() }}
 @endsection
-@if(auth()->check() && (!auth()->user()->password_set || isset($activeSubscription) || isset($pendingSubscription)))
+@if(auth()->check())
     @section('hide_nav_links') 1 @endsection
-    @if(!auth()->user()->password_set)
+    @if(auth()->check() && !auth()->user()->password_set)
         @section('brand_bar_step')<span class="sp-brand-step">Step 2 of 3 &mdash; Choose a Plan</span>@endsection
     @elseif(isset($pendingSubscription))
         @section('brand_bar_step')<span class="sp-brand-step">Waiting for Confirmation</span>@endsection
-    @else
+    @elseif(isset($activeSubscription))
         @section('brand_bar_step')<span class="sp-brand-step">Upgrade Your Plan</span>@endsection
+    @else
+        @section('brand_bar_step')<span class="sp-brand-step" style="background: rgba(239,68,68,.25); color: #fca5a5; border-color: rgba(239,68,68,.4);">&#9888; Renew Your Subscription</span>@endsection
     @endif
 @endif
 @section('welcome_page_content')
@@ -55,6 +57,35 @@ Choose Your Plan - {{ app_name() }}
             <h2>Choose Your Perfect Plan</h2>
             <p>Select a plan that fits your business needs and start growing today</p>
         </div>
+
+        {{-- ===== Expired subscription banner (shown only when the logged-in user has no active sub) ===== --}}
+        @auth
+        @php
+            $pricingPageHasActiveSub = \App\Models\UserSubscription::where('user_id', auth()->id())
+                ->where('status', 'active')
+                ->where('end_date', '>=', now())
+                ->exists();
+        @endphp
+        @if(!$pricingPageHasActiveSub && !isset($pendingSubscription))
+        <div style="max-width:800px;margin:0 auto 2rem;padding:1.25rem 1.5rem;background:linear-gradient(135deg,#fef2f2 0%,#fff1f2 100%);border-left:4px solid #ef4444;border-radius:12px;display:flex;align-items:flex-start;gap:1rem;">
+            <span style="font-size:1.6rem;flex-shrink:0;">&#x26A0;&#xFE0F;</span>
+            <div style="flex:1;">
+                <h4 style="margin:0 0 .35rem;color:#b91c1c;font-size:1.05rem;font-weight:700;">Your subscription has expired</h4>
+                <p style="margin:0 0 .5rem;color:#7f1d1d;font-size:.95rem;">
+                    You are logged in as <strong>{{ auth()->user()->email }}</strong>.
+                    Please choose a plan below to restore access to your account.
+                </p>
+                <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;margin-top:.65rem;">
+                    <form method="POST" action="{{ route('logout') }}" style="margin:0;">
+                        @csrf
+                        <button type="submit" style="background:#ef4444;color:#fff;border:none;border-radius:8px;padding:.45rem 1.1rem;font-size:.85rem;cursor:pointer;font-weight:600;">&#x2192; Log out &amp; switch account</button>
+                    </form>
+                    <span style="color:#9ca3af;font-size:.8rem;">or select a plan below to renew immediately</span>
+                </div>
+            </div>
+        </div>
+        @endif
+        @endauth
 
         @if(isset($activeSubscription))
         <div style="max-width: 800px; margin: 0 auto 2rem; padding: 1.25rem; background: linear-gradient(135deg, #e0f2fe 0%, #dbeafe 100%); border-left: 4px solid #0ea5e9; border-radius: 12px;">

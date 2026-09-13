@@ -13,9 +13,44 @@ Welcome to {{ app_name() }}
         <h1>Transform Your Business with Modern Inventory Management</h1>
         <p>{{ app_name() }} is the all-in-one solution for managing inventory, sales, customers, and analytics. {{ setting('app_tagline', 'Built for modern businesses that demand efficiency and growth.') }}</p>
         <div class="cta">
+            @auth
+            @php
+                $heroHasActiveSub = \App\Models\UserSubscription::where('user_id', auth()->id())
+                    ->where('status', 'active')
+                    ->where('end_date', '>=', now())
+                    ->exists();
+
+                if (!$heroHasActiveSub && auth()->user()->role === 'manager' && auth()->user()->addby) {
+                    $heroCreator = \App\Models\User::where('email', auth()->user()->addby)->first();
+                    $heroHasActiveSub = $heroCreator
+                        ? \App\Models\UserSubscription::where('user_id', $heroCreator->id)
+                            ->where('status', 'active')
+                            ->where('end_date', '>=', now())
+                            ->exists()
+                        : false;
+                }
+
+                $heroDashRoute = '/';
+                $heroRole = auth()->user()->role;
+                if ($heroRole === 'superadmin') $heroDashRoute = route('superadmin');
+                elseif ($heroRole === 'manager') $heroDashRoute = route('manager');
+                elseif ($heroRole === 'businessowner') $heroDashRoute = route('businessdashboard');
+                elseif ($heroRole === 'staff') $heroDashRoute = route('dashboard');
+            @endphp
+            @if($heroHasActiveSub)
+                <a class="btn btn-primary" href="{{ $heroDashRoute }}">
+                    <span>Go to Dashboard</span>
+                </a>
+            @else
+                <a class="btn btn-primary" href="{{ route('plan_pricing') }}" style="background: linear-gradient(135deg,#f59e0b,#ef4444);">
+                    <span>Renew Your Plan</span>
+                </a>
+            @endif
+            @else
             <a class="btn btn-primary" href="{{ route('get_started') }}">
                 <span>Get Started Free</span>
             </a>
+            @endauth
             <a class="btn btn-outline" href="#features">
                 <span>Learn More</span>
             </a>

@@ -260,10 +260,12 @@ document.addEventListener('DOMContentLoaded', function() {
         renderFilteredSales(allSales);
     });
 
-    // Export functionality
-    exportReportBtn.addEventListener('click', function() {
-        exportToCSV();
-    });
+    // Export functionality (button only exists on pages that include it)
+    if (exportReportBtn) {
+        exportReportBtn.addEventListener('click', function() {
+            exportToCSV();
+        });
+    }
 
     // Export to CSV
     function exportToCSV() {

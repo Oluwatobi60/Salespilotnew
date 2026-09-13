@@ -2,20 +2,20 @@
 
 namespace App\Http\Controllers\Manager;
 
+use App\Exports\ReportExport;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use App\Models\CartItem;
 use App\Models\Staffs;
 use App\Models\User;
-use Carbon\Carbon;
-use App\Exports\ReportExport;
-use Maatwebsite\Excel\Facades\Excel;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Maatwebsite\Excel\Facades\Excel;
 
 class StaffSalesController extends Controller
 {
-      public function staff_sales(Request $request)
+    public function staff_sales(Request $request)
     {
         // Get manager information
         $manager = Auth::user();
@@ -34,23 +34,23 @@ class StaffSalesController extends Controller
 
         // If the user was added by another manager, filter by user_id, staff_id, or branch_name
         if ($manager->addby) {
-            $query->where(function($q) use ($manager, $branchName) {
+            $query->where(function ($q) use ($manager, $branchName) {
                 $q->where('cart_items.user_id', $manager->id)
-                  ->orWhereIn('cart_items.staff_id', function($subQuery) use ($manager) {
-                      $subQuery->select('id')
-                          ->from('staffs')
-                          ->where('manager_email', $manager->email);
-                  })
-                  ->orWhere('cart_items.branch_name', $branchName);
+                    ->orWhereIn('cart_items.staff_id', function ($subQuery) use ($manager) {
+                        $subQuery->select('id')
+                            ->from('staffs')
+                            ->where('manager_email', $manager->email);
+                    })
+                    ->orWhere('cart_items.branch_name', $branchName);
             });
         }
 
         // Apply staff filter
         if ($request->filled('staff_id')) {
             $staffId = $request->staff_id;
-            $query->where(function($q) use ($staffId) {
+            $query->where(function ($q) use ($staffId) {
                 $q->where('cart_items.staff_id', $staffId)
-                  ->orWhere('cart_items.user_id', $staffId);
+                    ->orWhere('cart_items.user_id', $staffId);
             });
         }
 
@@ -138,23 +138,23 @@ class StaffSalesController extends Controller
 
         // If the user was added by another manager, filter by user_id, staff_id, or branch_name
         if ($manager->addby) {
-            $totalsQuery->where(function($q) use ($manager, $branchName) {
+            $totalsQuery->where(function ($q) use ($manager, $branchName) {
                 $q->where('cart_items.user_id', $manager->id)
-                  ->orWhereIn('cart_items.staff_id', function($subQuery) use ($manager) {
-                      $subQuery->select('id')
-                          ->from('staffs')
-                          ->where('manager_email', $manager->email);
-                  })
-                  ->orWhere('cart_items.branch_name', $branchName);
+                    ->orWhereIn('cart_items.staff_id', function ($subQuery) use ($manager) {
+                        $subQuery->select('id')
+                            ->from('staffs')
+                            ->where('manager_email', $manager->email);
+                    })
+                    ->orWhere('cart_items.branch_name', $branchName);
             });
         }
 
         // Apply same staff filter
         if ($request->filled('staff_id')) {
             $staffId = $request->staff_id;
-            $totalsQuery->where(function($q) use ($staffId) {
+            $totalsQuery->where(function ($q) use ($staffId) {
                 $q->where('cart_items.staff_id', $staffId)
-                  ->orWhere('cart_items.user_id', $staffId);
+                    ->orWhere('cart_items.user_id', $staffId);
             });
         }
 
@@ -217,10 +217,10 @@ class StaffSalesController extends Controller
         $staffQuery = Staffs::where('business_name', $businessName);
 
         // If the user was added by another manager (is not business creator), show only staff from their assigned branches
-        if (!$manager->isBusinessCreator()) {
+        if (! $manager->isBusinessCreator()) {
             $managedBranchIds = \App\Models\Branch\Branch::where('manager_id', $manager->id)->pluck('id');
             if ($managedBranchIds->isNotEmpty()) {
-                $staffQuery->whereHas('branches', function($q) use ($managedBranchIds) {
+                $staffQuery->whereHas('branches', function ($q) use ($managedBranchIds) {
                     $q->whereIn('branches.id', $managedBranchIds);
                 });
             } else {
@@ -251,22 +251,22 @@ class StaffSalesController extends Controller
             ->where('cart_items.business_name', $businessName);
 
         if ($manager->addby) {
-            $query->where(function($q) use ($manager, $branchName) {
+            $query->where(function ($q) use ($manager, $branchName) {
                 $q->where('cart_items.user_id', $manager->id)
-                  ->orWhereIn('cart_items.staff_id', function($subQuery) use ($manager) {
-                      $subQuery->select('id')
-                          ->from('staffs')
-                          ->where('manager_email', $manager->email);
-                  })
-                  ->orWhere('cart_items.branch_name', $branchName);
+                    ->orWhereIn('cart_items.staff_id', function ($subQuery) use ($manager) {
+                        $subQuery->select('id')
+                            ->from('staffs')
+                            ->where('manager_email', $manager->email);
+                    })
+                    ->orWhere('cart_items.branch_name', $branchName);
             });
         }
 
         if ($request->filled('staff_id')) {
             $staffId = $request->staff_id;
-            $query->where(function($q) use ($staffId) {
+            $query->where(function ($q) use ($staffId) {
                 $q->where('cart_items.staff_id', $staffId)
-                  ->orWhere('cart_items.user_id', $staffId);
+                    ->orWhere('cart_items.user_id', $staffId);
             });
         }
 
@@ -275,19 +275,39 @@ class StaffSalesController extends Controller
             $startDate = null;
             $endDate = null;
             switch ($dateRange) {
-                case 'today': $startDate = Carbon::today(); $endDate = Carbon::today()->endOfDay(); break;
-                case 'yesterday': $startDate = Carbon::yesterday(); $endDate = Carbon::yesterday()->endOfDay(); break;
-                case 'last7': $startDate = Carbon::today()->subDays(6); $endDate = Carbon::today()->endOfDay(); break;
-                case 'last30': $startDate = Carbon::today()->subDays(29); $endDate = Carbon::today()->endOfDay(); break;
-                case 'thisMonth': $startDate = Carbon::now()->startOfMonth(); $endDate = Carbon::now()->endOfMonth(); break;
-                case 'lastMonth': $startDate = Carbon::now()->subMonth()->startOfMonth(); $endDate = Carbon::now()->subMonth()->endOfMonth(); break;
+                case 'today': $startDate = Carbon::today();
+                    $endDate = Carbon::today()->endOfDay();
+                    break;
+                case 'yesterday': $startDate = Carbon::yesterday();
+                    $endDate = Carbon::yesterday()->endOfDay();
+                    break;
+                case 'last7': $startDate = Carbon::today()->subDays(6);
+                    $endDate = Carbon::today()->endOfDay();
+                    break;
+                case 'last30': $startDate = Carbon::today()->subDays(29);
+                    $endDate = Carbon::today()->endOfDay();
+                    break;
+                case 'thisMonth': $startDate = Carbon::now()->startOfMonth();
+                    $endDate = Carbon::now()->endOfMonth();
+                    break;
+                case 'lastMonth': $startDate = Carbon::now()->subMonth()->startOfMonth();
+                    $endDate = Carbon::now()->subMonth()->endOfMonth();
+                    break;
                 case 'custom':
-                    if ($request->filled('start_date')) $startDate = Carbon::parse($request->start_date)->startOfDay();
-                    if ($request->filled('end_date')) $endDate = Carbon::parse($request->end_date)->endOfDay();
+                    if ($request->filled('start_date')) {
+                        $startDate = Carbon::parse($request->start_date)->startOfDay();
+                    }
+                    if ($request->filled('end_date')) {
+                        $endDate = Carbon::parse($request->end_date)->endOfDay();
+                    }
                     break;
             }
-            if ($startDate) $query->where('cart_items.created_at', '>=', $startDate);
-            if ($endDate) $query->where('cart_items.created_at', '<=', $endDate);
+            if ($startDate) {
+                $query->where('cart_items.created_at', '>=', $startDate);
+            }
+            if ($endDate) {
+                $query->where('cart_items.created_at', '<=', $endDate);
+            }
         }
 
         $salesbystaff = $query
@@ -321,30 +341,30 @@ class StaffSalesController extends Controller
 
         $totalsQuery = clone $query;
         // The clone of $query already has all filters applied!
-        // But wait! The clone above has joins and selects added, so we clone before doing that? 
+        // But wait! The clone above has joins and selects added, so we clone before doing that?
         // No, $query doesn't have the joins yet because we didn't mutate $query for the select!
-        
+
         // Let me re-create $totalsQuery safely to match the original logic
         $totalsQuery = CartItem::where('cart_items.status', 'completed')
             ->where('cart_items.business_name', $businessName);
 
         if ($manager->addby) {
-            $totalsQuery->where(function($q) use ($manager, $branchName) {
+            $totalsQuery->where(function ($q) use ($manager, $branchName) {
                 $q->where('cart_items.user_id', $manager->id)
-                  ->orWhereIn('cart_items.staff_id', function($subQuery) use ($manager) {
-                      $subQuery->select('id')
-                          ->from('staffs')
-                          ->where('manager_email', $manager->email);
-                  })
-                  ->orWhere('cart_items.branch_name', $branchName);
+                    ->orWhereIn('cart_items.staff_id', function ($subQuery) use ($manager) {
+                        $subQuery->select('id')
+                            ->from('staffs')
+                            ->where('manager_email', $manager->email);
+                    })
+                    ->orWhere('cart_items.branch_name', $branchName);
             });
         }
 
         if ($request->filled('staff_id')) {
             $staffId = $request->staff_id;
-            $totalsQuery->where(function($q) use ($staffId) {
+            $totalsQuery->where(function ($q) use ($staffId) {
                 $q->where('cart_items.staff_id', $staffId)
-                  ->orWhere('cart_items.user_id', $staffId);
+                    ->orWhere('cart_items.user_id', $staffId);
             });
         }
 
@@ -353,19 +373,39 @@ class StaffSalesController extends Controller
             $startDate = null;
             $endDate = null;
             switch ($dateRange) {
-                case 'today': $startDate = Carbon::today(); $endDate = Carbon::today()->endOfDay(); break;
-                case 'yesterday': $startDate = Carbon::yesterday(); $endDate = Carbon::yesterday()->endOfDay(); break;
-                case 'last7': $startDate = Carbon::today()->subDays(6); $endDate = Carbon::today()->endOfDay(); break;
-                case 'last30': $startDate = Carbon::today()->subDays(29); $endDate = Carbon::today()->endOfDay(); break;
-                case 'thisMonth': $startDate = Carbon::now()->startOfMonth(); $endDate = Carbon::now()->endOfMonth(); break;
-                case 'lastMonth': $startDate = Carbon::now()->subMonth()->startOfMonth(); $endDate = Carbon::now()->subMonth()->endOfMonth(); break;
+                case 'today': $startDate = Carbon::today();
+                    $endDate = Carbon::today()->endOfDay();
+                    break;
+                case 'yesterday': $startDate = Carbon::yesterday();
+                    $endDate = Carbon::yesterday()->endOfDay();
+                    break;
+                case 'last7': $startDate = Carbon::today()->subDays(6);
+                    $endDate = Carbon::today()->endOfDay();
+                    break;
+                case 'last30': $startDate = Carbon::today()->subDays(29);
+                    $endDate = Carbon::today()->endOfDay();
+                    break;
+                case 'thisMonth': $startDate = Carbon::now()->startOfMonth();
+                    $endDate = Carbon::now()->endOfMonth();
+                    break;
+                case 'lastMonth': $startDate = Carbon::now()->subMonth()->startOfMonth();
+                    $endDate = Carbon::now()->subMonth()->endOfMonth();
+                    break;
                 case 'custom':
-                    if ($request->filled('start_date')) $startDate = Carbon::parse($request->start_date)->startOfDay();
-                    if ($request->filled('end_date')) $endDate = Carbon::parse($request->end_date)->endOfDay();
+                    if ($request->filled('start_date')) {
+                        $startDate = Carbon::parse($request->start_date)->startOfDay();
+                    }
+                    if ($request->filled('end_date')) {
+                        $endDate = Carbon::parse($request->end_date)->endOfDay();
+                    }
                     break;
             }
-            if ($startDate) $totalsQuery->where('cart_items.created_at', '>=', $startDate);
-            if ($endDate) $totalsQuery->where('cart_items.created_at', '<=', $endDate);
+            if ($startDate) {
+                $totalsQuery->where('cart_items.created_at', '>=', $startDate);
+            }
+            if ($endDate) {
+                $totalsQuery->where('cart_items.created_at', '<=', $endDate);
+            }
         }
 
         $totals = $totalsQuery
@@ -380,6 +420,7 @@ class StaffSalesController extends Controller
         if ($format === 'pdf') {
             return Pdf::loadView($viewName, $data)->download('staff_sales.pdf');
         }
+
         return Excel::download(new ReportExport($viewName, $data), 'staff_sales.xlsx');
     }
 }

@@ -3,18 +3,19 @@
 namespace App\Http\Controllers\Manager;
 
 use App\Http\Controllers\Controller;
+use App\Models\Supplier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Supplier;
 
 class SupplierController extends Controller
 {
-   public function suppliers()
+    public function suppliers()
     {
         $manager = Auth::user();
         $businessName = $manager->business_name;
 
         $suppliers = Supplier::where('business_name', $businessName)->paginate(10);
+
         return view('manager.supplier.supplier', compact('suppliers'));
     }
 
@@ -31,7 +32,7 @@ class SupplierController extends Controller
 
         // Get manager information
         $manager = Auth::user();
-        $managerName = trim(($manager->firstname ?? '') . ' ' . ($manager->othername ?? '') . ' ' . ($manager->surname ?? ''));
+        $managerName = trim(($manager->firstname ?? '').' '.($manager->othername ?? '').' '.($manager->surname ?? ''));
 
         // Add manager info to validated data
         $validatedData['business_name'] = $manager->business_name;
@@ -52,8 +53,8 @@ class SupplierController extends Controller
                     'email' => $supplier->email,
                     'contact_person' => $supplier->contact_person,
                     'phone' => $supplier->phone,
-                    'address' => $supplier->address
-                ]
+                    'address' => $supplier->address,
+                ],
             ], 201);
         }
 
@@ -65,10 +66,11 @@ class SupplierController extends Controller
     {
         $manager = Auth::user();
         $businessName = $manager->business_name;
-        
+
         // ✅ SECURITY: Verify supplier belongs to manager's business
         $supplier = Supplier::where('business_name', $businessName)
             ->findOrFail($id);
+
         return view('manager.supplier.edit_supplier', compact('supplier'));
     }
 
@@ -76,7 +78,7 @@ class SupplierController extends Controller
     {
         $manager = Auth::user();
         $businessName = $manager->business_name;
-        
+
         // ✅ SECURITY: Verify supplier belongs to manager's business
         $supplier = Supplier::where('business_name', $businessName)
             ->findOrFail($id);
@@ -85,7 +87,7 @@ class SupplierController extends Controller
         $validatedData = $request->validate([
             'name' => 'required|string|max:255',
             'contact_person' => 'nullable|string|max:255',
-            'email' => 'nullable|email|max:255|unique:suppliers,email,' . $supplier->id,
+            'email' => 'nullable|email|max:255|unique:suppliers,email,'.$supplier->id,
             'phone' => 'required|string|max:20',
             'address' => 'nullable|string|max:500',
         ]);
@@ -104,8 +106,8 @@ class SupplierController extends Controller
                     'email' => $supplier->email,
                     'contact_person' => $supplier->contact_person,
                     'phone' => $supplier->phone,
-                    'address' => $supplier->address
-                ]
+                    'address' => $supplier->address,
+                ],
             ], 200);
         }
 
@@ -113,12 +115,11 @@ class SupplierController extends Controller
         return redirect()->route('manager.suppliers')->with('success', 'Supplier updated successfully.');
     }
 
-
     public function delete_supplier($id)
     {
         $manager = Auth::user();
         $businessName = $manager->business_name;
-        
+
         // ✅ SECURITY: Verify supplier belongs to manager's business
         $supplier = Supplier::where('business_name', $businessName)
             ->findOrFail($id);
@@ -128,7 +129,7 @@ class SupplierController extends Controller
         if (request()->expectsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Supplier deleted successfully'
+                'message' => 'Supplier deleted successfully',
             ], 200);
         }
 

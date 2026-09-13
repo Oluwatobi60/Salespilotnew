@@ -31,7 +31,7 @@ Inventory Valuation
                     @else
                       <h4 class="card-title">Inventory Evaluation Report</h4>
                       <p class="card-description">Current inventory value and stock levels.</p>
-                      <form class="row g-2 align-items-center mb-4" id="inventoryFilterForm" style="margin-bottom: 1.5rem !important;">
+                      <form class="row g-2 align-items-center mb-4" id="inventoryFilterForm" method="GET" action="{{ route('manager.valuation_report') }}" style="margin-bottom: 1.5rem !important;">
                         <div class="col-md-4 col-12">
                           <input type="text" class="form-control form-control-sm" id="searchInput" placeholder="Search Item Name or Category">
                         </div>
@@ -47,6 +47,18 @@ Inventory Valuation
                             @endif
                           </select>
                         </div>
+                        @if(isset($allBranches) && $allBranches->count() > 0)
+                        <div class="col-md-3 col-12">
+                          <select class="form-select form-select-sm" name="branch" onchange="this.form.submit()">
+                            <option value="all">All Branches (Main & Branch Stock)</option>
+                            @foreach($allBranches as $branch)
+                                <option value="{{ $branch->id }}" {{ request('branch') == $branch->id ? 'selected' : '' }}>
+                                  {{ $branch->branch_name }}
+                                </option>
+                            @endforeach
+                          </select>
+                        </div>
+                        @endif
                       </form>
                       <div class="row mb-4">
                         <div class="col-md-3 col-6 mb-2">

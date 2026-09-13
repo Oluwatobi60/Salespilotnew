@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Manager;
 
 use App\Http\Controllers\Controller;
-use App\Models\BranchInventory;
 use App\Models\Branch\Branch;
+use App\Models\BranchInventory;
+use App\Models\ProductVariant;
 use App\Models\StandardItem;
 use App\Models\VariantItem;
-use App\Models\ProductVariant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -23,7 +23,7 @@ class BranchInventoryController extends Controller
         $user = Auth::user();
 
         // Only business creator can access
-        if (!$user->isBusinessCreator()) {
+        if (! $user->isBusinessCreator()) {
             return redirect()->route('manager.dashboard')
                 ->with('error', 'Only business creator can manage inventory allocation');
         }
@@ -45,7 +45,7 @@ class BranchInventoryController extends Controller
 
         // Get all variant items with their variants
         $variantItems = VariantItem::where('business_name', $businessName)
-            ->with(['variants' => function($query) {
+            ->with(['variants' => function ($query) {
                 $query->where('sell_item', true);
             }, 'supplier', 'unit'])
             ->get();
@@ -71,7 +71,7 @@ class BranchInventoryController extends Controller
         $inventory = BranchInventory::where('branch_id', $branchId)
             ->with('item')
             ->get()
-            ->map(function($item) {
+            ->map(function ($item) {
                 $itemDetails = null;
                 if ($item->item_type === 'standard') {
                     $itemDetails = StandardItem::find($item->item_id);
@@ -96,7 +96,7 @@ class BranchInventoryController extends Controller
         return response()->json([
             'success' => true,
             'branch' => $branch,
-            'inventory' => $inventory
+            'inventory' => $inventory,
         ]);
     }
 
@@ -109,10 +109,10 @@ class BranchInventoryController extends Controller
         $user = Auth::user();
 
         // Only business creator can allocate
-        if (!$user->isBusinessCreator()) {
+        if (! $user->isBusinessCreator()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Only business creator can allocate inventory'
+                'message' => 'Only business creator can allocate inventory',
             ], 403);
         }
 
@@ -122,7 +122,7 @@ class BranchInventoryController extends Controller
             'item_type' => 'required|in:standard,variant',
             'quantity' => 'required|numeric|min:0.01',
             'low_stock_threshold' => 'nullable|numeric|min:0',
-            'notes' => 'nullable|string|max:500'
+            'notes' => 'nullable|string|max:500',
         ]);
 
         try {
@@ -144,7 +144,7 @@ class BranchInventoryController extends Controller
                 if ($item->current_stock < $validated['quantity']) {
                     return response()->json([
                         'success' => false,
-                        'message' => "Insufficient stock. Available: {$item->current_stock} {$unitName}"
+                        'message' => "Insufficient stock. Available: {$item->current_stock} {$unitName}",
                     ], 400);
                 }
 
@@ -153,7 +153,7 @@ class BranchInventoryController extends Controller
                 $item->save();
             } else {
                 $item = ProductVariant::where('id', $validated['item_id'])
-                    ->whereHas('variantItem', function($query) use ($user) {
+                    ->whereHas('variantItem', function ($query) use ($user) {
                         $query->where('business_name', $user->business_name);
                     })
                     ->firstOrFail();
@@ -163,7 +163,7 @@ class BranchInventoryController extends Controller
                 if ($availableStock < $validated['quantity']) {
                     return response()->json([
                         'success' => false,
-                        'message' => "Insufficient stock. Available: {$availableStock}"
+                        'message' => "Insufficient stock. Available: {$availableStock}",
                     ], 400);
                 }
 
@@ -202,7 +202,7 @@ class BranchInventoryController extends Controller
                     'low_stock_threshold' => $validated['low_stock_threshold'] ?? null,
                     'allocated_by' => $user->id,
                     'allocated_at' => now(),
-                    'notes' => $validated['notes'] ?? null
+                    'notes' => $validated['notes'] ?? null,
                 ]);
             }
 
@@ -215,13 +215,13 @@ class BranchInventoryController extends Controller
                     'branch' => $branch->branch_name,
                     'item_type' => $validated['item_type'],
                     'item_id' => $validated['item_id'],
-                    'quantity' => $validated['quantity']
+                    'quantity' => $validated['quantity'],
                 ])
             );
 
             return response()->json([
                 'success' => true,
-                'message' => 'Inventory allocated successfully'
+                'message' => 'Inventory allocated successfully',
             ]);
 
         } catch (\Exception $e) {
@@ -229,7 +229,7 @@ class BranchInventoryController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to allocate inventory: ' . $e->getMessage()
+                'message' => 'Failed to allocate inventory: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -242,20 +242,20 @@ class BranchInventoryController extends Controller
         /** @var \App\Models\User $user */
         $user = Auth::user();
 
-        if (!$user->isBusinessCreator()) {
+        if (! $user->isBusinessCreator()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Only business creator can transfer inventory'
+                'message' => 'Only business creator can transfer inventory',
             ], 403);
         }
 
         $validated = $request->validate([
-            'from_branch_id'   => 'required|exists:branches,id|different:to_branch_id',
-            'to_branch_id'     => 'required|exists:branches,id',
-            'item_id'          => 'required|integer',
-            'item_type'        => 'required|in:standard,variant',
-            'quantity'         => 'required|numeric|min:0.01',
-            'notes'            => 'nullable|string|max:500',
+            'from_branch_id' => 'required|exists:branches,id|different:to_branch_id',
+            'to_branch_id' => 'required|exists:branches,id',
+            'item_id' => 'required|integer',
+            'item_type' => 'required|in:standard,variant',
+            'quantity' => 'required|numeric|min:0.01',
+            'notes' => 'nullable|string|max:500',
         ]);
 
         try {
@@ -279,22 +279,22 @@ class BranchInventoryController extends Controller
                 ->where('business_name', $businessName)
                 ->first();
 
-            if (!$sourceInv) {
+            if (! $sourceInv) {
                 return response()->json([
                     'success' => false,
-                    'message' => "This item has no inventory in {$fromBranch->branch_name}."
+                    'message' => "This item has no inventory in {$fromBranch->branch_name}.",
                 ], 400);
             }
 
             if ($sourceInv->current_quantity < $validated['quantity']) {
                 return response()->json([
                     'success' => false,
-                    'message' => "Insufficient stock in {$fromBranch->branch_name}. Available: {$sourceInv->current_quantity}"
+                    'message' => "Insufficient stock in {$fromBranch->branch_name}. Available: {$sourceInv->current_quantity}",
                 ], 400);
             }
 
             // Deduct from source branch
-            $sourceInv->current_quantity  -= $validated['quantity'];
+            $sourceInv->current_quantity -= $validated['quantity'];
             $sourceInv->allocated_quantity -= $validated['quantity'];
             if ($sourceInv->allocated_quantity < 0) {
                 $sourceInv->allocated_quantity = 0;
@@ -309,7 +309,7 @@ class BranchInventoryController extends Controller
                 ->first();
 
             if ($destInv) {
-                $destInv->current_quantity  += $validated['quantity'];
+                $destInv->current_quantity += $validated['quantity'];
                 $destInv->allocated_quantity += $validated['quantity'];
                 if (isset($validated['notes'])) {
                     $destInv->notes = $validated['notes'];
@@ -317,16 +317,16 @@ class BranchInventoryController extends Controller
                 $destInv->save();
             } else {
                 BranchInventory::create([
-                    'branch_id'          => $validated['to_branch_id'],
-                    'business_name'      => $businessName,
-                    'item_id'            => $validated['item_id'],
-                    'item_type'          => $validated['item_type'],
+                    'branch_id' => $validated['to_branch_id'],
+                    'business_name' => $businessName,
+                    'item_id' => $validated['item_id'],
+                    'item_type' => $validated['item_type'],
                     'allocated_quantity' => $validated['quantity'],
-                    'current_quantity'   => $validated['quantity'],
-                    'sold_quantity'      => 0,
-                    'allocated_by'       => $user->id,
-                    'allocated_at'       => now(),
-                    'notes'              => $validated['notes'] ?? null,
+                    'current_quantity' => $validated['quantity'],
+                    'sold_quantity' => 0,
+                    'allocated_by' => $user->id,
+                    'allocated_at' => now(),
+                    'notes' => $validated['notes'] ?? null,
                 ]);
             }
 
@@ -336,16 +336,16 @@ class BranchInventoryController extends Controller
                 'Inventory transferred between branches',
                 json_encode([
                     'from_branch' => $fromBranch->branch_name,
-                    'to_branch'   => $toBranch->branch_name,
-                    'item_type'   => $validated['item_type'],
-                    'item_id'     => $validated['item_id'],
-                    'quantity'    => $validated['quantity'],
+                    'to_branch' => $toBranch->branch_name,
+                    'item_type' => $validated['item_type'],
+                    'item_id' => $validated['item_id'],
+                    'quantity' => $validated['quantity'],
                 ])
             );
 
             return response()->json([
                 'success' => true,
-                'message' => "Successfully transferred {$validated['quantity']} unit(s) from {$fromBranch->branch_name} to {$toBranch->branch_name}."
+                'message' => "Successfully transferred {$validated['quantity']} unit(s) from {$fromBranch->branch_name} to {$toBranch->branch_name}.",
             ]);
 
         } catch (\Exception $e) {
@@ -353,7 +353,7 @@ class BranchInventoryController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Transfer failed: ' . $e->getMessage()
+                'message' => 'Transfer failed: '.$e->getMessage(),
             ], 500);
         }
     }

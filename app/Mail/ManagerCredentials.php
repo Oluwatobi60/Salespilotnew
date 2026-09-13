@@ -2,18 +2,21 @@
 
 namespace App\Mail;
 
+use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
-use App\Models\User;
 
 class ManagerCredentials extends Mailable
 {
     use Queueable, SerializesModels;
 
     public $manager;
+
     public $password;
+
     public $businessName;
+
     public $addedBy;
 
     public function __construct(User $manager, string $password, ?string $businessName = null, ?string $addedBy = null)
@@ -32,7 +35,7 @@ class ManagerCredentials extends Mailable
                 'user' => $this->manager,
                 'password' => $this->password,
                 'businessName' => $this->businessName,
-                'managerName' => $this->manager->first_name . ' ' . $this->manager->surname,
+                'managerName' => $this->manager->first_name.' '.$this->manager->surname,
             ]);
     }
 }

@@ -1,9 +1,8 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -16,7 +15,7 @@ return new class extends Migration
         if (Schema::hasTable('app_settings')) {
             // Check if key already exists
             $exists = DB::table('app_settings')->where('key', 'gemini_api_key')->exists();
-            if (!$exists) {
+            if (! $exists) {
                 DB::table('app_settings')->insert([
                     'key' => 'gemini_api_key',
                     'value' => '',

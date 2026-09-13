@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Carbon\Carbon;
 
 class UserSubscription extends Model
 {
@@ -104,6 +104,7 @@ class UserSubscription extends Model
         if ($this->isExpired()) {
             return 0;
         }
+
         return Carbon::today()->diffInDays($this->end_date);
     }
 
@@ -113,7 +114,7 @@ class UserSubscription extends Model
     public function scopeActive($query)
     {
         return $query->where('status', 'active')
-                    ->where('end_date', '>=', Carbon::today());
+            ->where('end_date', '>=', Carbon::today());
     }
 
     /**
@@ -123,10 +124,10 @@ class UserSubscription extends Model
     {
         return $query->where(function ($q) {
             $q->where('status', 'expired')
-              ->orWhere(function ($subQ) {
-                  $subQ->where('status', 'active')
-                       ->where('end_date', '<', Carbon::today());
-              });
+                ->orWhere(function ($subQ) {
+                    $subQ->where('status', 'active')
+                        ->where('end_date', '<', Carbon::today());
+                });
         });
     }
 }
