@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Your SalesPilot Signup Token</title>
+    <title>Your VigCore Signup Token</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -66,13 +66,13 @@
 </head>
 <body>
     <div class="header">
-        <h1>Welcome to SalesPilot!</h1>
+        <h1>Welcome to VigCore!</h1>
     </div>
 
     <div class="content">
         <p>Hello,</p>
 
-        <p>Thank you for your interest in SalesPilot! We're excited to have you join us.</p>
+        <p>Thank you for your interest in VigCore! We're excited to have you join us.</p>
 
         <p>Your signup verification token has been generated. Please use this token to complete your registration:</p>
 
@@ -93,11 +93,11 @@
 
         <p>If you didn't request this token, please ignore this email.</p>
 
-        <p>Best regards,<br>The SalesPilot Team</p>
+        <p>Best regards,<br>The VigCore Team</p>
     </div>
 
     <div class="footer">
-        <p>&copy; {{ date('Y') }} SalesPilot. All rights reserved.</p>
+        <p>&copy; {{ date('Y') }} VigCore. All rights reserved.</p>
         <p>This is an automated email. Please do not reply to this message.</p>
     </div>
 </body>

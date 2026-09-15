@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 namespace App\Http\Controllers\Manager;
 
@@ -55,7 +55,7 @@ class AIInventoryController extends Controller
             $itemName = $request->input('item_name');
             $description = $request->input('description', '');
 
-            $prompt = "You are an AI assistant for a retail POS and inventory management system named SalesPilot.\n"
+            $prompt = "You are an AI assistant for a retail POS and inventory management system named VigCore.\n"
                     ."Given a product name: \"{$itemName}\" and description: \"{$description}\".\n"
                     ."Here is a list of available categories with their IDs: {$categoriesJson}.\n"
                     ."Determine which of these categories fits the product best.\n"
@@ -114,7 +114,7 @@ class AIInventoryController extends Controller
                 }
             }
 
-            $prompt = "You are an expert sales copywriter for a POS and inventory system named SalesPilot.\n"
+            $prompt = "You are an expert sales copywriter for a POS and inventory system named VigCore.\n"
                     ."Write an engaging, premium, and SEO-friendly product description for the following product:\n"
                     ."Product Name: \"{$itemName}\"\n"
                     ."Product Category: \"{$categoryName}\"\n"
@@ -164,7 +164,7 @@ class AIInventoryController extends Controller
                 }
             }
 
-            $prompt = "You are a retail pricing strategist assistant for SalesPilot.\n"
+            $prompt = "You are a retail pricing strategist assistant for VigCore.\n"
                     ."Product Name: \"{$itemName}\"\n"
                     ."Cost Price (what the business paid): {$costPrice}\n"
                     ."Category: \"{$categoryName}\"\n\n"

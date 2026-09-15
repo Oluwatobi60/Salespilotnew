@@ -433,7 +433,9 @@ Welcome to {{ app_name() }}
 		<footer class="footer">
 			<div class="footer-content">
 				<div class="footer-section">
-					<h3>{{ app_name() }}</h3>
+					<h3>
+                        <img src="{{ app_logo() }}" alt="{{ app_name() }}" style="max-height: 80px; height: auto;">
+                    </h3>
 					<p>{{ setting('app_tagline', 'Empowering businesses with modern inventory and POS solutions.') }}</p>
 					<div class="social-links">
 						<a href="#"><i class="fa-brands fa-facebook-f"></i></a>

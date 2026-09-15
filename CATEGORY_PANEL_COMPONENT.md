@@ -1,4 +1,4 @@
-# Category Panel Component
+﻿# Category Panel Component
 
 A reusable component for adding new categories on-the-fly in Laravel Blade templates.
 
@@ -258,4 +258,4 @@ Modify the `handleSuccess` method in the component file to customize behavior af
 
 ## License
 
-Part of SalesPilot Laravel Application
+Part of VigCore Laravel Application

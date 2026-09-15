@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -134,7 +134,7 @@
 
                             <p style="color: #666; font-size: 14px; line-height: 1.6; margin: 25px 0 0 0;">
                                 If you have any questions or need assistance, feel free to contact our support team at
-                                <a href="mailto:support@salespilot.com" style="color: #4CAF50; text-decoration: none;">support@salespilot.com</a>
+                                <a href="mailto:support@vigcore.com" style="color: #4CAF50; text-decoration: none;">support@vigcore.com</a>
                             </p>
                         </td>
                     </tr>
@@ -146,7 +146,7 @@
                                 This is an automated email. Please do not reply to this message.
                             </p>
                             <p style="color: #999; font-size: 12px; margin: 0;">
-                                &copy; {{ date('Y') }} SalesPilot. All rights reserved.
+                                &copy; {{ date('Y') }} VigCore. All rights reserved.
                             </p>
                         </td>
                     </tr>

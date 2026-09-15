@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 namespace App\Mail;
 
@@ -33,7 +33,7 @@ class SubscriptionActivated extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Welcome to SalesPilot - Subscription Activated!',
+            subject: 'Welcome to VigCore - Subscription Activated!',
         );
     }
 

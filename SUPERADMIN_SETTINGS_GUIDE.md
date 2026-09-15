@@ -1,8 +1,8 @@
-# Superadmin Settings & Control Panel Documentation
+﻿# Superadmin Settings & Control Panel Documentation
 
 ## Overview
 
-The Superadmin Settings & Control Panel provides a centralized, widget-based dashboard for managing all application configurations without touching source code. This system allows superadmins to dynamically control every aspect of the SalesPilot application.
+The Superadmin Settings & Control Panel provides a centralized, widget-based dashboard for managing all application configurations without touching source code. This system allows superadmins to dynamically control every aspect of the VigCore application.
 
 ---
 
@@ -64,9 +64,9 @@ https://your-domain.com/superadmin/settings
 
 | Setting | Type | Description | Example |
 |---------|------|-------------|---------|
-| Application Name | Text | Your app's name | SalesPilot |
+| Application Name | Text | Your app's name | VigCore |
 | Application Tagline | Text | Short tagline | Smart Business Management |
-| Support Email | Email | Customer support email | support@salespilot.com |
+| Support Email | Email | Customer support email | support@vigcore.com |
 | Support Phone | Phone | Customer support phone | +234 800 000 0000 |
 | Default Timezone | Text | Application timezone | Africa/Lagos |
 | Maintenance Mode | Boolean | Put app in maintenance | Enabled/Disabled |
@@ -85,11 +85,11 @@ https://your-domain.com/superadmin/settings
 | Mail Driver | Text | Email service | smtp |
 | SMTP Host | Text | Mail server address | smtp.gmail.com |
 | SMTP Port | Number | Mail server port | 587 |
-| SMTP Username | Text | Auth username | noreply@salespilot.com |
+| SMTP Username | Text | Auth username | noreply@vigcore.com |
 | SMTP Password | Password | Auth password | ••••••••••••• |
 | Mail Encryption | Text | Encryption type | tls |
-| From Email Address | Email | Default sender email | noreply@salespilot.com |
-| From Name | Text | Default sender name | SalesPilot |
+| From Email Address | Email | Default sender email | noreply@vigcore.com |
+| From Name | Text | Default sender name | VigCore |
 
 **Impact**: Controls all email sent from the application
 
@@ -109,7 +109,7 @@ https://your-domain.com/superadmin/settings
 | Enable Bank Transfer | Boolean | Accept bank transfers | Enabled/Disabled |
 | Bank Name | Text | Your bank name | GTBank |
 | Account Number | Text | Bank account number | 0123456789 |
-| Account Name | Text | Account holder name | SalesPilot Technologies |
+| Account Name | Text | Account holder name | VigCore Technologies |
 | Currency | Text | Currency code | NGN |
 | Currency Symbol | Text | Currency symbol | ₦ |
 
@@ -141,11 +141,11 @@ https://your-domain.com/superadmin/settings
 
 | Setting | Type | Description | Example |
 |---------|------|-------------|---------|
-| Application Logo | File | Main logo (upload) | salespilot-logo.png |
+| Application Logo | File | Main logo (upload) | vigcore-logo.png |
 | Favicon | File | Browser icon (upload) | favicon.ico |
 | Primary Color | Color | Main brand color | #667eea |
 | Secondary Color | Color | Secondary brand color | #764ba2 |
-| Footer Text | Text | Footer copyright | © 2026 SalesPilot |
+| Footer Text | Text | Footer copyright | © 2026 VigCore |
 
 **Impact**: Changes branding, colors, and visual identity
 
@@ -256,7 +256,7 @@ The system provides convenient helper functions for accessing settings:
 
 ```php
 // Get setting value with default
-$appName = setting('app_name', 'SalesPilot');
+$appName = setting('app_name', 'VigCore');
 $supportEmail = setting('support_email');
 ```
 
@@ -404,7 +404,7 @@ AppSetting::clearCache();
 1. **Run Migration**
 
 ```bash
-cd /path/to/salespilot
+cd /path/to/vigcore
 php artisan migrate
 ```
 
@@ -684,4 +684,4 @@ For issues or questions:
 
 ---
 
-**Built with ❤️ for SalesPilot**
+**Built with ❤️ for VigCore**

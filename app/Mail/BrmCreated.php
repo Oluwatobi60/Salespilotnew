@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 namespace App\Mail;
 
@@ -32,7 +32,7 @@ class BrmCreated extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Welcome to SalesPilot - Your BRM Account Credentials',
+            subject: 'Welcome to VigCore - Your BRM Account Credentials',
         );
     }
 

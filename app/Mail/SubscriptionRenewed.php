@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 namespace App\Mail;
 
@@ -28,7 +28,7 @@ class SubscriptionRenewed extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Your SalesPilot Subscription Has Been Auto-Renewed',
+            subject: 'Your VigCore Subscription Has Been Auto-Renewed',
         );
     }
 

@@ -1,4 +1,4 @@
-
+﻿
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -230,9 +230,9 @@
 <body>
     <div class="receipt-container">
         <div class="receipt-header">
-            <img src="{{ app_logo() }}" alt="SalesPilot Logo" class="receipt-logo">
+            <img src="{{ app_logo() }}" alt="VigCore Logo" class="receipt-logo">
             <h4><i class="bi bi-receipt"></i> Sales Receipt</h4>
-            <div class="business-name">SalesPilot Inventory</div>
+            <div class="business-name">VigCore Inventory</div>
         </div>
 
         <div class="receipt-body">

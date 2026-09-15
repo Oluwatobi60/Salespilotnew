@@ -1,4 +1,4 @@
-@extends('manager.layouts.layout')
+﻿@extends('manager.layouts.layout')
 @section('manager_page_title')
 Sell Product
 @endsection
@@ -389,7 +389,7 @@ Sell Product
       <div class="receipt-container">
         <div class="receipt-header">
           <h2><i class="bi bi-receipt"></i> Receipt</h2>
-          <div class="business-name">SalesPilot Inventory</div>
+          <div class="business-name">VigCore Inventory</div>
           <div class="receipt-date" id="receiptDate"></div>
         </div>
 

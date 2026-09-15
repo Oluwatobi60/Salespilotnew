@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 /**
  * Settings Helper Functions
@@ -59,7 +59,7 @@ if (! function_exists('app_name')) {
      */
     function app_name(): string
     {
-        return setting('app_name', config('app.name', 'SalesPilot'));
+        return setting('app_name', config('app.name', 'VigCore'));
     }
 }
 
@@ -71,7 +71,7 @@ if (! function_exists('app_logo')) {
     {
         $logo = setting('logo_url');
 
-        return $logo ? asset('storage/'.$logo) : asset('manager_asset/images/salespilot logo1.png');
+        return $logo ? asset('storage/'.$logo) : asset('manager_asset/images/vigcore logo1.png');
     }
 }
 
@@ -103,7 +103,7 @@ if (! function_exists('support_email')) {
      */
     function support_email(): string
     {
-        return setting('support_email', 'support@salespilot.com');
+        return setting('support_email', 'support@vigcore.com');
     }
 }
 

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -19,7 +19,7 @@
                             🎉 Account Created!
                         </h1>
                         <p style="color:rgba(255,255,255,0.9);margin:10px 0 0;font-size:15px;">
-                            One last step — set your password to access SalesPilot
+                            One last step — set your password to access VigCore
                         </p>
                     </td>
                 </tr>
@@ -31,7 +31,7 @@
                             Hello <strong>{{ $user->first_name }} {{ $user->surname }}</strong>,
                         </p>
                         <p style="color:#555;font-size:15px;line-height:1.6;margin:0 0 24px;">
-                            Your SalesPilot account has been created and your subscription is active. 
+                            Your VigCore account has been created and your subscription is active. 
                             Click the button below to create your password and gain access to your account.
                         </p>
 
@@ -72,7 +72,7 @@
                 <tr>
                     <td style="background-color:#f9f9f9;padding:20px 30px;text-align:center;border-top:1px solid #eee;">
                         <p style="color:#999;font-size:12px;margin:0;">
-                            © {{ date('Y') }} SalesPilot. All rights reserved.<br>
+                            © {{ date('Y') }} VigCore. All rights reserved.<br>
                             If you didn't create this account, please ignore this email.
                         </p>
                     </td>

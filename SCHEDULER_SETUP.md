@@ -1,4 +1,4 @@
-# Laravel Scheduler Setup for Subscription Expiry
+﻿# Laravel Scheduler Setup for Subscription Expiry
 
 The system now automatically checks and expires subscriptions. To enable this, you need to set up the Laravel scheduler.
 
@@ -17,14 +17,14 @@ The system now automatically checks and expires subscriptions. To enable this, y
    - **Trigger**: Daily at midnight (or every minute for testing)
    - **Action**: Start a program
    - **Program**: `php`
-   - **Arguments**: `C:\Users\TOBESTIC\laravel-projects\salespilot\artisan schedule:run`
-   - **Start in**: `C:\Users\TOBESTIC\laravel-projects\salespilot`
+   - **Arguments**: `C:\Users\TOBESTIC\laravel-projects\vigcore\artisan schedule:run`
+   - **Start in**: `C:\Users\TOBESTIC\laravel-projects\vigcore`
 
 ### For Linux/Production Server
 
 Add this cron entry:
 ```bash
-* * * * * cd /path/to/salespilot && php artisan schedule:run >> /dev/null 2>&1
+* * * * * cd /path/to/vigcore && php artisan schedule:run >> /dev/null 2>&1
 ```
 
 ## Manual Testing
@@ -44,5 +44,5 @@ php artisan subscriptions:check-expired
 
 - User is logged out automatically
 - Status changes from 'active' to 'expired' in database
-- User sees error message: "Your subscription has expired. Please renew to continue using SalesPilot."
+- User sees error message: "Your subscription has expired. Please renew to continue using VigCore."
 - User is redirected to login page with option to view plans

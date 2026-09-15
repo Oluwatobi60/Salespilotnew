@@ -1,4 +1,4 @@
-# Dynamic Settings - Frontend Integration Complete ✅
+﻿# Dynamic Settings - Frontend Integration Complete ✅
 
 ## What Was Fixed
 
@@ -47,7 +47,7 @@ Your settings were not reflecting on the frontend because the views had **hardco
 
 ### Step 2: Change General Settings
 In the **General Settings** widget, try changing:
-- **App Name**: Change from "SalesPilot" to "MyBusiness Pro"
+- **App Name**: Change from "VigCore" to "MyBusiness Pro"
 - **App Tagline**: Change to "Your Business, Your Way"
 - **Support Email**: Change to your email
 - **Support Phone**: Change to your phone
@@ -78,8 +78,8 @@ Try changing:
 
 ### Before (Hardcoded)
 ```blade
-<h1>Welcome to SalesPilot</h1>
-<p>support@salespilot.com</p>
+<h1>Welcome to VigCore</h1>
+<p>support@vigcore.com</p>
 ```
 
 ### After (Dynamic)

@@ -1,4 +1,4 @@
-@extends('manager.layouts.layout')
+﻿@extends('manager.layouts.layout')
 @section('manager_page_title')
 System Preferences
 @endsection
@@ -444,7 +444,7 @@ System Preferences
                   <i class="bi bi-info-circle text-primary me-3" style="font-size: 1.5rem;"></i>
                   <div>
                     <strong class="d-block mb-1">Need help choosing?</strong>
-                    <p class="mb-0 text-muted">Contact our support team at <a href="mailto:support@salespilot.com">support@salespilot.com</a> or call +234 800 000 0000 for personalized assistance.</p>
+                    <p class="mb-0 text-muted">Contact our support team at <a href="mailto:support@vigcore.com">support@vigcore.com</a> or call +234 800 000 0000 for personalized assistance.</p>
                   </div>
                 </div>
 

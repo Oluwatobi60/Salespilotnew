@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -26,9 +26,9 @@ return new class extends Migration
         // Insert default settings
         $defaultSettings = [
             // General Settings
-            ['key' => 'app_name', 'value' => 'SalesPilot', 'type' => 'text', 'group' => 'general', 'label' => 'Application Name', 'description' => 'The name of your application'],
+            ['key' => 'app_name', 'value' => 'VigCore', 'type' => 'text', 'group' => 'general', 'label' => 'Application Name', 'description' => 'The name of your application'],
             ['key' => 'app_tagline', 'value' => 'Smart Business Management', 'type' => 'text', 'group' => 'general', 'label' => 'Application Tagline', 'description' => 'Short tagline for the application'],
-            ['key' => 'support_email', 'value' => 'support@salespilot.com', 'type' => 'text', 'group' => 'general', 'label' => 'Support Email', 'description' => 'Email address for customer support'],
+            ['key' => 'support_email', 'value' => 'support@vigcore.com', 'type' => 'text', 'group' => 'general', 'label' => 'Support Email', 'description' => 'Email address for customer support'],
             ['key' => 'support_phone', 'value' => '+234 800 000 0000', 'type' => 'text', 'group' => 'general', 'label' => 'Support Phone', 'description' => 'Phone number for customer support'],
             ['key' => 'timezone', 'value' => 'Africa/Lagos', 'type' => 'text', 'group' => 'general', 'label' => 'Default Timezone', 'description' => 'Application timezone'],
             ['key' => 'maintenance_mode', 'value' => '0', 'type' => 'boolean', 'group' => 'general', 'label' => 'Maintenance Mode', 'description' => 'Enable to put the application in maintenance mode'],
@@ -41,8 +41,8 @@ return new class extends Migration
             ['key' => 'mail_username', 'value' => '', 'type' => 'text', 'group' => 'email', 'label' => 'SMTP Username', 'description' => 'SMTP authentication username'],
             ['key' => 'mail_password', 'value' => '', 'type' => 'password', 'group' => 'email', 'label' => 'SMTP Password', 'description' => 'SMTP authentication password'],
             ['key' => 'mail_encryption', 'value' => 'tls', 'type' => 'text', 'group' => 'email', 'label' => 'Mail Encryption', 'description' => 'Email encryption (tls, ssl, or null)'],
-            ['key' => 'mail_from_address', 'value' => 'noreply@salespilot.com', 'type' => 'text', 'group' => 'email', 'label' => 'From Email Address', 'description' => 'Default sender email address'],
-            ['key' => 'mail_from_name', 'value' => 'SalesPilot', 'type' => 'text', 'group' => 'email', 'label' => 'From Name', 'description' => 'Default sender name'],
+            ['key' => 'mail_from_address', 'value' => 'noreply@vigcore.com', 'type' => 'text', 'group' => 'email', 'label' => 'From Email Address', 'description' => 'Default sender email address'],
+            ['key' => 'mail_from_name', 'value' => 'VigCore', 'type' => 'text', 'group' => 'email', 'label' => 'From Name', 'description' => 'Default sender name'],
 
             // Payment Settings
             ['key' => 'paystack_public_key', 'value' => '', 'type' => 'text', 'group' => 'payment', 'label' => 'Paystack Public Key', 'description' => 'Paystack public API key'],
@@ -51,7 +51,7 @@ return new class extends Migration
             ['key' => 'bank_transfer_enabled', 'value' => '1', 'type' => 'boolean', 'group' => 'payment', 'label' => 'Enable Bank Transfer', 'description' => 'Enable bank transfer payment method'],
             ['key' => 'bank_name', 'value' => 'GTBank', 'type' => 'text', 'group' => 'payment', 'label' => 'Bank Name', 'description' => 'Bank name for transfer payments'],
             ['key' => 'bank_account_number', 'value' => '0123456789', 'type' => 'text', 'group' => 'payment', 'label' => 'Account Number', 'description' => 'Bank account number'],
-            ['key' => 'bank_account_name', 'value' => 'SalesPilot Technologies', 'type' => 'text', 'group' => 'payment', 'label' => 'Account Name', 'description' => 'Bank account name'],
+            ['key' => 'bank_account_name', 'value' => 'VigCore Technologies', 'type' => 'text', 'group' => 'payment', 'label' => 'Account Name', 'description' => 'Bank account name'],
             ['key' => 'currency', 'value' => 'NGN', 'type' => 'text', 'group' => 'payment', 'label' => 'Currency', 'description' => 'Default currency code'],
             ['key' => 'currency_symbol', 'value' => '₦', 'type' => 'text', 'group' => 'payment', 'label' => 'Currency Symbol', 'description' => 'Currency symbol'],
 
@@ -69,7 +69,7 @@ return new class extends Migration
             ['key' => 'favicon_url', 'value' => '', 'type' => 'file', 'group' => 'appearance', 'label' => 'Favicon', 'description' => 'Browser favicon icon'],
             ['key' => 'primary_color', 'value' => '#667eea', 'type' => 'color', 'group' => 'appearance', 'label' => 'Primary Color', 'description' => 'Main brand color'],
             ['key' => 'secondary_color', 'value' => '#764ba2', 'type' => 'color', 'group' => 'appearance', 'label' => 'Secondary Color', 'description' => 'Secondary brand color'],
-            ['key' => 'footer_text', 'value' => '© 2026 SalesPilot. All rights reserved.', 'type' => 'text', 'group' => 'appearance', 'label' => 'Footer Text', 'description' => 'Footer copyright text'],
+            ['key' => 'footer_text', 'value' => '© 2026 VigCore. All rights reserved.', 'type' => 'text', 'group' => 'appearance', 'label' => 'Footer Text', 'description' => 'Footer copyright text'],
 
             // Security Settings
             ['key' => 'password_min_length', 'value' => '8', 'type' => 'number', 'group' => 'security', 'label' => 'Min Password Length', 'description' => 'Minimum password length requirement'],

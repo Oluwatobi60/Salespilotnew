@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 namespace App\Http\Controllers\Welcome;
 
@@ -186,7 +186,7 @@ class SignupController extends Controller
             'expiresIn' => 30,
         ], function ($message) use ($signupRequest) {
             $message->to($signupRequest->email)
-                ->subject('Your SalesPilot Signup Token');
+                ->subject('Your VigCore Signup Token');
         });
     }
 

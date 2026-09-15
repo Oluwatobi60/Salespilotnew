@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 namespace App\Http\Controllers\Auth;
 
@@ -64,6 +64,6 @@ class SetPasswordController extends Controller
         ])->save();
 
         return redirect()->route('login')
-            ->with('success', 'Password created successfully! You can now log in to your SalesPilot account.');
+            ->with('success', 'Password created successfully! You can now log in to your VigCore account.');
     }
 }

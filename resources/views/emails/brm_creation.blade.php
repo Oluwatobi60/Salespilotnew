@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BRM Account Created - SalesPilot</title>
+    <title>BRM Account Created - VigCore</title>
     <style>
         * {
             margin: 0;
@@ -198,7 +198,7 @@
     <div class="container">
         <!-- Header -->
         <div class="header">
-            <h1>🎉 Welcome to SalesPilot</h1>
+            <h1>🎉 Welcome to VigCore</h1>
             <p>Your BRM Account Has Been Created</p>
         </div>
 
@@ -208,7 +208,7 @@
                 Hello <strong>{{ $brm->name }}</strong>,
             </p>
             <p style="margin-bottom: 20px;">
-                Your Business Referral Manager (BRM) account has been successfully created by the SalesPilot administration team. Below are your account details and login credentials.
+                Your Business Referral Manager (BRM) account has been successfully created by the VigCore administration team. Below are your account details and login credentials.
             </p>
 
             <!-- BRM Information -->
@@ -276,15 +276,15 @@
             <!-- Support -->
             <p style="margin-top: 30px; color: #666; font-size: 13px;">
                 If you have any questions or need assistance, please contact our support team at
-                <strong>support@salespilot.com</strong>.
+                <strong>support@vigcore.com</strong>.
             </p>
         </div>
 
         <!-- Footer -->
         <div class="footer">
             <p>This is an automated email. Please do not reply directly to this message.</p>
-            <p>&copy; {{ date('Y') }} SalesPilot. All rights reserved.</p>
-            <p><a href="{{ route('login') }}">Login to SalesPilot</a></p>
+            <p>&copy; {{ date('Y') }} VigCore. All rights reserved.</p>
+            <p><a href="{{ route('login') }}">Login to VigCore</a></p>
         </div>
     </div>
 </body>

@@ -1,6 +1,6 @@
-# Subscription Upgrade Process
+﻿# Subscription Upgrade Process
 
-This document explains how the subscription upgrade system works in SalesPilot.
+This document explains how the subscription upgrade system works in VigCore.
 
 ## Overview
 

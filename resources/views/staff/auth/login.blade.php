@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Staff Login - SalesPilot</title>
+    <title>Staff Login - VigCore</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://unicons.iconscout.com/release/v4.0.0/css/line.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
@@ -26,7 +26,7 @@
             <div class="login-branding">
                 <div class="brand-logo-wrapper">
                     <a href="{{ url('/') }}">
-                        <img src="{{ app_logo() }}" alt="SalesPilot Logo" class="brand-logo-img">
+                        <img src="{{ app_logo() }}" alt="VigCore Logo" class="brand-logo-img">
                     </a>
                 </div>
                 <h1>Staff Portal</h1>
@@ -68,7 +68,7 @@
             <div class="form-wrapper">
                 <div class="form-logo">
                     <a href="{{ url('/') }}">
-                        <img src="{{ app_logo() }}" alt="SalesPilot Logo">
+                        <img src="{{ app_logo() }}" alt="VigCore Logo">
                     </a>
                 </div>
                 <div class="form-header">

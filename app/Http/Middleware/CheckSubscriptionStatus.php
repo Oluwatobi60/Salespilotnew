@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 namespace App\Http\Middleware;
 
@@ -74,7 +74,7 @@ class CheckSubscriptionStatus
 
             // If subscription is expired or missing, redirect to pricing page while keeping session active for renewal
             return redirect()->route('plan_pricing')->withErrors([
-                'email' => 'Your subscription has expired. Please choose a plan to continue using SalesPilot.',
+                'email' => 'Your subscription has expired. Please choose a plan to continue using VigCore.',
             ])->with('redirect_to_plans', true);
         }
 

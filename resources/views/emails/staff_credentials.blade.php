@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -126,7 +126,7 @@
 <body>
     <div class="email-container">
         <div class="header">
-            <h1>🎉 Welcome to SalesPilot!</h1>
+            <h1>🎉 Welcome to VigCore!</h1>
         </div>
 
         <div class="welcome-text">
@@ -200,7 +200,7 @@
         </div>
 
         <div class="footer">
-            <p><strong>SalesPilot</strong> - Your Comprehensive Inventory Management Solution</p>
+            <p><strong>VigCore</strong> - Your Comprehensive Inventory Management Solution</p>
             <p style="color: #999; font-size: 12px;">This is an automated email. Please do not reply to this message.</p>
             <p style="color: #999; font-size: 12px;">If you did not expect this email or believe this is an error, please contact your system administrator.</p>
         </div>

@@ -128,7 +128,11 @@
 @else
 <nav class="navbar" id="navbar">
     <div class="nav-container">
-        <div class="logo">{{ app_name() }}</div>
+        <div class="logo">
+            <a href="{{ url('/') }}">
+                <img src="{{ app_logo() }}" alt="{{ app_name() }}" style="max-height: 80px; height: auto;">
+            </a>
+        </div>
         <button class="mobile-menu-btn" onclick="toggleMenu()">☰</button>
         <ul class="nav-links" id="navLinks">
             <li><a href="#home">Home</a></li>

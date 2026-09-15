@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -113,7 +113,7 @@
 
                             <p style="color: #666; font-size: 14px; line-height: 1.6; margin: 25px 0 0 0; text-align: center;">
                                 Need help? Contact our support team at
-                                <a href="mailto:support@salespilot.com" style="color: #4CAF50; text-decoration: none;">{{ support_email() }}</a>
+                                <a href="mailto:support@vigcore.com" style="color: #4CAF50; text-decoration: none;">{{ support_email() }}</a>
                             </p>
                         </td>
                     </tr>

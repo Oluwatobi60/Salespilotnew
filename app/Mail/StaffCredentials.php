@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 namespace App\Mail;
 
@@ -38,7 +38,7 @@ class StaffCredentials extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Your SalesPilot Staff Account - Login Credentials',
+            subject: 'Your VigCore Staff Account - Login Credentials',
         );
     }
 

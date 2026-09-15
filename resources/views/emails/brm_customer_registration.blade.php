@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
@@ -135,7 +135,7 @@
             </div>
 
             <p>
-                Great news! A new customer has just registered on SalesPilot using your referral code.
+                Great news! A new customer has just registered on VigCore using your referral code.
                 Below are their details:
             </p>
 
@@ -218,10 +218,10 @@
         <!-- Footer -->
         <div class="footer">
             <p>
-                <strong>SalesPilot</strong> - Business Relation Manager Portal
+                <strong>VigCore</strong> - Business Relation Manager Portal
             </p>
             <p>
-                © {{ date('Y') }} SalesPilot. All rights reserved.
+                © {{ date('Y') }} VigCore. All rights reserved.
             </p>
             <p style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #ddd;">
                 This email was sent to you as a Business Relation Manager because a new customer

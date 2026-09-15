@@ -1,6 +1,6 @@
-@extends('layout.layout')
+﻿@extends('layout.layout')
 @section('welcome_page_title')
-Payment - SalesPilot
+Payment - VigCore
 @endsection
 @section('hide_nav_links') 1 @endsection
 @section('brand_bar_step')<span class="sp-brand-step">Step 2 of 3 &mdash; Payment</span>@endsection
@@ -18,7 +18,7 @@ Payment - SalesPilot
     <div class="payment-container">
         <div class="payment-header">
             <h2>Complete Your Payment</h2>
-            <p>You're one step away from accessing SalesPilot's powerful features</p>
+            <p>You're one step away from accessing VigCore's powerful features</p>
         </div>
 
         <div class="payment-grid">
@@ -127,7 +127,7 @@ Payment - SalesPilot
                                     </div>
                                     <div class="bank-detail-row">
                                         <span class="bank-detail-label">Account Name:</span>
-                                        <span class="bank-detail-value">{{ setting('bank_account_name', 'SalesPilot Technologies') }}</span>
+                                        <span class="bank-detail-value">{{ setting('bank_account_name', 'VigCore Technologies') }}</span>
                                     </div>
                                     <div class="bank-detail-row">
                                         <span class="bank-detail-label">Account Number:</span>

@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 namespace App\Mail;
 
@@ -36,7 +36,7 @@ class SubscriptionExpiryReminder extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Subscription Expiry Reminder - SalesPilot',
+            subject: 'Subscription Expiry Reminder - VigCore',
         );
     }
 

@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('brms_page_title') - SalesPilot</title>
+    <title>@yield('brms_page_title') - VigCore</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -33,7 +33,7 @@
       <i class="bi bi-list"></i>
     </button>
     <a class="navbar-brand brand-logo" href="{{ route('brm.dashboard') }}">
-      <img src="{{ app_logo() }}" alt="SalesPilot">
+      <img src="{{ app_logo() }}" alt="VigCore">
     </a>
   </div>
 </div>

@@ -1,4 +1,4 @@
-# Superadmin Settings - Quick Reference
+﻿# Superadmin Settings - Quick Reference
 
 ## ✅ What Was Created
 
@@ -83,7 +83,7 @@ https://your-domain.com/superadmin/settings
 ### In PHP/Controllers
 ```php
 // Get any setting
-$appName = setting('app_name', 'SalesPilot');
+$appName = setting('app_name', 'VigCore');
 
 // Specialized helpers
 $logo = app_logo();
@@ -178,9 +178,9 @@ php artisan up
 | `setting($key, $default)` | mixed | `setting('app_name')` |
 | `settings($group)` | Collection | `settings('email')` |
 | `update_setting($key, $value)` | bool | `update_setting('key', 'val')` |
-| `app_name()` | string | `SalesPilot` |
+| `app_name()` | string | `VigCore` |
 | `app_logo()` | string\|null | `/storage/logos/logo.png` |
-| `support_email()` | string | `support@salespilot.com` |
+| `support_email()` | string | `support@vigcore.com` |
 | `support_phone()` | string | `+234 800 000 0000` |
 | `primary_color()` | string | `#667eea` |
 | `secondary_color()` | string | `#764ba2` |
@@ -297,7 +297,7 @@ php artisan storage:link
 ## 🚀 Next Steps
 
 1. **Access Settings**: `/superadmin/settings`
-2. **Configure App Name**: Update from "SalesPilot"
+2. **Configure App Name**: Update from "VigCore"
 3. **Setup Email**: Configure SMTP settings
 4. **Add Logo**: Upload your logo
 5. **Set Colors**: Choose brand colors
@@ -312,4 +312,4 @@ php artisan storage:link
 **Helper Functions**: 15  
 **Documentation**: Complete  
 
-**Built for SalesPilot** 🚀
+**Built for VigCore** 🚀

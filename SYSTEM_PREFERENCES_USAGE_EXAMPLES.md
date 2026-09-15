@@ -1,4 +1,4 @@
-# System Preferences - Practical Usage Examples
+﻿# System Preferences - Practical Usage Examples
 
 This document demonstrates how to use system preferences throughout your application. All these helper functions and directives are available after implementing the System Preferences feature.
 
@@ -95,7 +95,7 @@ public function systemInfo()
 public function customSettings()
 {
     // Get any setting by key
-    $appName = setting('app_name', 'SalesPilot');
+    $appName = setting('app_name', 'VigCore');
     $supportEmail = setting('support_email', 'support@example.com');
     $maintenanceMode = setting('maintenance_mode', false);
     
@@ -112,7 +112,7 @@ public function customSettings()
 
 ```blade
 <div class="user-info">
-    <h1>Welcome to @setting('app_name', 'SalesPilot')</h1>
+    <h1>Welcome to @setting('app_name', 'VigCore')</h1>
     
     <p>Account created: @formatDate($user->created_at)</p>
     <p>Last login: @formatDatetime($user->last_login_at)</p>

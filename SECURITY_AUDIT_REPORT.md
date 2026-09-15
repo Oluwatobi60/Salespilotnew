@@ -1,7 +1,7 @@
-# 🔒 SalesPilot Security Audit Report
+﻿# 🔒 VigCore Security Audit Report
 **Date:** May 18, 2026  
 **Auditor:** AI Security Analysis  
-**Application:** SalesPilot POS System
+**Application:** VigCore POS System
 
 ---
 

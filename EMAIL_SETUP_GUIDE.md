@@ -1,4 +1,4 @@
-# Email Configuration Guide for SalesPilot
+﻿# Email Configuration Guide for VigCore
 
 ## Current Setup
 The application is configured to use SMTP for sending emails. You need to provide your email credentials.
@@ -14,7 +14,7 @@ The application is configured to use SMTP for sending emails. You need to provid
 1. Go to: https://myaccount.google.com/apppasswords
 2. Select **Mail** as the app
 3. Select **Other (Custom name)** as the device
-4. Enter "SalesPilot" as the name
+4. Enter "VigCore" as the name
 5. Click **Generate**
 6. Copy the 16-character password (no spaces)
 
@@ -28,8 +28,8 @@ MAIL_PORT=587
 MAIL_USERNAME=your-email@gmail.com          # Your Gmail address
 MAIL_PASSWORD=xxxx xxxx xxxx xxxx            # The 16-char app password from Step 2
 MAIL_ENCRYPTION=tls
-MAIL_FROM_ADDRESS="noreply@salespilot.com"   # Can be any email
-MAIL_FROM_NAME="SalesPilot"
+MAIL_FROM_ADDRESS="noreply@vigcore.com"   # Can be any email
+MAIL_FROM_NAME="VigCore"
 ```
 
 ### Step 4: Clear Config Cache
@@ -59,8 +59,8 @@ MAIL_PORT=2525
 MAIL_USERNAME=your-mailtrap-username
 MAIL_PASSWORD=your-mailtrap-password
 MAIL_ENCRYPTION=tls
-MAIL_FROM_ADDRESS="noreply@salespilot.com"
-MAIL_FROM_NAME="SalesPilot"
+MAIL_FROM_ADDRESS="noreply@vigcore.com"
+MAIL_FROM_NAME="VigCore"
 ```
 
 ---
@@ -79,8 +79,8 @@ MAIL_PORT=587
 MAIL_USERNAME=apikey
 MAIL_PASSWORD=your-sendgrid-api-key
 MAIL_ENCRYPTION=tls
-MAIL_FROM_ADDRESS="noreply@salespilot.com"
-MAIL_FROM_NAME="SalesPilot"
+MAIL_FROM_ADDRESS="noreply@vigcore.com"
+MAIL_FROM_NAME="VigCore"
 ```
 
 ---
@@ -95,7 +95,7 @@ php artisan tinker
 
 Then run:
 ```php
-Mail::raw('Test email from SalesPilot', function($message) {
+Mail::raw('Test email from VigCore', function($message) {
     $message->to('your-test-email@gmail.com')
             ->subject('Test Email');
 });

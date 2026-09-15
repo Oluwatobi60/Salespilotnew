@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 namespace App\Mail;
 
@@ -26,7 +26,7 @@ class SetupPassword extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Set Your SalesPilot Password',
+            subject: 'Set Your VigCore Password',
         );
     }
 

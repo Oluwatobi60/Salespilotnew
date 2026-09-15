@@ -1,4 +1,4 @@
-# Supplier Panel Component
+﻿# Supplier Panel Component
 
 ## Overview
 Reusable supplier creation panel component for item forms (standard and variant items).
@@ -217,4 +217,4 @@ Check:
 **1.0.0** - Initial release (February 2026)
 
 ## License
-Part of SalesPilot Laravel application.
+Part of VigCore Laravel application.

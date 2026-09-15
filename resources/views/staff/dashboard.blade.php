@@ -1,4 +1,4 @@
-@extends('staff.layouts.layout')
+﻿@extends('staff.layouts.layout')
 @section('staff_page_title')
 Staff Dashboard
 @endsection
@@ -344,7 +344,7 @@ document.addEventListener('DOMContentLoaded', function() {
       <div class="receipt-container">
         <div class="receipt-header">
           <h2><i class="bi bi-receipt"></i> Receipt</h2>
-          <div class="business-name">SalesPilot Inventory</div>
+          <div class="business-name">VigCore Inventory</div>
           <div class="receipt-date" id="receiptDate"></div>
         </div>
 

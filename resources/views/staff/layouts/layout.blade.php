@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
   <head>
     <!-- Required meta tags -->
@@ -133,7 +133,7 @@
         $staffUser = Auth::guard('staff')->user();
         $staffImg = $staffUser && $staffUser->passport_photo ? (str_starts_with($staffUser->passport_photo, 'uploads/') ? asset($staffUser->passport_photo) : asset('storage/' . $staffUser->passport_photo)) : asset('manager_asset/images/faces/face8.jpg');
         $staffName = $staffUser ? ($staffUser->fullname ?? ($staffUser->surname . ' ' . $staffUser->first_name)) : 'Staff User';
-        $staffEmail = $staffUser ? $staffUser->email : 'staff@salespilot.com';
+        $staffEmail = $staffUser ? $staffUser->email : 'staff@vigcore.com';
       @endphp
       <a class="nav-link dropdown-toggle" id="UserDropdown" href="#" data-bs-toggle="dropdown" aria-expanded="false" role="button" style="cursor: pointer; display: flex; align-items: center; padding: 15px 20px;">
         <img class="img-xs rounded-circle" src="{{ $staffImg }}" alt="Profile image" style="width: 40px; height: 40px; object-fit: cover;">

@@ -1,4 +1,4 @@
-# System Preferences - Global Application Settings
+﻿# System Preferences - Global Application Settings
 
 ## Overview
 The System Preferences feature allows the Superadmin to dynamically configure system-wide settings that automatically apply throughout the entire application. Changes made in the Superadmin panel are immediately reflected across all modules.
@@ -185,7 +185,7 @@ if (!is_allowed_file($file->getClientOriginalName())) {
 
 <!-- Access settings -->
 <p>Currency: @currency</p>
-<p>App: @setting('app_name', 'SalesPilot')</p>
+<p>App: @setting('app_name', 'VigCore')</p>
 
 <!-- Use shared variables -->
 <p>{{ $systemCurrency }}</p>

@@ -1,6 +1,6 @@
-@extends('layout.layout')
+﻿@extends('layout.layout')
 @section('welcome_page_title')
-Get Started - SalesPilot
+Get Started - VigCore
 @endsection
 @section('hide_nav_links', true)
 @section('welcome_page_content')
@@ -15,9 +15,9 @@ Get Started - SalesPilot
     <div class="signup-left">
         <div class="signup-branding">
             <div class="form-logo">
-                    <img src="{{ app_logo() }}" alt="SalesPilot Logo">
+                    <img src="{{ app_logo() }}" alt="VigCore Logo">
             </div>
-            <{{-- h1>SalesPilot</h1> --}}
+            <{{-- h1>VigCore</h1> --}}
             <p>Join thousands of businesses transforming their inventory management and sales operations.</p>
 
             <div class="features-list">

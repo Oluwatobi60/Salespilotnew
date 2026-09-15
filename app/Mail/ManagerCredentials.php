@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 namespace App\Mail;
 
@@ -29,7 +29,7 @@ class ManagerCredentials extends Mailable
 
     public function build()
     {
-        return $this->subject('Your SalesPilot Manager Account - Login Credentials')
+        return $this->subject('Your VigCore Manager Account - Login Credentials')
             ->view('emails.manager_credentials')
             ->with([
                 'user' => $this->manager,

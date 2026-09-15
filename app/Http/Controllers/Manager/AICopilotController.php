@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 namespace App\Http\Controllers\Manager;
 
@@ -160,7 +160,7 @@ class AICopilotController extends Controller
 
             // Formulate Gemini Prompt
             $contextJson = json_encode($context, JSON_PRETTY_PRINT);
-            $prompt = "You are the SalesPilot AI POS Copilot, a helpful voice & text chatbot for store staff and managers.\n"
+            $prompt = "You are the VigCore AI POS Copilot, a helpful voice & text chatbot for store staff and managers.\n"
                     ."Here is the real-time context database details for the business \"{$businessName}\":\n"
                     ."{$contextJson}\n\n"
                     ."The user asked: \"{$query}\"\n\n"

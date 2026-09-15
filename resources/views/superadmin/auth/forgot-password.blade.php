@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Forgot Password - Superadmin - SalesPilot</title>
+    <title>Forgot Password - Superadmin - VigCore</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap" rel="stylesheet">
     <style>
@@ -47,7 +47,7 @@
     <div class="row w-100 justify-content-center">
         <div class="col-md-6 col-lg-5">
             <div class="text-center mb-4">
-                <img src="{{ app_logo() }}" alt="SalesPilot Logo" style="max-width: 160px;">
+                <img src="{{ app_logo() }}" alt="VigCore Logo" style="max-width: 160px;">
                 <h3 class="brand-title mt-3">Superadmin Password Reset</h3>
             </div>
 
