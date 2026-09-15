@@ -1,4 +1,4 @@
-﻿@extends('staff.layouts.layout')
+@extends('staff.layouts.layout')
 @section('staff_page_title')
 Staff Dashboard
 @endsection

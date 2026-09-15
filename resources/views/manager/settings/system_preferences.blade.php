@@ -1,4 +1,4 @@
-﻿@extends('manager.layouts.layout')
+@extends('manager.layouts.layout')
 @section('manager_page_title')
 System Preferences
 @endsection

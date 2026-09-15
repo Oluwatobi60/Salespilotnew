@@ -456,9 +456,9 @@ Route::middleware(['auth:staff', 'throttle:60,1'])->prefix('staff')->group(funct
         Route::post('/add_customer', 'add_customer')->name('staff.add_customer');
         Route::get('/customers_information', 'customers')->name('staff.customers');
         Route::get('/get_customer_details/{id}', 'get_customer_details')->name('staff.customer.details');
-        Route::get('/edit_customer/{id}', 'edit_customer')->name('customer.edit');
-        Route::put('/update_customer/{id}', 'update_customer')->name('customer.update');
-        Route::delete('/delete_customer/{id}', 'delete_customer')->name('customer.delete');
+        Route::get('/edit_customer/{id}', 'edit_customer')->name('staff.customer.edit');
+        Route::put('/update_customer/{id}', 'update_customer')->name('staff.customer.update');
+        Route::delete('/delete_customer/{id}', 'delete_customer')->name('staff.customer.delete');
         Route::get('/print_receipt/{receiptNumber}', 'print_receipt')->name('staff.print_receipt');
         // Add staff route for getting sale items by receipt number
         Route::get('/get_sale_items/{receiptNumber}', 'get_sale_items')->name('staff.get_sale_items');

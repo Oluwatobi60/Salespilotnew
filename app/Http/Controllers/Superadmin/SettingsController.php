@@ -48,8 +48,8 @@ class SettingsController extends Controller
             'settings.*' => 'nullable',
         ]);
 
-        // Get submitted settings array
-        $submittedSettings = $request->input('settings', []);
+        // Get submitted settings array including files
+        $submittedSettings = $request->all()['settings'] ?? [];
 
         // Log the request data for debugging
         Log::info('Settings Update Request', [

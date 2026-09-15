@@ -1,4 +1,4 @@
-﻿@extends('layout.layout')
+@extends('layout.layout')
 @section('welcome_page_title')
 Get Started - VigCore
 @endsection
