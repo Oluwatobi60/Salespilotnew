@@ -50,7 +50,7 @@ class DatabaseBackup extends Command
             // Try mysqldump first
             if ($this->tryMysqldump($filepath, $host, $port, $database, $username, $password)) {
                 $size = $this->formatBytes(File::size($filepath));
-                $this->info('✓ Database backup created successfully using mysqldump!');
+                $this->info('âœ“ Database backup created successfully using mysqldump!');
                 $this->info("Location: {$filepath}");
                 $this->info("Size: {$size}");
                 $this->cleanupOldBackups($backupPath);
@@ -62,7 +62,7 @@ class DatabaseBackup extends Command
             $this->info('mysqldump not available, using Laravel database export...');
             if ($this->exportDatabaseUsingLaravel($filepath)) {
                 $size = $this->formatBytes(File::size($filepath));
-                $this->info('✓ Database backup created successfully!');
+                $this->info('âœ“ Database backup created successfully!');
                 $this->info("Location: {$filepath}");
                 $this->info("Size: {$size}");
                 $this->cleanupOldBackups($backupPath);

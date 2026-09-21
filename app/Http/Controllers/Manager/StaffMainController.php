@@ -398,7 +398,7 @@ class StaffMainController extends Controller
         $manager = Auth::user();
         $businessName = $manager->business_name;
 
-        // ✅ SECURITY: Verify staff belongs to manager's business
+        // âœ… SECURITY: Verify staff belongs to manager's business
         $staff = Staffs::where('business_name', $businessName)
             ->findOrFail($id);
         // Toggle the status between 'active' and 'inactive'

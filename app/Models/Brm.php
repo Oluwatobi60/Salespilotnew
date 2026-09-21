@@ -35,6 +35,7 @@ class Brm extends Model implements Authenticatable
         'phone',
         'address',
         'region',
+        'profile_photo',
         'referral_code',
         'password',
         'notes',

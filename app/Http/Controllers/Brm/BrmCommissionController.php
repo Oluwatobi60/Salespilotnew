@@ -332,7 +332,7 @@ class BrmCommissionController extends Controller
             if ($wallet->balance < $amount) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Insufficient balance. Available: ₦'.number_format($wallet->balance, 2),
+                    'message' => 'Insufficient balance. Available: â‚¦'.number_format($wallet->balance, 2),
                 ], 422);
             }
 

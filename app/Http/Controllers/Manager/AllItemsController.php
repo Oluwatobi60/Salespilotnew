@@ -65,7 +65,7 @@ class AllItemsController extends Controller
                     $q->whereIn('id', $variantIds);
                 });
             } else {
-                // No variant allocations for these branches — return empty
+                // No variant allocations for these branches â€” return empty
                 $variantQuery->whereRaw('1 = 0');
             }
         }
@@ -594,7 +594,7 @@ class AllItemsController extends Controller
                     break;
 
                 case 'variant':
-                    // ✅ SECURITY: Verify variant item belongs to manager's business
+                    // âœ… SECURITY: Verify variant item belongs to manager's business
                     $item = VariantItem::with(['supplier', 'unit', 'variants.pricingTiers'])
                         ->where('business_name', $businessName)
                         ->findOrFail($id);

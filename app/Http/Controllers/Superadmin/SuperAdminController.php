@@ -206,7 +206,7 @@ class SuperAdminController extends Controller
         }
     }
 
-    // ─── BRM ───────────────────────────────────────────────────────────────────
+    // â”€â”€â”€ BRM â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     public function brms(Request $request)
     {
@@ -232,18 +232,27 @@ class SuperAdminController extends Controller
     public function storeBrm(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:brms,email',
-            'phone' => 'nullable|string|max:20',
-            'address' => 'nullable|string|max:255',
-            'region' => 'nullable|string|max:100',
-            'referral_code' => 'nullable|string|max:6|unique:brms,referral_code',
-            'notes' => 'nullable|string|max:1000',
-            'password' => 'required|string|min:8|confirmed',
+            'name'           => 'required|string|max:255',
+            'email'          => 'required|email|unique:brms,email',
+            'phone'          => 'nullable|string|max:20',
+            'address'        => 'nullable|string|max:255',
+            'region'         => 'nullable|string|max:100',
+            'referral_code'  => 'nullable|string|max:6|unique:brms,referral_code',
+            'notes'          => 'nullable|string|max:1000',
+            'password'       => 'required|string|min:8|confirmed',
+            'profile_photo'  => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         // Store the plain password before it gets hashed
         $plainPassword = $validated['password'];
+
+        // Handle profile photo upload
+        if ($request->hasFile('profile_photo')) {
+            $photo = $request->file('profile_photo');
+            $photoName = time().'_'.uniqid().'.'.$photo->extension();
+            $photo->move(public_path('brm_photos'), $photoName);
+            $validated['profile_photo'] = $photoName;
+        }
 
         // Generate unique referral code if not provided
         if (empty($validated['referral_code'])) {
@@ -290,18 +299,32 @@ class SuperAdminController extends Controller
     public function updateBrm(Request $request, Brm $brm)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:brms,email,'.$brm->id,
-            'phone' => 'nullable|string|max:20',
-            'address' => 'nullable|string|max:255',
-            'region' => 'nullable|string|max:100',
-            'notes' => 'nullable|string|max:1000',
-            'password' => 'nullable|string|min:8|confirmed',
+            'name'          => 'required|string|max:255',
+            'email'         => 'required|email|unique:brms,email,'.$brm->id,
+            'phone'         => 'nullable|string|max:20',
+            'address'       => 'nullable|string|max:255',
+            'region'        => 'nullable|string|max:100',
+            'notes'         => 'nullable|string|max:1000',
+            'password'      => 'nullable|string|min:8|confirmed',
+            'profile_photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
-        $data = collect($validated)->except('password')->toArray();
+        $data = collect($validated)->except(['password', 'profile_photo'])->toArray();
+
         if (! empty($validated['password'])) {
             $data['password'] = Hash::make($validated['password']);
+        }
+
+        // Handle profile photo upload
+        if ($request->hasFile('profile_photo')) {
+            // Delete old photo if it exists
+            if ($brm->profile_photo && file_exists(public_path('brm_photos/'.$brm->profile_photo))) {
+                unlink(public_path('brm_photos/'.$brm->profile_photo));
+            }
+            $photo = $request->file('profile_photo');
+            $photoName = time().'_'.uniqid().'.'.$photo->extension();
+            $photo->move(public_path('brm_photos'), $photoName);
+            $data['profile_photo'] = $photoName;
         }
 
         $brm->update($data);

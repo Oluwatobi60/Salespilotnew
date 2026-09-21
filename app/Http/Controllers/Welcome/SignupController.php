@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Welcome;
 use App\Http\Controllers\Controller;
 use App\Mail\SetupPassword;
 use App\Mail\SubscriptionActivated;
+use App\Models\Brm;
 use App\Models\SubscriptionPlan;
 use App\Models\User;
 use App\Models\UserSubscription;
@@ -276,8 +277,17 @@ class SignupController extends Controller
             'pricing' => $pricing,
         ]);
 
-        // If free plan or 7-day trial, activate immediately
+        // If free plan or trial, check for previous usage and activate
         if ($validated['plan'] === 'free' || $pricing['discounted_price'] == 0) {
+            // Check if user already had this free plan
+            $hasUsedFreePlan = UserSubscription::where('user_id', Auth::id())
+                ->where('subscription_plan_id', $plan->id)
+                ->exists();
+
+            if ($hasUsedFreePlan) {
+                return redirect()->back()->with('error', 'You have already used the free trial. Please select a paid plan to continue.');
+            }
+
             return $this->activateFreePlan($plan, $validated['duration']);
         }
 
@@ -319,6 +329,9 @@ class SignupController extends Controller
         // Cancel any existing active subscriptions before creating new one
         $this->cancelExistingSubscriptions(Auth::id());
 
+        // Auto-assign a BRM if the user doesn't already have one
+        $this->assignBrmIfNeeded(Auth::user());
+
         $plan = SubscriptionPlan::find(session('selected_plan'));
         $duration = (int) session('selected_duration');
         $pricing = session('pricing');
@@ -336,8 +349,9 @@ class SignupController extends Controller
             'payment_reference' => $validated['payment_reference'] ?? 'BANK-'.Str::random(10),
         ]);
 
-        // Generate commission for BRM if customer has one and paid amount is > 0
-        if (Auth::user()->brm_id && $subscription->amount_paid > 0) {
+        // Generate commission only if customer came via BRM referral code (not auto-assigned)
+        $currentUser = Auth::user()->fresh();
+        if ($currentUser->brm_id && $currentUser->referral_code && $subscription->amount_paid > 0) {
             \App\Http\Controllers\Brm\BrmCommissionController::generateCommission($subscription);
         }
 
@@ -368,6 +382,9 @@ class SignupController extends Controller
         // Cancel any existing active subscriptions before creating new one
         $this->cancelExistingSubscriptions(Auth::id());
 
+        // Auto-assign a BRM if the user doesn't already have one
+        $this->assignBrmIfNeeded(Auth::user());
+
         $duration = (int) $duration;
 
         $subscription = UserSubscription::create([
@@ -390,7 +407,7 @@ class SignupController extends Controller
         // Send set-password email
         $this->sendPasswordSetupEmail(Auth::user());
 
-        // Log the user out — they must set password before logging in
+        // Log the user out â€” they must set password before logging in
         $userEmail = Auth::user()->email;
         Auth::logout();
         session()->forget(['selected_plan', 'selected_duration', 'pricing']);
@@ -487,15 +504,44 @@ class SignupController extends Controller
         // Cancel any existing active subscriptions before creating new one
         $this->cancelExistingSubscriptions(Auth::id());
 
+        // Auto-assign a BRM if the user doesn't already have one
+        $this->assignBrmIfNeeded(Auth::user());
+
         $plan = SubscriptionPlan::find(session('selected_plan'));
         $duration = (int) session('selected_duration');
         $pricing = session('pricing');
 
         // Verify amount matches
-        $expectedAmount = $pricing['discounted_price'] * 100; // Paystack uses kobo
-        if ($result->data->amount != $expectedAmount) {
+        $expectedAmount = (int) round($pricing['discounted_price'] * 100); // Paystack uses kobo
+        
+        // Paystack adds fees to the total if the customer bears the fee.
+        // We should check 'requested_amount' first, falling back to 'amount'.
+        $actualAmount = isset($result->data->requested_amount) 
+            ? (int) $result->data->requested_amount 
+            : (int) $result->data->amount;
+        
+        if ($actualAmount !== $expectedAmount) {
+            \Illuminate\Support\Facades\Log::error('Payment amount mismatch', [
+                'expected' => $expectedAmount,
+                'actual' => $actualAmount,
+                'paystack_data' => $result->data
+            ]);
             return redirect()->route('payment.show')
                 ->with('error', 'Payment amount mismatch. Please contact support.');
+        }
+
+        // Capture Paystack Authorization Token for Auto-Renewal
+        if (isset($result->data->authorization) && isset($result->data->authorization->authorization_code)) {
+            $user = Auth::user();
+            $user->paystack_authorization_code = $result->data->authorization->authorization_code;
+            $user->card_last4 = $result->data->authorization->last4 ?? null;
+            $user->card_exp_month = $result->data->authorization->exp_month ?? null;
+            $user->card_exp_year = $result->data->authorization->exp_year ?? null;
+            
+            if (isset($result->data->customer) && isset($result->data->customer->customer_code)) {
+                $user->paystack_customer_code = $result->data->customer->customer_code;
+            }
+            $user->save();
         }
 
         // Create subscription
@@ -511,8 +557,9 @@ class SignupController extends Controller
             'payment_reference' => $reference,
         ]);
 
-        // Generate commission for BRM if customer has one and paid amount is > 0
-        if (Auth::user()->brm_id && $subscription->amount_paid > 0) {
+        // Generate commission only if customer came via BRM referral code (not auto-assigned)
+        $paystackUser = Auth::user()->fresh();
+        if ($paystackUser->brm_id && $paystackUser->referral_code && $subscription->amount_paid > 0) {
             \App\Http\Controllers\Brm\BrmCommissionController::generateCommission($subscription);
         }
 
@@ -522,12 +569,41 @@ class SignupController extends Controller
         // Send set-password email
         $this->sendPasswordSetupEmail(Auth::user());
 
-        // Log the user out — they must set password before logging in
+        // Log the user out â€” they must set password before logging in
         $userEmail = Auth::user()->email;
         Auth::logout();
         session()->forget(['selected_plan', 'selected_duration', 'pricing']);
 
         return redirect()->route('signup.account.created')->with('setup_email', $userEmail);
+    }
+
+    /**
+     * Auto-assign the active BRM with the fewest customers to a user, if they don't have one.
+     * Note: Auto-assigned BRMs do NOT earn commission. Commission is only earned
+     * when the customer originally used the BRM's referral code at registration.
+     */
+    protected function assignBrmIfNeeded(User $user): void
+    {
+        if ($user->brm_id) {
+            return; // Already has a BRM, nothing to do
+        }
+
+        // Find the active BRM with the fewest assigned customers
+        $brm = Brm::where('status', 1)
+            ->withCount('customers')
+            ->orderBy('customers_count', 'asc')
+            ->first();
+
+        if ($brm) {
+            $user->brm_id = $brm->id;
+            $user->save();
+
+            Log::info('Auto-assigned BRM to user', [
+                'user_id'  => $user->id,
+                'brm_id'   => $brm->id,
+                'brm_name' => $brm->name,
+            ]);
+        }
     }
 
     /**

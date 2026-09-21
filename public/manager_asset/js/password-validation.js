@@ -53,7 +53,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Initialize password validator for BRM Edit Form
-    if (document.querySelector('form[action*="brms"]')) {
+    if (document.querySelector('form[action*="brms"]') && !document.getElementById('createBrmForm')) {
         new PasswordValidator({
             passwordSelector: 'input[name="password"]',
             confirmSelector: 'input[name="password_confirmation"]',

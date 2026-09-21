@@ -17,11 +17,37 @@
                 <p class="text-muted small mb-0">Update Business Relation Manager details</p>
             </div>
 
-            <form method="POST" action="{{ route('superadmin.brms.update', $brm->id) }}">
+            <form method="POST" action="{{ route('superadmin.brms.update', $brm->id) }}" enctype="multipart/form-data">
                 @csrf
                 @method('PUT')
 
                 <div class="row g-3">
+
+                    <!-- Profile Photo -->
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">Profile Photo</label>
+                        <div class="d-flex align-items-center gap-3">
+                            <div id="photoPreviewWrapper" style="width:80px;height:80px;border-radius:50%;overflow:hidden;border:2px solid #dee2e6;background:#f8f9fa;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                @if($brm->profile_photo)
+                                    <img id="photoPreview" src="{{ asset('brm_photos/'.$brm->profile_photo) }}" alt="{{ $brm->name }}" style="width:100%;height:100%;object-fit:cover;">
+                                    <i id="photoPlaceholderIcon" class="bi bi-person-fill" style="font-size:2rem;color:#adb5bd;display:none;"></i>
+                                @else
+                                    <img id="photoPreview" src="" alt="" style="width:100%;height:100%;object-fit:cover;display:none;">
+                                    <i id="photoPlaceholderIcon" class="bi bi-person-fill" style="font-size:2rem;color:#adb5bd;"></i>
+                                @endif
+                            </div>
+                            <div class="flex-grow-1">
+                                <input type="file" id="profile_photo_input" name="profile_photo"
+                                       class="form-control @error('profile_photo') is-invalid @enderror"
+                                       accept="image/jpeg,image/png,image/jpg,image/gif">
+                                <small class="text-muted d-block mt-1">JPG, PNG or GIF — max 2 MB. Leave blank to keep current photo.</small>
+                                @error('profile_photo')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="col-12">
                         <label class="form-label fw-semibold">Full Name <span class="text-danger">*</span></label>
                         <input type="text" name="name" value="{{ old('name', $brm->name) }}"
@@ -97,5 +123,31 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const photoInput   = document.getElementById('profile_photo_input');
+    const photoPreview = document.getElementById('photoPreview');
+    const photoIcon    = document.getElementById('photoPlaceholderIcon');
+    const wrapper      = document.getElementById('photoPreviewWrapper');
+
+    if (photoInput) {
+        photoInput.addEventListener('change', function () {
+            const file = this.files[0];
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    photoPreview.src = e.target.result;
+                    photoPreview.style.display = 'block';
+                    photoIcon.style.display = 'none';
+                    wrapper.style.border = '2px solid #4299e1';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+});
+</script>
+
 
 @endsection

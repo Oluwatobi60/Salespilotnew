@@ -24,7 +24,7 @@ class StandardItemImport implements SkipsEmptyRows, ToModel, WithHeadingRow, Wit
         $managerName = trim(($manager->firstname ?? '').' '.($manager->othername ?? '').' '.($manager->surname ?? '')) ?: ($manager->name ?? '');
         $managerEmail = $manager->email;
 
-        // ── Category: find or create ──────────────────────────────────────────
+        // â”€â”€ Category: find or create â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         $categoryId = null;
         if (! empty($row['category'])) {
             $category = Category::firstOrCreate(
@@ -40,7 +40,7 @@ class StandardItemImport implements SkipsEmptyRows, ToModel, WithHeadingRow, Wit
             $categoryId = $category->id;
         }
 
-        // ── Unit: find or create in units table ───────────────────────────────
+        // â”€â”€ Unit: find or create in units table â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         $unitValue = 'pcs';
         if (! empty($row['unit'])) {
             $unit = Unit::firstOrCreate(
@@ -56,7 +56,7 @@ class StandardItemImport implements SkipsEmptyRows, ToModel, WithHeadingRow, Wit
             $unitValue = $unit->name;
         }
 
-        // ── Supplier: find or create ──────────────────────────────────────────
+        // â”€â”€ Supplier: find or create â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         $supplierId = null;
         if (! empty($row['supplier_name'])) {
             $supplier = Supplier::firstOrCreate(
@@ -76,13 +76,13 @@ class StandardItemImport implements SkipsEmptyRows, ToModel, WithHeadingRow, Wit
             $supplierId = $supplier->id;
         }
 
-        // ── Product Image: download from URL and store in public disk ─────────
+        // â”€â”€ Product Image: download from URL and store in public disk â”€â”€â”€â”€â”€â”€â”€â”€â”€
         $imagePath = null;
         if (! empty($row['product_image_url'])) {
             $imagePath = $this->downloadImage(trim($row['product_image_url']));
         }
 
-        // ── Pricing ───────────────────────────────────────────────────────────
+        // â”€â”€ Pricing â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         $costPrice = isset($row['cost_price']) ? floatval($row['cost_price']) : 0;
         $sellingPrice = isset($row['selling_price']) ? floatval($row['selling_price']) : 0;
         $profitMargin = ($costPrice > 0)
@@ -141,7 +141,7 @@ class StandardItemImport implements SkipsEmptyRows, ToModel, WithHeadingRow, Wit
 
             return $filename;
         } catch (\Throwable $e) {
-            Log::warning('StandardItemImport: could not download image from '.$url.' — '.$e->getMessage());
+            Log::warning('StandardItemImport: could not download image from '.$url.' â€” '.$e->getMessage());
 
             return null;
         }

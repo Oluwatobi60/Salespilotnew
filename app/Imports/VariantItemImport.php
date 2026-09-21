@@ -37,7 +37,7 @@ class VariantItemImport implements SkipsEmptyRows, ToCollection, WithHeadingRow,
             // Use the first row to set parent-level attributes
             $firstVariant = $variants->first();
 
-            // ── Category: find or create ──────────────────────────────────────
+            // â”€â”€ Category: find or create â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             $categoryId = null;
             if (! empty($firstVariant['category'])) {
                 $category = Category::firstOrCreate(
@@ -53,7 +53,7 @@ class VariantItemImport implements SkipsEmptyRows, ToCollection, WithHeadingRow,
                 $categoryId = $category->id;
             }
 
-            // ── Unit: find or create in units table ──────────────────────────
+            // â”€â”€ Unit: find or create in units table â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             $unitId = null;
             if (! empty($firstVariant['unit'])) {
                 $unit = Unit::firstOrCreate(
@@ -69,7 +69,7 @@ class VariantItemImport implements SkipsEmptyRows, ToCollection, WithHeadingRow,
                 $unitId = $unit->id;
             }
 
-            // ── Supplier: find or create ──────────────────────────────────────
+            // â”€â”€ Supplier: find or create â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             $supplierId = null;
             if (! empty($firstVariant['supplier_name'])) {
                 $supplier = Supplier::firstOrCreate(
@@ -89,13 +89,13 @@ class VariantItemImport implements SkipsEmptyRows, ToCollection, WithHeadingRow,
                 $supplierId = $supplier->id;
             }
 
-            // ── Parent Item Image: download from URL ──────────────────────────
+            // â”€â”€ Parent Item Image: download from URL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             $imagePath = null;
             if (! empty($firstVariant['parent_item_image_url'])) {
                 $imagePath = $this->downloadImage(trim($firstVariant['parent_item_image_url']));
             }
 
-            // ── Create or update Parent VariantItem ───────────────────────────
+            // â”€â”€ Create or update Parent VariantItem â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             $variantItem = VariantItem::firstOrCreate(
                 [
                     'item_name' => $parentName,
@@ -114,7 +114,7 @@ class VariantItemImport implements SkipsEmptyRows, ToCollection, WithHeadingRow,
                 ]
             );
 
-            // ── Create child ProductVariants ──────────────────────────────────
+            // â”€â”€ Create child ProductVariants â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             foreach ($variants as $row) {
                 $costPrice = isset($row['cost_price']) ? floatval($row['cost_price']) : 0;
                 $sellingPrice = isset($row['selling_price']) ? floatval($row['selling_price']) : 0;
@@ -176,7 +176,7 @@ class VariantItemImport implements SkipsEmptyRows, ToCollection, WithHeadingRow,
 
             return $filename;
         } catch (\Throwable $e) {
-            Log::warning('VariantItemImport: could not download image from '.$url.' — '.$e->getMessage());
+            Log::warning('VariantItemImport: could not download image from '.$url.' â€” '.$e->getMessage());
 
             return null;
         }

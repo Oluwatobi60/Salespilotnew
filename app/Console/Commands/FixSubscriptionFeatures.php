@@ -74,7 +74,7 @@ class FixSubscriptionFeatures extends Command
             }
         }
 
-        $this->info("✅ Fixed {$fixed} subscription plans with invalid features");
+        $this->info("âœ… Fixed {$fixed} subscription plans with invalid features");
         $this->info("Total plans processed: {$plans->count()}");
 
         return Command::SUCCESS;

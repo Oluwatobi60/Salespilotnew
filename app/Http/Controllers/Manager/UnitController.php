@@ -105,7 +105,7 @@ class UnitController extends Controller
         $manager = Auth::user();
         $businessName = $manager->business_name;
 
-        // ✅ SECURITY: Verify unit belongs to manager's business
+        // âœ… SECURITY: Verify unit belongs to manager's business
         $unit = Unit::where('business_name', $businessName)
             ->findOrFail($id);
 
@@ -163,7 +163,7 @@ class UnitController extends Controller
         $manager = Auth::user();
         $businessName = $manager->business_name;
 
-        // ✅ SECURITY: Verify unit belongs to manager's business
+        // âœ… SECURITY: Verify unit belongs to manager's business
         $unit = Unit::where('business_name', $businessName)
             ->findOrFail($id);
 

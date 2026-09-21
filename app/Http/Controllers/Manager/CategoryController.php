@@ -113,7 +113,7 @@ class CategoryController extends Controller
         $manager = Auth::user();
         $businessName = $manager->business_name;
 
-        // ✅ SECURITY: Verify category belongs to manager's business
+        // âœ… SECURITY: Verify category belongs to manager's business
         $category = Category::where('business_name', $businessName)
             ->findOrFail($id);
 
@@ -136,7 +136,7 @@ class CategoryController extends Controller
         $manager = Auth::user();
         $businessName = $manager->business_name;
 
-        // ✅ SECURITY: Verify category belongs to manager's business
+        // âœ… SECURITY: Verify category belongs to manager's business
         $category = Category::where('business_name', $businessName)
             ->findOrFail($id);
 
@@ -169,7 +169,7 @@ class CategoryController extends Controller
         $manager = Auth::user();
         $businessName = $manager->business_name;
 
-        // ✅ SECURITY: Verify category belongs to manager's business
+        // âœ… SECURITY: Verify category belongs to manager's business
         $category = Category::where('business_name', $businessName)
             ->findOrFail($id);
 

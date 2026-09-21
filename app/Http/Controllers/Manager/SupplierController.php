@@ -67,7 +67,7 @@ class SupplierController extends Controller
         $manager = Auth::user();
         $businessName = $manager->business_name;
 
-        // ✅ SECURITY: Verify supplier belongs to manager's business
+        // âœ… SECURITY: Verify supplier belongs to manager's business
         $supplier = Supplier::where('business_name', $businessName)
             ->findOrFail($id);
 
@@ -79,7 +79,7 @@ class SupplierController extends Controller
         $manager = Auth::user();
         $businessName = $manager->business_name;
 
-        // ✅ SECURITY: Verify supplier belongs to manager's business
+        // âœ… SECURITY: Verify supplier belongs to manager's business
         $supplier = Supplier::where('business_name', $businessName)
             ->findOrFail($id);
 
@@ -120,7 +120,7 @@ class SupplierController extends Controller
         $manager = Auth::user();
         $businessName = $manager->business_name;
 
-        // ✅ SECURITY: Verify supplier belongs to manager's business
+        // âœ… SECURITY: Verify supplier belongs to manager's business
         $supplier = Supplier::where('business_name', $businessName)
             ->findOrFail($id);
         $supplier->delete();

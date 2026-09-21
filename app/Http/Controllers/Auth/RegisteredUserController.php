@@ -131,7 +131,7 @@ class RegisteredUserController extends Controller
             'referral_code' => $validated['referral_code'],
             'brm_id' => $brmId, // Assign the BRM ID if valid referral code was provided
             'email' => $validated['email'],
-            'password' => Hash::make(Str::random(40)), // temporary — user sets via email link
+            'password' => Hash::make(Str::random(40)), // temporary â€” user sets via email link
             'role' => $validated['role'],
             'status' => 1, // Automatically activate upon registration
             'password_set' => false,

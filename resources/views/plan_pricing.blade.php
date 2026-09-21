@@ -129,6 +129,10 @@ Choose Your Plan - {{ app_name() }}
 
         <div class="pricing-grid">
             <!-- Free Plan -->
+            @php
+                $freePlan = $plans->where('name', 'free')->first();
+                $trialDays = $freePlan ? $freePlan->trial_days : 7;
+            @endphp
             <div class="pricing-card">
                 <div class="plan-icon">
                     <i class="uil uil-gift" style="color: #3b82f6;"></i>
@@ -136,7 +140,7 @@ Choose Your Plan - {{ app_name() }}
                 <h3>Free Trial</h3>
                 <div class="price">
                     <span class="calculated-price">₦0</span>
-                    <div class="duration-text">7-Days Free</div>
+                    <div class="duration-text">{{ $trialDays }}-Days Free</div>
                     <p style="font-size: 0.875rem; color: #999; margin-top: 0.5rem;">Test all features risk-free</p>
                 </div>
                 <ul class="features-list">

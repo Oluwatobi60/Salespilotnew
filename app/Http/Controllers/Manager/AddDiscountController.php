@@ -214,7 +214,7 @@ class AddDiscountController extends Controller
         $manager = Auth::user();
         $businessName = $manager->business_name;
 
-        // ✅ SECURITY: Verify discount belongs to manager's business
+        // âœ… SECURITY: Verify discount belongs to manager's business
         $discount = AddDiscount::where('business_name', $businessName)
             ->findOrFail($id);
 
@@ -258,7 +258,7 @@ class AddDiscountController extends Controller
         $manager = Auth::user();
         $businessName = $manager->business_name;
 
-        // ✅ SECURITY: Verify discount belongs to manager's business
+        // âœ… SECURITY: Verify discount belongs to manager's business
         $discount = AddDiscount::where('business_name', $businessName)
             ->findOrFail($id);
         $discount->delete();

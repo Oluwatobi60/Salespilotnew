@@ -23,7 +23,7 @@ class RevenueController extends Controller
 
         $planId = $request->plan_id;
 
-        // ── Summary stats for the selected period ─────────────────────────
+        // â”€â”€ Summary stats for the selected period â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         $baseQuery = UserSubscription::whereBetween('created_at', [$from, $to]);
 
         if ($planId) {
@@ -46,7 +46,7 @@ class RevenueController extends Controller
             ? round((($periodRevenue - $prevRevenue) / $prevRevenue) * 100, 1)
             : null;
 
-        // ── Daily revenue for chart ────────────────────────────────────────
+        // â”€â”€ Daily revenue for chart â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         $daily = UserSubscription::selectRaw('DATE(created_at) as date, SUM(amount_paid) as total')
             ->whereBetween('created_at', [$from, $to])
             ->when($planId, fn ($q) => $q->where('subscription_plan_id', $planId))
@@ -66,7 +66,7 @@ class RevenueController extends Controller
             $cursor->addDay();
         }
 
-        // ── Revenue by plan ───────────────────────────────────────────────
+        // â”€â”€ Revenue by plan â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         $byPlan = UserSubscription::selectRaw('subscription_plan_id, SUM(amount_paid) as total, COUNT(*) as count')
             ->with('subscriptionPlan:id,name')
             ->whereBetween('created_at', [$from, $to])
@@ -74,7 +74,7 @@ class RevenueController extends Controller
             ->orderByDesc('total')
             ->get();
 
-        // ── Transaction list (paginated) ──────────────────────────────────
+        // â”€â”€ Transaction list (paginated) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         $transactions = UserSubscription::with(['user:id,first_name,surname,email', 'subscriptionPlan:id,name'])
             ->whereBetween('created_at', [$from, $to])
             ->when($planId, fn ($q) => $q->where('subscription_plan_id', $planId))

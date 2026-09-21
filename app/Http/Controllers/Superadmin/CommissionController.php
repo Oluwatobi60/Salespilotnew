@@ -96,7 +96,7 @@ class CommissionController extends Controller
 
         $commission->approve();
 
-        return back()->with('success', 'Commission #'.$commission->id.' has been approved. Amount: ₦'.number_format($commission->commission_amount, 2));
+        return back()->with('success', 'Commission #'.$commission->id.' has been approved. Amount: â‚¦'.number_format($commission->commission_amount, 2));
     }
 
     /**
@@ -110,7 +110,7 @@ class CommissionController extends Controller
 
         $commission->markAsPaid();
 
-        return back()->with('success', 'Commission #'.$commission->id.' has been marked as paid. Amount: ₦'.number_format($commission->commission_amount, 2));
+        return back()->with('success', 'Commission #'.$commission->id.' has been marked as paid. Amount: â‚¦'.number_format($commission->commission_amount, 2));
     }
 
     /**
@@ -149,7 +149,7 @@ class CommissionController extends Controller
             ->where('status', 'approved')
             ->sum('commission_amount');
 
-        return back()->with('success', "$count commission(s) approved. Total: ₦".number_format($totalAmount, 2));
+        return back()->with('success', "$count commission(s) approved. Total: â‚¦".number_format($totalAmount, 2));
     }
 
     /**

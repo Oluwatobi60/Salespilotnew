@@ -87,7 +87,7 @@ class WithdrawalController extends Controller
         $notes = $request->input('notes');
         $withdrawal->approve($notes);
 
-        return back()->with('success', 'Withdrawal #'.$withdrawal->id.' (₦'.number_format((float) $withdrawal->amount, 2).') has been approved. Amount deducted from wallet. Please make the bank transfer.');
+        return back()->with('success', 'Withdrawal #'.$withdrawal->id.' (â‚¦'.number_format((float) $withdrawal->amount, 2).') has been approved. Amount deducted from wallet. Please make the bank transfer.');
     }
 
     /**
@@ -143,7 +143,7 @@ class WithdrawalController extends Controller
             }
         }
 
-        return back()->with('success', "$count withdrawal(s) approved. Total: ₦".number_format($totalAmount, 2).' deducted from wallets.');
+        return back()->with('success', "$count withdrawal(s) approved. Total: â‚¦".number_format($totalAmount, 2).' deducted from wallets.');
     }
 
     /**
@@ -169,6 +169,6 @@ class WithdrawalController extends Controller
             }
         }
 
-        return back()->with('success', "$count withdrawal(s) marked as paid. Total: ₦".number_format($totalAmount, 2));
+        return back()->with('success', "$count withdrawal(s) marked as paid. Total: â‚¦".number_format($totalAmount, 2));
     }
 }

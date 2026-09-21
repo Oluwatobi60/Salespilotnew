@@ -12,7 +12,7 @@ class VariantItemTemplateExport implements FromArray, WithHeadings, WithStyles
     public function array(): array
     {
         return [
-            // Sample data row 1 — first variant of a parent
+            // Sample data row 1 â€” first variant of a parent
             [
                 'Example T-Shirt',                  // Parent Item Name
                 'Clothing',                         // Category (created if not found)
@@ -33,7 +33,7 @@ class VariantItemTemplateExport implements FromArray, WithHeadings, WithStyles
                 '1234567891',                       // Barcode
                 'Example t-shirt description',      // Description
             ],
-            // Sample data row 2 — second variant of the SAME parent
+            // Sample data row 2 â€” second variant of the SAME parent
             [
                 'Example T-Shirt',
                 'Clothing',

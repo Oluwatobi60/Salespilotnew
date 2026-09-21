@@ -18,7 +18,7 @@
                 <p class="text-muted small mb-0">Add a Business Relation Manager to the platform</p>
             </div>
 
-            <form id="createBrmForm" method="POST" action="{{ route('superadmin.brms.store') }}">
+            <form id="createBrmForm" method="POST" action="{{ route('superadmin.brms.store') }}" enctype="multipart/form-data">
                 @csrf
 
                 <div class="row g-3">
@@ -115,6 +115,26 @@
                         @enderror
                     </div>
 
+                    <!-- Profile Photo -->
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">Profile Photo <span class="text-muted">(Optional)</span></label>
+                        <div class="d-flex align-items-center gap-3">
+                            <div id="photoPreviewWrapper" style="width:80px;height:80px;border-radius:50%;overflow:hidden;border:2px dashed #ccc;background:#f8f9fa;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                <img id="photoPreview" src="" alt="" style="width:100%;height:100%;object-fit:cover;display:none;">
+                                <i id="photoPlaceholderIcon" class="bi bi-person-fill" style="font-size:2rem;color:#adb5bd;"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <input type="file" id="profile_photo_input" name="profile_photo"
+                                       class="form-control @error('profile_photo') is-invalid @enderror"
+                                       accept="image/jpeg,image/png,image/jpg,image/gif">
+                                <small class="text-muted d-block mt-1">JPG, PNG or GIF — max 2 MB</small>
+                                @error('profile_photo')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Notes -->
                     <div class="col-12">
                         <label class="form-label fw-semibold">Notes</label>
@@ -168,6 +188,28 @@ document.addEventListener('DOMContentLoaded', function() {
 
         referralCodeInput.value = code;
         referralCodeInput.classList.remove('is-invalid');
+    }
+
+    // Live photo preview
+    const photoInput  = document.getElementById('profile_photo_input');
+    const photoPreview = document.getElementById('photoPreview');
+    const photoIcon   = document.getElementById('photoPlaceholderIcon');
+    const wrapper     = document.getElementById('photoPreviewWrapper');
+
+    if (photoInput) {
+        photoInput.addEventListener('change', function () {
+            const file = this.files[0];
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    photoPreview.src = e.target.result;
+                    photoPreview.style.display = 'block';
+                    photoIcon.style.display = 'none';
+                    wrapper.style.border = '2px solid #4299e1';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
     }
 });
 </script>

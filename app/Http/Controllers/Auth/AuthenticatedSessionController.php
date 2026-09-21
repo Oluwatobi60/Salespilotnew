@@ -23,7 +23,7 @@ class AuthenticatedSessionController extends Controller
      */
     public function create(): View|RedirectResponse
     {
-        // Already logged in — guard against the "nothing happens" loop
+        // Already logged in â€” guard against the "nothing happens" loop
         if (Auth::check()) {
             $user = Auth::user();
 
@@ -44,12 +44,12 @@ class AuthenticatedSessionController extends Controller
                     : false;
             }
 
-            // Expired or missing subscription → send to plan renewal
+            // Expired or missing subscription â†’ send to plan renewal
             if (! $hasActiveSub && $user->role !== 'superadmin') {
                 return redirect()->route('plan_pricing');
             }
 
-            // Active subscription → send to their dashboard
+            // Active subscription â†’ send to their dashboard
             if ($user->role === 'superadmin') {
                 return redirect()->route('superadmin');
             }

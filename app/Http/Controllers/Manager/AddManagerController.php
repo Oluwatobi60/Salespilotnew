@@ -171,7 +171,7 @@ class AddManagerController extends Controller
         $currentManager = Auth::user();
         $businessName = $currentManager->business_name;
 
-        // ✅ SECURITY: Verify manager belongs to same business
+        // âœ… SECURITY: Verify manager belongs to same business
         $manageredit = User::where('business_name', $businessName)
             ->findOrFail($id);
 
@@ -190,7 +190,7 @@ class AddManagerController extends Controller
  */ 'phone' => 'nullable|string|max:20',
         ]);
 
-        // ✅ SECURITY: Verify manager belongs to same business
+        // âœ… SECURITY: Verify manager belongs to same business
         $manager = User::where('business_name', $businessName)
             ->findOrFail($id);
         $manager->surname = $validatedData['surname'];
@@ -207,7 +207,7 @@ class AddManagerController extends Controller
         $currentManager = Auth::user();
         $businessName = $currentManager->business_name;
 
-        // ✅ SECURITY: Verify manager belongs to same business
+        // âœ… SECURITY: Verify manager belongs to same business
         $manager = User::where('business_name', $businessName)
             ->findOrFail($id);
         // Toggle the status
@@ -225,7 +225,7 @@ class AddManagerController extends Controller
         $currentManager = Auth::user();
         $businessName = $currentManager->business_name;
 
-        // ✅ SECURITY: Verify manager belongs to same business
+        // âœ… SECURITY: Verify manager belongs to same business
         $manager = User::where('business_name', $businessName)
             ->findOrFail($id);
 

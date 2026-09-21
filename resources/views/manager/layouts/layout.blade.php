@@ -551,5 +551,164 @@
     {{-- AI POS Copilot Chat Interface --}}
    {{--  <x-copilot-modal /> --}}
 
+    {{-- BRM Floating Badge & Contact Modal --}}
+    @php
+        $brmContact = null;
+        if ($isBusinessCreator && $manager->brm_id) {
+            $brmContact = $manager->brm;
+        }
+    @endphp
+
+    @if($brmContact)
+    {{-- Floating BRM Badge --}}
+    <div id="brmBadge" onclick="document.getElementById('brmContactModal').classList.add('show-modal')" title="Your Relationship Manager" style="
+        position: fixed;
+        bottom: 28px;
+        right: 28px;
+        z-index: 2000;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+        color: #fff;
+        padding: 10px 18px 10px 12px;
+        border-radius: 50px;
+        box-shadow: 0 8px 32px rgba(15,52,96,0.45), 0 2px 8px rgba(0,0,0,0.25);
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        border: 1.5px solid rgba(99,179,237,0.25);
+        user-select: none;
+    "
+    onmouseenter="this.style.transform='translateY(-3px)';this.style.boxShadow='0 12px 40px rgba(15,52,96,0.55), 0 4px 16px rgba(0,0,0,0.3)';"
+    onmouseleave="this.style.transform='';this.style.boxShadow='0 8px 32px rgba(15,52,96,0.45), 0 2px 8px rgba(0,0,0,0.25)';"
+    >
+        <div style="position:relative;">
+            <img
+                src="{{ $brmContact->profile_photo ? asset('brm_photos/'.$brmContact->profile_photo) : asset('manager_asset/assets/images/faces/face8.jpg') }}"
+                alt="{{ $brmContact->name }}"
+                style="width:38px;height:38px;border-radius:50%;object-fit:cover;border:2px solid rgba(99,179,237,0.5);"
+            >
+            <span style="position:absolute;bottom:0;right:0;width:11px;height:11px;background:#48bb78;border-radius:50%;border:2px solid #1a1a2e;"></span>
+        </div>
+        <div style="line-height:1.2;">
+            <div style="font-size:0.65rem;color:rgba(255,255,255,0.55);text-transform:uppercase;letter-spacing:0.06em;font-weight:600;">Your BRM</div>
+            <div style="font-size:0.88rem;font-weight:700;color:#fff;">{{ $brmContact->name }}</div>
+        </div>
+        <i class="bi bi-chat-dots-fill" style="font-size:1rem;color:#63b3ed;margin-left:4px;"></i>
+    </div>
+
+    {{-- BRM Contact Modal Overlay --}}
+    <div id="brmContactModal" style="
+        display:none;
+        position:fixed;inset:0;z-index:3000;
+        background:rgba(0,0,0,0.55);
+        backdrop-filter:blur(4px);
+        justify-content:center;
+        align-items:center;
+        transition:opacity 0.25s;
+    " onclick="if(event.target===this)this.classList.remove('show-modal')">
+        <div style="
+            background: linear-gradient(160deg,#fff 60%,#ebf8ff 100%);
+            border-radius: 20px;
+            padding: 0;
+            width: 100%;
+            max-width: 400px;
+            margin: 1rem;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+            animation: brmSlideIn 0.3s cubic-bezier(0.34,1.56,0.64,1);
+        ">
+            {{-- Modal Header --}}
+            <div style="background:linear-gradient(135deg,#1a1a2e,#0f3460);padding:28px 24px 20px;text-align:center;position:relative;">
+                <button onclick="document.getElementById('brmContactModal').classList.remove('show-modal')" style="
+                    position:absolute;top:14px;right:16px;
+                    background:rgba(255,255,255,0.12);border:none;color:#fff;
+                    width:30px;height:30px;border-radius:50%;cursor:pointer;
+                    font-size:1rem;display:flex;align-items:center;justify-content:center;
+                    transition:background 0.2s;
+                " onmouseenter="this.style.background='rgba(255,255,255,0.25)'" onmouseleave="this.style.background='rgba(255,255,255,0.12)'"
+                >&times;</button>
+
+                <img
+                    src="{{ $brmContact->profile_photo ? asset('brm_photos/'.$brmContact->profile_photo) : asset('manager_asset/assets/images/faces/face8.jpg') }}"
+                    alt="{{ $brmContact->name }}"
+                    style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid rgba(99,179,237,0.6);margin-bottom:12px;"
+                >
+                <h5 style="color:#fff;margin:0 0 4px;font-weight:700;font-size:1.15rem;">{{ $brmContact->name }}</h5>
+                <span style="font-size:0.75rem;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:0.08em;">Business Relationship Manager</span>
+                <div style="margin-top:10px;">
+                    <span style="display:inline-flex;align-items:center;gap:5px;background:rgba(72,187,120,0.2);color:#68d391;border:1px solid rgba(72,187,120,0.35);border-radius:20px;padding:3px 12px;font-size:0.72rem;font-weight:600;">
+                        <span style="width:7px;height:7px;background:#48bb78;border-radius:50%;display:inline-block;"></span> Available
+                    </span>
+                </div>
+            </div>
+
+            {{-- Modal Body --}}
+            <div style="padding:24px;">
+                <p style="font-size:0.82rem;color:#718096;text-align:center;margin:0 0 20px;">Your dedicated manager is here to help. Reach out anytime.</p>
+
+                {{-- Phone --}}
+                @if($brmContact->phone)
+                <a href="tel:{{ $brmContact->phone }}" style="
+                    display:flex;align-items:center;gap:14px;
+                    padding:13px 16px;border-radius:12px;
+                    background:#f0fff4;border:1px solid #c6f6d5;
+                    text-decoration:none;margin-bottom:10px;
+                    transition:background 0.2s;
+                " onmouseenter="this.style.background='#c6f6d5'" onmouseleave="this.style.background='#f0fff4'">
+                    <div style="width:40px;height:40px;background:#48bb78;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                        <i class="bi bi-telephone-fill" style="color:#fff;font-size:1rem;"></i>
+                    </div>
+                    <div>
+                        <div style="font-size:0.7rem;color:#2d6a4f;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Call Directly</div>
+                        <div style="font-size:0.95rem;color:#276749;font-weight:700;">{{ $brmContact->phone }}</div>
+                    </div>
+                    <i class="bi bi-arrow-right" style="margin-left:auto;color:#48bb78;"></i>
+                </a>
+                @endif
+
+                {{-- Email --}}
+                @if($brmContact->email)
+                <a href="mailto:{{ $brmContact->email }}" style="
+                    display:flex;align-items:center;gap:14px;
+                    padding:13px 16px;border-radius:12px;
+                    background:#ebf8ff;border:1px solid #bee3f8;
+                    text-decoration:none;margin-bottom:10px;
+                    transition:background 0.2s;
+                " onmouseenter="this.style.background='#bee3f8'" onmouseleave="this.style.background='#ebf8ff'">
+                    <div style="width:40px;height:40px;background:#4299e1;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                        <i class="bi bi-envelope-fill" style="color:#fff;font-size:1rem;"></i>
+                    </div>
+                    <div style="min-width:0;">
+                        <div style="font-size:0.7rem;color:#2b6cb0;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Send Email</div>
+                        <div style="font-size:0.88rem;color:#2c5282;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ $brmContact->email }}</div>
+                    </div>
+                    <i class="bi bi-arrow-right" style="margin-left:auto;color:#4299e1;"></i>
+                </a>
+                @endif
+
+                {{-- Rate BRM Button --}}
+                <a href="mailto:{{ $brmContact->email }}?subject=Rating+for+my+BRM+{{ urlencode($brmContact->name) }}&body=Hi+{{ urlencode($brmContact->name) }},%0A%0AI+would+like+to+share+my+feedback+about+your+service.%0A%0ARating+(1-5):%0AComments:%0A" style="
+                    display:flex;align-items:center;justify-content:center;gap:8px;
+                    padding:12px;border-radius:12px;
+                    background:linear-gradient(135deg,#667eea,#764ba2);
+                    color:#fff;text-decoration:none;font-weight:600;font-size:0.9rem;
+                    transition:opacity 0.2s;
+                " onmouseenter="this.style.opacity='0.88'" onmouseleave="this.style.opacity='1'">
+                    <i class="bi bi-star-fill"></i> Rate Your BRM
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        #brmContactModal.show-modal { display: flex !important; }
+        @keyframes brmSlideIn {
+            from { opacity: 0; transform: scale(0.85) translateY(20px); }
+            to   { opacity: 1; transform: scale(1) translateY(0); }
+        }
+    </style>
+    @endif
+
   </body>
 </html>

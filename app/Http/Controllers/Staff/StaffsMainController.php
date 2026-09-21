@@ -964,7 +964,7 @@ class StaffsMainController extends Controller
                 'lastUpdated' => $customer->updated_at->format('M d, Y'),
                 'status' => 'Active',
                 'totalOrders' => $totalOrders,
-                'totalSpent' => '₦'.number_format($totalSpent, 2),
+                'totalSpent' => 'â‚¦'.number_format($totalSpent, 2),
                 'lastPurchase' => $lastPurchaseDate ? date('M d, Y', strtotime($lastPurchaseDate)) : 'Never',
                 'orders' => $orderDetails,
             ],
