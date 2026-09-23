@@ -30,7 +30,7 @@ class BranchController extends Controller
             ->pluck('manager_id')
             ->toArray();
 
-        $managers = User::where('business_name', $user->business_name)
+        $managers = User::where('business_id', $user->getBusinessId())
             ->where('role', 'manager')
             ->where('status', 1)
             ->where('addby', $user->email)
@@ -159,7 +159,7 @@ class BranchController extends Controller
             ->pluck('manager_id')
             ->toArray();
 
-        $managers = User::where('business_name', $user->business_name)
+        $managers = User::where('business_id', $user->getBusinessId())
             ->where('role', 'manager')
             ->where('status', 1)
             ->where('addby', $user->email)

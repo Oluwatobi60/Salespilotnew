@@ -18,7 +18,7 @@ class ValuationReportController extends Controller
     {
         // Get manager information
         $manager = Auth::user();
-        $businessName = $manager->business_name;
+        $businessId = $manager->getBusinessId();
 
         // Check subscription plan - inventory valuation is not available for basic plan
         $currentSubscription = $manager->currentSubscription()->with('subscriptionPlan')->first();
@@ -40,7 +40,7 @@ class ValuationReportController extends Controller
             $managerBranchName = $branchRecord->branch_name;
         } elseif (! empty($managerBranchName)) {
             // Fallback for manager records that store branch_name but may not have a branch_id mapping
-            $branchIds = Branch::where('business_name', $businessName)
+            $branchIds = Branch::where('business_id', $businessId)
                 ->where('branch_name', $managerBranchName)
                 ->pluck('id')
                 ->toArray();
@@ -50,7 +50,7 @@ class ValuationReportController extends Controller
 
         $allBranches = collect();
         if (!$isBranchManager) {
-            $allBranches = Branch::where('business_name', $businessName)->orderBy('branch_name')->get();
+            $allBranches = Branch::where('business_id', $businessId)->orderBy('branch_name')->get();
 
             if ($request->filled('branch') && $request->branch !== 'all') {
                 $branchIds = [$request->branch];
@@ -69,10 +69,10 @@ class ValuationReportController extends Controller
         if ($isBranchManager && ! empty($branchIds)) {
             // Branch manager: Get items from branch_inventory
             $branchInventories = BranchInventory::whereIn('branch_id', $branchIds)
-                ->where('business_name', $businessName)
+                ->where('business_id', $businessId)
                 ->get();
 
-            $categories = Category::where('business_name', $businessName)->pluck('category_name', 'id');
+            $categories = Category::where('business_id', $businessId)->pluck('category_name', 'id');
 
             foreach ($branchInventories as $branchItem) {
                 $quantity = $branchItem->current_quantity ?? 0;
@@ -133,16 +133,16 @@ class ValuationReportController extends Controller
             }
         } else {
             // Business creator: Show all items across all branches
-            $standardItems = StandardItem::where('business_name', $businessName)->get();
-            $productVariants = ProductVariant::where('business_name', $businessName)->get();
-            $categories = Category::where('business_name', $businessName)->pluck('category_name', 'id');
+            $standardItems = StandardItem::where('business_id', $businessId)->get();
+            $productVariants = ProductVariant::where('business_id', $businessId)->get();
+            $categories = Category::where('business_id', $businessId)->pluck('category_name', 'id');
 
             // Standard Items
             foreach ($standardItems as $item) {
                 $mainQuantity = $item->current_stock ?? 0;
                 $branchQuantity = BranchInventory::where('item_id', $item->id)
                     ->where('item_type', 'standard')
-                    ->where('business_name', $businessName)
+                    ->where('business_id', $businessId)
                     ->sum('current_quantity');
                 $quantity = $mainQuantity + $branchQuantity;
                 $cost = $item->cost_price ?? 0;
@@ -177,7 +177,7 @@ class ValuationReportController extends Controller
                 $mainQuantity = $variant->current_stock ?? 0;
                 $branchQuantity = BranchInventory::where('item_id', $variant->id)
                     ->where('item_type', 'variant')
-                    ->where('business_name', $businessName)
+                    ->where('business_id', $businessId)
                     ->sum('current_quantity');
                 $quantity = $mainQuantity + $branchQuantity;
                 $cost = $variant->cost_price ?? 0;
@@ -250,7 +250,7 @@ class ValuationReportController extends Controller
         );
 
         // Get all unique categories from items filtered by business_name
-        $allCategories = Category::where('business_name', $businessName)->orderBy('category_name')->get();
+        $allCategories = Category::where('business_id', $businessId)->orderBy('category_name')->get();
 
         return view('manager.reports.inventory_valuation', compact('paginatedItems', 'totalInventoryValue', 'totalSellingValue', 'totalPotentialProfit', 'overallMargin', 'allCategories', 'isBasicPlan', 'allBranches'));
     }

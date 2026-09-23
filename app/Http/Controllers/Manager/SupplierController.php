@@ -12,9 +12,9 @@ class SupplierController extends Controller
     public function suppliers()
     {
         $manager = Auth::user();
-        $businessName = $manager->business_name;
+        $businessId = $manager->getBusinessId();
 
-        $suppliers = Supplier::where('business_name', $businessName)->paginate(10);
+        $suppliers = Supplier::where('business_id', $businessId)->paginate(10);
 
         return view('manager.supplier.supplier', compact('suppliers'));
     }
@@ -36,6 +36,7 @@ class SupplierController extends Controller
 
         // Add manager info to validated data
         $validatedData['business_name'] = $manager->business_name;
+        $validatedData['business_id']   = $manager->getBusinessId();
         $validatedData['manager_name'] = $managerName;
         $validatedData['manager_email'] = $manager->email;
 
@@ -65,10 +66,10 @@ class SupplierController extends Controller
     public function edit_supplier($id)
     {
         $manager = Auth::user();
-        $businessName = $manager->business_name;
+        $businessId = $manager->getBusinessId();
 
         // âœ… SECURITY: Verify supplier belongs to manager's business
-        $supplier = Supplier::where('business_name', $businessName)
+        $supplier = Supplier::where('business_id', $businessId)
             ->findOrFail($id);
 
         return view('manager.supplier.edit_supplier', compact('supplier'));
@@ -77,10 +78,10 @@ class SupplierController extends Controller
     public function update_supplier(Request $request, $id)
     {
         $manager = Auth::user();
-        $businessName = $manager->business_name;
+        $businessId = $manager->getBusinessId();
 
         // âœ… SECURITY: Verify supplier belongs to manager's business
-        $supplier = Supplier::where('business_name', $businessName)
+        $supplier = Supplier::where('business_id', $businessId)
             ->findOrFail($id);
 
         // Validate the request data
@@ -118,10 +119,10 @@ class SupplierController extends Controller
     public function delete_supplier($id)
     {
         $manager = Auth::user();
-        $businessName = $manager->business_name;
+        $businessId = $manager->getBusinessId();
 
         // âœ… SECURITY: Verify supplier belongs to manager's business
-        $supplier = Supplier::where('business_name', $businessName)
+        $supplier = Supplier::where('business_id', $businessId)
             ->findOrFail($id);
         $supplier->delete();
 

@@ -26,7 +26,7 @@ class StaffsMainController extends Controller
     public function index()
     {
         $staff = Auth::guard('staff')->user();
-        $businessName = $staff->business_name;
+        $businessId = $staff->getBusinessId();
 
         // Get staff's branch
         $staffBranch = $staff->branches->first();
@@ -40,7 +40,7 @@ class StaffsMainController extends Controller
             // Only include items allocated by the business owner (branch user)
             $branchOwnerId = $staffBranch->user_id ?? null;
             $branchInventory = BranchInventory::where('branch_id', $branchId)
-                ->where('business_name', $businessName)
+                ->where('business_id', $businessId)
                 ->where('current_quantity', '>', 0)
                 ->when($branchOwnerId, function ($q) use ($branchOwnerId) {
                     $q->where('allocated_by', $branchOwnerId);
@@ -61,7 +61,7 @@ class StaffsMainController extends Controller
             'supplier',
             'pricingTiers',
         ])
-            ->where('business_name', $businessName)
+            ->where('business_id', $businessId)
             ->where('enable_sale', true);
 
         // Filter by branch inventory if staff has a branch
@@ -88,7 +88,7 @@ class StaffsMainController extends Controller
                 $query->with('pricingTiers');
             },
         ])
-            ->where('business_name', $businessName);
+            ->where('business_id', $businessId);
 
         // Filter variant items by branch inventory
         if ($branchId && ! empty($variantBranchItemIds)) {
@@ -106,7 +106,7 @@ class StaffsMainController extends Controller
         if ($branchId) {
             $branchOwnerId = $staffBranch->user_id ?? null;
             $branchInventory = BranchInventory::where('branch_id', $branchId)
-                ->where('business_name', $businessName)
+                ->where('business_id', $businessId)
                 ->when($branchOwnerId, function ($q) use ($branchOwnerId) {
                     $q->where('allocated_by', $branchOwnerId);
                 })
@@ -138,7 +138,7 @@ class StaffsMainController extends Controller
         }
 
         // Get all unique categories
-        $categories = Category::where('business_name', $businessName)
+        $categories = Category::where('business_id', $businessId)
             ->orderBy('category_name')
             ->get();
 
@@ -161,7 +161,7 @@ class StaffsMainController extends Controller
         $staffId = Auth::guard('staff')->id();
 
         $completedBase = CartItem::where('status', 'completed')
-            ->where('business_name', $businessName)
+            ->where('business_id', $businessId)
             ->where('staff_id', $staffId);
 
         $today = Carbon::today();
@@ -186,12 +186,12 @@ class StaffsMainController extends Controller
 
         // Saved orders (distinct sessions) for this staff
         $saved_orders_count = CartItem::where('status', 'saved')
-            ->where('business_name', $businessName)
+            ->where('business_id', $businessId)
             ->where('staff_id', $staffId)
             ->distinct('session_id')->count('session_id');
 
         // Customers added by this staff
-        $new_customers_count = AddCustomer::where('business_name', $businessName)
+        $new_customers_count = AddCustomer::where('business_id', $businessId)
             ->where('staff_id', $staffId)
             ->count();
 
@@ -206,7 +206,7 @@ class StaffsMainController extends Controller
     public function sell_product()
     {
         $staff = Auth::guard('staff')->user();
-        $businessName = $staff->business_name;
+        $businessId = $staff->getBusinessId();
 
         // Get staff's branch
         $staffBranch = $staff->branches->first();
@@ -219,7 +219,7 @@ class StaffsMainController extends Controller
         if ($branchId) {
             $branchOwnerId = $staffBranch->user_id ?? null;
             $branchInventory = BranchInventory::where('branch_id', $branchId)
-                ->where('business_name', $businessName)
+                ->where('business_id', $businessId)
                 ->where('current_quantity', '>', 0)
                 ->when($branchOwnerId, function ($q) use ($branchOwnerId) {
                     $q->where('allocated_by', $branchOwnerId);
@@ -241,7 +241,7 @@ class StaffsMainController extends Controller
             'unit',
             'pricingTiers',
         ])
-            ->where('business_name', $businessName)
+            ->where('business_id', $businessId)
             ->where('enable_sale', true);
 
         // Filter by branch inventory if staff has a branch
@@ -268,7 +268,7 @@ class StaffsMainController extends Controller
                 $query->with('pricingTiers');
             },
         ])
-            ->where('business_name', $businessName);
+            ->where('business_id', $businessId);
 
         // Filter variant items by branch inventory
         if ($branchId && ! empty($variantBranchItemIds)) {
@@ -286,7 +286,7 @@ class StaffsMainController extends Controller
         if ($branchId) {
             $branchOwnerId = $staffBranch->user_id ?? null;
             $branchInventory = BranchInventory::where('branch_id', $branchId)
-                ->where('business_name', $businessName)
+                ->where('business_id', $businessId)
                 ->when($branchOwnerId, function ($q) use ($branchOwnerId) {
                     $q->where('allocated_by', $branchOwnerId);
                 })
@@ -318,7 +318,7 @@ class StaffsMainController extends Controller
         }
 
         // Get all unique categories
-        $categories = Category::where('business_name', $businessName)
+        $categories = Category::where('business_id', $businessId)
             ->orderBy('category_name')
             ->get();
 
@@ -486,7 +486,7 @@ class StaffsMainController extends Controller
                         } else {
                             if ($itemType === 'standard') {
                                 $standardItem = StandardItem::where('id', $item['id'])
-                                    ->where('business_name', $staff->business_name)
+                                    ->where('business_id', $staff->getBusinessId())
                                     ->lockForUpdate()
                                     ->first();
 
@@ -497,7 +497,7 @@ class StaffsMainController extends Controller
                                 $standardItem->save();
                             } elseif ($itemType === 'variant') {
                                 $productVariant = ProductVariant::where('id', $item['id'])
-                                    ->where('business_name', $staff->business_name)
+                                    ->where('business_id', $staff->getBusinessId())
                                     ->lockForUpdate()
                                     ->first();
 
@@ -511,7 +511,7 @@ class StaffsMainController extends Controller
                     } else {
                         if ($itemType === 'standard') {
                             $standardItem = StandardItem::where('id', $item['id'])
-                                ->where('business_name', $staff->business_name)
+                                ->where('business_id', $staff->getBusinessId())
                                 ->lockForUpdate()
                                 ->first();
 
@@ -522,7 +522,7 @@ class StaffsMainController extends Controller
                             $standardItem->save();
                         } elseif ($itemType === 'variant') {
                             $productVariant = ProductVariant::where('id', $item['id'])
-                                ->where('business_name', $staff->business_name)
+                                ->where('business_id', $staff->getBusinessId())
                                 ->lockForUpdate()
                                 ->first();
 
@@ -615,7 +615,7 @@ class StaffsMainController extends Controller
     {
         try {
             $staff = Auth::guard('staff')->user();
-            $businessName = $staff->business_name;
+            $businessId = $staff->getBusinessId();
 
             // Show all saved carts from staff members in same business
             $savedCarts = CartItem::where('status', 'saved')
@@ -644,11 +644,11 @@ class StaffsMainController extends Controller
     {
         try {
             $staff = Auth::guard('staff')->user();
-            $businessName = $staff->business_name;
+            $businessId = $staff->getBusinessId();
 
             $cartItems = CartItem::where('session_id', $sessionId)
                 ->where('status', 'saved')
-                ->where('business_name', $businessName)
+                ->where('business_id', $businessId)
                 ->where('staff_id', Auth::guard('staff')->id())
                 ->get();
 
@@ -690,11 +690,11 @@ class StaffsMainController extends Controller
     {
         try {
             $staff = Auth::guard('staff')->user();
-            $businessName = $staff->business_name;
+            $businessId = $staff->getBusinessId();
 
             CartItem::where('session_id', $sessionId)
                 ->where('status', 'saved')
-                ->where('business_name', $businessName)
+                ->where('business_id', $businessId)
                 ->delete();
 
             return response()->json([
@@ -712,7 +712,7 @@ class StaffsMainController extends Controller
     public function view_saved_carts()
     {
         $staff = Auth::guard('staff')->user();
-        $businessName = $staff->business_name;
+        $businessId = $staff->getBusinessId();
 
         // Show all saved carts from staff members in same business
         $savedCarts = CartItem::where('cart_items.status', 'saved')
@@ -731,10 +731,10 @@ class StaffsMainController extends Controller
     public function completed_sales()
     {
         $staff = Auth::guard('staff')->user();
-        $businessName = $staff->business_name;
+        $businessId = $staff->getBusinessId();
 
         $completedSales = CartItem::where('status', 'completed')
-            ->where('business_name', $businessName)
+            ->where('business_id', $businessId)
             ->where('staff_id', Auth::guard('staff')->id())
             ->select('receipt_number', 'customer_name', 'customer_id', 'created_at', 'staff_id')
             ->selectRaw('SUM(total) as total')
@@ -751,11 +751,11 @@ class StaffsMainController extends Controller
     public function get_sale_items($receiptNumber)
     {
         $staff = Auth::guard('staff')->user();
-        $businessName = $staff->business_name;
+        $businessId = $staff->getBusinessId();
 
         $items = CartItem::where('receipt_number', $receiptNumber)
             ->where('status', 'completed')
-            ->where('business_name', $businessName)
+            ->where('business_id', $businessId)
             ->where('staff_id', Auth::guard('staff')->id())
             ->get();
 
@@ -775,9 +775,9 @@ class StaffsMainController extends Controller
     public function customers()
     {
         $staff = Auth::guard('staff')->user();
-        $businessName = $staff->business_name;
+        $businessId = $staff->getBusinessId();
 
-        $customers = AddCustomer::where('business_name', $businessName)
+        $customers = AddCustomer::where('business_id', $businessId)
             ->where('staff_id', $staff->id)
             ->latest()
             ->paginate(10);
@@ -788,9 +788,9 @@ class StaffsMainController extends Controller
     public function get_all_customers()
     {
         $staff = Auth::guard('staff')->user();
-        $businessName = $staff->business_name;
+        $businessId = $staff->getBusinessId();
 
-        $customers = AddCustomer::where('business_name', $businessName)
+        $customers = AddCustomer::where('business_id', $businessId)
             ->select('id', 'customer_name', 'email', 'phone_number')
             ->orderBy('customer_name', 'asc')
             ->get();
@@ -837,9 +837,9 @@ class StaffsMainController extends Controller
     public function edit_customer($id)
     {
         $staff = Auth::guard('staff')->user();
-        $businessName = $staff->business_name;
+        $businessId = $staff->getBusinessId();
 
-        $customer = AddCustomer::where('business_name', $businessName)
+        $customer = AddCustomer::where('business_id', $businessId)
             ->findOrFail($id);
 
         return view('staff.customer.edit_customer', compact('customer'));
@@ -848,9 +848,9 @@ class StaffsMainController extends Controller
     public function update_customer(Request $request, $id)
     {
         $staff = Auth::guard('staff')->user();
-        $businessName = $staff->business_name;
+        $businessId = $staff->getBusinessId();
 
-        $customer = AddCustomer::where('business_name', $businessName)
+        $customer = AddCustomer::where('business_id', $businessId)
             ->where('staff_id', $staff->id)
             ->findOrFail($id);
 
@@ -875,9 +875,9 @@ class StaffsMainController extends Controller
     public function delete_customer($id)
     {
         $staff = Auth::guard('staff')->user();
-        $businessName = $staff->business_name;
+        $businessId = $staff->getBusinessId();
 
-        $customer = AddCustomer::where('business_name', $businessName)
+        $customer = AddCustomer::where('business_id', $businessId)
             ->where('staff_id', $staff->id)
             ->findOrFail($id);
 
@@ -892,10 +892,10 @@ class StaffsMainController extends Controller
     public function get_customer_details($id)
     {
         $staff = Auth::guard('staff')->user();
-        $businessName = $staff->business_name;
+        $businessId = $staff->getBusinessId();
 
         $customer = AddCustomer::with(['user', 'staff'])
-            ->where('business_name', $businessName)
+            ->where('business_id', $businessId)
             ->where('staff_id', $staff->id)
             ->findOrFail($id);
 
@@ -974,13 +974,13 @@ class StaffsMainController extends Controller
     public function print_receipt($receiptNumber)
     {
         $staff = Auth::guard('staff')->user();
-        $businessName = $staff->business_name;
+        $businessId = $staff->getBusinessId();
 
         // Get all items for this receipt
         $items = CartItem::with(['staff', 'user'])
             ->where('receipt_number', $receiptNumber)
             ->where('status', 'completed')
-            ->where('business_name', $businessName)
+            ->where('business_id', $businessId)
             ->get();
 
         if ($items->isEmpty()) {

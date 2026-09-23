@@ -53,6 +53,7 @@ class StaffMainController extends Controller
             /** @var \App\Models\User $manager */
             $manager = Auth::user();
             $validatedData['business_name'] = $manager->business_name ?? null;
+        $validatedData['business_id']   = $manager->getBusinessId();
             $managerFullName = trim(($manager->firstname ?? '').' '.($manager->othername ?? '').' '.($manager->surname ?? ''));
             $validatedData['manager_name'] = $managerFullName ?: null;
             $validatedData['manager_email'] = $manager->email ?? null;
@@ -65,7 +66,7 @@ class StaffMainController extends Controller
 
             if ($subscription && $subscription->subscriptionPlan) {
                 $planName = strtolower($subscription->subscriptionPlan->name);
-                $currentStaffCount = Staffs::where('business_name', $manager->business_name)->count();
+                $currentStaffCount = Staffs::where('business_id', $manager->getBusinessId())->count();
 
                 // Free plan: max 1 staff
                 if ($planName === 'free' && $currentStaffCount >= 1) {
@@ -192,9 +193,9 @@ class StaffMainController extends Controller
     {
         /** @var \App\Models\User $manager */
         $manager = Auth::user();
-        $businessName = $manager->business_name;
+        $businessId = $manager->getBusinessId();
 
-        $query = Staffs::where('business_name', $businessName)
+        $query = Staffs::where('business_id', $businessId)
             ->with('branches')
             ->latest();
 
@@ -239,7 +240,7 @@ class StaffMainController extends Controller
 
         // Get staff count
         if ($isBusinessCreator) {
-            $staffCount = Staffs::where('business_name', $businessName)->count();
+            $staffCount = Staffs::where('business_id', $businessId)->count();
         } else {
             // $staffdata is paginated, we can get total items
             $staffCount = $staffdata->total();
@@ -252,9 +253,9 @@ class StaffMainController extends Controller
     {
         /** @var \App\Models\User $manager */
         $manager = Auth::user();
-        $businessName = $manager->business_name;
+        $businessId = $manager->getBusinessId();
 
-        $staffedit = Staffs::where('business_name', $businessName)
+        $staffedit = Staffs::where('business_id', $businessId)
             ->with('branches')
             ->findOrFail($id);
 
@@ -289,8 +290,8 @@ class StaffMainController extends Controller
         try {
             // Find the staff member - ensure they belong to manager's business
             $manager = Auth::user();
-            $businessName = $manager->business_name;
-            $staff = Staffs::where('business_name', $businessName)->findOrFail($id);
+            $businessId = $manager->getBusinessId();
+            $staff = Staffs::where('business_id', $businessId)->findOrFail($id);
 
             // Validate the incoming request data
             $validatedData = $request->validate([
@@ -329,6 +330,7 @@ class StaffMainController extends Controller
             // Auto-populate business_name, manager_name, and manager_email from the logged-in manager's user record
             $manager = Auth::user();
             $validatedData['business_name'] = $manager->business_name ?? null;
+        $validatedData['business_id']   = $manager->getBusinessId();
             $managerFullName = trim(($manager->firstname ?? '').' '.($manager->othername ?? '').' '.($manager->surname ?? ''));
             $validatedData['manager_name'] = $managerFullName ?: null;
             $validatedData['manager_email'] = $manager->email ?? null;
@@ -374,8 +376,8 @@ class StaffMainController extends Controller
         try {
             // Find the staff member - ensure they belong to manager's business
             $manager = Auth::user();
-            $businessName = $manager->business_name;
-            $staff = Staffs::where('business_name', $businessName)->findOrFail($id);
+            $businessId = $manager->getBusinessId();
+            $staff = Staffs::where('business_id', $businessId)->findOrFail($id);
 
             // Delete passport photo if exists
             if ($staff->passport_photo && file_exists(public_path($staff->passport_photo))) {
@@ -396,10 +398,10 @@ class StaffMainController extends Controller
     public function toggleStatus(Request $request, $id)
     {
         $manager = Auth::user();
-        $businessName = $manager->business_name;
+        $businessId = $manager->getBusinessId();
 
         // âœ… SECURITY: Verify staff belongs to manager's business
-        $staff = Staffs::where('business_name', $businessName)
+        $staff = Staffs::where('business_id', $businessId)
             ->findOrFail($id);
         // Toggle the status between 'active' and 'inactive'
         $staff->status = ($staff->status === 'active') ? 'inactive' : 'active';

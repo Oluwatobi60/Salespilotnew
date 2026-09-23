@@ -92,6 +92,7 @@ class VariantItemController extends Controller
 
             // Add manager info to validated data
             $validatedData['business_name'] = $manager->business_name;
+        $validatedData['business_id']   = $manager->getBusinessId();
             $validatedData['manager_name'] = $managerName;
             $validatedData['manager_email'] = $manager->email;
 
@@ -123,6 +124,7 @@ class VariantItemController extends Controller
                 $productVariantData = [
                     'variant_item_id' => $variantItem->id,
                     'business_name' => $manager->business_name,
+                    'business_id'   => $manager->getBusinessId(),
                     'manager_name' => $managerName,
                     'manager_email' => $manager->email,
                     'variant_name' => $variantData['name'],
@@ -187,7 +189,7 @@ class VariantItemController extends Controller
                 if ($manager->addby !== null) { // This is an added manager, not creator
                     // Find the branch where this manager is the user_id (branch manager)
                     $managerBranch = Branch::where('user_id', $manager->id)
-                        ->where('business_name', $manager->business_name)
+                        ->where('business_id', $manager->getBusinessId())
                         ->whereNull('staff_id')
                         ->first();
 
@@ -197,6 +199,7 @@ class VariantItemController extends Controller
                             'item_id' => $productVariant->id,
                             'item_type' => 'variant',
                             'business_name' => $manager->business_name,
+                    'business_id'   => $manager->getBusinessId(),
                             'allocated_quantity' => $variantOpeningStock,
                             'current_quantity' => $variantOpeningStock,
                             'sold_quantity' => 0,

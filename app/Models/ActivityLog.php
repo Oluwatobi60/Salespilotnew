@@ -10,6 +10,7 @@ class ActivityLog extends Model
         'user_id',
         'staff_id',
         'business_name',
+        'business_id',
         'action',
         'device',
         'ip_address',

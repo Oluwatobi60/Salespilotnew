@@ -13,6 +13,7 @@ class Sale extends Model
         'receipt_number',
         'session_id',
         'business_name',
+        'business_id',
         'user_id',
         'staff_id',
         'branch_id',

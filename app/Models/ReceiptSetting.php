@@ -8,6 +8,7 @@ class ReceiptSetting extends Model
 {
     protected $fillable = [
         'business_name',
+        'business_id',
         'receipt_title',
         'header_text',
         'footer_text',

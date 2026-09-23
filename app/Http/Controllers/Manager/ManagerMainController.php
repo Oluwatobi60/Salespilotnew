@@ -28,7 +28,7 @@ class ManagerMainController extends Controller
             $creator = User::where('email', $user->addby)->first();
             $businessName = $creator ? $creator->business_name : $user->business_name;
         } else {
-            $businessName = $user->business_name;
+            $businessId = $user->getBusinessId();
         }
 
         // Default: show stats for all time, or filter by date if provided
@@ -37,7 +37,7 @@ class ManagerMainController extends Controller
 
         // Filter by business_name and status
         $query = CartItem::where('status', 'completed')
-            ->where('business_name', $businessName);
+            ->where('business_id', $businessId);
 
         // If the user was added by another manager, filter by user_id, staff_id, or branch_name
         if ($user->addby) {
@@ -172,11 +172,11 @@ class ManagerMainController extends Controller
     public function add_item_standard()
     {
         $user = Auth::user();
-        $businessName = $user->business_name;
+        $businessId = $user->getBusinessId();
 
-        $suppliers = Supplier::where('business_name', $businessName)->get();
-        $units = Unit::where('business_name', $businessName)->get();
-        $categories = Category::where('business_name', $businessName)->get();
+        $suppliers = Supplier::where('business_id', $businessId)->get();
+        $units = Unit::where('business_id', $businessId)->get();
+        $categories = Category::where('business_id', $businessId)->get();
 
         return view('manager.standardItems.add_item_standard', compact('suppliers', 'units', 'categories'));
     }
@@ -184,11 +184,11 @@ class ManagerMainController extends Controller
     public function add_item_variant()
     {
         $user = Auth::user();
-        $businessName = $user->business_name;
+        $businessId = $user->getBusinessId();
 
-        $suppliers = Supplier::where('business_name', $businessName)->get();
-        $units = Unit::where('business_name', $businessName)->get();
-        $categories = Category::where('business_name', $businessName)->get();
+        $suppliers = Supplier::where('business_id', $businessId)->get();
+        $units = Unit::where('business_id', $businessId)->get();
+        $categories = Category::where('business_id', $businessId)->get();
 
         return view('manager.variantItems.add_item_variant', compact('suppliers', 'units', 'categories'));
     }

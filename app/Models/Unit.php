@@ -11,6 +11,7 @@ class Unit extends Model
         'abbreviation',
         'is_custom',
         'business_name',
+        'business_id',
         'manager_name',
         'manager_email',
     ];

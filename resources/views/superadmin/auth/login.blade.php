@@ -100,11 +100,7 @@
                         <button type="submit" class="btn btn-superadmin w-100 py-2 fw-semibold">Log In</button>
                     </form>
 
-                    <div class="text-center mt-3">
-                        <small class="text-muted">Don't have an account?
-                            <a href="{{ route('superadmin.signup') }}" class="text-decoration-none fw-semibold">Sign up</a>
-                        </small>
-                    </div>
+
 
                 </div>
             </div>

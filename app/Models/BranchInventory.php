@@ -13,6 +13,7 @@ class BranchInventory extends Model
     protected $fillable = [
         'branch_id',
         'business_name',
+        'business_id',
         'item_id',
         'item_type',
         'allocated_quantity',

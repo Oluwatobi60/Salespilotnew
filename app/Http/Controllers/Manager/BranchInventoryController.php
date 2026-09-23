@@ -28,10 +28,10 @@ class BranchInventoryController extends Controller
                 ->with('error', 'Only business creator can manage inventory allocation');
         }
 
-        $businessName = $user->business_name;
+        $businessId = $user->getBusinessId();
 
         // Get all active branches for this business with user_id only (exclude staff_id branches)
-        $branches = Branch::where('business_name', $businessName)
+        $branches = Branch::where('business_id', $businessId)
             ->where('status', 1)
             ->whereNotNull('user_id')
             ->whereNull('staff_id')
@@ -39,12 +39,12 @@ class BranchInventoryController extends Controller
             ->get();
 
         // Get all standard items
-        $standardItems = StandardItem::where('business_name', $businessName)
+        $standardItems = StandardItem::where('business_id', $businessId)
             ->with('supplier')
             ->get();
 
         // Get all variant items with their variants
-        $variantItems = VariantItem::where('business_name', $businessName)
+        $variantItems = VariantItem::where('business_id', $businessId)
             ->with(['variants' => function ($query) {
                 $query->where('sell_item', true);
             }, 'supplier', 'unit'])
@@ -65,7 +65,7 @@ class BranchInventoryController extends Controller
         /** @var \App\Models\User $user */
         $user = Auth::user();
         $branch = Branch::where('id', $branchId)
-            ->where('business_name', $user->business_name)
+            ->where('business_id', $user->getBusinessId())
             ->firstOrFail();
 
         $inventory = BranchInventory::where('branch_id', $branchId)
@@ -130,13 +130,13 @@ class BranchInventoryController extends Controller
 
             // Verify branch belongs to this business
             $branch = Branch::where('id', $validated['branch_id'])
-                ->where('business_name', $user->business_name)
+                ->where('business_id', $user->getBusinessId())
                 ->firstOrFail();
 
             // Verify item exists and belongs to this business
             if ($validated['item_type'] === 'standard') {
                 $item = StandardItem::where('id', $validated['item_id'])
-                    ->where('business_name', $user->business_name)
+                    ->where('business_id', $user->getBusinessId())
                     ->firstOrFail();
 
                 // Check if sufficient stock available
@@ -154,7 +154,7 @@ class BranchInventoryController extends Controller
             } else {
                 $item = ProductVariant::where('id', $validated['item_id'])
                     ->whereHas('variantItem', function ($query) use ($user) {
-                        $query->where('business_name', $user->business_name);
+                        $query->where('business_id', $user->getBusinessId());
                     })
                     ->firstOrFail();
 
@@ -194,6 +194,7 @@ class BranchInventoryController extends Controller
                 BranchInventory::create([
                     'branch_id' => $validated['branch_id'],
                     'business_name' => $user->business_name,
+                    'business_id'   => $user->getBusinessId(),
                     'item_id' => $validated['item_id'],
                     'item_type' => $validated['item_type'],
                     'allocated_quantity' => $validated['quantity'],
@@ -261,22 +262,22 @@ class BranchInventoryController extends Controller
         try {
             DB::beginTransaction();
 
-            $businessName = $user->business_name;
+            $businessId = $user->getBusinessId();
 
             // Verify both branches belong to this business
             $fromBranch = Branch::where('id', $validated['from_branch_id'])
-                ->where('business_name', $businessName)
+                ->where('business_id', $businessId)
                 ->firstOrFail();
 
             $toBranch = Branch::where('id', $validated['to_branch_id'])
-                ->where('business_name', $businessName)
+                ->where('business_id', $businessId)
                 ->firstOrFail();
 
             // Find source branch inventory record
             $sourceInv = BranchInventory::where('branch_id', $validated['from_branch_id'])
                 ->where('item_id', $validated['item_id'])
                 ->where('item_type', $validated['item_type'])
-                ->where('business_name', $businessName)
+                ->where('business_id', $businessId)
                 ->first();
 
             if (! $sourceInv) {
@@ -305,7 +306,7 @@ class BranchInventoryController extends Controller
             $destInv = BranchInventory::where('branch_id', $validated['to_branch_id'])
                 ->where('item_id', $validated['item_id'])
                 ->where('item_type', $validated['item_type'])
-                ->where('business_name', $businessName)
+                ->where('business_id', $businessId)
                 ->first();
 
             if ($destInv) {
@@ -318,7 +319,7 @@ class BranchInventoryController extends Controller
             } else {
                 BranchInventory::create([
                     'branch_id' => $validated['to_branch_id'],
-                    'business_name' => $businessName,
+                    'business_name' => $businessName, 'business_id' => $businessId,
                     'item_id' => $validated['item_id'],
                     'item_type' => $validated['item_type'],
                     'allocated_quantity' => $validated['quantity'],

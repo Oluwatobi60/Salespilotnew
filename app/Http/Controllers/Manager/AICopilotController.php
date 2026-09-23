@@ -29,12 +29,12 @@ class AICopilotController extends Controller
             // Handle staff user vs manager user
             if (Auth::guard('staff')->check()) {
                 $staff = Auth::guard('staff')->user();
-                $businessName = $staff->business_name;
+                $businessId = $staff->getBusinessId();
                 $creatorEmail = $staff->manager_email;
                 $creator = \App\Models\User::where('email', $creatorEmail)->first();
                 $managerId = $creator ? $creator->id : null;
             } else {
-                $businessName = $user->business_name;
+                $businessId = $user->getBusinessId();
                 if ($user->addby) {
                     $creator = \App\Models\User::where('email', $user->addby)->first();
                     $managerId = $creator ? $creator->id : $user->id;
@@ -53,12 +53,12 @@ class AICopilotController extends Controller
             });
 
             // 1. Query branches
-            $branches = Branch::where('business_name', $businessName)
+            $branches = Branch::where('business_id', $businessId)
                 ->orWhere('user_id', $managerId)
                 ->get(['id', 'branch_name']);
 
             // 2. Query items matching query keywords
-            $itemsQuery = StandardItem::where('business_name', $businessName);
+            $itemsQuery = StandardItem::where('business_id', $businessId);
             if (! empty($words)) {
                 $itemsQuery->where(function ($q) use ($words) {
                     foreach ($words as $word) {
@@ -70,7 +70,7 @@ class AICopilotController extends Controller
             $standardItems = $itemsQuery->take(10)->get(['id', 'item_name', 'current_stock', 'selling_price']);
 
             // 3. Query variant items matching keywords
-            $variantsQuery = ProductVariant::where('business_name', $businessName);
+            $variantsQuery = ProductVariant::where('business_id', $businessId);
             if (! empty($words)) {
                 $variantsQuery->where(function ($q) use ($words) {
                     foreach ($words as $word) {
@@ -81,7 +81,7 @@ class AICopilotController extends Controller
             $variantItems = $variantsQuery->with('variantItem:id,item_name')->take(10)->get(['id', 'variant_item_id', 'variant_name', 'current_stock', 'selling_price']);
 
             // 4. Query branch allocations
-            $branchInventories = BranchInventory::where('business_name', $businessName)
+            $branchInventories = BranchInventory::where('business_id', $businessId)
                 ->whereIn('item_id', array_merge(
                     $standardItems->pluck('id')->toArray(),
                     $variantItems->pluck('id')->toArray()
@@ -102,7 +102,7 @@ class AICopilotController extends Controller
 
             if ($isSalesQuery) {
                 // Today's total sales transactions
-                $sales = \App\Models\CartItem::where('business_name', $businessName)
+                $sales = \App\Models\CartItem::where('business_id', $businessId)
                     ->where('status', 'completed')
                     ->whereDate('created_at', today())
                     ->get(['item_name', 'item_price', 'quantity', 'total', 'branch_name', 'created_at']);
@@ -134,7 +134,7 @@ class AICopilotController extends Controller
 
             // Build Context Dictionary
             $context = [
-                'business_name' => $businessName,
+                'business_name' => $businessName, 'business_id' => $businessId,
                 'branches' => $branches->map(fn ($b) => ['id' => $b->id, 'name' => $b->branch_name]),
                 'matching_standard_items' => $standardItems->map(fn ($i) => [
                     'name' => $i->item_name,

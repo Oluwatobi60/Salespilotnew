@@ -49,8 +49,6 @@ use Illuminate\Support\Facades\Route;
 
 // Superadmin auth routes (unauthenticated)
 Route::prefix('superadmin')->controller(SuperAdminController::class)->group(function () {
-    Route::get('/signup', 'showSignup')->name('superadmin.signup');
-    Route::post('/signup', 'register')->name('superadmin.register');
     Route::get('/login', 'showLogin')->name('superadmin.login');
     Route::post('/login', 'login')->name('superadmin.login.submit');
     Route::post('/logout', 'logout')->name('superadmin.logout');
@@ -79,6 +77,14 @@ Route::middleware(['auth:superadmin', 'throttle:60,1'])->prefix('superadmin')->c
     Route::get('/brms/{brm}/edit', 'editBrm')->name('superadmin.brms.edit');
     Route::put('/brms/{brm}', 'updateBrm')->name('superadmin.brms.update');
     Route::post('/brms/{brm}/toggle-status', 'toggleBrmStatus')->name('superadmin.brms.toggle');
+
+    // Superadmins
+    Route::get('/admins', 'superadmins')->name('superadmin.admins');
+    Route::get('/admins/create', 'createSuperadmin')->name('superadmin.admins.create');
+    Route::post('/admins', 'storeSuperadmin')->name('superadmin.admins.store');
+    Route::get('/admins/{admin}/edit', 'editSuperadmin')->name('superadmin.admins.edit');
+    Route::put('/admins/{admin}', 'updateSuperadmin')->name('superadmin.admins.update');
+    Route::delete('/admins/{admin}', 'deleteSuperadmin')->name('superadmin.admins.delete');
 });
 
 // Superadmin Plans routes
@@ -166,7 +172,6 @@ Route::middleware(['auth:superadmin', 'throttle:60,1'])->prefix('superadmin/syst
 
 // BRM auth routes (unauthenticated)
 Route::prefix('brm')->controller(BrmController::class)->group(function () {
-    Route::post('/signup', 'register')->name('brm.register');
     Route::get('/login', 'showLogin')->name('brm.login');
     Route::post('/login', 'login')->name('brm.login.submit');
     Route::post('/logout', 'logout')->name('brm.logout');

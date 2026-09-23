@@ -131,10 +131,10 @@ class AddDiscountController extends Controller
     {
         // Get logged-in manager's business name
         $manager = Auth::user();
-        $businessName = $manager->business_name;
+        $businessId = $manager->getBusinessId();
 
         // Fetch discounts only for this manager's business
-        $discounnts = AddDiscount::where('business_name', $businessName)->get();
+        $discounnts = AddDiscount::where('business_id', $businessId)->get();
 
         return view('manager.customer.add_discount', compact('discounnts'));
     }
@@ -167,6 +167,7 @@ class AddDiscountController extends Controller
         // Create a new discount record in the database
         $discount = new AddDiscount;
         $discount->business_name = $manager->business_name ?? null;
+        $manager->business_id ?? $manager->getBusinessId(); // business_id set below
         $discount->manager_name = $managerFullName ?: null;
         $discount->manager_email = $manager->email ?? null;
         $discount->discount_name = $validatedData['discount_name'];
@@ -186,10 +187,10 @@ class AddDiscountController extends Controller
     {
         // Get logged-in manager's business name
         $manager = Auth::user();
-        $businessName = $manager->business_name;
+        $businessId = $manager->getBusinessId();
 
         // Fetch discounts only for this manager's business
-        $discounts = AddDiscount::where('business_name', $businessName)
+        $discounts = AddDiscount::where('business_id', $businessId)
             ->get(['id', 'discount_name', 'discount_rate', 'time_used']);
 
         return response()->json([
@@ -212,10 +213,10 @@ class AddDiscountController extends Controller
         }
 
         $manager = Auth::user();
-        $businessName = $manager->business_name;
+        $businessId = $manager->getBusinessId();
 
         // âœ… SECURITY: Verify discount belongs to manager's business
-        $discount = AddDiscount::where('business_name', $businessName)
+        $discount = AddDiscount::where('business_id', $businessId)
             ->findOrFail($id);
 
         // Validate the request data
@@ -256,10 +257,10 @@ class AddDiscountController extends Controller
         }
 
         $manager = Auth::user();
-        $businessName = $manager->business_name;
+        $businessId = $manager->getBusinessId();
 
         // âœ… SECURITY: Verify discount belongs to manager's business
-        $discount = AddDiscount::where('business_name', $businessName)
+        $discount = AddDiscount::where('business_id', $businessId)
             ->findOrFail($id);
         $discount->delete();
 

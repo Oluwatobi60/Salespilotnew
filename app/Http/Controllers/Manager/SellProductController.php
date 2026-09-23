@@ -23,7 +23,7 @@ class SellProductController extends Controller
     {
         // Get manager information
         $manager = Auth::user();
-        $businessName = $manager->business_name;
+        $businessId = $manager->getBusinessId();
 
         // Check if manager is managing a branch (delegated manager)
         $managedBranch = $manager->managedBranch;
@@ -45,7 +45,7 @@ class SellProductController extends Controller
                 'pricingTiers',
             ])
                 ->where('enable_sale', true)
-                ->where('business_name', $businessName)
+                ->where('business_id', $businessId)
                 ->where(function ($query) use ($standardItemIds, $manager) {
                     $query->whereIn('id', $standardItemIds)
                         ->orWhere('manager_email', $manager->email);
@@ -66,7 +66,7 @@ class SellProductController extends Controller
             }
 
             // Get variant item IDs for items added by this manager
-            $managerVariantItemIds = VariantItem::where('business_name', $businessName)
+            $managerVariantItemIds = VariantItem::where('business_id', $businessId)
                 ->where('manager_email', $manager->email)
                 ->pluck('id');
 
@@ -84,7 +84,7 @@ class SellProductController extends Controller
                         ->with('pricingTiers');
                 },
             ])
-                ->where('business_name', $businessName)
+                ->where('business_id', $businessId)
                 ->where(function ($query) use ($variantItemIds, $managerVariantItemIds) {
                     $query->whereHas('variants', function ($q) use ($variantItemIds) {
                         $q->whereIn('id', $variantItemIds);
@@ -115,7 +115,7 @@ class SellProductController extends Controller
                 'pricingTiers',
             ])
                 ->where('enable_sale', true)
-                ->where('business_name', $businessName)
+                ->where('business_id', $businessId)
                 ->get();
 
             $variant_items = VariantItem::with([
@@ -125,12 +125,12 @@ class SellProductController extends Controller
                     $query->where('sell_item', true)->with('pricingTiers');
                 },
             ])
-                ->where('business_name', $businessName)
+                ->where('business_id', $businessId)
                 ->get();
         }
 
         // Get all unique categories filtered by business_name
-        $categories = Category::where('business_name', $businessName)->orderBy('category_name')->get();
+        $categories = Category::where('business_id', $businessId)->orderBy('category_name')->get();
 
         // Merge both collections for a unified item list
         $all_items = collect([]);
@@ -189,6 +189,7 @@ class SellProductController extends Controller
                 $itemCode = isset($item['code']) ? $item['code'] : null;
                 CartItem::create([
                     'business_name' => $manager->business_name,
+                    'business_id'   => $manager->getBusinessId(),
                     'manager_name' => $managerName,
                     'manager_email' => $manager->email,
                     'cart_name' => $validated['cart_name'],
@@ -293,7 +294,7 @@ class SellProductController extends Controller
                         } else {
                             if ($itemType === 'standard') {
                                 $standardItem = StandardItem::where('id', $item['id'])
-                                    ->where('business_name', $manager->business_name)
+                                    ->where('business_id', $manager->getBusinessId())
                                     ->lockForUpdate()
                                     ->first();
 
@@ -304,7 +305,7 @@ class SellProductController extends Controller
                                 $standardItem->save();
                             } elseif ($itemType === 'variant') {
                                 $productVariant = ProductVariant::where('id', $item['id'])
-                                    ->where('business_name', $manager->business_name)
+                                    ->where('business_id', $manager->getBusinessId())
                                     ->lockForUpdate()
                                     ->first();
 
@@ -318,7 +319,7 @@ class SellProductController extends Controller
                     } else {
                         if ($itemType === 'standard') {
                             $standardItem = StandardItem::where('id', $item['id'])
-                                ->where('business_name', $manager->business_name)
+                                ->where('business_id', $manager->getBusinessId())
                                 ->lockForUpdate()
                                 ->first();
 
@@ -329,7 +330,7 @@ class SellProductController extends Controller
                             $standardItem->save();
                         } elseif ($itemType === 'variant') {
                             $productVariant = ProductVariant::where('id', $item['id'])
-                                ->where('business_name', $manager->business_name)
+                                ->where('business_id', $manager->getBusinessId())
                                 ->lockForUpdate()
                                 ->first();
 
@@ -344,6 +345,7 @@ class SellProductController extends Controller
                     // 2. Create CartItem line item
                     CartItem::create([
                         'business_name' => $manager->business_name,
+                    'business_id'   => $manager->getBusinessId(),
                         'manager_name' => $managerName,
                         'manager_email' => $manager->email,
                         'cart_name' => 'Sale - '.now()->format('Y-m-d H:i'),
@@ -375,6 +377,7 @@ class SellProductController extends Controller
                     'receipt_number' => $receiptNumber,
                     'session_id' => $sessionId,
                     'business_name' => $manager->business_name,
+                    'business_id'   => $manager->getBusinessId(),
                     'user_id' => Auth::id(),
                     'staff_id' => null,
                     'branch_id' => $branchId,
@@ -423,11 +426,11 @@ class SellProductController extends Controller
         try {
             // Get manager information
             $manager = Auth::user();
-            $businessName = $manager->business_name;
+            $businessId = $manager->getBusinessId();
 
             // Admin view - show all saved carts from all staff members filtered by business_name
             $savedCarts = CartItem::where('status', 'saved')
-                ->where('business_name', $businessName)
+                ->where('business_id', $businessId)
                 ->select('session_id', 'cart_name', 'customer_name', 'customer_id', 'created_at', 'manager_name as user_name')
                 ->selectRaw('SUM(total) as total')
                 ->selectRaw('COUNT(*) as items_count')
@@ -451,11 +454,11 @@ class SellProductController extends Controller
     {
         try {
             $manager = Auth::user();
-            $businessName = $manager->business_name;
+            $businessId = $manager->getBusinessId();
 
             $cartItems = CartItem::where('session_id', $sessionId)
                 ->where('status', 'saved')
-                ->where('business_name', $businessName)
+                ->where('business_id', $businessId)
                 ->get();
 
             if ($cartItems->isEmpty()) {
@@ -497,11 +500,11 @@ class SellProductController extends Controller
     {
         try {
             $manager = Auth::user();
-            $businessName = $manager->business_name;
+            $businessId = $manager->getBusinessId();
 
             CartItem::where('session_id', $sessionId)
                 ->where('status', 'saved')
-                ->where('business_name', $businessName)
+                ->where('business_id', $businessId)
                 ->delete();
 
             return response()->json([
@@ -520,11 +523,11 @@ class SellProductController extends Controller
     {
         // Get manager information
         $manager = Auth::user();
-        $businessName = $manager->business_name;
+        $businessId = $manager->getBusinessId();
 
         // Get all saved carts from all staff members and managers filtered by business_name
         $savedCarts = CartItem::where('status', 'saved')
-            ->where('business_name', $businessName)
+            ->where('business_id', $businessId)
             ->select('session_id', 'cart_name', 'customer_name', 'customer_id', 'created_at', 'user_id', 'staff_id')
             ->selectRaw('SUM(total) as total')
             ->selectRaw('COUNT(*) as items_count')
@@ -552,7 +555,7 @@ class SellProductController extends Controller
     {
         try {
             $manager = Auth::user();
-            $businessName = $manager->business_name;
+            $businessId = $manager->getBusinessId();
 
             $query = \App\Models\Staffs::select('staffs.staffsid', 'staffs.fullname', 'staffs.email', 'staffs.role')
                 ->where('staffs.business_name', $businessName)

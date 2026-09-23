@@ -365,6 +365,86 @@ class SuperAdminController extends Controller
         return view('superadmin.users.show', compact('user', 'subscriptions', 'activeBrms'));
     }
 
+    // ─── Superadmins ─────────────────────────────────────────────────────────
+
+    public function superadmins(Request $request)
+    {
+        $search = $request->get('search');
+
+        $admins = SuperAdmin::when($search, function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            })
+            ->latest()
+            ->paginate(20);
+
+        return view('superadmin.admins.index', compact('admins', 'search'));
+    }
+
+    public function createSuperadmin()
+    {
+        return view('superadmin.admins.create');
+    }
+
+    public function storeSuperadmin(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:superadmins,email',
+            'phone' => 'nullable|string|max:20',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        SuperAdmin::create([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'phone' => $validated['phone'] ?? null,
+            'password' => Hash::make($validated['password']),
+        ]);
+
+        return redirect()->route('superadmin.admins')->with('success', 'Superadmin created successfully.');
+    }
+
+    public function editSuperadmin(SuperAdmin $admin)
+    {
+        return view('superadmin.admins.edit', compact('admin'));
+    }
+
+    public function updateSuperadmin(Request $request, SuperAdmin $admin)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:superadmins,email,' . $admin->id,
+            'phone' => 'nullable|string|max:20',
+            'password' => 'nullable|string|min:8|confirmed',
+        ]);
+
+        $data = [
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'phone' => $validated['phone'] ?? null,
+        ];
+
+        if (!empty($validated['password'])) {
+            $data['password'] = Hash::make($validated['password']);
+        }
+
+        $admin->update($data);
+
+        return redirect()->route('superadmin.admins')->with('success', 'Superadmin updated successfully.');
+    }
+
+    public function deleteSuperadmin(SuperAdmin $admin)
+    {
+        if (Auth::guard('superadmin')->id() === $admin->id) {
+            return back()->with('error', 'You cannot delete your own account.');
+        }
+
+        $admin->delete();
+
+        return back()->with('success', 'Superadmin deleted successfully.');
+    }
+
     public function showForgotPassword()
     {
         return view('superadmin.auth.forgot-password');

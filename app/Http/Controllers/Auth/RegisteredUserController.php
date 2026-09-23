@@ -81,19 +81,19 @@ class RegisteredUserController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'first_name' => 'required|string|max:255',
-            'surname' => 'required|string|max:255',
-            'other_name' => 'nullable|string|max:255',
-            'business_name' => 'required|string|max:255',
-            'branch_name' => 'required|string|max:255',
-            'business_logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'state' => 'required|string|max:255',
-            'local_govt' => 'required|string|max:255',
-            'address' => 'required|string|max:1000',
-            'phone_number' => 'required|string|size:11',
-            'referral_code' => 'nullable|string|max:255|exists:brms,referral_code',
-            'email' => 'required|string|email|max:255|unique:users',
-            'role' => 'required|string|in:manager',
+            'first_name'     => 'required|string|max:255',
+            'surname'        => 'required|string|max:255',
+            'other_name'     => 'nullable|string|max:255',
+            'business_name'  => 'required|string|max:255|unique:users,business_name',
+            'branch_name'    => 'required|string|max:255',
+            'business_logo'  => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'state'          => 'required|string|max:255',
+            'local_govt'     => 'required|string|max:255',
+            'address'        => 'required|string|max:1000',
+            'phone_number'   => 'required|string|size:11',
+            'referral_code'  => 'nullable|string|max:255|exists:brms,referral_code',
+            'email'          => 'required|string|email|max:255|unique:users',
+            'role'           => 'required|string|in:manager',
         ]);
 
         // Handle business logo upload
@@ -118,24 +118,28 @@ class RegisteredUserController extends Controller
         }
 
         $user = User::create([
-            'first_name' => $validated['first_name'],
-            'surname' => $validated['surname'],
-            'other_name' => $validated['other_name'],
-            'business_name' => $validated['business_name'],
-            'branch_name' => $validated['branch_name'],
-            'business_logo' => $businessLogoPath,
-            'state' => $validated['state'],
-            'local_govt' => $validated['local_govt'],
-            'address' => $validated['address'],
+            'first_name'   => $validated['first_name'],
+            'surname'      => $validated['surname'],
+            'other_name'   => $validated['other_name'],
+            'business_name'=> $validated['business_name'],
+            'branch_name'  => $validated['branch_name'],
+            'business_logo'=> $businessLogoPath,
+            'state'        => $validated['state'],
+            'local_govt'   => $validated['local_govt'],
+            'address'      => $validated['address'],
             'phone_number' => $validated['phone_number'],
-            'referral_code' => $validated['referral_code'],
-            'brm_id' => $brmId, // Assign the BRM ID if valid referral code was provided
-            'email' => $validated['email'],
-            'password' => Hash::make(Str::random(40)), // temporary â€” user sets via email link
-            'role' => $validated['role'],
-            'status' => 1, // Automatically activate upon registration
+            'referral_code'=> $validated['referral_code'],
+            'brm_id'       => $brmId,
+            'email'        => $validated['email'],
+            'password'     => Hash::make(Str::random(40)), // temporary — user sets via email link
+            'role'         => $validated['role'],
+            'status'       => 1, // Automatically activate upon registration
             'password_set' => false,
         ]);
+
+        // Set business_id = own id (owner is their own business anchor)
+        $user->business_id = $user->id;
+        $user->save();
 
         // Send notification email to BRM if customer was referred by them
         if ($brmId) {
@@ -146,9 +150,9 @@ class RegisteredUserController extends Controller
                 } catch (\Exception $e) {
                     // Log the error but don't block registration
                     Log::error('Failed to send BRM notification email', [
-                        'brm_id' => $brmId,
+                        'brm_id'         => $brmId,
                         'customer_email' => $user->email,
-                        'error' => $e->getMessage(),
+                        'error'          => $e->getMessage(),
                     ]);
                 }
             }

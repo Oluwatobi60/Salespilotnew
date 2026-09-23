@@ -15,9 +15,9 @@ class UnitController extends Controller
     public function all_units()
     {
         $manager = Auth::user();
-        $businessName = $manager->business_name;
+        $businessId = $manager->getBusinessId();
 
-        $units = Unit::where('business_name', $businessName)
+        $units = Unit::where('business_id', $businessId)
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -39,7 +39,7 @@ class UnitController extends Controller
                 'min:2',
                 'max:50',
                 function ($attribute, $value, $fail) use ($manager) {
-                    $exists = Unit::where('business_name', $manager->business_name)
+                    $exists = Unit::where('business_id', $manager->getBusinessId())
                         ->where('name', $value)
                         ->exists();
 
@@ -53,7 +53,7 @@ class UnitController extends Controller
                 'min:1',
                 'max:10',
                 function ($attribute, $value, $fail) use ($manager) {
-                    $exists = Unit::where('business_name', $manager->business_name)
+                    $exists = Unit::where('business_id', $manager->getBusinessId())
                         ->where('abbreviation', $value)
                         ->exists();
 
@@ -68,6 +68,7 @@ class UnitController extends Controller
 
         // Add manager info to validated data
         $validatedata['business_name'] = $manager->business_name;
+        $validatedata['business_id']   = $manager->getBusinessId();
         $validatedata['manager_name'] = $managerName;
         $validatedata['manager_email'] = $manager->email;
         $validatedata['is_custom'] = true;
@@ -103,10 +104,10 @@ class UnitController extends Controller
     public function update_unit(Request $request, $id)
     {
         $manager = Auth::user();
-        $businessName = $manager->business_name;
+        $businessId = $manager->getBusinessId();
 
         // âœ… SECURITY: Verify unit belongs to manager's business
-        $unit = Unit::where('business_name', $businessName)
+        $unit = Unit::where('business_id', $businessId)
             ->findOrFail($id);
 
         // Validate the request data - unit name and abbreviation must be unique per business (excluding current unit)
@@ -116,7 +117,7 @@ class UnitController extends Controller
                 'min:2',
                 'max:50',
                 function ($attribute, $value, $fail) use ($manager, $id) {
-                    $exists = Unit::where('business_name', $manager->business_name)
+                    $exists = Unit::where('business_id', $manager->getBusinessId())
                         ->where('name', $value)
                         ->where('id', '!=', $id)
                         ->exists();
@@ -131,7 +132,7 @@ class UnitController extends Controller
                 'min:1',
                 'max:10',
                 function ($attribute, $value, $fail) use ($manager, $id) {
-                    $exists = Unit::where('business_name', $manager->business_name)
+                    $exists = Unit::where('business_id', $manager->getBusinessId())
                         ->where('abbreviation', $value)
                         ->where('id', '!=', $id)
                         ->exists();
@@ -161,10 +162,10 @@ class UnitController extends Controller
     public function delete_unit($id)
     {
         $manager = Auth::user();
-        $businessName = $manager->business_name;
+        $businessId = $manager->getBusinessId();
 
         // âœ… SECURITY: Verify unit belongs to manager's business
-        $unit = Unit::where('business_name', $businessName)
+        $unit = Unit::where('business_id', $businessId)
             ->findOrFail($id);
 
         // Check if unit is used by any items before deleting

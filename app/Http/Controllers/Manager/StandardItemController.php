@@ -76,6 +76,7 @@ class StandardItemController extends Controller
             $manager = Auth::user();
             $managerFullName = trim(($manager->firstname ?? '').' '.($manager->othername ?? '').' '.($manager->surname ?? ''));
             $validatedData['business_name'] = $manager->business_name ?? null;
+        $validatedData['business_id']   = $manager->getBusinessId();
             $validatedData['manager_name'] = $managerFullName ?: null;
             $validatedData['manager_email'] = $manager->email ?? null;
 
@@ -86,7 +87,7 @@ class StandardItemController extends Controller
             if ($manager->addby !== null) { // This is an added manager, not creator
                 // Find the branch where this manager is the user_id (branch manager)
                 $managerBranch = Branch::where('user_id', $manager->id)
-                    ->where('business_name', $manager->business_name)
+                    ->where('business_id', $manager->getBusinessId())
                     ->whereNull('staff_id')
                     ->first();
 
@@ -96,6 +97,7 @@ class StandardItemController extends Controller
                         'item_id' => $standardItem->id,
                         'item_type' => 'standard',
                         'business_name' => $manager->business_name,
+                    'business_id'   => $manager->getBusinessId(),
                         'allocated_quantity' => $validatedData['opening_stock'] ?? 0,
                         'current_quantity' => $validatedData['opening_stock'] ?? 0,
                         'sold_quantity' => 0,

@@ -26,7 +26,7 @@ class StaffSalesController extends Controller
             $creator = User::where('email', $manager->addby)->first();
             $businessName = $creator ? $creator->business_name : $manager->business_name;
         } else {
-            $businessName = $manager->business_name;
+            $businessId = $manager->getBusinessId();
         }
 
         $query = CartItem::where('cart_items.status', 'completed')
@@ -214,7 +214,7 @@ class StaffSalesController extends Controller
             ->first();
 
         // Get staff members from manager's business for the filter dropdown
-        $staffQuery = Staffs::where('business_name', $businessName);
+        $staffQuery = Staffs::where('business_id', $businessId);
 
         // If the user was added by another manager (is not business creator), show only staff from their assigned branches
         if (! $manager->isBusinessCreator()) {
@@ -244,7 +244,7 @@ class StaffSalesController extends Controller
             $creator = User::where('email', $manager->addby)->first();
             $businessName = $creator ? $creator->business_name : $manager->business_name;
         } else {
-            $businessName = $manager->business_name;
+            $businessId = $manager->getBusinessId();
         }
 
         $query = CartItem::where('cart_items.status', 'completed')

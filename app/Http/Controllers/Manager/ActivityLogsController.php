@@ -13,7 +13,7 @@ class ActivityLogsController extends Controller
     public function activity_logs(\Illuminate\Http\Request $request)
     {
         $currentUser = Auth::user();
-        $businessName = $currentUser->business_name;
+        $businessId = $currentUser->getBusinessId();
 
         // Get filter inputs
         $search = $request->input('search');
@@ -24,12 +24,12 @@ class ActivityLogsController extends Controller
         $endDate = $request->input('end_date');
 
         // Get users and staff for dropdowns
-        $businessUsers = User::where('business_name', $businessName)->get();
-        $businessStaffs = Staffs::where('business_name', $businessName)->get();
+        $businessUsers = User::where('business_id', $businessId)->get();
+        $businessStaffs = Staffs::where('business_id', $businessId)->get();
 
         // Query builder for all logs
         $query = ActivityLog::with(['user', 'staff'])
-            ->where('business_name', $businessName);
+            ->where('business_id', $businessId);
 
         // Access Type Filter
         if ($accessType === 'Manager') {

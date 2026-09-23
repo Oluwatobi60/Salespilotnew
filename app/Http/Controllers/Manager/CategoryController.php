@@ -32,9 +32,9 @@ class CategoryController extends Controller
     public function all_category()
     {
         $manager = Auth::user();
-        $businessName = $manager->business_name;
+        $businessId = $manager->getBusinessId();
 
-        $categories = Category::where('business_name', $businessName)->paginate(10);
+        $categories = Category::where('business_id', $businessId)->paginate(10);
 
         // Count items for each category
         foreach ($categories as $category) {
@@ -70,7 +70,7 @@ class CategoryController extends Controller
                 'min:5',
                 'max:100',
                 function ($attribute, $value, $fail) use ($manager) {
-                    $exists = Category::where('business_name', $manager->business_name)
+                    $exists = Category::where('business_id', $manager->getBusinessId())
                         ->where('category_name', $value)
                         ->exists();
 
@@ -85,6 +85,7 @@ class CategoryController extends Controller
 
         // Add manager info to validated data
         $validatedata['business_name'] = $manager->business_name;
+        $validatedata['business_id']   = $manager->getBusinessId();
         $validatedata['manager_name'] = $managerName;
         $validatedata['manager_email'] = $manager->email;
 
@@ -111,10 +112,10 @@ class CategoryController extends Controller
     public function edit_category($id)
     {
         $manager = Auth::user();
-        $businessName = $manager->business_name;
+        $businessId = $manager->getBusinessId();
 
         // âœ… SECURITY: Verify category belongs to manager's business
-        $category = Category::where('business_name', $businessName)
+        $category = Category::where('business_id', $businessId)
             ->findOrFail($id);
 
         return view('manager.category.edit_category', compact('category'));
@@ -134,10 +135,10 @@ class CategoryController extends Controller
         }
 
         $manager = Auth::user();
-        $businessName = $manager->business_name;
+        $businessId = $manager->getBusinessId();
 
         // âœ… SECURITY: Verify category belongs to manager's business
-        $category = Category::where('business_name', $businessName)
+        $category = Category::where('business_id', $businessId)
             ->findOrFail($id);
 
         // Validate the request data
@@ -167,10 +168,10 @@ class CategoryController extends Controller
         }
 
         $manager = Auth::user();
-        $businessName = $manager->business_name;
+        $businessId = $manager->getBusinessId();
 
         // âœ… SECURITY: Verify category belongs to manager's business
-        $category = Category::where('business_name', $businessName)
+        $category = Category::where('business_id', $businessId)
             ->findOrFail($id);
 
         // Check if any items are associated with this category

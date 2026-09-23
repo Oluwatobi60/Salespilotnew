@@ -29,11 +29,11 @@ class AIInventoryController extends Controller
                 $creator = User::where('email', $user->addby)->first();
                 $businessName = $creator ? $creator->business_name : $user->business_name;
             } else {
-                $businessName = $user->business_name;
+                $businessId = $user->getBusinessId();
             }
 
             // Retrieve all available categories
-            $categories = Category::where('business_name', $businessName)->get();
+            $categories = Category::where('business_id', $businessId)->get();
 
             if ($categories->isEmpty()) {
                 return response()->json([

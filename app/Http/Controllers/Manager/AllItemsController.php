@@ -24,7 +24,7 @@ class AllItemsController extends Controller
         // Get manager information
         /** @var \App\Models\User $manager */
         $manager = Auth::user();
-        $businessName = $manager->business_name;
+        $businessId = $manager->getBusinessId();
 
         // Determine plan scope for the manager
         $activeSubscription = $manager->currentSubscription()->with('subscriptionPlan')->first();
@@ -36,14 +36,14 @@ class AllItemsController extends Controller
             'supplier',
             'unit',
             'pricingTiers',
-        ])->where('business_name', $businessName);
+        ])->where('business_id', $businessId);
 
         // Base query for Variant Items
         $variantQuery = VariantItem::with([
             'supplier',
             'unit',
             'variants.pricingTiers',
-        ])->where('business_name', $businessName);
+        ])->where('business_id', $businessId);
 
         // If user is an added manager (has addby), filter by their own email
         if ($manager->addby) {
@@ -57,7 +57,7 @@ class AllItemsController extends Controller
             // Collect variant (product_variant) IDs allocated to the managed branches and filter by those.
             $variantIds = BranchInventory::where('item_type', 'variant')
                 ->whereIn('branch_id', $managedBranchIds)
-                ->where('business_name', $businessName)
+                ->where('business_id', $businessId)
                 ->pluck('item_id')
                 ->unique();
             if ($variantIds->count() > 0) {
@@ -93,7 +93,7 @@ class AllItemsController extends Controller
             ->values();
 
         // Get all suppliers filtered by business_name
-        $suppliersQuery = Supplier::where('business_name', $businessName);
+        $suppliersQuery = Supplier::where('business_id', $businessId);
 
         // If user is an added manager, filter by their own email
         if ($manager->addby) {
@@ -103,7 +103,7 @@ class AllItemsController extends Controller
         $suppliers = $suppliersQuery->orderBy('name')->get();
 
         // Get all branches for this business
-        $branches = Branch::where('business_name', $businessName)->get();
+        $branches = Branch::where('business_id', $businessId)->get();
 
         // Combine all items into a single collection
         $allItems = collect();
@@ -112,7 +112,7 @@ class AllItemsController extends Controller
         foreach ($standardItems as $item) {
             $branchInventoriesQuery = BranchInventory::where('item_id', $item->id)
                 ->where('item_type', 'standard')
-                ->where('business_name', $businessName)
+                ->where('business_id', $businessId)
                 ->with('branch');
             if ($manager->addby) {
                 $branchInventoriesQuery->whereIn('branch_id', $managedBranchIds);
@@ -191,7 +191,7 @@ class AllItemsController extends Controller
                 foreach ($item->variants as $variant) {
                     $branchInventoriesQuery = BranchInventory::where('item_id', $variant->id)
                         ->where('item_type', 'variant')
-                        ->where('business_name', $businessName)
+                        ->where('business_id', $businessId)
                         ->with('branch');
                     if ($manager->addby) {
                         $branchInventoriesQuery->whereIn('branch_id', $managedBranchIds);
@@ -326,14 +326,14 @@ class AllItemsController extends Controller
     public function exportAllItems($format)
     {
         $manager = Auth::user();
-        $businessName = $manager->business_name;
+        $businessId = $manager->getBusinessId();
 
         $activeSubscription = $manager->currentSubscription()->with('subscriptionPlan')->first();
         $planName = strtolower(trim($activeSubscription->subscriptionPlan->name ?? ''));
         $isBasicOrFree = in_array($planName, ['basic', 'free']);
 
-        $standardQuery = StandardItem::with(['supplier', 'unit', 'pricingTiers'])->where('business_name', $businessName);
-        $variantQuery = VariantItem::with(['supplier', 'unit', 'variants.pricingTiers'])->where('business_name', $businessName);
+        $standardQuery = StandardItem::with(['supplier', 'unit', 'pricingTiers'])->where('business_id', $businessId);
+        $variantQuery = VariantItem::with(['supplier', 'unit', 'variants.pricingTiers'])->where('business_id', $businessId);
 
         if ($manager->addby) {
             $managedBranchIds = Branch::where('manager_id', $manager->id)->pluck('id');
@@ -342,7 +342,7 @@ class AllItemsController extends Controller
             });
             $variantIds = BranchInventory::where('item_type', 'variant')
                 ->whereIn('branch_id', $managedBranchIds)
-                ->where('business_name', $businessName)
+                ->where('business_id', $businessId)
                 ->pluck('item_id')
                 ->unique();
             if ($variantIds->count() > 0) {
@@ -362,7 +362,7 @@ class AllItemsController extends Controller
         foreach ($standardItems as $item) {
             $branchInventoriesQuery = BranchInventory::where('item_id', $item->id)
                 ->where('item_type', 'standard')
-                ->where('business_name', $businessName)
+                ->where('business_id', $businessId)
                 ->with('branch');
             if ($manager->addby) {
                 $branchInventoriesQuery->whereIn('branch_id', $managedBranchIds);
@@ -413,7 +413,7 @@ class AllItemsController extends Controller
                 foreach ($item->variants as $variant) {
                     $branchInventoriesQuery = BranchInventory::where('item_id', $variant->id)
                         ->where('item_type', 'variant')
-                        ->where('business_name', $businessName)
+                        ->where('business_id', $businessId)
                         ->with('branch');
                     if ($manager->addby) {
                         $branchInventoriesQuery->whereIn('branch_id', $managedBranchIds);
@@ -520,7 +520,7 @@ class AllItemsController extends Controller
     {
         /** @var \App\Models\User $manager */
         $manager = Auth::user();
-        $businessName = $manager->business_name;
+        $businessId = $manager->getBusinessId();
 
         if (! $this->canEditItems()) {
             return redirect()->route('all_items')->with('error', 'You do not have permission to delete items. This must be enabled by your business creator.');
@@ -528,12 +528,12 @@ class AllItemsController extends Controller
 
         switch ($type) {
             case 'standard':
-                $item = StandardItem::where('business_name', $businessName)->findOrFail($id);
+                $item = StandardItem::where('business_id', $businessId)->findOrFail($id);
                 $itemName = $item->item_name;
                 $item->forceDelete();
                 break;
             case 'variant':
-                $item = VariantItem::where('business_name', $businessName)->findOrFail($id);
+                $item = VariantItem::where('business_id', $businessId)->findOrFail($id);
                 $itemName = $item->item_name;
                 $item->forceDelete();
                 break;
@@ -559,12 +559,12 @@ class AllItemsController extends Controller
     {
         try {
             $manager = Auth::user();
-            $businessName = $manager->business_name;
+            $businessId = $manager->getBusinessId();
 
             switch ($type) {
                 case 'standard':
                     $item = StandardItem::with(['supplier', 'unit', 'pricingTiers'])
-                        ->where('business_name', $businessName)
+                        ->where('business_id', $businessId)
                         ->findOrFail($id);
 
                     // Get the unit object - the 'unit' field contains the unit ID
@@ -596,7 +596,7 @@ class AllItemsController extends Controller
                 case 'variant':
                     // âœ… SECURITY: Verify variant item belongs to manager's business
                     $item = VariantItem::with(['supplier', 'unit', 'variants.pricingTiers'])
-                        ->where('business_name', $businessName)
+                        ->where('business_id', $businessId)
                         ->findOrFail($id);
                     $formattedItem = [
                         'id' => $item->id,
@@ -672,26 +672,26 @@ class AllItemsController extends Controller
     {
         try {
             $manager = Auth::user();
-            $businessName = $manager->business_name;
+            $businessId = $manager->getBusinessId();
 
             if (! $this->canEditItems()) {
                 return redirect()->route('all_items')->with('error', 'You do not have permission to edit items. This must be enabled by your business creator.');
             }
 
-            $suppliers = Supplier::where('business_name', $businessName)->get();
+            $suppliers = Supplier::where('business_id', $businessId)->get();
             $units = Unit::all();
             $itemType = $type; // Define itemType variable
 
             switch ($type) {
                 case 'standard':
                     $item = StandardItem::with(['supplier', 'unit', 'pricingTiers'])
-                        ->where('business_name', $businessName)
+                        ->where('business_id', $businessId)
                         ->findOrFail($id);
                     break;
 
                 case 'variant':
                     $item = VariantItem::with(['supplier', 'unit', 'variants.pricingTiers'])
-                        ->where('business_name', $businessName)
+                        ->where('business_id', $businessId)
                         ->findOrFail($id);
                     break;
 
@@ -719,7 +719,7 @@ class AllItemsController extends Controller
     {
         try {
             $manager = Auth::user();
-            $businessName = $manager->business_name;
+            $businessId = $manager->getBusinessId();
 
             if (! $this->canEditItems()) {
                 return redirect()->route('all_items')->with('error', 'You do not have permission to edit items. This must be enabled by your business creator.');
@@ -727,7 +727,7 @@ class AllItemsController extends Controller
 
             switch ($type) {
                 case 'standard':
-                    $item = StandardItem::where('business_name', $businessName)->findOrFail($id);
+                    $item = StandardItem::where('business_id', $businessId)->findOrFail($id);
 
                     $validatedData = $request->validate([
                         'item_name' => 'required|string|max:255',
@@ -772,7 +772,7 @@ class AllItemsController extends Controller
                     break;
 
                 case 'variant':
-                    $item = VariantItem::where('business_name', $businessName)->findOrFail($id);
+                    $item = VariantItem::where('business_id', $businessId)->findOrFail($id);
 
                     $validatedData = $request->validate([
                         'item_name' => 'required|string|max:255',
@@ -858,7 +858,7 @@ class AllItemsController extends Controller
     {
         try {
             $manager = Auth::user();
-            $businessName = $manager->business_name;
+            $businessId = $manager->getBusinessId();
 
             if (! $this->canEditItems()) {
                 return response()->json([
@@ -895,7 +895,7 @@ class AllItemsController extends Controller
                     $itemName = '';
                     switch ($type) {
                         case 'standard':
-                            $item = StandardItem::where('business_name', $businessName)->find($id);
+                            $item = StandardItem::where('business_id', $businessId)->find($id);
                             if ($item) {
                                 $itemName = $item->item_name;
                                 $item->forceDelete();
@@ -905,7 +905,7 @@ class AllItemsController extends Controller
                             break;
 
                         case 'variant':
-                            $item = VariantItem::where('business_name', $businessName)->find($id);
+                            $item = VariantItem::where('business_id', $businessId)->find($id);
                             if ($item) {
                                 $itemName = $item->item_name;
                                 $item->forceDelete();

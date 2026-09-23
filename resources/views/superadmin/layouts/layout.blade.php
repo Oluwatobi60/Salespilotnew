@@ -39,6 +39,9 @@
         </a>
 
         <span class="nav-group-label">Management</span>
+        <a href="{{ route('superadmin.admins') }}" class="{{ request()->routeIs('superadmin.admins*') ? 'active' : '' }}">
+            <i class="bi bi-shield-lock"></i> Administrators
+        </a>
         <a href="{{ route('superadmin.customers') }}" class="{{ request()->routeIs('superadmin.customers*') || request()->routeIs('superadmin.users*') ? 'active' : '' }}">
             <i class="bi bi-people"></i> Customers
         </a>

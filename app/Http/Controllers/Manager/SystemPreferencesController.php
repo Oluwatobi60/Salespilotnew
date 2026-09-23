@@ -23,7 +23,7 @@ class SystemPreferencesController extends Controller
             $businessOwner = $manager;
         } else {
             // For branch managers, fetch the business owner
-            $businessOwner = User::where('business_name', $manager->business_name)
+            $businessOwner = User::where('business_id', $manager->getBusinessId())
                 ->where('addby', null)
                 ->first() ?? $manager;
         }
@@ -37,7 +37,7 @@ class SystemPreferencesController extends Controller
                 ->get();
 
             // Get all staff for business creator
-            $staffs = Staffs::where('business_name', $manager->business_name)
+            $staffs = Staffs::where('business_id', $manager->getBusinessId())
                 ->with('branches')
                 ->orderBy('created_at', 'desc')
                 ->get();
@@ -141,7 +141,10 @@ class SystemPreferencesController extends Controller
         $validated['show_discounts'] = $request->has('show_discounts');
 
         ReceiptSetting::updateOrCreate(
-            ['business_name' => $manager->business_name],
+            [
+                'business_name' => $manager->business_name,
+                'business_id'   => $manager->getBusinessId(),
+            ],
             $validated
         );
 

@@ -29,11 +29,11 @@ class SalesbyItemController extends Controller
             $creator = User::where('email', $manager->addby)->first();
             $businessName = $creator ? $creator->business_name : $manager->business_name;
         } else {
-            $businessName = $manager->business_name;
+            $businessId = $manager->getBusinessId();
         }
 
         $query = CartItem::where('status', 'completed')
-            ->where('business_name', $businessName);
+            ->where('business_id', $businessId);
 
         // If the user was added by another manager, filter by user_id, staff_id, or branch_name
         if ($manager->addby) {
@@ -245,11 +245,11 @@ class SalesbyItemController extends Controller
             $creator = User::where('email', $manager->addby)->first();
             $businessName = $creator ? $creator->business_name : $manager->business_name;
         } else {
-            $businessName = $manager->business_name;
+            $businessId = $manager->getBusinessId();
         }
 
         $query = CartItem::where('status', 'completed')
-            ->where('business_name', $businessName);
+            ->where('business_id', $businessId);
 
         if ($manager->addby) {
             $query->where(function ($q) use ($manager, $branchName) {
@@ -437,12 +437,12 @@ class SalesbyItemController extends Controller
             $creator = User::where('email', $manager->addby)->first();
             $businessName = $creator ? $creator->business_name : $manager->business_name;
         } else {
-            $businessName = $manager->business_name;
+            $businessId = $manager->getBusinessId();
         }
 
         // Build base query with business_name filter
         $query = CartItem::where('status', 'completed')
-            ->where('business_name', $businessName)
+            ->where('business_id', $businessId)
             ->whereNotNull('item_id');
 
         // If the user was added by another manager, filter by user_id, staff_id, or branch_name
@@ -509,12 +509,12 @@ class SalesbyItemController extends Controller
             $creator = User::where('email', $manager->addby)->first();
             $businessName = $creator ? $creator->business_name : $manager->business_name;
         } else {
-            $businessName = $manager->business_name;
+            $businessId = $manager->getBusinessId();
         }
 
         // Build base query with business_name filter
         $query = CartItem::where('status', 'completed')
-            ->where('business_name', $businessName);
+            ->where('business_id', $businessId);
 
         // If the user was added by another manager, filter by user_id, staff_id, or branch_name
         if ($manager->addby) {

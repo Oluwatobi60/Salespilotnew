@@ -17,15 +17,15 @@ class AddManagerController extends Controller
 {
     public function add_manager()
     {        /** @var \App\Models\User $manager */ $manager = Auth::user();
-        $businessName = $manager->business_name;
+        $businessId = $manager->getBusinessId();
 
         // All managers for the business (for main table)
-        $managerdata = User::where('business_name', $businessName)
+        $managerdata = User::where('business_id', $businessId)
             ->latest()
             ->paginate(10);
 
         // Only managers where 'addby' is set (not null/empty)
-        $delegatedManagers = User::where('business_name', $businessName)
+        $delegatedManagers = User::where('business_id', $businessId)
             ->whereNotNull('addby')
             ->where('addby', '!=', '')
             ->with('managedBranch')
@@ -96,7 +96,7 @@ class AddManagerController extends Controller
         $planName = strtolower(trim($plan->name));
 
         // Count existing managers created by this business (delegated managers)
-        $currentManagerCount = User::where('business_name', $sessionManager->business_name)
+        $currentManagerCount = User::where('business_id', $sessionManager->getBusinessId())
             ->whereNotNull('addby')
             ->where('addby', '!=', '')
             ->count();
@@ -134,21 +134,23 @@ class AddManagerController extends Controller
         $status = strtolower($validatedData['status']) === 'active' ? 1 : 0;
 
         $user = User::create([
-            'first_name' => $validatedData['firstname'],
+            'first_name'    => $validatedData['firstname'],
             /*             'other_name' => $validatedData['othername'],
- */ 'surname' => $validatedData['surname'],
-            'email' => $validatedData['email'],
-            'phone_number' => $validatedData['phone'],
+ */ 'surname'       => $validatedData['surname'],
+            'email'         => $validatedData['email'],
+            'phone_number'  => $validatedData['phone'],
             'business_name' => $sessionManager->business_name,
-            'branch_name' => $validatedData['branch_name'] ?? null,
+                    'business_id'   => $sessionManager->getBusinessId(),
+            'business_id'   => $sessionManager->getBusinessId(), // inherit owner's business_id
+            'branch_name'   => $validatedData['branch_name'] ?? null,
             'business_logo' => $businessLogoPath,
-            'state' => $validatedData['state'],
-            'local_govt' => $validatedData['local_govt'],
-            'addby' => $sessionManager->email,
-            'address' => $validatedData['address'] ?? null,
-            'role' => 'manager',
-            'status' => $status,
-            'password' => Hash::make($validatedData['password']),
+            'state'         => $validatedData['state'],
+            'local_govt'    => $validatedData['local_govt'],
+            'addby'         => $sessionManager->email,
+            'address'       => $validatedData['address'] ?? null,
+            'role'          => 'manager',
+            'status'        => $status,
+            'password'      => Hash::make($validatedData['password']),
         ]);
 
         // Send login details to email using a manager-specific mailable
@@ -169,10 +171,10 @@ class AddManagerController extends Controller
     public function editmanager($id)
     {
         $currentManager = Auth::user();
-        $businessName = $currentManager->business_name;
+        $businessId = $currentManager->getBusinessId();
 
         // âœ… SECURITY: Verify manager belongs to same business
-        $manageredit = User::where('business_name', $businessName)
+        $manageredit = User::where('business_id', $businessId)
             ->findOrFail($id);
 
         return view('manager.staff.edit_manager', compact('manageredit'));
@@ -181,7 +183,7 @@ class AddManagerController extends Controller
     public function updatemanager(Request $request, $id)
     {
         $currentManager = Auth::user();
-        $businessName = $currentManager->business_name;
+        $businessId = $currentManager->getBusinessId();
 
         $validatedData = $request->validate([
             'first_name' => 'required|string|max:255',
@@ -191,7 +193,7 @@ class AddManagerController extends Controller
         ]);
 
         // âœ… SECURITY: Verify manager belongs to same business
-        $manager = User::where('business_name', $businessName)
+        $manager = User::where('business_id', $businessId)
             ->findOrFail($id);
         $manager->surname = $validatedData['surname'];
         $manager->first_name = $validatedData['first_name'];
@@ -205,10 +207,10 @@ class AddManagerController extends Controller
     public function toggleStatus(Request $request, $id)
     {
         $currentManager = Auth::user();
-        $businessName = $currentManager->business_name;
+        $businessId = $currentManager->getBusinessId();
 
         // âœ… SECURITY: Verify manager belongs to same business
-        $manager = User::where('business_name', $businessName)
+        $manager = User::where('business_id', $businessId)
             ->findOrFail($id);
         // Toggle the status
         $manager->status = ! $manager->status;
@@ -223,10 +225,10 @@ class AddManagerController extends Controller
     public function deletemanager($id)
     {
         $currentManager = Auth::user();
-        $businessName = $currentManager->business_name;
+        $businessId = $currentManager->getBusinessId();
 
         // âœ… SECURITY: Verify manager belongs to same business
-        $manager = User::where('business_name', $businessName)
+        $manager = User::where('business_id', $businessId)
             ->findOrFail($id);
 
         // Prevent self-deletion

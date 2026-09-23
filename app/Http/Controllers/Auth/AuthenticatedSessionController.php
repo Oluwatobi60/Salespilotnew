@@ -134,7 +134,7 @@ class AuthenticatedSessionController extends Controller
 
             if (! $assignedBranch && ! empty($user->branch_name)) {
                 $assignedBranch = Branch::where('branch_name', $user->branch_name)
-                    ->where('business_name', $user->business_name)
+                    ->where('business_id', $user->getBusinessId())
                     ->first();
             }
 

@@ -19,6 +19,7 @@ class StandardItem extends Model
 
     protected $fillable = [
         'business_name',
+        'business_id',
         'manager_name',
         'manager_email',
         'item_name',

@@ -15,10 +15,10 @@ class CustomerController extends Controller
     {
         // Get manager information
         $manager = Auth::user();
-        $businessName = $manager->business_name;
+        $businessId = $manager->getBusinessId();
 
         $query = AddCustomer::with(['user', 'staff'])
-            ->where('business_name', $businessName);
+            ->where('business_id', $businessId);
 
         // Apply staff filter
         if ($request->filled('staff_id')) {
@@ -37,10 +37,10 @@ class CustomerController extends Controller
     public function get_all_customers()
     {
         $manager = Auth::user();
-        $businessName = $manager->business_name;
+        $businessId = $manager->getBusinessId();
 
         $customers = AddCustomer::select('id', 'customer_name', 'email', 'phone_number')
-            ->where('business_name', $businessName)
+            ->where('business_id', $businessId)
             ->orderBy('customer_name', 'asc')
             ->get();
 
@@ -66,6 +66,7 @@ class CustomerController extends Controller
 
         // Add manager info to validated data
         $validatedData['business_name'] = $manager->business_name;
+        $validatedData['business_id']   = $manager->getBusinessId();
         $validatedData['manager_name'] = $managerName;
         $validatedData['manager_email'] = $manager->email;
 
@@ -91,9 +92,9 @@ class CustomerController extends Controller
     public function edit_customer($id)
     {
         $manager = Auth::user();
-        $businessName = $manager->business_name;
+        $businessId = $manager->getBusinessId();
 
-        $customer = AddCustomer::where('business_name', $businessName)->findOrFail($id);
+        $customer = AddCustomer::where('business_id', $businessId)->findOrFail($id);
 
         return view('manager.customer.edit_customer', compact('customer'));
     }
@@ -101,9 +102,9 @@ class CustomerController extends Controller
     public function update_customer(Request $request, $id)
     {
         $manager = Auth::user();
-        $businessName = $manager->business_name;
+        $businessId = $manager->getBusinessId();
 
-        $customer = AddCustomer::where('business_name', $businessName)->findOrFail($id);
+        $customer = AddCustomer::where('business_id', $businessId)->findOrFail($id);
 
         // Validate incoming request data
         $validatedData = $request->validate([
@@ -126,9 +127,9 @@ class CustomerController extends Controller
     public function delete_customer($id)
     {
         $manager = Auth::user();
-        $businessName = $manager->business_name;
+        $businessId = $manager->getBusinessId();
 
-        $customer = AddCustomer::where('business_name', $businessName)->findOrFail($id);
+        $customer = AddCustomer::where('business_id', $businessId)->findOrFail($id);
         $customer->delete();
 
         return response()->json([
@@ -140,10 +141,10 @@ class CustomerController extends Controller
     public function get_customer_details($id)
     {
         $manager = Auth::user();
-        $businessName = $manager->business_name;
+        $businessId = $manager->getBusinessId();
 
         $customer = AddCustomer::with(['user', 'staff'])
-            ->where('business_name', $businessName)
+            ->where('business_id', $businessId)
             ->findOrFail($id);
 
         // Get added by name

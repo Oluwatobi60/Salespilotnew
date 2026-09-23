@@ -12,12 +12,14 @@ use Illuminate\Notifications\Notifiable;
 
 /**
  * @property int $id
+ * @property int|null $business_id
  * @property string $email
  * @property string $business_name
  * @property string|null $addby
  *
  * @method \Illuminate\Database\Eloquent\Relations\HasOne currentSubscription()
  * @method bool isBusinessCreator()
+ * @method int getBusinessId()
  */
 class User extends Authenticatable
 {
@@ -45,6 +47,7 @@ class User extends Authenticatable
         'address',
         'phone_number',
         'referral_code',
+        'business_id',
         'email',
         'password',
         'role',
@@ -122,6 +125,16 @@ class User extends Authenticatable
     public function isBusinessCreator(): bool
     {
         return is_null($this->addby) || $this->addby === $this->email || $this->addby === $this->id;
+    }
+
+    /**
+     * Get the canonical business_id for this user.
+     * For owners: their own id. For managers/staff: the owner's id.
+     * Falls back to $this->id if business_id is somehow null (legacy rows).
+     */
+    public function getBusinessId(): int
+    {
+        return (int) ($this->business_id ?? $this->id);
     }
 
     public function brm(): \Illuminate\Database\Eloquent\Relations\BelongsTo

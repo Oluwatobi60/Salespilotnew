@@ -10,6 +10,7 @@ class AddCustomer extends Model
 
     protected $fillable = [
         'business_name',
+        'business_id',
         'manager_name',
         'manager_email',
         'customer_name',
