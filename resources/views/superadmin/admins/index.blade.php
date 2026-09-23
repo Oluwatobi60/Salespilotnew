@@ -41,6 +41,7 @@
                     <th class="px-3 py-3 fw-semibold text-secondary">Name</th>
                     <th class="px-3 py-3 fw-semibold text-secondary col-hide-sm">Email</th>
                     <th class="px-3 py-3 fw-semibold text-secondary col-hide-sm">Phone</th>
+                    <th class="px-3 py-3 fw-semibold text-secondary text-center">Status</th>
                     <th class="px-3 py-3 fw-semibold text-secondary text-center">Actions</th>
                 </tr>
             </thead>
@@ -60,6 +61,14 @@
                         <td class="px-3 col-hide-sm">{{ $admin->phone ?? '—' }}</td>
 
                         <td class="px-3 text-center">
+                            @if($admin->status)
+                                <span class="badge rounded-pill text-bg-success">Active</span>
+                            @else
+                                <span class="badge rounded-pill text-bg-danger">Disabled</span>
+                            @endif
+                        </td>
+
+                        <td class="px-3 text-center">
                             <div class="d-flex align-items-center justify-content-center gap-2">
                                 <a href="{{ route('superadmin.admins.edit', $admin->id) }}"
                                    class="btn btn-sm btn-outline-secondary" title="Edit">
@@ -67,14 +76,13 @@
                                 </a>
                                 @if(Auth::guard('superadmin')->id() !== $admin->id)
                                 <form method="POST"
-                                      action="{{ route('superadmin.admins.delete', $admin->id) }}"
-                                      onsubmit="return confirm('Are you sure you want to delete this admin? This action cannot be undone.')">
+                                      action="{{ route('superadmin.admins.toggle', $admin->id) }}"
+                                      onsubmit="return confirm('Are you sure you want to {{ $admin->status ? 'disable' : 'activate' }} this admin?')">
                                     @csrf
-                                    @method('DELETE')
                                     <button type="submit"
-                                            class="btn btn-sm btn-outline-danger"
-                                            title="Delete Admin">
-                                        <i class="bi bi-trash"></i>
+                                            class="btn btn-sm {{ $admin->status ? 'btn-outline-danger' : 'btn-outline-success' }}"
+                                            title="{{ $admin->status ? 'Disable Admin' : 'Activate Admin' }}">
+                                        <i class="bi bi-{{ $admin->status ? 'toggle-on' : 'toggle-off' }}"></i>
                                     </button>
                                 </form>
                                 @endif

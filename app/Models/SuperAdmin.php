@@ -30,6 +30,7 @@ class SuperAdmin extends Authenticatable
         'email',
         'phone',
         'password',
+        'status',
     ];
 
     protected $hidden = [

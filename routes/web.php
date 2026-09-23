@@ -84,7 +84,7 @@ Route::middleware(['auth:superadmin', 'throttle:60,1'])->prefix('superadmin')->c
     Route::post('/admins', 'storeSuperadmin')->name('superadmin.admins.store');
     Route::get('/admins/{admin}/edit', 'editSuperadmin')->name('superadmin.admins.edit');
     Route::put('/admins/{admin}', 'updateSuperadmin')->name('superadmin.admins.update');
-    Route::delete('/admins/{admin}', 'deleteSuperadmin')->name('superadmin.admins.delete');
+    Route::post('/admins/{admin}/toggle-status', 'toggleSuperadminStatus')->name('superadmin.admins.toggle');
 });
 
 // Superadmin Plans routes

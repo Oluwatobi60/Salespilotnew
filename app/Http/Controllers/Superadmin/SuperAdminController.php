@@ -62,6 +62,12 @@ class SuperAdminController extends Controller
         // Check if superadmin exists and is locked
         $superadmin = \App\Models\SuperAdmin::where('email', $request->email)->first();
 
+        if ($superadmin && $superadmin->status == 0) {
+            return back()->withErrors([
+                'email' => 'Your account has been disabled. Please contact an administrator.',
+            ])->onlyInput('email');
+        }
+
         if ($superadmin && method_exists($superadmin, 'isLocked') && $superadmin->isLocked()) {
             $minutes = $superadmin->getRemainingLockTimeMinutes();
 
@@ -434,15 +440,17 @@ class SuperAdminController extends Controller
         return redirect()->route('superadmin.admins')->with('success', 'Superadmin updated successfully.');
     }
 
-    public function deleteSuperadmin(SuperAdmin $admin)
+    public function toggleSuperadminStatus(SuperAdmin $admin)
     {
         if (Auth::guard('superadmin')->id() === $admin->id) {
-            return back()->with('error', 'You cannot delete your own account.');
+            return back()->with('error', 'You cannot disable your own account.');
         }
 
-        $admin->delete();
+        $admin->status = $admin->status ? 0 : 1;
+        $admin->save();
+        $label = $admin->status ? 'activated' : 'disabled';
 
-        return back()->with('success', 'Superadmin deleted successfully.');
+        return back()->with('success', "Superadmin account has been {$label}.");
     }
 
     public function showForgotPassword()
